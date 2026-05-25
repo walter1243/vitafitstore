@@ -1,3 +1,4 @@
+'use client';
 import { useState } from "react";
 import ProductDragDrop from "./product-dragdrop";
 
