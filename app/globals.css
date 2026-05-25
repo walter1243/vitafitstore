@@ -1,0 +1,251 @@
+@import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Raleway:wght@300;400;500;600;700&display=swap');
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: oklch(0.99 0.002 150);
+  --foreground: oklch(0.2 0.02 150);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.2 0.02 150);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.2 0.02 150);
+  --primary: oklch(0.55 0.17 160);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.95 0.02 150);
+  --secondary-foreground: oklch(0.3 0.05 150);
+  --muted: oklch(0.96 0.01 150);
+  --muted-foreground: oklch(0.5 0.02 150);
+  --accent: oklch(0.65 0.15 160);
+  --accent-foreground: oklch(1 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.9 0.02 150);
+  --input: oklch(0.92 0.01 150);
+  --ring: oklch(0.55 0.17 160);
+  --chart-1: oklch(0.55 0.17 160);
+  --chart-2: oklch(0.65 0.15 160);
+  --chart-3: oklch(0.45 0.12 160);
+  --chart-4: oklch(0.75 0.1 160);
+  --chart-5: oklch(0.35 0.1 160);
+  --radius: 0.75rem;
+  --sidebar: oklch(0.98 0.01 150);
+  --sidebar-foreground: oklch(0.2 0.02 150);
+  --sidebar-primary: oklch(0.55 0.17 160);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.95 0.02 150);
+  --sidebar-accent-foreground: oklch(0.3 0.05 150);
+  --sidebar-border: oklch(0.9 0.02 150);
+  --sidebar-ring: oklch(0.55 0.17 160);
+  --success: oklch(0.55 0.17 160);
+  --success-foreground: oklch(1 0 0);
+  --warning: oklch(0.75 0.15 85);
+  --warning-foreground: oklch(0.25 0.05 85);
+  --font-heading: 'Lora', serif;
+  --font-body: 'Raleway', sans-serif;
+}
+
+.dark {
+  --background: oklch(0.15 0.02 150);
+  --foreground: oklch(0.95 0.01 150);
+  --card: oklch(0.18 0.02 150);
+  --card-foreground: oklch(0.95 0.01 150);
+  --popover: oklch(0.18 0.02 150);
+  --popover-foreground: oklch(0.95 0.01 150);
+  --primary: oklch(0.6 0.17 160);
+  --primary-foreground: oklch(0.15 0.02 150);
+  --secondary: oklch(0.25 0.03 150);
+  --secondary-foreground: oklch(0.95 0.01 150);
+  --muted: oklch(0.25 0.02 150);
+  --muted-foreground: oklch(0.7 0.02 150);
+  --accent: oklch(0.55 0.15 160);
+  --accent-foreground: oklch(0.95 0.01 150);
+  --destructive: oklch(0.5 0.2 25);
+  --destructive-foreground: oklch(0.95 0.01 150);
+  --border: oklch(0.3 0.02 150);
+  --input: oklch(0.25 0.02 150);
+  --ring: oklch(0.6 0.17 160);
+  --chart-1: oklch(0.6 0.17 160);
+  --chart-2: oklch(0.7 0.15 160);
+  --chart-3: oklch(0.5 0.12 160);
+  --chart-4: oklch(0.8 0.1 160);
+  --chart-5: oklch(0.4 0.1 160);
+  --sidebar: oklch(0.18 0.02 150);
+  --sidebar-foreground: oklch(0.95 0.01 150);
+  --sidebar-primary: oklch(0.6 0.17 160);
+  --sidebar-primary-foreground: oklch(0.15 0.02 150);
+  --sidebar-accent: oklch(0.25 0.03 150);
+  --sidebar-accent-foreground: oklch(0.95 0.01 150);
+  --sidebar-border: oklch(0.3 0.02 150);
+  --sidebar-ring: oklch(0.6 0.17 160);
+  --success: oklch(0.6 0.17 160);
+  --success-foreground: oklch(0.15 0.02 150);
+  --warning: oklch(0.75 0.15 85);
+  --warning-foreground: oklch(0.15 0.05 85);
+}
+
+@theme inline {
+  --font-sans: 'Raleway', 'Geist', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', monospace;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+  }
+  h1, h2, h3 {
+    font-family: var(--font-heading);
+  }
+}
+
+/* ─── Conveyor Belt ──────────────────────────────── */
+@keyframes marquee-left {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes marquee-right {
+  0%   { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+.animate-marquee-left {
+  animation: marquee-left 35s linear infinite;
+}
+.animate-marquee-right {
+  animation: marquee-right 40s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee-left,
+  .animate-marquee-right {
+    animation-play-state: paused;
+  }
+}
+
+/* ─── Color Reveal (clip-path circle expand) ─────── */
+@keyframes color-reveal {
+  from {
+    clip-path: circle(0% at var(--rx, 50%) var(--ry, 50%));
+  }
+  to {
+    clip-path: circle(200% at var(--rx, 50%) var(--ry, 50%));
+  }
+}
+.color-reveal {
+  animation: color-reveal 650ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* ─── Product Slide Transitions ──────────────────── */
+@keyframes slide-in-from-right {
+  from { transform: translateX(60px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+@keyframes slide-in-from-left {
+  from { transform: translateX(-60px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+.slide-from-right {
+  animation: slide-in-from-right 350ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.slide-from-left {
+  animation: slide-in-from-left 350ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* ─── Category Tab Underline ─────────────────────── */
+@keyframes tab-underline-in {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* ─── Fade + Slide Up ────────────────────────────── */
+@keyframes fade-slide-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-slide-up {
+  animation: fade-slide-up 500ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* ─── Glow Pulse ─────────────────────────────────── */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(16,185,129,0.3); }
+  50%       { box-shadow: 0 0 40px rgba(16,185,129,0.6); }
+}
+.animate-glow {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+/* ─── Blob Float ─────────────────────────────────── */
+@keyframes blob-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(30px, -20px) scale(1.05); }
+  66%       { transform: translate(-20px, 15px) scale(0.95); }
+}
+.animate-blob {
+  animation: blob-float 8s ease-in-out infinite;
+}
+.animation-delay-2000 { animation-delay: 2s; }
+.animation-delay-4000 { animation-delay: 4s; }
+
+/* ─── Step Progress ──────────────────────────────── */
+@keyframes step-fill {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
+/* ─── Glassmorphism Utilities ────────────────────── */
+.glass {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.glass-dark {
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}

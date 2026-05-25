@@ -1,0 +1,1035 @@
+{
+  "metadata": {
+    "generatedAt": "2026-05-25T17:24:32.727Z",
+    "totalScraped": 100,
+    "totalAnalyzed": 30,
+    "successCount": 0,
+    "errorCount": 30,
+    "avgScore": "5.0",
+    "highFitCount": 0,
+    "mediumFitCount": 30,
+    "lowFitCount": 0
+  },
+  "ads": [
+    {
+      "id": "1662742077717825",
+      "pageName": "Rcocio.com",
+      "pageId": "117142334583028",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "ES",
+      "keyword": "suplementos adelgazar",
+      "copyText": "Batido sustitutivo de comida con proteina y colágeno. \n🇪🇸Fabricado en España",
+      "title": "Envío en 24/48 horas",
+      "description": "",
+      "callToAction": "Get offer",
+      "imageUrl": null,
+      "videoUrl": "https://video-waw2-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQNyisKskixcjPFhbuYJ8Glvn_8Tl5XMBvHbeTRknqzoObxog0RsElIyTJXSXKTGRL4tzVcIi3M0_iI-MZPpFpysm4yN8sl5Tm_mKOgin8u58g.mp4?_nc_cat=110&_nc_sid=5e9851&_nc_ht=video-waw2-1.xx.fbcdn.net&_nc_ohc=468HsoHPo80Q7kNvwFkFIFK&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjU2MzE0ODg1MzE4MzU2MywiYXNzZXRfYWdlX2RheXMiOjM2NywidmlfdXNlY2FzZV9pZCI6MTA3OTksImR1cmF0aW9uX3MiOjc2MCwidXJsZ2VuX3NvdXJjZSI6Ind3dyJ9&ccb=17-1&vs=fafaeee509de91fc&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC83MjQ3OTU4MDg5NDU1NEY5QTc3RDdDREIwMzJFNjRCRV9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhg6cGFzc3Rocm91Z2hfZXZlcnN0b3JlL0dEcDJ0eDFEdHktY0MtOEVBRUVXWnR1S0MxNFZidjRHQUFBRhUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACaWkcz1yYuAAhUCKAJDMywXQIfGZmZmZmYYGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUAZd6oAQA&_nc_gid=t3sxlIBafQXFDgvJlebyNg&_nc_ss=7f289&_nc_zt=28&oh=00_Af6GsnzZD6aAoib2i1kRsV2HYVmW5Rb0W-Kvyg03ou1zIg&oe=6A1A481E",
+      "mediaType": "video",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "Envío en 24/48 horas"
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    },
+    {
+      "id": "1252382319204740",
+      "pageName": "Rcocio.com",
+      "pageId": "117142334583028",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "ES",
+      "keyword": "suplementos adelgazar",
+      "copyText": "Pack más completo de RcOcio. Batido que te aporta todo lo que necesitas.",
+      "title": "Pago contrareembolso gratis",
+      "description": "",
+      "callToAction": "Get offer",
+      "imageUrl": null,
+      "videoUrl": "https://video-waw2-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQPFH5rdv4KNbmc4EERvFA3hpYGTGdzZxwm4v87lGBlsgCCp1qTsTAgArlrSuook674CKhMMfIkwOv94IecpWtc8JL1sa1o6B88X1a-Jlev1LQ.mp4?_nc_cat=111&_nc_sid=5e9851&_nc_ht=video-waw2-1.xx.fbcdn.net&_nc_ohc=ALPdOb7q5iIQ7kNvwGvKfzZ&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjgwODc4MDM4NDczMzA5OSwiYXNzZXRfYWdlX2RheXMiOjUwMCwidmlfdXNlY2FzZV9pZCI6MTA3OTksImR1cmF0aW9uX3MiOjQ1OCwidXJsZ2VuX3NvdXJjZSI6Ind3dyJ9&ccb=17-1&vs=fc08ec04adf3dc9f&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC84QzQ2Q0JBMjI4NDdBOTM1QkM2RkNCNkM1M0U4QjY5MV9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhg6cGFzc3Rocm91Z2hfZXZlcnN0b3JlL0dFZlJJQnp3NFl5c1g0WUZBQTRVcmVmZ1puQUFidjRHQUFBRhUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACbWnsS4m-XvAhUCKAJDMywXQHygAAAAAAAYGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUAZd6oAQA&_nc_gid=t3sxlIBafQXFDgvJlebyNg&_nc_ss=7f289&_nc_zt=28&oh=00_Af7MxBuOeCk-aBxVYoJi50SniiKh82rWmcMoF7c82hEK5A&oe=6A1A5611",
+      "mediaType": "video",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "Pago contrareembolso gratis"
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    },
+    {
+      "id": "2047270282407059",
+      "pageName": "Rcocio.com",
+      "pageId": "117142334583028",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "ES",
+      "keyword": "suplementos adelgazar",
+      "copyText": "Pack FitBody más completo de RcOcio. Batido que te aporta todo lo que necesitas.",
+      "title": "Envío en 24/48 horas",
+      "description": "",
+      "callToAction": "Get offer",
+      "imageUrl": null,
+      "videoUrl": "https://video-waw2-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQNAIE3P2HfZKSgbxgblhsBRiy_acRTLTyB3WxO5fIqDG0nHcsxj-2SjbeVOvuwBK7qnlJ6_-dqrk7xth6edO0_QgOwZhO37bItGctM281I5Rw.mp4?_nc_cat=104&_nc_sid=5e9851&_nc_ht=video-waw2-1.xx.fbcdn.net&_nc_ohc=H_qV_QrMRNMQ7kNvwFMFvIf&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjEzNzI0MTkzMTcxMTkyMTUsImFzc2V0X2FnZV9kYXlzIjo0NTcsInZpX3VzZWNhc2VfaWQiOjEwNzk5LCJkdXJhdGlvbl9zIjo3MDMsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=811fc2f928cebec5&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC9CMjQ5ODNFNEI0NDZEQ0MzOTVEMDM1RUE3RkRDQUI4QV9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhg6cGFzc3Rocm91Z2hfZXZlcnN0b3JlL0dGaUxteHpQMWs2OEZKTURBS2hNZGlLSVotQUdidjRHQUFBRhUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACbe44neqI3wBBUCKAJDMywXQIX4zMzMzM0YGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUAZd6oAQA&_nc_gid=t3sxlIBafQXFDgvJlebyNg&_nc_ss=7f289&_nc_zt=28&oh=00_Af5q0HyoeXeJ4koNR47LkaDqTusApsG0wNl1JZF2hVm4gA&oe=6A1A7068",
+      "mediaType": "video",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "Envío en 24/48 horas"
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    },
+    {
+      "id": "1792783578033301",
+      "pageName": "Rcocio.com",
+      "pageId": "117142334583028",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "ES",
+      "keyword": "suplementos adelgazar",
+      "copyText": "Pack FitBody más completo de RcOcio. Batido que te aporta todo lo que necesitas.",
+      "title": "Envío en 24/48 horas",
+      "description": "",
+      "callToAction": "Get offer",
+      "imageUrl": null,
+      "videoUrl": "https://video-waw2-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQNAIE3P2HfZKSgbxgblhsBRiy_acRTLTyB3WxO5fIqDG0nHcsxj-2SjbeVOvuwBK7qnlJ6_-dqrk7xth6edO0_QgOwZhO37bItGctM281I5Rw.mp4?_nc_cat=104&_nc_sid=5e9851&_nc_ht=video-waw2-1.xx.fbcdn.net&_nc_ohc=H_qV_QrMRNMQ7kNvwFMFvIf&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjEzNzI0MTkzMTcxMTkyMTUsImFzc2V0X2FnZV9kYXlzIjo0NTcsInZpX3VzZWNhc2VfaWQiOjEwNzk5LCJkdXJhdGlvbl9zIjo3MDMsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=811fc2f928cebec5&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC9CMjQ5ODNFNEI0NDZEQ0MzOTVEMDM1RUE3RkRDQUI4QV9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhg6cGFzc3Rocm91Z2hfZXZlcnN0b3JlL0dGaUxteHpQMWs2OEZKTURBS2hNZGlLSVotQUdidjRHQUFBRhUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACbe44neqI3wBBUCKAJDMywXQIX4zMzMzM0YGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUAZd6oAQA&_nc_gid=t3sxlIBafQXFDgvJlebyNg&_nc_ss=7f289&_nc_zt=28&oh=00_Af5q0HyoeXeJ4koNR47LkaDqTusApsG0wNl1JZF2hVm4gA&oe=6A1A7068",
+      "mediaType": "video",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "Envío en 24/48 horas"
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    },
+    {
+      "id": "1650446139163154",
+      "pageName": "Rcocio.com",
+      "pageId": "117142334583028",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "ES",
+      "keyword": "suplementos adelgazar",
+      "copyText": "Pack más completo de RcOcio. Batido que te aporta todo lo que necesitas.",
+      "title": "Envío en 24/48 horas",
+      "description": "",
+      "callToAction": "Get offer",
+      "imageUrl": null,
+      "videoUrl": "https://video-waw2-2.xx.fbcdn.net/o1/v/t2/f2/m366/AQNQbMstHxY0XXfCsX7H1vVZoGtnZYCDfEHzpjEkh2epz5BKLoFeUSCq76pby6ya7-iXIPcM9jMqp-0K-KRxrbd1nmqZzazP1ttWgkkizhV6Rg.mp4?_nc_cat=105&_nc_sid=5e9851&_nc_ht=video-waw2-2.xx.fbcdn.net&_nc_ohc=mwntZqErT54Q7kNvwHC9DL0&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjE0NzgzNzA5MDMxMjI3NDIsImFzc2V0X2FnZV9kYXlzIjo0NzUsInZpX3VzZWNhc2VfaWQiOjEwNzk5LCJkdXJhdGlvbl9zIjo0NzcsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=62e8b3b4d774de1c&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC9DNDRCODdFNDdEMTgzQ0FCNzJDMzdDOTQwMEUzRDhCRl9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhg6cGFzc3Rocm91Z2hfZXZlcnN0b3JlL0dCUUhZeHcyTVAySW1FWUdBR3lvZDhMMDlqRnRidjRHQUFBRhUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACbsjLfIwaSgBRUCKAJDMywXQH3Tul41P30YGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUAZd6oAQA&_nc_gid=t3sxlIBafQXFDgvJlebyNg&_nc_ss=7f289&_nc_zt=28&oh=00_Af5Em5OsdWLMQClt3HWaCKj5xuGbc1OtIOPJ6weZHuR5bA&oe=6A1A597F",
+      "mediaType": "video",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "Envío en 24/48 horas"
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    },
+    {
+      "id": "1912575972693602",
+      "pageName": "Baïa Food Co.",
+      "pageId": "222812934765629",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "ES",
+      "keyword": "suplementos adelgazar",
+      "copyText": "Nueva marca en la farmacia… ¡y viene pisando fuerte! ✨\n\nDescubre BAIA FOOD @baiafoodco y su revolucionario formato creamer: suplementos en polvo que añades a tu café o bebida favorita para cuidarte sin pastillas y con un extra de sabor y cremosidad ☕\n\n🌿 Microbiotic – Bienestar digestivo\n🌸 Beauty – Piel, cabello y uñas\n💪 Fit Blend – Control del apetito y proteína\n🌙 Dreamer – Relax y mejor descanso\n\n¿Con cuál te quedas? 👀💛",
+      "title": "",
+      "description": "",
+      "callToAction": "Shop now",
+      "imageUrl": null,
+      "videoUrl": "https://video-waw2-1.xx.fbcdn.net/o1/v/t2/f2/m69/AQOlrm7aP-AXUgZQP0PAmauVs4H3Sc8pEFPMDR8N9BGxDWCDV_bofyjYUBWRJRW7bQCc-Wh4lez8K5aJs_L3_CKz.mp4?strext=1&_nc_cat=110&_nc_sid=5e9851&_nc_ht=video-waw2-1.xx.fbcdn.net&_nc_ohc=IUk-2CriEK8Q7kNvwGBFB2c&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MTgzMTUxMTUxNzcyNDk3NDIsImFzc2V0X2FnZV9kYXlzIjoxMDEsInZpX3VzZWNhc2VfaWQiOjEwMDk5LCJkdXJhdGlvbl9zIjoxMTAsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=e178dbca82bda97f&_nc_vs=HBksFQIYOnBhc3N0aHJvdWdoX2V2ZXJzdG9yZS9HSktVamlWaWk5RXVCeXNEQU41eVltQm5YeWxkYnNwVEFRQUYVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyLzdBNEU5MkE0MUY5NjA1MTEwMDQ4MjdGQUYwN0MzREFEX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACacr8jigeCIQRUCKAJDMywXQFuu6XjU_fQYEmRhc2hfYmFzZWxpbmVfMV92MREAdQBl5p0BAA&_nc_gid=t3sxlIBafQXFDgvJlebyNg&_nc_ss=7f289&_nc_zt=28&oh=00_Af7KHG1yDkVlyUM_nd47fWN29K7jyAZH4yGoXrxw_4M8TQ&oe=6A1A5CF0",
+      "mediaType": "video",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "Hook não extraído"
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    },
+    {
+      "id": "1378064397016992",
+      "pageName": "Rcocio.com",
+      "pageId": "117142334583028",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "ES",
+      "keyword": "suplementos adelgazar",
+      "copyText": "Pack FitBody más completo de RcOcio. Batido que te aporta todo lo que necesitas.",
+      "title": "Envío en 24/48 horas",
+      "description": "",
+      "callToAction": "Get offer",
+      "imageUrl": null,
+      "videoUrl": "https://video-waw2-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQNAIE3P2HfZKSgbxgblhsBRiy_acRTLTyB3WxO5fIqDG0nHcsxj-2SjbeVOvuwBK7qnlJ6_-dqrk7xth6edO0_QgOwZhO37bItGctM281I5Rw.mp4?_nc_cat=104&_nc_sid=5e9851&_nc_ht=video-waw2-1.xx.fbcdn.net&_nc_ohc=H_qV_QrMRNMQ7kNvwFMFvIf&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjEzNzI0MTkzMTcxMTkyMTUsImFzc2V0X2FnZV9kYXlzIjo0NTcsInZpX3VzZWNhc2VfaWQiOjEwNzk5LCJkdXJhdGlvbl9zIjo3MDMsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=811fc2f928cebec5&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC9CMjQ5ODNFNEI0NDZEQ0MzOTVEMDM1RUE3RkRDQUI4QV9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhg6cGFzc3Rocm91Z2hfZXZlcnN0b3JlL0dGaUxteHpQMWs2OEZKTURBS2hNZGlLSVotQUdidjRHQUFBRhUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACbe44neqI3wBBUCKAJDMywXQIX4zMzMzM0YGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUAZd6oAQA&_nc_gid=t3sxlIBafQXFDgvJlebyNg&_nc_ss=7f289&_nc_zt=28&oh=00_Af5q0HyoeXeJ4koNR47LkaDqTusApsG0wNl1JZF2hVm4gA&oe=6A1A7068",
+      "mediaType": "video",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "Envío en 24/48 horas"
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    },
+    {
+      "id": "812999561453516",
+      "pageName": "Rcocio.com",
+      "pageId": "117142334583028",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "ES",
+      "keyword": "suplementos adelgazar",
+      "copyText": "Batido para conseguir tus objetivos con mayor facilidad y rapidez. Fabricado en España",
+      "title": "Pago contrareembolso gratis",
+      "description": "",
+      "callToAction": "Get offer",
+      "imageUrl": null,
+      "videoUrl": "https://video-waw2-2.xx.fbcdn.net/o1/v/t2/f2/m366/AQMEYMGod2pn2slfxkN97yOBDnSZRf9SwwRK9lvEulqCF2qMFwjBTHbQekClEvz7NlS4bruEojcgOC7BCjfldHIKxD4j-4ev1xmLOJPwSuAfyQ.mp4?_nc_cat=106&_nc_sid=5e9851&_nc_ht=video-waw2-2.xx.fbcdn.net&_nc_ohc=fNVp1o_hVcUQ7kNvwHYTfqc&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjE0NDgwODQyMTY0ODk1NjksImFzc2V0X2FnZV9kYXlzIjoyMTksInZpX3VzZWNhc2VfaWQiOjEwNzk5LCJkdXJhdGlvbl9zIjozNDEsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=d69c7fca6270067c&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC84NTQ3QUFCQUVFQTg0QURCRTYxQzdDRTJCNkYwNDdBRF9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhhAZmJfcGVybWFuZW50L0QwNDEwOEM3NjM2MUEzQTcwNkJDQTE0NEI4RTdBQzhFX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACbCmaGVzMGSBRUCKAJDMywXQHVgAAAAAAAYGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUAZd6oAQA&_nc_gid=t3sxlIBafQXFDgvJlebyNg&_nc_ss=7f289&_nc_zt=28&oh=00_Af7yU8RZ0Qe6aN-lhFLY8ZD-s7dM67_cKgN7yNqWLlpupg&oe=6A1A562A",
+      "mediaType": "video",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "Pago contrareembolso gratis"
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    },
+    {
+      "id": "651091834019448",
+      "pageName": "Rcocio.com",
+      "pageId": "117142334583028",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "ES",
+      "keyword": "suplementos adelgazar",
+      "copyText": "Pack más completo de RcOcio. Batido que te aporta todo lo que necesitas.",
+      "title": "Pago contrareembolso gratis",
+      "description": "",
+      "callToAction": "Get offer",
+      "imageUrl": null,
+      "videoUrl": "https://video-waw2-2.xx.fbcdn.net/o1/v/t2/f2/m366/AQNmiNJyd0Hb-5zbT4xHfed_m1cAUrsLZX0rJACyqXbDRzyvS8LbHFLgT4pUxn8XQ0yAzTXAtkQDJGqzTaYg4urDWQGucabIyXDv5Z3DYuD71g.mp4?_nc_cat=107&_nc_sid=5e9851&_nc_ht=video-waw2-2.xx.fbcdn.net&_nc_ohc=4fDqEiZ-RkoQ7kNvwEfKRWj&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjE2NjU5MjY0MDA2NzE3ODQsImFzc2V0X2FnZV9kYXlzIjo0NzUsInZpX3VzZWNhc2VfaWQiOjEwNzk5LCJkdXJhdGlvbl9zIjo0ODYsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=86184e26715a34b5&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC9DOTRBMkVDNUVBMDVEQjVGRkE3OTA4NjY5OUExOTQ4Ml9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhg6cGFzc3Rocm91Z2hfZXZlcnN0b3JlL0dFM3pZQnhnSVdFeXdkTURBQ1B3V2I0U3BPSXpidjRHQUFBRhUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACbQgKz11sn1BRUCKAJDMywXQH5rul41P30YGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUAZd6oAQA&_nc_gid=t3sxlIBafQXFDgvJlebyNg&_nc_ss=7f289&_nc_zt=28&oh=00_Af7ZjkJtOinEorDFhZgXmRvu5uYrZLYF0jPPwLfkOOcC1Q&oe=6A1A4461",
+      "mediaType": "video",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "Pago contrareembolso gratis"
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    },
+    {
+      "id": "1546586096754850",
+      "pageName": "La Esquina Española",
+      "pageId": "107740027598082",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "ES",
+      "keyword": "suplementos adelgazar",
+      "copyText": "Batido sustitutivo de comida con proteina y colágeno. \n💰 1,60 euros por comida\n👅 Sabor delicioso\n🇪🇸Fabricado en España",
+      "title": "Pago contrareembolso gratis",
+      "description": "",
+      "callToAction": "Get offer",
+      "imageUrl": null,
+      "videoUrl": "https://video-waw2-2.xx.fbcdn.net/o1/v/t2/f2/m366/AQPZULtRLONd4sfPg0mweq7msTH81-YbUhl_YfU3nyqsbAQwn34nzPdWA52sBTWct4ouQuL2qspfS1HP53XjvkOACGAI5MjyHenJU2kuuLpYFw.mp4?_nc_cat=107&_nc_sid=5e9851&_nc_ht=video-waw2-2.xx.fbcdn.net&_nc_ohc=fZwhOA-CIDQQ7kNvwFWANru&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjIxNTg3MjI2MTc4NzMyNjUsImFzc2V0X2FnZV9kYXlzIjo0NTIsInZpX3VzZWNhc2VfaWQiOjEwNzk5LCJkdXJhdGlvbl9zIjozODMsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=26defd25a9dd9c1d&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC80MzQ3NzVBNUEwRkZDODM5Mzk3QjU2RDlGNzY4Mzg5Rl9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhg6cGFzc3Rocm91Z2hfZXZlcnN0b3JlL0dFaDByaHdoU3hncERNVUJBR1c1Qzl2VGt0d2VidjRHQUFBRhUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACbizfTsmNbVBxUCKAJDMywXQHf4hysCDEoYGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUAZd6oAQA&_nc_gid=t3sxlIBafQXFDgvJlebyNg&_nc_ss=7f289&_nc_zt=28&oh=00_Af7Rs9Kv4oHTjpsJpU8OuwevH_iW8tD3WHkn4CaFpkumkg&oe=6A1A6F4D",
+      "mediaType": "video",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "Pago contrareembolso gratis"
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    },
+    {
+      "id": "1275961033987795",
+      "pageName": "Rcocio.com",
+      "pageId": "117142334583028",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "ES",
+      "keyword": "suplementos adelgazar",
+      "copyText": "Batido sustitutivo de comida con proteina y colágeno. \n🇪🇸Fabricado en España",
+      "title": "Envío en 24/48 horas",
+      "description": "",
+      "callToAction": "Get offer",
+      "imageUrl": null,
+      "videoUrl": "https://video-waw2-2.xx.fbcdn.net/o1/v/t2/f2/m366/AQMtpsRxX7SeUlvuhUNq8AkMh_-p7wFxjIue9qbb7FdvyCuG4GAU0SayI7JKczA0ELSp4u9X_7-3rMzXgjUNecqrKozDSstvUH_c2TtszRGDoA.mp4?_nc_cat=103&_nc_sid=5e9851&_nc_ht=video-waw2-2.xx.fbcdn.net&_nc_ohc=RPZbmg71-yMQ7kNvwERzVn8&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjEwOTUxODg0NDI1NzY1NTksImFzc2V0X2FnZV9kYXlzIjoyODQsInZpX3VzZWNhc2VfaWQiOjEwNzk5LCJkdXJhdGlvbl9zIjo3MjYsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=fd50ec40d7950efb&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC81RDRBRkFFQjIyNzREMEYwRDQzQ0I0MUQzQjUzRjRBNF9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhhAZmJfcGVybWFuZW50Lzk3NEEzQzIwNThEN0E5MjU3M0ZGMjhDQ0I2RTlGM0E3X2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACbe2qfhrYTyAxUCKAJDMywXQIa3MzMzMzMYGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUAZd6oAQA&_nc_gid=t3sxlIBafQXFDgvJlebyNg&_nc_ss=7f289&_nc_zt=28&oh=00_Af4NafFDNwJi0Q-hKHaBqhsdRon9G5FRb_GTK0ZR00A9Ow&oe=6A1A3DDD",
+      "mediaType": "video",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "Envío en 24/48 horas"
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    },
+    {
+      "id": "419394977934830",
+      "pageName": "La Esquina Española",
+      "pageId": "107740027598082",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "ES",
+      "keyword": "suplementos adelgazar",
+      "copyText": "Batido sustitutivo de comida con proteina y colágeno. \n💰 1,60 euros por comida\n🌱🥛 Opción vegana y sin lactosa\n👅 Sabor delicioso\n🇪🇸Fabricado en España",
+      "title": "Pago contrareembolso gratis",
+      "description": "",
+      "callToAction": "Get offer",
+      "imageUrl": null,
+      "videoUrl": "https://video-waw2-1.xx.fbcdn.net/o1/v/t2/f2/m69/AQMisQxQIcyKegu9qtldtSJ4nenqY6js_RaqD3NgqaZwpL6jLXRPGOW9YVcTnHUnDRVD-MDjBdjMwbHgrbws-a2z.mp4?strext=1&_nc_cat=111&_nc_sid=8bf8fe&_nc_ht=video-waw2-1.xx.fbcdn.net&_nc_ohc=UDcVCAq9Ni8Q7kNvwHYnVWe&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuMzYwLnN2ZV9zZCIsInhwdl9hc3NldF9pZCI6MTIyNzEyMTM5NTI0ODAwNCwiYXNzZXRfYWdlX2RheXMiOjU1OCwidmlfdXNlY2FzZV9pZCI6MTA3OTksImR1cmF0aW9uX3MiOjEzODAsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&_nc_gid=t3sxlIBafQXFDgvJlebyNg&_nc_ss=7f289&_nc_zt=28&oh=00_Af5hevDjE2-A46lK59gGnKzTBJu_Oo4gWM8NoHqiw5PCmg&oe=6A1A6917",
+      "mediaType": "video",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "Pago contrareembolso gratis"
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    },
+    {
+      "id": "503610762777401",
+      "pageName": "La Esquina Española",
+      "pageId": "107740027598082",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "ES",
+      "keyword": "suplementos adelgazar",
+      "copyText": "Batido sustitutivo de comida con proteina y colágeno. \n💰 1,60 euros por comida\n👅 Sabor delicioso\n🇪🇸Fabricado en España",
+      "title": "Pago contrareembolso gratis",
+      "description": "",
+      "callToAction": "Get offer",
+      "imageUrl": null,
+      "videoUrl": "https://video-waw2-2.xx.fbcdn.net/o1/v/t2/f2/m366/AQPZULtRLONd4sfPg0mweq7msTH81-YbUhl_YfU3nyqsbAQwn34nzPdWA52sBTWct4ouQuL2qspfS1HP53XjvkOACGAI5MjyHenJU2kuuLpYFw.mp4?_nc_cat=107&_nc_sid=5e9851&_nc_ht=video-waw2-2.xx.fbcdn.net&_nc_ohc=fZwhOA-CIDQQ7kNvwFWANru&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjIxNTg3MjI2MTc4NzMyNjUsImFzc2V0X2FnZV9kYXlzIjo0NTIsInZpX3VzZWNhc2VfaWQiOjEwNzk5LCJkdXJhdGlvbl9zIjozODMsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=26defd25a9dd9c1d&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC80MzQ3NzVBNUEwRkZDODM5Mzk3QjU2RDlGNzY4Mzg5Rl9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhg6cGFzc3Rocm91Z2hfZXZlcnN0b3JlL0dFaDByaHdoU3hncERNVUJBR1c1Qzl2VGt0d2VidjRHQUFBRhUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACbizfTsmNbVBxUCKAJDMywXQHf4hysCDEoYGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUAZd6oAQA&_nc_gid=t3sxlIBafQXFDgvJlebyNg&_nc_ss=7f289&_nc_zt=28&oh=00_Af7Rs9Kv4oHTjpsJpU8OuwevH_iW8tD3WHkn4CaFpkumkg&oe=6A1A6F4D",
+      "mediaType": "video",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "Pago contrareembolso gratis"
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    },
+    {
+      "id": "1255551899872338",
+      "pageName": "Rcocio.com",
+      "pageId": "117142334583028",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "ES",
+      "keyword": "suplementos adelgazar",
+      "copyText": "Café Fitbody con beneficios reales para tu cuerpo",
+      "title": "Envío en 24/48 horas",
+      "description": "",
+      "callToAction": "Get offer",
+      "imageUrl": null,
+      "videoUrl": "https://video-waw2-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQNyq4HrBIdBJN_lQqFuLn8aQ2X0do79gHDWV3VsQQmMyq2nm00cALDXU56PFIsy1DibUuCIxcKKugjcktPLNXisFaTNUyv_2bEXFVO2NbIXlQ.mp4?_nc_cat=104&_nc_sid=5e9851&_nc_ht=video-waw2-1.xx.fbcdn.net&_nc_ohc=2bkMTtoGNywQ7kNvwFPzp2m&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjE0NTM4Njc4OTk2ODExOTIsImFzc2V0X2FnZV9kYXlzIjo5OCwidmlfdXNlY2FzZV9pZCI6MTA3OTksImR1cmF0aW9uX3MiOjE2NCwidXJsZ2VuX3NvdXJjZSI6Ind3dyJ9&ccb=17-1&vs=182a6c5a3bc154b3&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC81NjQwMUE1QTk2QUVGRDE5MjAyOUZBRDQ5ODAzMzlBMF9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhhAZmJfcGVybWFuZW50L0VBNDdBNDA3NUQyNjg1QUJCMDExMTFCN0U5QTgyRkFGX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACbQ5q_7n5KVBRUCKAJDMywXQGSgAAAAAAAYGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUAZd6oAQA&_nc_gid=t3sxlIBafQXFDgvJlebyNg&_nc_ss=7f289&_nc_zt=28&oh=00_Af5zdqqmVb5tnEFqzv4c3aKbF1RklYGBlsoFi-q8wql7Pw&oe=6A1A463C",
+      "mediaType": "video",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "Envío en 24/48 horas"
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    },
+    {
+      "id": "1201208368662886",
+      "pageName": "Rcocio.com",
+      "pageId": "117142334583028",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "ES",
+      "keyword": "suplementos adelgazar",
+      "copyText": "Café Fitbody con beneficios reales para tu cuerpo",
+      "title": "Envío en 24/48 horas",
+      "description": "",
+      "callToAction": "Get offer",
+      "imageUrl": null,
+      "videoUrl": "https://video-waw2-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQPG9GLc_X3l9A7Ikz-7-bkv3EshU-FKAt3VmM6JnCySMZh3bmLu7YqZ5VBzSOtXbM3ZrrcEfliHiF6L46Gn-6cstIi-tHJ8-3Swvh8LbCRQPA.mp4?_nc_cat=109&_nc_sid=5e9851&_nc_ht=video-waw2-1.xx.fbcdn.net&_nc_ohc=4S3dadPt98EQ7kNvwE7Hx3N&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjEyNTg2MzAxMTYxMjM3MjQsImFzc2V0X2FnZV9kYXlzIjo5OCwidmlfdXNlY2FzZV9pZCI6MTA3OTksImR1cmF0aW9uX3MiOjI3MywidXJsZ2VuX3NvdXJjZSI6Ind3dyJ9&ccb=17-1&vs=3be2156770cd5e27&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC9ENjRFM0U0MjcyNURERTk1NDg1OUJBQTJCODAwOURBRF9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhhAZmJfcGVybWFuZW50LzA1NDI2MTg5NEFDMjc3MkVEOUE0Q0Q1ODYxMDI1QzhFX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACaYkc2P9a28BBUCKAJDMywXQHERmZmZmZoYGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUAZd6oAQA&_nc_gid=t3sxlIBafQXFDgvJlebyNg&_nc_ss=7f289&_nc_zt=28&oh=00_Af5SUu8exnzamjAcAhiTgqPx6uG3X8XOUnig81KuNIyFRA&oe=6A1A4407",
+      "mediaType": "video",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "Envío en 24/48 horas"
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    },
+    {
+      "id": "2121187658717960",
+      "pageName": "Vikika",
+      "pageId": "571311176269491",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "ES",
+      "keyword": "suplementos adelgazar",
+      "copyText": "Tiene que haber razones por las que tomamos suplementos, no puede ser que los tomemos porque está de moda o porque tenemos al influ de turno contándonos los beneficios del diente de león y lo compramos. Es importante además de saber para que, elegir bien 👍🏼",
+      "title": "",
+      "description": "",
+      "callToAction": "Learn more",
+      "imageUrl": null,
+      "videoUrl": "https://video-waw2-1.xx.fbcdn.net/o1/v/t2/f2/m86/AQP6-EQZvENEA4W7eQfPvCTDSWjOFTRHYSrqxy7y9VEDwxubAUh9HkonkZgnas1ttBITnEeRRpy1Kr8RG7l458n71rGxiw6-cozLzZk.mp4?_nc_cat=109&_nc_sid=5e9851&_nc_ht=video-waw2-1.xx.fbcdn.net&_nc_ohc=_X_1MfeZK9MQ7kNvwGrkii-&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MTc5MzgxMTgxNTExMTk4OTksImFzc2V0X2FnZV9kYXlzIjoxMDksInZpX3VzZWNhc2VfaWQiOjEwMDk5LCJkdXJhdGlvbl9zIjoxNDMsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=f690483ddcdaf29b&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC83MzRBQ0Y4ODU1MUMyNkZGNzQyNjhFMkUzNURDNjg5MV92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyL0RDNENCQzgwNEU2NDY0NzA3QzVFRTQ5QkNBNzU5OEEzX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACa2kLGF86fdPxUCKAJDMywXQGH7tkWhysEYEmRhc2hfYmFzZWxpbmVfMV92MREAdQBl5p0BAA&_nc_gid=t3sxlIBafQXFDgvJlebyNg&_nc_ss=7f289&_nc_zt=28&oh=00_Af6HnijELlrSjC17kV8M5xBQ2SH0L2vcYM5fPt1cDZVItA&oe=6A16561A",
+      "mediaType": "video",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "Hook não extraído"
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    },
+    {
+      "id": "2064000314113720",
+      "pageName": "La Esquina Española",
+      "pageId": "107740027598082",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "ES",
+      "keyword": "suplementos adelgazar",
+      "copyText": "Batido sustitutivo de comida con proteina y colágeno. \n💰 1,60 euros por comida\n👅 Sabor delicioso\n🇪🇸Fabricado en España",
+      "title": "Pago contrareembolso gratis",
+      "description": "",
+      "callToAction": "Get offer",
+      "imageUrl": null,
+      "videoUrl": "https://video-waw2-2.xx.fbcdn.net/o1/v/t2/f2/m366/AQPZlNFaOMCQ9JXfVSV8PUiHL8u_XrRK1pv4uJMuhlCWWjNQcLhtIr9PfS4OxINr2Ru_xswVV_T4qiWZVcJnhtMcWMC5oG5OnDrR7-XAbbrjLQ.mp4?_nc_cat=102&_nc_sid=5e9851&_nc_ht=video-waw2-2.xx.fbcdn.net&_nc_ohc=shZE-L_YdN4Q7kNvwF0gz4d&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjYwODA5MTE0NTMzMzQ4MywiYXNzZXRfYWdlX2RheXMiOjQ1OCwidmlfdXNlY2FzZV9pZCI6MTA3OTksImR1cmF0aW9uX3MiOjUzOSwidXJsZ2VuX3NvdXJjZSI6Ind3dyJ9&ccb=17-1&vs=a72b060a5b6ac4f&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC80NzRBM0FDQjM3NzQzRTFCMDk3NzVGNTIxQjA3Q0U4RV9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhg6cGFzc3Rocm91Z2hfZXZlcnN0b3JlL0dKSWRxaHhTZVA0VmZIb0RBSk5BOC13TGsxZEFidjRHQUFBRhUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACbWq6uLyMOUAhUCKAJDMywXQIDbVgQYk3UYGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUAZd6oAQA&_nc_gid=t3sxlIBafQXFDgvJlebyNg&_nc_ss=7f289&_nc_zt=28&oh=00_Af6mB-SlaYxikvSZkeBKvg5vS_p-BiXeK7-gYMQNcggFHA&oe=6A1A46D2",
+      "mediaType": "video",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "Pago contrareembolso gratis"
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    },
+    {
+      "id": "1327749962198540",
+      "pageName": "Patricia Davidson Nutrición y Pérdida de Peso",
+      "pageId": "675155382359035",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "ES",
+      "keyword": "suplementos adelgazar",
+      "copyText": "Después de los 40, todo cambia. \n\nHormonas, energía, ánimo… y sé que no es fácil.\n\nPor eso creé un método pensando en nosotras.\n\n👉 Lo tienes en el link de mi bio.",
+      "title": "",
+      "description": "",
+      "callToAction": "Visit Instagram profile",
+      "imageUrl": null,
+      "videoUrl": "https://video-waw2-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQNBXuetUOSSE5g3PanO-y-_9YrqjdFcqA7BhJJCJT1DOed9pqo7sZy-V9GQGwrmlMg3dYo4y0ucBOj49j0DggcDxgmEvgxT1gKBlTXEUQ.mp4?_nc_cat=110&_nc_sid=8bf8fe&_nc_ht=video-waw2-1.xx.fbcdn.net&_nc_ohc=OIq-CW4jmtwQ7kNvwHe5DXr&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuMzYwLnN2ZV9zZCIsInhwdl9hc3NldF9pZCI6NzU4OTk5NTM2ODg4ODYzLCJhc3NldF9hZ2VfZGF5cyI6MjU4LCJ2aV91c2VjYXNlX2lkIjoxMDEwMSwiZHVyYXRpb25fcyI6NjEsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&_nc_gid=t3sxlIBafQXFDgvJlebyNg&_nc_ss=7f289&_nc_zt=28&oh=00_Af6Y_ZXLo3hGdBQQhGPUD1q9oQnu4_qdNP-UAdnYy6HStg&oe=6A1A3F90",
+      "mediaType": "video",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "Hook não extraído"
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    },
+    {
+      "id": "1178043514220708",
+      "pageName": "Rcocio.com",
+      "pageId": "117142334583028",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "ES",
+      "keyword": "suplementos adelgazar",
+      "copyText": "Pack personalizado Fitbody, crea tu pack con los productos que quieras. Sin limitaciones",
+      "title": "Envío en 24/48 horas",
+      "description": "",
+      "callToAction": "Get offer",
+      "imageUrl": null,
+      "videoUrl": "https://video-waw2-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQOMoOmWlwB-gtyry-H6MxsE4yElOoVo87JC3mJTTKq8LeJLmL6WSqv6aS7F8SqOnvAE8HVKdEdGrb3pedH6DzHwCbV3rV0fAPGgbeDoJ3F3jA.mp4?_nc_cat=108&_nc_sid=5e9851&_nc_ht=video-waw2-1.xx.fbcdn.net&_nc_ohc=MjtY3qWziQEQ7kNvwGbDjtB&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjIyODk0MjA3MDQ4ODMzMjUsImFzc2V0X2FnZV9kYXlzIjo4OSwidmlfdXNlY2FzZV9pZCI6MTA3OTksImR1cmF0aW9uX3MiOjk1MSwidXJsZ2VuX3NvdXJjZSI6Ind3dyJ9&ccb=17-1&vs=bb8dd930d6b4da4&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC9EQTQ2OTZCNDZCOUZFOUExQzBCRkZGMUIyMkZDMDc5Nl9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhhAZmJfcGVybWFuZW50L0EyNDU0RTVFQ0ExQTI5NEM2NEE0QjIxODBDQUYwOEE4X2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACb6idm96Y2RCBUCKAJDMywXQI29mZmZmZoYGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUAZd6oAQA&_nc_gid=t3sxlIBafQXFDgvJlebyNg&_nc_ss=7f289&_nc_zt=28&oh=00_Af5qbVwkLQelUAJIE4Ko4O2i-iS99akCcZDBqtjEQqPCiA&oe=6A1A4F74",
+      "mediaType": "video",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "Envío en 24/48 horas"
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    },
+    {
+      "id": "1117644117183682",
+      "pageName": "Rcocio.com",
+      "pageId": "117142334583028",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "ES",
+      "keyword": "suplementos adelgazar",
+      "copyText": "Descubre el poder del Magnesio con Triptófano, tu aliado natural para el bienestar diario. ¡Recupera tu equilibrio físico y mental!",
+      "title": "Pago contrareembolso gratis",
+      "description": "",
+      "callToAction": "Get offer",
+      "imageUrl": null,
+      "videoUrl": "https://video-waw2-2.xx.fbcdn.net/o1/v/t2/f2/m366/AQMAF5Es0emrenKP3JmWNOy-32SUn77yGYqOLogKdamTzWTejxetOYT34izOOOxyx6l1Vw33L3PyqBdH8-0l_7sd1ZiFCLdXhObw-i7Yi5G27g.mp4?_nc_cat=107&_nc_sid=5e9851&_nc_ht=video-waw2-2.xx.fbcdn.net&_nc_ohc=WhN5J7aNDXMQ7kNvwE0iP2m&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjE1MTY0NzczMTYxNzE2NDUsImFzc2V0X2FnZV9kYXlzIjoyMjQsInZpX3VzZWNhc2VfaWQiOjEwNzk5LCJkdXJhdGlvbl9zIjozMTMsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=edf97b0614234ee7&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC82NjQzQUM2QTk4MEQzRThGRDI5N0Y4NDYzMDhGNkM5OF9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhhAZmJfcGVybWFuZW50LzlBNEI5MDgzRDQyNDFERTZCRTk0Q0Y3QzVEQzMzNkE4X2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACb6ney7zM6xBRUCKAJDMywXQHOZmZmZmZoYGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUAZd6oAQA&_nc_gid=t3sxlIBafQXFDgvJlebyNg&_nc_ss=7f289&_nc_zt=28&oh=00_Af7UKSjXEok8f8qxyst0JuPQItQrYoCOE8pS-zQAI49X7g&oe=6A1A6345",
+      "mediaType": "video",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "Pago contrareembolso gratis"
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    },
+    {
+      "id": "656040793560120",
+      "pageName": "La Esquina Española",
+      "pageId": "107740027598082",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "ES",
+      "keyword": "suplementos adelgazar",
+      "copyText": "Batido sustitutivo de comida con proteina y colágeno. \n💰 1,60 euros por comida\n👅 Sabor delicioso\n🇪🇸Fabricado en España",
+      "title": "Pago contrareembolso gratis",
+      "description": "",
+      "callToAction": "Get offer",
+      "imageUrl": null,
+      "videoUrl": "https://video-waw2-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQNjWjtEOZNXI2j8A4ExMIy6jhV2O8u20Th7cpyXl7ZoJYMO7YoFl4cdmpQohMdpRB5BDVAWVrLrUNwygrNrifhnofrIEfoWU4tlMWHnSLsWCA.mp4?_nc_cat=111&_nc_sid=5e9851&_nc_ht=video-waw2-1.xx.fbcdn.net&_nc_ohc=G3VDar4gFhAQ7kNvwGCb-Hq&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjE2NzkwNTQ2MDI2OTEzMTgsImFzc2V0X2FnZV9kYXlzIjo0NTQsInZpX3VzZWNhc2VfaWQiOjEwNzk5LCJkdXJhdGlvbl9zIjo4OTUsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=8b04cedf4ee19c7b&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC8wNzRGQzMxODQxMDE5NTA5NzBDNTUzMDhBMTE2NjJCQl9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhg6cGFzc3Rocm91Z2hfZXZlcnN0b3JlL0dBQVhyeHljX1JWU2FoZ0VBQklmeFVWbEpmTjlidjRHQUFBRhUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACbsi7fS68X7BRUCKAJDMywXQIv_MzMzMzMYGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUAZd6oAQA&_nc_gid=t3sxlIBafQXFDgvJlebyNg&_nc_ss=7f289&_nc_zt=28&oh=00_Af7Q6eM-WICFIx0SaIbNB-5PrypMZd-Hd01weHDeDogSGQ&oe=6A1A48B1",
+      "mediaType": "video",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "Pago contrareembolso gratis"
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    },
+    {
+      "id": "1649596169059328",
+      "pageName": "Dr. Irene Bretón",
+      "pageId": "124962277356607",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "ES",
+      "keyword": "suplementos adelgazar",
+      "copyText": "“No podíamos creerlo... estas dos fotos fueron tomadas con solo tres meses de diferencia!”\n\nHola a todos, somos Carla (35 años) y Miguel (38 años) de Madrid. ¿Estas fotos? El mismo lugar, la misma pareja... ¡pero vaya transformación!\n\nHace solo unos meses, nos sentíamos completamente agotados. Fatiga constante, mal sueño, confusión mental y esa sensación de no estar bien casi todos los días. Probamos de todo: dietas extremas, rutinas de ejercicio, suplementos caros… pero nada funcionaba a largo plazo.\n\nHasta que encontramos las gotas herbales HHVB® GLP-1. Solo dos gotas, dos veces al día. 100 % a base de plantas. Sin efectos secundarios, sin cambios drásticos en el estilo de vida, sin dietas restrictivas.\n\nEn pocos días, yo me sentía más ligera, con menos hinchazón, y por fin comencé a dormir profundamente.\nMiguel decía que se sentía más lúcido, con más energía, y con ganas reales de volver a moverse.\n\n¿Y lo mejor? Estas sonrisas son auténticas — volvimos a sentirnos bien con nosotros mismos.\n\nAhora volvemos a disfrutar de la vida — viajamos, caminamos, reímos más.\n¿Este paseo por el puerto? Hace unos meses ni siquiera lo habríamos intentado.\n\nEstas fotos no son un típico \"antes y después\" — son una prueba real de lo que puede pasar cuando tu cuerpo empieza a trabajar contigo y no contra ti.\n\nSi últimamente te has sentido apagado, cansado, o simplemente no como antes…\nHHVB podría ser justo lo que estás buscando.\n\nEstamos muy felices de haberle dado una oportunidad. Esa botellita pequeña trajo un cambio enorme a nuestras vidas.",
+      "title": "🇪🇸 Fabricado en España ✅ Certificado CE ⏰ Se envía en 24 horas",
+      "description": "HHVB® GLP-1 Moringa Adelgazar y Salud Gotas Boost ha sido desarrollado por expertos en endocrinología y metabolismo de la Facultad de Medicina de la Universidad de Barcelona.Tras años de investigación, el equipo científico ha profundizado en los mecanismos detrás de la pérdida de peso y el co...",
+      "callToAction": "Shop now",
+      "imageUrl": "https://scontent-waw2-1.xx.fbcdn.net/v/t39.35426-6/505284858_695651880096543_9185056900139410840_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=c53f8f&_nc_ohc=f-NiDtJlArEQ7kNvwFAfBxJ&_nc_oc=AdqxGU9xyzeJDyvzv2PIJz8pH3FWgCPsjkF-6L4ZNkZNeYt2TqHubCbJJWRL6r7t2Zc&_nc_zt=14&_nc_ht=scontent-waw2-1.xx&_nc_gid=t3sxlIBafQXFDgvJlebyNg&_nc_ss=7f289&oh=00_Af4dSM1A1DQZPfx-bd7oby5C7XiyxAvz6e9ikdYxzordBQ&oe=6A1A70AC",
+      "videoUrl": null,
+      "mediaType": "image",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "🇪🇸 Fabricado en España ✅ Certificado CE ⏰ Se envía en 24 horas"
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    },
+    {
+      "id": "1403293307792545",
+      "pageName": "Rcocio.com",
+      "pageId": "117142334583028",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "ES",
+      "keyword": "suplementos adelgazar",
+      "copyText": "Pack más completo de RcOcio. Batido que te aporta todo lo que necesitas.",
+      "title": "Envío en 24/48 horas",
+      "description": "",
+      "callToAction": "Get offer",
+      "imageUrl": null,
+      "videoUrl": "https://video-waw2-1.xx.fbcdn.net/o1/v/t2/f2/m69/AQPwrQ8EN0cAE8xnzdpDEhbEmkEpEVZlzYBen-6sRffo046h8QkrxWb7EnAnP3Kmjriaeuc4UpnStB-MYcp3wlVU.mp4?strext=1&_nc_cat=104&_nc_sid=8bf8fe&_nc_ht=video-waw2-1.xx.fbcdn.net&_nc_ohc=hxWDmSKGBjwQ7kNvwFVXnsG&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuMzYwLnN2ZV9zZCIsInhwdl9hc3NldF9pZCI6MTYyNjQyMTU2NDcwNTYxNywiYXNzZXRfYWdlX2RheXMiOjM5NCwidmlfdXNlY2FzZV9pZCI6MTA3OTksImR1cmF0aW9uX3MiOjgyNSwidXJsZ2VuX3NvdXJjZSI6Ind3dyJ9&ccb=17-1&_nc_gid=t3sxlIBafQXFDgvJlebyNg&_nc_ss=7f289&_nc_zt=28&oh=00_Af5k4prCagjYO_KFxp0j1aDXxrCz7tzprbrb95H0_IC4kg&oe=6A1A6CFA",
+      "mediaType": "video",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "Envío en 24/48 horas"
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    },
+    {
+      "id": "1135627311698630",
+      "pageName": "Rego Lodos",
+      "pageId": "385083144923045",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "ES",
+      "keyword": "suplementos adelgazar",
+      "copyText": "Los GLP-1 son esas inyecciones para adelgazar de las que habla medio país.�Las que te quitan el hambre y te ayudan a perder peso sin guerra psicológica con la nevera.\nPero cuando comes menos, tu cuerpo también recibe menos: menos proteína, menos vitaminas, menos minerales, menos grasa buena… y a veces hasta menos ganas de ir al baño.\n\nPor eso te he preparado este carrusel:�- Para que entiendas qué suplementos sí tienen sentido cuando usas GLP-1�- Para evitar perder músculo, energía y piel firme por el camino��Si estás leyendo esto y pensando:�\nVale Tamar, pero, qué narices son exactamente los GLP-1?\n\nTranquila, que también te lo he dejado explicado en un carrusel anterior (te lo dejo colgado en stories durante las próximas 24 horas, sino te va a tocar buscarlo)",
+      "title": "",
+      "description": "",
+      "callToAction": "Visit Instagram profile",
+      "imageUrl": "https://scontent-waw2-2.xx.fbcdn.net/v/t39.35426-6/591750667_1221842153172765_6644507416923795437_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=c53f8f&_nc_ohc=ke_zzxakdFYQ7kNvwGA84-7&_nc_oc=AdqeLoXUg3nDObvJPkVqLlew0I2Lf8u3TCeL5xA2pWlek_g2bZi8EgGuGV3jWToxKpI&_nc_zt=14&_nc_ht=scontent-waw2-2.xx&_nc_gid=t3sxlIBafQXFDgvJlebyNg&_nc_ss=7f289&oh=00_Af48G6HB3JDnP_cSxOeJ3F7Zbx1ctExragZJ3ewuHa8SyQ&oe=6A1A5C75",
+      "videoUrl": null,
+      "mediaType": "image",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "Hook não extraído"
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    },
+    {
+      "id": "794418140382079",
+      "pageName": "A Sua Farmácia Online",
+      "pageId": "401870489996087",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "PT",
+      "keyword": "suplementos adelgazar",
+      "copyText": "🔥💧 O Kilofit Pic foi desenvolvido para apoiar o seu bem-estar, ajudando a controlar o apetite, estimular o metabolismo e reduzir a retenção de líquidos.\n\n🌿 Fórmula com ingredientes de origem natural\n⚡ Contribui para o controlo de peso\n💧 Ajuda a eliminar toxinas e líquidos em excesso\n🙌 Ideal para quem procura sentir-se mais leve e equilibrado\n💙 Cuide de si, de dentro para fora: www.asuafarmaciaonline.pt/emagrecimento",
+      "title": "Suplementos Emagrecimento | aSuaFarmáciaOnline",
+      "description": "Suplementos que auxiliam no processo de emagrecimento aos melhores preços. Entregas em 24 horas.",
+      "callToAction": "Shop now",
+      "imageUrl": "https://scontent-eze1-1.xx.fbcdn.net/v/t39.35426-6/654308656_2004994966717376_2309065466771418025_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=c53f8f&_nc_ohc=mN_bMK0A6GMQ7kNvwFZnkCO&_nc_oc=AdpNqdpRtTPNPf-0St1kKD_uHqMAunOBpSF9xg9udWenADptkrAEXRPaxZVeC-zdP_8&_nc_zt=14&_nc_ht=scontent-eze1-1.xx&_nc_gid=ZTDyA1GQGRySZPUGiUr4Ng&_nc_ss=7f289&oh=00_Af5J55qZqyXZEI5m38godB-QqLu4FSkVo2H_QHcJnbJj8g&oe=6A1A45E3",
+      "videoUrl": null,
+      "mediaType": "image",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "Suplementos Emagrecimento | aSuaFarmáciaOnline"
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    },
+    {
+      "id": "1459296271852857",
+      "pageName": "Ali Ochandiano - Escuela de Nutrición y Emociones",
+      "pageId": "109145478525556",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "PT",
+      "keyword": "suplementos adelgazar",
+      "copyText": "Después de los 40, y con cambios hormonales, mi cuerpo cambió. \n\nProbé todas las dietas: contar calorías, matarme en el gimnasio, ayunos, suplementos... Bajaba de peso, pero lo recuperaba. \n\nMe sentía agotada, frustrada y atrapada en un cuerpo que no reconocía. 😔\"\n\nPero un día entendí algo que lo cambió todo: el problema no era mi fuerza de voluntad ni mi metabolismo, sino mi relación con mi cuerpo y la comida. \n\nDejé de pelear contra mi cuerpo, aprendí a escucharlo, y mi peso se reguló de manera natural. 🌿\n\nSi tú también te sientes así, quiero enseñarte lo que realmente funciona. \n\nÚnete a mi formación online y descubre el primer paso para adelgazar en pre-menopausia sin dietas, sin restricciones y sin ansiedad.\n\n✨ No es otra dieta. Es el inicio de un cambio real.\n\n🔗 Inscríbete ahora y consigue acceso inmediato. ¡Nos vemos dentro! 💻",
+      "title": "🌿 Adelgaza en pre-menopausia sin planes estrictos ni pasar hambre",
+      "description": "Oferta especial",
+      "callToAction": "Learn more",
+      "imageUrl": null,
+      "videoUrl": "https://video-eze1-2.xx.fbcdn.net/o1/v/t2/f2/m366/AQPtrJAdR1NbzwAv3AyZVmgTxjyiCvPQlolQComGE8p0aKrkLXH6It-3sSJ9ZC3abxknofgcYb1hM76dxWrnta3oQPebIxskKy0VWDTw9Zhwyw.mp4?_nc_cat=103&_nc_sid=5e9851&_nc_ht=video-eze1-2.xx.fbcdn.net&_nc_ohc=-4Hrm5el4-kQ7kNvwGwYQ8E&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjk3MjY5OTQ3ODM3NDE5NSwiYXNzZXRfYWdlX2RheXMiOjQwOSwidmlfdXNlY2FzZV9pZCI6MTA3OTksImR1cmF0aW9uX3MiOjU2LCJ1cmxnZW5fc291cmNlIjoid3d3In0%3D&ccb=17-1&vs=606d681d4b7673f4&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC83MjQ5RjQzMzY5NzUyOUJFQkQwNURGNDcxNkVCOUU5RF9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhg6cGFzc3Rocm91Z2hfZXZlcnN0b3JlL0dLNEtLaDJzeV9nSnRlUUVBRTJsLWJLaUY1WktidjRHQUFBRhUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACbm3I3ux6q6AxUCKAJDMywXQEwd0vGp--cYGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUAZd6oAQA&_nc_gid=ZTDyA1GQGRySZPUGiUr4Ng&_nc_ss=7f289&_nc_zt=28&oh=00_Af7vUPTs59Ze1ChBLWH3OvvQ7sZ66eaWCo0DRRE_fIULmA&oe=6A1A6461",
+      "mediaType": "video",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "🌿 Adelgaza en pre-menopausia sin planes estrictos ni pasar hambre"
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    },
+    {
+      "id": "1352276630043097",
+      "pageName": "Drama ShortMax TV",
+      "pageId": "950209508168417",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "PT",
+      "keyword": "suplementos adelgazar",
+      "copyText": "Mariana no es princesa… pero debe fingir que lo es para volver a casa. 👑❌\nSu misión: conquistar a cinco bestias 🐺🐉🦊\nSu arma: la cocina 🍳\nSu mayor riesgo: el amor 💔\nEntre traiciones, mentiras y un zorro de nueve colas que le roba el alma…\n¿Podrá Mariana ganar la confianza de todos… sin perderse a sí misma? 🖤",
+      "title": "👉 No te pierdas esta historia. Mira la serie completa.",
+      "description": "",
+      "callToAction": "Watch more",
+      "imageUrl": null,
+      "videoUrl": "https://video-eze1-2.xx.fbcdn.net/o1/v/t2/f2/m366/AQMjh0FJLAhfT2q_XRQn5OHza9Nb22MHtQPWvN6Q8c4PYvVVLabGH8-xadIx94FQplq_yX4Xr9lQ6C0pq8ex1G97XTRMk76i1IuW2wUXMWDfYQ.mp4?_nc_cat=103&_nc_sid=5e9851&_nc_ht=video-eze1-2.xx.fbcdn.net&_nc_ohc=HpbfpirmXgYQ7kNvwHn8DM0&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjEyOTI5MjY4NDYzNjg0NDEsImFzc2V0X2FnZV9kYXlzIjo0OCwidmlfdXNlY2FzZV9pZCI6MTAxMzksImR1cmF0aW9uX3MiOjEwNzgsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=1d68fa210fef10ce&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC9FRjQ4MThEQjgxMUZCOEFERUJCRDRDQjgzMjVFQ0NCQl9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhhAZmJfcGVybWFuZW50LzNFNDdFNTYwODk3MDNGMzNDMjgzRTIzNDQ2OTg4MzhGX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACby6q_Wn_rLBBUCKAJDMywXQJDZ3S8an74YGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUAZbaeAQA&_nc_gid=ZTDyA1GQGRySZPUGiUr4Ng&_nc_ss=7f289&_nc_zt=28&oh=00_Af4R9dvpAGjO3bQ8IzX5L-c60QUXc49QYfrlyawiVOlMxw&oe=6A1A436D",
+      "mediaType": "video",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "👉 No te pierdas esta historia. Mira la serie completa."
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    },
+    {
+      "id": "24759206907096387",
+      "pageName": "Ali Ochandiano - Escuela de Nutrición y Emociones",
+      "pageId": "109145478525556",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "PT",
+      "keyword": "suplementos adelgazar",
+      "copyText": "Después de los 40, y con cambios hormonales, mi cuerpo cambió. \n\nProbé todas las dietas: contar calorías, matarme en el gimnasio, ayunos, suplementos... Bajaba de peso, pero lo recuperaba. \n\nMe sentía agotada, frustrada y atrapada en un cuerpo que no reconocía. 😔\"\n\nPero un día entendí algo que lo cambió todo: el problema no era mi fuerza de voluntad ni mi metabolismo, sino mi relación con mi cuerpo y la comida. \n\nDejé de pelear contra mi cuerpo, aprendí a escucharlo, y mi peso se reguló de manera natural. 🌿\n\nSi tú también te sientes así, quiero enseñarte lo que realmente funciona. \n\nÚnete a mi formación online y descubre el primer paso para adelgazar en pre-menopausia sin dietas, sin restricciones y sin ansiedad.\n\n✨ No es otra dieta. Es el inicio de un cambio real.\n\n🔗 Inscríbete ahora y consigue acceso inmediato. ¡Nos vemos dentro! 💻",
+      "title": "🌿 Adelgaza en pre-menopausia sin planes estrictos ni pasar hambre",
+      "description": "Oferta especial",
+      "callToAction": "Learn more",
+      "imageUrl": null,
+      "videoUrl": "https://video-eze1-2.xx.fbcdn.net/o1/v/t2/f2/m366/AQPtrJAdR1NbzwAv3AyZVmgTxjyiCvPQlolQComGE8p0aKrkLXH6It-3sSJ9ZC3abxknofgcYb1hM76dxWrnta3oQPebIxskKy0VWDTw9Zhwyw.mp4?_nc_cat=103&_nc_sid=5e9851&_nc_ht=video-eze1-2.xx.fbcdn.net&_nc_ohc=-4Hrm5el4-kQ7kNvwGwYQ8E&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjk3MjY5OTQ3ODM3NDE5NSwiYXNzZXRfYWdlX2RheXMiOjQwOSwidmlfdXNlY2FzZV9pZCI6MTA3OTksImR1cmF0aW9uX3MiOjU2LCJ1cmxnZW5fc291cmNlIjoid3d3In0%3D&ccb=17-1&vs=606d681d4b7673f4&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC83MjQ5RjQzMzY5NzUyOUJFQkQwNURGNDcxNkVCOUU5RF9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhg6cGFzc3Rocm91Z2hfZXZlcnN0b3JlL0dLNEtLaDJzeV9nSnRlUUVBRTJsLWJLaUY1WktidjRHQUFBRhUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACbm3I3ux6q6AxUCKAJDMywXQEwd0vGp--cYGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUAZd6oAQA&_nc_gid=ZTDyA1GQGRySZPUGiUr4Ng&_nc_ss=7f289&_nc_zt=28&oh=00_Af7vUPTs59Ze1ChBLWH3OvvQ7sZ66eaWCo0DRRE_fIULmA&oe=6A1A6461",
+      "mediaType": "video",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "🌿 Adelgaza en pre-menopausia sin planes estrictos ni pasar hambre"
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    },
+    {
+      "id": "1591406568970617",
+      "pageName": "Sarah Morel",
+      "pageId": "489872744212277",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "PT",
+      "keyword": "suplementos adelgazar",
+      "copyText": "El famoso truco de la gelatina, el secreto de las celebridades para derretir la grasa mientras duermes… 😱",
+      "title": "Haz clic en \"Saber más\" 👉",
+      "description": "Mira la receta",
+      "callToAction": "Learn more",
+      "imageUrl": null,
+      "videoUrl": "https://video-eze1-1.xx.fbcdn.net/o1/v/t2/f2/m412/AQPcgm283SIKZGPsuY9YMdl4V0xrSk6mewIHi8ncetNAi2UanVopID2xoDG34YfWXqAO704OuzXoCEs1_fKp5E4RRfb3yeb05yO625XUbw.mp4?_nc_cat=102&_nc_sid=8bf8fe&_nc_ht=video-eze1-1.xx.fbcdn.net&_nc_ohc=TUn49xJOeV4Q7kNvwFmJUuR&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuMzYwLnN2ZV9zZCIsInhwdl9hc3NldF9pZCI6MTI5NDk3NjM4NTY0Nzk4OCwiYXNzZXRfYWdlX2RheXMiOjE5MCwidmlfdXNlY2FzZV9pZCI6MTA3OTksImR1cmF0aW9uX3MiOjU5OCwidXJsZ2VuX3NvdXJjZSI6Ind3dyJ9&ccb=17-1&_nc_gid=ZTDyA1GQGRySZPUGiUr4Ng&_nc_ss=7f289&_nc_zt=28&oh=00_Af6mn0pkNHFLfRTpHLzxq4GKnpS-9u0jXlW6AagwzsRMrg&oe=6A1A6618",
+      "mediaType": "video",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "Haz clic en \"Saber más\" 👉"
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    },
+    {
+      "id": "780401258366565",
+      "pageName": "Sarah Morel",
+      "pageId": "489872744212277",
+      "startDate": null,
+      "endDate": null,
+      "isActive": true,
+      "country": "PT",
+      "keyword": "suplementos adelgazar",
+      "copyText": "El famoso truco de la gelatina, el secreto de las celebridades para derretir la grasa mientras duermes… 😱",
+      "title": "Haz clic en \"Saber más\" 👉",
+      "description": "Mira la receta",
+      "callToAction": "Learn more",
+      "imageUrl": null,
+      "videoUrl": "https://video-eze1-1.xx.fbcdn.net/o1/v/t2/f2/m412/AQPcgm283SIKZGPsuY9YMdl4V0xrSk6mewIHi8ncetNAi2UanVopID2xoDG34YfWXqAO704OuzXoCEs1_fKp5E4RRfb3yeb05yO625XUbw.mp4?_nc_cat=102&_nc_sid=8bf8fe&_nc_ht=video-eze1-1.xx.fbcdn.net&_nc_ohc=TUn49xJOeV4Q7kNvwFmJUuR&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuMzYwLnN2ZV9zZCIsInhwdl9hc3NldF9pZCI6MTI5NDk3NjM4NTY0Nzk4OCwiYXNzZXRfYWdlX2RheXMiOjE5MCwidmlfdXNlY2FzZV9pZCI6MTA3OTksImR1cmF0aW9uX3MiOjU5OCwidXJsZ2VuX3NvdXJjZSI6Ind3dyJ9&ccb=17-1&_nc_gid=ZTDyA1GQGRySZPUGiUr4Ng&_nc_ss=7f289&_nc_zt=28&oh=00_Af6mn0pkNHFLfRTpHLzxq4GKnpS-9u0jXlW6AagwzsRMrg&oe=6A1A6618",
+      "mediaType": "video",
+      "durationDays": 0,
+      "ai": {
+        "score": 5,
+        "fitLabel": "Médio",
+        "angle": "Benefício Direto",
+        "angleEmoji": "💡",
+        "strategy": "Análise automática não disponível — adicione ANTHROPIC_API_KEY no .env",
+        "whyItWorks": "Este anúncio rodou por 0 dias, indicando performance positiva.",
+        "applicability": "Configure ANTHROPIC_API_KEY para análise detalhada.",
+        "hooks": [
+          "Haz clic en \"Saber más\" 👉"
+        ],
+        "keyEmotions": [
+          "Interesse"
+        ],
+        "redFlags": ""
+      }
+    }
+  ]
+}
