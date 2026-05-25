@@ -1,156 +1,150 @@
-"use client"
-
-import { useState } from 'react'
-import Image from 'next/image'
-import { Star, ShoppingCart, Eye } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
-import { useCart } from '@/lib/cart-context'
-import { type Product } from '@/lib/products'
+'use client';
+import { useState } from 'react';
+import Image from 'next/image';
+import { Star, ShoppingCart, Eye, Check } from 'lucide-react';
+import { useCart } from '@/lib/cart-context';
+import { type Product } from '@/lib/products';
 
 interface ProductCardProps {
-  product: Product
-  onViewDetails: (product: Product) => void
+  product: Product;
+  onViewDetails: (product: Product) => void;
 }
 
+const badgeConfig: Record<string, { text: string; cls: string }> = {
+  'mas-vendido': { text: 'Más vendido', cls: 'bg-gradient-to-r from-emerald-500 to-green-400' },
+  oferta: { text: 'Oferta', cls: 'bg-gradient-to-r from-rose-500 to-pink-500' },
+  nuevo: { text: 'Nuevo', cls: 'bg-gradient-to-r from-violet-500 to-purple-500' },
+};
+
 export function ProductCard({ product, onViewDetails }: ProductCardProps) {
-  const { addItem } = useCart()
-  const [imageError, setImageError] = useState(false)
+  const { addItem } = useCart();
+  const [imageError, setImageError] = useState(false);
+  const [added, setAdded] = useState(false);
 
-  const getBadgeVariant = (badge?: string) => {
-    switch (badge) {
-      case 'mas-vendido':
-        return 'default'
-      case 'oferta':
-        return 'destructive'
-      case 'nuevo':
-        return 'secondary'
-      default:
-        return 'outline'
-    }
-  }
+  const badge = product.badge ? badgeConfig[product.badge] : null;
 
-  const getBadgeText = (badge?: string) => {
-    switch (badge) {
-      case 'mas-vendido':
-        return 'Más vendido'
-      case 'oferta':
-        return 'Oferta'
-      case 'nuevo':
-        return 'Nuevo'
-      default:
-        return ''
-    }
-  }
+  const handleAdd = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    addItem(product);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1800);
+  };
 
   return (
-    <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg">
+    <div
+      className="group relative rounded-2xl bg-white border border-gray-100 overflow-hidden cursor-pointer select-none
+        transition-all duration-[350ms] cubic-bezier(0.34,1.56,0.64,1)
+        hover:-translate-y-3 hover:shadow-[0_20px_60px_rgba(0,0,0,0.13)] hover:border-gray-200"
+      style={{ willChange: 'transform' }}
+      onClick={() => onViewDetails(product)}
+    >
       {/* Badge */}
-      {product.badge && (
-        <div className="absolute left-3 top-3 z-10">
-          <Badge variant={getBadgeVariant(product.badge)} className="font-semibold">
-            {getBadgeText(product.badge)}
-          </Badge>
-        </div>
+      {badge && (
+        <span
+          className={`absolute left-3 top-3 z-10 ${badge.cls} text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-sm`}
+        >
+          {badge.text}
+        </span>
       )}
 
-      <CardContent className="p-0">
-        {/* Image */}
-        <div className="relative aspect-square overflow-hidden bg-muted">
-          {!imageError ? (
-            <Image
-              src={product.image}
-              alt={product.name}
-              fill
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-              onError={() => setImageError(true)}
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
-              <div className="text-center">
-                <div className="mx-auto mb-2 flex h-16 w-16 items-center justify-center rounded-full bg-primary/20">
-                  <span className="text-2xl font-bold text-primary">
-                    {product.name.charAt(0)}
-                  </span>
-                </div>
-                <p className="px-4 text-sm font-medium text-muted-foreground">{product.name}</p>
-              </div>
-            </div>
-          )}
-          
-          {/* Quick View Overlay */}
-          <div className="absolute inset-0 flex items-center justify-center bg-foreground/60 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => onViewDetails(product)}
-              className="gap-2"
-            >
-              <Eye className="h-4 w-4" />
-              Ver detalles
-            </Button>
+      {/* Image */}
+      <div className="relative aspect-square overflow-hidden bg-gray-50">
+        {!imageError ? (
+          <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-[1.08]"
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          <div
+            className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${product.gradient}`}
+          >
+            <span className="text-5xl">{product.emoji}</span>
           </div>
+        )}
+
+        {/* Hover overlay */}
+        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+          <button
+            className="flex items-center gap-2 bg-white/95 text-gray-900 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-white transition-colors cursor-pointer shadow-lg"
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewDetails(product);
+            }}
+          >
+            <Eye className="h-4 w-4" />
+            Ver detalles
+          </button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="p-4">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 mb-1">
+          {product.category === 'salud' ? 'Salud y Bienestar' : 'Fitness'}
+        </p>
+
+        <h3
+          className="font-bold text-gray-900 text-base leading-tight line-clamp-1 mb-1"
+          style={{ fontFamily: 'var(--font-heading)' }}
+        >
+          {product.name}
+        </h3>
+
+        <p className="text-sm text-gray-500 line-clamp-2 mb-3 leading-relaxed">
+          {product.shortDescription}
+        </p>
+
+        {/* Stars */}
+        <div className="flex items-center gap-1.5 mb-3">
+          <div className="flex">
+            {[...Array(5)].map((_, i) => (
+              <Star
+                key={i}
+                className={`h-3.5 w-3.5 ${
+                  i < Math.floor(product.rating)
+                    ? 'fill-amber-400 text-amber-400'
+                    : 'fill-gray-200 text-gray-200'
+                }`}
+              />
+            ))}
+          </div>
+          <span className="text-xs font-semibold text-gray-700">{product.rating}</span>
+          <span className="text-xs text-gray-400">({product.reviews})</span>
         </div>
 
-        {/* Content */}
-        <div className="p-4">
-          {/* Category */}
-          <p className="mb-1 text-xs font-medium uppercase tracking-wide text-primary">
-            {product.category === 'salud' ? 'Salud y Bienestar' : 'Fitness'}
-          </p>
-
-          {/* Title */}
-          <h3 className="mb-1 line-clamp-1 text-lg font-semibold text-foreground">
-            {product.name}
-          </h3>
-
-          {/* Short Description */}
-          <p className="mb-3 line-clamp-2 text-sm text-muted-foreground">
-            {product.shortDescription}
-          </p>
-
-          {/* Rating */}
-          <div className="mb-3 flex items-center gap-2">
-            <div className="flex items-center gap-1">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className={`h-4 w-4 ${
-                    i < Math.floor(product.rating)
-                      ? 'fill-warning text-warning'
-                      : 'text-muted'
-                  }`}
-                />
-              ))}
-            </div>
-            <span className="text-sm font-medium text-foreground">{product.rating}</span>
-            <span className="text-sm text-muted-foreground">({product.reviews})</span>
+        {/* Price + Button */}
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <span className="text-xl font-bold text-gray-900">{product.price.toFixed(2)}€</span>
+            {product.originalPrice && (
+              <span className="text-sm text-gray-400 line-through ml-1.5">
+                {product.originalPrice.toFixed(2)}€
+              </span>
+            )}
           </div>
 
-          {/* Price and Button */}
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-xl font-bold text-foreground">
-                {product.price.toFixed(2)}€
-              </p>
-              {product.originalPrice && (
-                <p className="text-sm text-muted-foreground line-through">
-                  {product.originalPrice.toFixed(2)}€
-                </p>
-              )}
-            </div>
-            <Button
-              size="sm"
-              onClick={() => addItem(product)}
-              className="gap-2"
-            >
-              <ShoppingCart className="h-4 w-4" />
-              <span className="hidden sm:inline">Añadir</span>
-            </Button>
-          </div>
+          <button
+            onClick={handleAdd}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 cursor-pointer
+              ${added ? 'bg-emerald-500 text-white' : 'bg-gray-900 text-white hover:bg-emerald-500'}`}
+          >
+            {added ? (
+              <>
+                <Check className="h-4 w-4" />
+                <span>Añadido</span>
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="h-4 w-4" />
+                <span className="hidden sm:inline">Añadir</span>
+              </>
+            )}
+          </button>
         </div>
-      </CardContent>
-    </Card>
-  )
+      </div>
+    </div>
+  );
 }
