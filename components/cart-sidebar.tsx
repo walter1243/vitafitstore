@@ -178,7 +178,9 @@ export function CartSidebar() {
               </div>
 
               <Button className="w-full" size="lg">
-                Finalizar compra
+                  <Link href="/checkout">
+                    Finalizar compra com Stripe
+                  </Link>
               </Button>
               
               <Button
