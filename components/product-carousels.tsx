@@ -16,11 +16,8 @@ type DbProduct = {
 };
 
 function normalizeCategory(raw?: string) {
-  if (!raw) return 'salud';
-  const key = raw.trim().toLowerCase();
-  if (key.includes('fit')) return 'fitness';
-  if (key.includes('saud') || key.includes('salud') || key.includes('suple')) return 'salud';
-  return key;
+  if (!raw) return 'geral';
+  return raw.trim().toLowerCase();
 }
 
 function toStoreProduct(p: DbProduct): Product {
@@ -85,9 +82,13 @@ export default function ProductCarousels() {
   }, [dbProducts]);
 
   const titleFor = (category: string) => {
+    if (category === 'geral') return 'Produtos';
     if (category === 'salud') return 'Suplementos & Cápsulas';
     if (category === 'fitness') return 'Moda Fit';
-    return category.charAt(0).toUpperCase() + category.slice(1);
+    return category
+      .split(/\s+/)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
   };
 
   return (
