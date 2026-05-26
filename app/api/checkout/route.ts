@@ -11,37 +11,26 @@ function getStripe() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { amount, customerName, productId, cardNumber, expMonth, expYear, cvv } = body;
+    const { amount, customerName, productId, paymentMethodId } = body;
 
     const amountNum = Number(amount);
     if (!amountNum || amountNum <= 0) {
       return NextResponse.json({ error: 'Importe inválido.' }, { status: 400 });
     }
 
-    const stripe = getStripe();
+    if (!paymentMethodId || typeof paymentMethodId !== 'string') {
+      return NextResponse.json({ error: 'Método de pago inválido.' }, { status: 400 });
+    }
 
-    // Create PaymentMethod server-side with raw card data
-    const pm = await stripe.paymentMethods.create({
-      type: 'card',
-      card: {
-        number: String(cardNumber ?? '').replace(/\s/g, ''),
-        exp_month: parseInt(String(expMonth ?? '1'), 10),
-        exp_year: parseInt(String(expYear ?? '25').length === 2
-          ? `20${expYear}` : String(expYear ?? '2025'), 10),
-        cvc: String(cvv ?? ''),
-      },
-    });
+    const stripe = getStripe();
 
     // Create and immediately confirm PaymentIntent
     const pi = await stripe.paymentIntents.create({
       amount: Math.round(amountNum * 100),
       currency: 'eur',
-      payment_method: pm.id,
+      payment_method: paymentMethodId,
+      payment_method_types: ['card'],
       confirm: true,
-      automatic_payment_methods: {
-        enabled: true,
-        allow_redirects: 'never',
-      },
       metadata: {
         customerName: customerName ?? 'Anônimo',
         productId: productId ? String(productId) : '',

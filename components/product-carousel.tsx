@@ -98,8 +98,8 @@ export function ProductCarousel({ products, title, subtitle, onViewDetails }: Pr
         </div>
 
         {/* Embla viewport */}
-        <div ref={emblaRef} className="overflow-hidden px-1 sm:px-0">
-          <div className="flex gap-7 sm:gap-5">
+        <div ref={emblaRef} className="overflow-hidden px-1 sm:px-1 lg:px-0">
+          <div className="flex gap-8 sm:gap-6 lg:gap-7">
             {products.map((product) => {
               const badge = product.badge ? badgeConfig[product.badge] : null;
               const isAdded = addedId === product.id;
@@ -107,7 +107,7 @@ export function ProductCarousel({ products, title, subtitle, onViewDetails }: Pr
               return (
                 <div
                   key={product.id}
-                  className="flex-none w-[236px] sm:w-[280px] cursor-pointer"
+                  className="flex-none w-[232px] sm:w-[272px] lg:w-[280px] cursor-pointer"
                   onClick={() => onViewDetails(product)}
                 >
                   <div

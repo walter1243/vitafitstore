@@ -8,6 +8,10 @@ import {
 import { useCart } from '@/lib/cart-context';
 import Link from 'next/link';
 import Image from 'next/image';
+import { CardElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '');
 
 // ─── Utils ───────────────────────────────────────────────────────────────────
 
@@ -463,8 +467,10 @@ function OrderSummary({ items, totalPrice, shipping, total, FREE_SHIP }: {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export default function CheckoutForm() {
+function CheckoutFormInner() {
   const { items, totalPrice, clearCart } = useCart();
+  const stripe = useStripe();
+  const elements = useElements();
 
   const FREE_SHIP = 50;
   const shipping  = totalPrice >= FREE_SHIP ? 0 : 4.99;
@@ -495,6 +501,7 @@ export default function CheckoutForm() {
   const [loading,  setLoading]  = useState(false);
   const [success,  setSuccess]  = useState(false);
   const [apiError, setApiError] = useState('');
+  const [cardReady, setCardReady] = useState(false);
 
   // ── Input handlers ──────────────────────────────────────────
   function handleCardNumber(e: React.ChangeEvent<HTMLInputElement>) {
@@ -528,10 +535,7 @@ export default function CheckoutForm() {
 
   function validateStep2() {
     const e: Record<string, string> = {};
-    const rawNum = cardNumber.replace(/\s/g, '');
-    if (rawNum.length < 13)    e.cardNumber = 'Número inválido';
-    if (expiry.length < 5)     e.expiry     = 'Validade inválida';
-    if (cvv.length < 3)        e.cvv        = 'CVV inválido';
+    if (!cardReady) e.card = 'Complete os dados do cartão.';
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -548,12 +552,34 @@ export default function CheckoutForm() {
     e.preventDefault();
     if (!validateStep2()) return;
 
-    const [expMonth, expYear] = expiry.split('/');
-
     setLoading(true);
     setApiError('');
 
     try {
+      if (!stripe || !elements) throw new Error('Stripe ainda está carregando. Tente novamente.');
+      const card = elements.getElement(CardElement);
+      if (!card) throw new Error('Campo de cartão indisponível.');
+
+      const pmResult = await stripe.createPaymentMethod({
+        type: 'card',
+        card,
+        billing_details: {
+          name: name.trim() || undefined,
+          email: email.trim() || undefined,
+          phone: phone.trim() || undefined,
+          address: {
+            line1: street.trim() ? `${street.trim()} ${streetN.trim()}`.trim() : undefined,
+            postal_code: postal.trim() || undefined,
+            city: city.trim() || undefined,
+            country: country || undefined,
+          },
+        },
+      });
+
+      if (pmResult.error || !pmResult.paymentMethod?.id) {
+        throw new Error(pmResult.error?.message ?? 'Não foi possível validar os dados do cartão.');
+      }
+
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -561,10 +587,7 @@ export default function CheckoutForm() {
           amount:       total,
           customerName: name.trim(),
           productId:    items[0]?.product.id ?? null,
-          cardNumber:   cardNumber.replace(/\s/g, ''),
-          expMonth:     expMonth?.trim(),
-          expYear:      expYear?.trim(),
-          cvv,
+          paymentMethodId: pmResult.paymentMethod.id,
         }),
       });
 
@@ -726,48 +749,29 @@ export default function CheckoutForm() {
         </div>
 
         <Field label="Número de Tarjeta" error={errors.cardNumber}>
-          <input
-            className={inputCls}
-            placeholder="1234 5678 9012 3456"
-            value={cardNumber}
-            onChange={handleCardNumber}
-            onFocus={() => setCardFlipped(false)}
-            inputMode="numeric"
-            autoComplete="cc-number"
-            maxLength={19}
-            style={errors.cardNumber ? { borderColor: '#f87171' } : {}}
-          />
+          <div className={`${inputCls} py-3`} style={errors.card ? { borderColor: '#f87171' } : {}}>
+            <CardElement
+              options={{
+                style: {
+                  base: {
+                    color: '#ffffff',
+                    fontSize: '14px',
+                    '::placeholder': { color: '#6b7280' },
+                  },
+                  invalid: { color: '#f87171' },
+                },
+              }}
+              onChange={(ev) => {
+                setCardReady(ev.complete);
+                if (ev.brand) setCardBrand(ev.brand);
+                if (ev.error?.message) setApiError(ev.error.message);
+                else if (apiError) setApiError('');
+              }}
+            />
+          </div>
         </Field>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Fecha de Vencimiento" error={errors.expiry}>
-            <input
-              className={inputCls}
-              placeholder="MM/AA"
-              value={expiry}
-              onChange={handleExpiry}
-              onFocus={() => setCardFlipped(false)}
-              inputMode="numeric"
-              autoComplete="cc-exp"
-              maxLength={5}
-              style={errors.expiry ? { borderColor: '#f87171' } : {}}
-            />
-          </Field>
-          <Field label="CVV" error={errors.cvv}>
-            <input
-              className={inputCls}
-              placeholder="•••"
-              value={cvv}
-              onChange={e => setCvv(e.target.value.replace(/\D/g, '').slice(0, 4))}
-              onFocus={() => setCardFlipped(true)}
-              onBlur={() => setCardFlipped(false)}
-              inputMode="numeric"
-              autoComplete="cc-csc"
-              maxLength={4}
-              style={errors.cvv ? { borderColor: '#f87171' } : {}}
-            />
-          </Field>
-        </div>
+        {errors.card && <p className="text-red-400 text-xs">{errors.card}</p>}
 
         <p className="text-gray-600 text-xs flex items-center gap-1.5">
           <Lock size={11} /> Pago procesado de forma segura · SSL 256-bit
@@ -833,5 +837,24 @@ export default function CheckoutForm() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutForm() {
+  if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4" style={{ background: '#0a0f0a' }}>
+        <div className="rounded-xl px-4 py-3 text-sm text-red-400"
+          style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY não configurada.
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <Elements stripe={stripePromise}>
+      <CheckoutFormInner />
+    </Elements>
   );
 }
