@@ -79,7 +79,7 @@ export function ProductCarousel({ products, title, subtitle, onViewDetails }: Pr
               {title}
             </h2>
           </div>
-          <div className="flex gap-2">
+          <div className="hidden sm:flex gap-2">
             <button
               onClick={scrollPrev}
               className="w-10 h-10 rounded-full border border-emerald-500/30 bg-black/40 text-emerald-400 flex items-center justify-center hover:bg-emerald-500/20 transition-all cursor-pointer"
@@ -98,8 +98,8 @@ export function ProductCarousel({ products, title, subtitle, onViewDetails }: Pr
         </div>
 
         {/* Embla viewport */}
-        <div ref={emblaRef} className="overflow-hidden">
-          <div className="flex gap-5">
+        <div ref={emblaRef} className="overflow-hidden px-1 sm:px-0">
+          <div className="flex gap-7 sm:gap-5">
             {products.map((product) => {
               const badge = product.badge ? badgeConfig[product.badge] : null;
               const isAdded = addedId === product.id;
@@ -107,7 +107,7 @@ export function ProductCarousel({ products, title, subtitle, onViewDetails }: Pr
               return (
                 <div
                   key={product.id}
-                  className="flex-none w-[260px] sm:w-[280px] cursor-pointer"
+                  className="flex-none w-[236px] sm:w-[280px] cursor-pointer"
                   onClick={() => onViewDetails(product)}
                 >
                   <div

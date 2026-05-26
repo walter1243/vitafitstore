@@ -101,11 +101,14 @@ export default function HeroVideo() {
   };
 
   return (
-    <section ref={sectionRef} className="relative w-full h-screen flex items-center justify-center overflow-hidden">
+    <section
+      ref={sectionRef}
+      className="relative w-full h-[72svh] min-h-[460px] sm:h-[85svh] lg:h-screen flex items-center justify-center overflow-hidden"
+    >
       {/* Video */}
       <video
         ref={videoRef}
-        className="absolute inset-0 w-full h-full object-cover z-0"
+        className="absolute inset-0 w-full h-full object-cover object-[center_30%] sm:object-center z-0"
         src="/video-hero.mp4"
         autoPlay
         loop
@@ -133,17 +136,17 @@ export default function HeroVideo() {
       {/* Main content */}
       <div
         ref={textRef}
-        className="relative z-10 text-white text-center flex flex-col items-center px-4 max-w-5xl mx-auto"
+        className="relative z-10 text-white text-center flex flex-col items-center px-4 sm:px-6 max-w-5xl mx-auto"
       >
         {/* Badge */}
-        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 backdrop-blur-sm px-5 py-2 text-sm font-semibold text-emerald-300">
+        <div className="mb-4 sm:mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 backdrop-blur-sm px-3 py-1.5 sm:px-5 sm:py-2 text-xs sm:text-sm font-semibold text-emerald-300">
           <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
           Envío gratis en pedidos +50€ · España
         </div>
 
         {/* Title */}
         <h1
-          className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 drop-shadow-2xl leading-[1.05] tracking-tight"
+          className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold mb-4 sm:mb-6 drop-shadow-2xl leading-[1.05] tracking-tight"
           style={{ fontFamily: 'var(--font-heading)' }}
         >
           <span className="block text-white">Bienvenido a</span>
@@ -153,27 +156,27 @@ export default function HeroVideo() {
         </h1>
 
         {/* Subtitle */}
-        <p className="text-xl md:text-2xl text-white/75 mb-10 font-light tracking-widest drop-shadow">
+        <p className="text-sm sm:text-lg md:text-2xl text-white/75 mb-7 sm:mb-10 font-light tracking-[0.2em] sm:tracking-widest drop-shadow">
           Salud · Performance · Bienestar
         </p>
 
         {/* Single CTA */}
         <a
           href="#productos"
-          className="group flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white px-10 py-4 rounded-xl text-base font-semibold transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-[0_0_30px_rgba(34,197,94,0.6)]"
+          className="group flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white px-6 py-3 sm:px-10 sm:py-4 rounded-xl text-sm sm:text-base font-semibold transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-[0_0_30px_rgba(34,197,94,0.6)]"
         >
           Descubrir Productos
           <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
         </a>
 
         {/* Trust row */}
-        <div className="mt-10 flex items-center gap-6 flex-wrap justify-center">
+        <div className="mt-8 sm:mt-10 flex items-center gap-3 sm:gap-6 flex-wrap justify-center">
           {[
             { icon: Shield, label: 'Pago Seguro' },
             { icon: Zap, label: 'Resultados Reales' },
             { icon: Leaf, label: '100% Natural' },
           ].map(({ icon: Icon, label }) => (
-            <div key={label} className="flex items-center gap-2 text-white/60 text-sm">
+            <div key={label} className="flex items-center gap-2 text-white/60 text-xs sm:text-sm">
               <Icon className="h-4 w-4 text-emerald-400" />
               <span>{label}</span>
             </div>
@@ -181,15 +184,15 @@ export default function HeroVideo() {
         </div>
 
         {/* Stats */}
-        <div className="mt-12 flex items-center divide-x divide-white/10 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm overflow-hidden">
+        <div className="mt-8 sm:mt-12 grid grid-cols-2 sm:flex items-stretch rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm overflow-hidden w-full max-w-[560px]">
           {[
             { value: '50K+', label: 'Clientes felices' },
             { value: '4.9★', label: 'Valoración media' },
             { value: '100%', label: 'Natural' },
             { value: '2-3d', label: 'Entrega rápida' },
           ].map((stat) => (
-            <div key={stat.label} className="px-6 py-4 text-center">
-              <p className="text-xl font-bold text-emerald-400">{stat.value}</p>
+            <div key={stat.label} className="px-4 py-3 sm:px-6 sm:py-4 text-center border-white/10 odd:border-r even:border-r-0 [&:nth-child(-n+2)]:border-b sm:border-b-0 sm:border-r last:border-r-0">
+              <p className="text-lg sm:text-xl font-bold text-emerald-400">{stat.value}</p>
               <p className="text-xs text-white/50 mt-0.5">{stat.label}</p>
             </div>
           ))}
@@ -199,7 +202,7 @@ export default function HeroVideo() {
       {/* Volume control */}
       <button
         onClick={toggleMute}
-        className="absolute bottom-6 right-6 z-20 bg-black/40 backdrop-blur-sm border border-white/20 rounded-full p-3 text-white hover:bg-black/60 transition-all duration-300 cursor-pointer"
+        className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 z-20 bg-black/40 backdrop-blur-sm border border-white/20 rounded-full p-2.5 sm:p-3 text-white hover:bg-black/60 transition-all duration-300 cursor-pointer"
         aria-label={isMuted ? 'Activar sonido' : 'Silenciar'}
       >
         {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
@@ -208,7 +211,7 @@ export default function HeroVideo() {
       {/* Scroll indicator */}
       <div
         ref={scrollIndicatorRef}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2"
+        className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2"
       >
         <span className="text-white/40 text-xs tracking-widest uppercase">Scroll</span>
         <div className="animate-bounce">
