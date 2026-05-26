@@ -9,6 +9,12 @@ export async function GET() {
       SELECT
         o.id,
         o.customer_name                               AS customer,
+        COALESCE(o.customer_email, '')               AS "customerEmail",
+        COALESCE(o.customer_phone, '')               AS "customerPhone",
+        COALESCE(o.address_line, '')                 AS "addressLine",
+        COALESCE(o.postal_code, '')                  AS "postalCode",
+        COALESCE(o.city, '')                         AS city,
+        COALESCE(o.country, '')                      AS country,
         COALESCE(p.name, 'Produto removido')          AS product,
         o.status,
         COALESCE(o.tracking_code, '')                 AS tracking,

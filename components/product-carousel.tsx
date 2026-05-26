@@ -10,6 +10,7 @@ interface ProductCarouselProps {
   products: Product[];
   title: string;
   subtitle: string;
+  categoryLabel?: string;
   onViewDetails: (product: Product) => void;
 }
 
@@ -19,7 +20,7 @@ const badgeConfig: Record<string, { text: string; cls: string }> = {
   nuevo: { text: 'Nuevo', cls: 'bg-gradient-to-r from-violet-500 to-purple-500' },
 };
 
-export function ProductCarousel({ products, title, subtitle, onViewDetails }: ProductCarouselProps) {
+export function ProductCarousel({ products, title, subtitle, categoryLabel, onViewDetails }: ProductCarouselProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, align: 'start', dragFree: false });
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [addedId, setAddedId] = useState<number | null>(null);
@@ -98,8 +99,8 @@ export function ProductCarousel({ products, title, subtitle, onViewDetails }: Pr
         </div>
 
         {/* Embla viewport */}
-        <div ref={emblaRef} className="overflow-hidden px-1 sm:px-1 lg:px-0">
-          <div className="flex gap-8 sm:gap-6 lg:gap-7">
+        <div ref={emblaRef} className="overflow-hidden px-2 sm:px-2 lg:px-0">
+          <div className="flex gap-10 sm:gap-8 lg:gap-8">
             {products.map((product) => {
               const badge = product.badge ? badgeConfig[product.badge] : null;
               const isAdded = addedId === product.id;
@@ -107,7 +108,7 @@ export function ProductCarousel({ products, title, subtitle, onViewDetails }: Pr
               return (
                 <div
                   key={product.id}
-                  className="flex-none w-[232px] sm:w-[272px] lg:w-[280px] cursor-pointer"
+                  className="flex-none w-[228px] sm:w-[268px] lg:w-[276px] cursor-pointer"
                   onClick={() => onViewDetails(product)}
                 >
                   <div
@@ -148,7 +149,7 @@ export function ProductCarousel({ products, title, subtitle, onViewDetails }: Pr
                     {/* Info */}
                     <div className="p-4">
                       <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-400 mb-1">
-                        {product.category === 'salud' ? 'Salud y Bienestar' : 'Fitness'}
+                        {categoryLabel ?? (product.category === 'salud' ? 'Salud y Bienestar' : 'Fitness')}
                       </p>
                       <h3 className="font-bold text-white text-sm leading-tight line-clamp-1 mb-1">
                         {product.name}

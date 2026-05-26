@@ -586,6 +586,12 @@ function CheckoutFormInner() {
         body: JSON.stringify({
           amount:       total,
           customerName: name.trim(),
+          customerEmail: email.trim(),
+          customerPhone: phone.trim(),
+          addressLine: `${street.trim()} ${streetN.trim()}`.trim(),
+          postalCode: postal.trim(),
+          city: city.trim(),
+          country,
           productId:    items[0]?.product.id ?? null,
           paymentMethodId: pmResult.paymentMethod.id,
         }),

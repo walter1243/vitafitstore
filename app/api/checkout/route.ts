@@ -11,7 +11,18 @@ function getStripe() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { amount, customerName, productId, paymentMethodId } = body;
+    const {
+      amount,
+      customerName,
+      customerEmail,
+      customerPhone,
+      addressLine,
+      postalCode,
+      city,
+      country,
+      productId,
+      paymentMethodId,
+    } = body;
 
     const amountNum = Number(amount);
     if (!amountNum || amountNum <= 0) {
@@ -33,6 +44,8 @@ export async function POST(req: NextRequest) {
       confirm: true,
       metadata: {
         customerName: customerName ?? 'Anônimo',
+        customerEmail: customerEmail ?? '',
+        customerPhone: customerPhone ?? '',
         productId: productId ? String(productId) : '',
       },
     });
@@ -41,12 +54,30 @@ export async function POST(req: NextRequest) {
       // Save confirmed order
       try {
         await sql`
-          INSERT INTO orders (customer_name, product_id, total_amount, status, stripe_payment_id)
+          INSERT INTO orders (
+            customer_name,
+            customer_email,
+            customer_phone,
+            address_line,
+            postal_code,
+            city,
+            country,
+            product_id,
+            total_amount,
+            status,
+            stripe_payment_id
+          )
           VALUES (
             ${customerName ? String(customerName) : 'Anônimo'},
+            ${customerEmail ? String(customerEmail) : null},
+            ${customerPhone ? String(customerPhone) : null},
+            ${addressLine ? String(addressLine) : null},
+            ${postalCode ? String(postalCode) : null},
+            ${city ? String(city) : null},
+            ${country ? String(country) : null},
             ${productId ? Number(productId) : null},
             ${amountNum},
-            'paid',
+            'pending',
             ${pi.id}
           )
         `;

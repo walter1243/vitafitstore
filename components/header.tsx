@@ -15,11 +15,29 @@ export function Header() {
   const { totalItems, setIsCartOpen } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [storeName, setStoreName] = useState('VitaFit Store');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [themeColor, setThemeColor] = useState('#10b981');
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handler, { passive: true });
     return () => window.removeEventListener('scroll', handler);
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/store-settings');
+        if (!res.ok) return;
+        const data = await res.json();
+        setStoreName(data?.storeName ?? 'VitaFit Store');
+        setLogoUrl(data?.logoUrl ?? '');
+        setThemeColor(data?.themeColor ?? '#10b981');
+      } catch {
+        // ignore settings load errors
+      }
+    })();
   }, []);
 
   return (
@@ -40,13 +58,17 @@ export function Header() {
           <div className={`flex items-center justify-between transition-all duration-400 ${scrolled ? 'py-3' : 'py-4'}`}>
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500 group-hover:bg-emerald-400 transition-colors duration-200">
-                <Leaf className="h-4 w-4 text-white" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg group-hover:opacity-90 transition-colors duration-200 overflow-hidden"
+                style={{ background: themeColor }}>
+                {logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={logoUrl} alt="Logo" className="h-full w-full object-cover" />
+                ) : (
+                  <Leaf className="h-4 w-4 text-white" />
+                )}
               </div>
               <span className="text-lg font-bold">
-                <span className="bg-gradient-to-r from-emerald-400 to-green-300 bg-clip-text text-transparent">Vita</span>
-                <span className="bg-gradient-to-r from-green-300 to-teal-300 bg-clip-text text-transparent">Fit</span>
-                <span className="text-white/90"> Store</span>
+                <span className="text-white/90">{storeName}</span>
               </span>
             </Link>
 

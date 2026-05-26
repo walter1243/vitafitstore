@@ -4,6 +4,7 @@ import {
   LayoutDashboard, Package, ShoppingCart, Truck, Settings,
   Menu, X, Plus, Trash2, ExternalLink, Check, Euro,
   ChevronRight, Upload, Video, AlertCircle, CheckCircle2,
+  ArrowUp, ArrowDown, Monitor,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -24,6 +25,12 @@ type Product = {
 type Order = {
   id: number;
   customer: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  addressLine?: string;
+  postalCode?: string;
+  city?: string;
+  country?: string;
   product: string;
   status: 'pending' | 'shipped' | 'delivered';
   tracking: string;
@@ -49,6 +56,7 @@ export default function AdminPage() {
   const [products, setProducts]     = useState<Product[]>([]);
   const [orders, setOrders]         = useState<Order[]>([]);
   const [toasts, setToasts]         = useState<Toast[]>([]);
+  const [viewport, setViewport]     = useState('—');
   let toastId = useRef(0);
 
   // Product form
@@ -67,6 +75,13 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => { fetchData(); }, []);
+
+  useEffect(() => {
+    const updateViewport = () => setViewport(`${window.innerWidth}x${window.innerHeight}px`);
+    updateViewport();
+    window.addEventListener('resize', updateViewport);
+    return () => window.removeEventListener('resize', updateViewport);
+  }, []);
 
   async function fetchData() {
     try {
@@ -120,6 +135,22 @@ export default function AdminPage() {
     const res = await fetch(`/api/products?id=${id}`, { method: 'DELETE' });
     if (res.ok) addToast('success', `"${name}" removido.`);
     else        addToast('error', 'Falha ao remover produto.');
+  }
+
+  async function moveProduct(id: number, direction: 'up' | 'down') {
+    const res = await fetch('/api/products', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, direction }),
+    });
+
+    if (res.ok) {
+      await fetchData();
+      addToast('success', 'Ordem de produtos atualizada.');
+    } else {
+      const data = await res.json().catch(() => ({}));
+      addToast('error', data?.error ?? 'Falha ao mover produto.');
+    }
   }
 
   async function updateTracking(id: number, tracking: string, status: Order['status']) {
@@ -222,11 +253,14 @@ export default function AdminPage() {
       <div className="flex-1 flex flex-col min-w-0">
         <header className="sticky top-0 z-30 bg-white border-b border-slate-200 px-4 sm:px-6 h-14 sm:h-16 flex items-center gap-3 shadow-sm shrink-0">
           <button onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer">
+            className="p-2 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer lg:hidden">
             <Menu size={20} className="text-slate-600" />
           </button>
           <h1 className="flex-1 font-semibold text-slate-800 text-sm sm:text-base">{SECTION_LABELS[section]}</h1>
           <div className="flex items-center gap-2 sm:gap-3">
+            <span className="hidden md:flex items-center gap-1.5 text-[11px] text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
+              <Monitor size={13} /> {viewport}
+            </span>
             <span className="hidden sm:flex items-center gap-1.5 bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-medium">
               <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
               Ao vivo
@@ -253,6 +287,7 @@ export default function AdminPage() {
               onDescChange={setProdDesc}
               onSubmit={addProduct}
               onDelete={deleteProduct}
+              onMove={moveProduct}
             />
           )}
           {section === 'orders'   && <OrdersSection   orders={orders}   onUpdateTracking={updateTracking} />}
@@ -342,7 +377,7 @@ function DashboardSection({ products, orders, revenue, onNavigate }: {
 // ─── Products ─────────────────────────────────────────────────────────────────
 
 function ProductsSection({ products, showForm, saving, form, image, desc,
-  onToggleForm, onFormChange, onImageChange, onDescChange, onSubmit, onDelete }: {
+  onToggleForm, onFormChange, onImageChange, onDescChange, onSubmit, onDelete, onMove }: {
   products: Product[];
   showForm: boolean;
   saving: boolean;
@@ -355,6 +390,7 @@ function ProductsSection({ products, showForm, saving, form, image, desc,
   onDescChange: (v: string) => void;
   onSubmit: () => void;
   onDelete: (id: number, name: string) => void;
+  onMove: (id: number, direction: 'up' | 'down') => void;
 }) {
   const dropRef    = useRef<HTMLDivElement>(null);
   const descRef    = useRef<HTMLDivElement>(null);
@@ -540,7 +576,7 @@ function ProductsSection({ products, showForm, saving, form, image, desc,
       <TableCard title={`Todos os produtos (${products.length})`} icon={<Package size={15} className="text-slate-400" />}>
         <table className="w-full text-sm">
           <thead className="bg-slate-50">
-            <tr>{['Produto','Categoria','Preço','Estoque',''].map((h,i) => (
+            <tr>{['Produto','Categoria','Preço','Estoque','Mover',''].map((h,i) => (
               <th key={i} className="px-4 sm:px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
             ))}</tr>
           </thead>
@@ -570,6 +606,24 @@ function ProductsSection({ products, showForm, saving, form, image, desc,
                     {p.stock??0} un.
                   </span>
                 </td>
+                <td className="px-4 sm:px-5 py-3 whitespace-nowrap">
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => onMove(p.id, 'up')}
+                      className="p-1.5 rounded border border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50 cursor-pointer"
+                      title="Mover para cima"
+                    >
+                      <ArrowUp size={13} />
+                    </button>
+                    <button
+                      onClick={() => onMove(p.id, 'down')}
+                      className="p-1.5 rounded border border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50 cursor-pointer"
+                      title="Mover para baixo"
+                    >
+                      <ArrowDown size={13} />
+                    </button>
+                  </div>
+                </td>
                 <td className="px-4 sm:px-5 py-3 text-right">
                   <button onClick={() => onDelete(p.id, p.name)}
                     className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-50 text-slate-400 hover:text-red-600 transition-all cursor-pointer"
@@ -580,7 +634,7 @@ function ProductsSection({ products, showForm, saving, form, image, desc,
               </tr>
             ))}
             {products.length === 0 && (
-              <tr><td colSpan={5} className="px-5 py-10 text-center text-slate-400 text-sm">Nenhum produto cadastrado ainda</td></tr>
+              <tr><td colSpan={6} className="px-5 py-10 text-center text-slate-400 text-sm">Nenhum produto cadastrado ainda</td></tr>
             )}
           </tbody>
         </table>
@@ -624,6 +678,8 @@ function OrdersSection({ orders, onUpdateTracking }: {
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4 text-sm">
             <div><div className="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Cliente</div><div className="text-slate-700 font-medium">{o.customer}</div></div>
             <div><div className="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Produto</div><div className="text-slate-600">{o.product}</div></div>
+            <div><div className="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Contato</div><div className="text-slate-600">{o.customerEmail || '—'} {o.customerPhone ? `• ${o.customerPhone}` : ''}</div></div>
+            <div className="sm:col-span-3"><div className="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Endereço</div><div className="text-slate-600">{o.addressLine || '—'} {o.postalCode ? `• ${o.postalCode}` : ''} {o.city ? `• ${o.city}` : ''} {o.country ? `• ${o.country}` : ''}</div></div>
           </div>
 
           <div className="flex gap-2 flex-wrap">
@@ -693,24 +749,83 @@ function TrackingSection() {
 // ─── Settings ─────────────────────────────────────────────────────────────────
 
 function SettingsSection() {
-  const [ig, setIg]           = useState('');
-  const [fb, setFb]           = useState('');
-  const [storeName, setStore] = useState('VitaFit');
-  const [saved, setSaved]     = useState(false);
+  const [ig, setIg] = useState('');
+  const [fb, setFb] = useState('');
+  const [storeName, setStore] = useState('VitaFit Store');
+  const [themeColor, setThemeColor] = useState('#10b981');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [saved, setSaved] = useState(false);
 
-  function handleSave(e: React.SyntheticEvent) {
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/store-settings');
+        if (!res.ok) return;
+        const data = await res.json();
+        setStore(data?.storeName ?? 'VitaFit Store');
+        setThemeColor(data?.themeColor ?? '#10b981');
+        setLogoUrl(data?.logoUrl ?? '');
+        setIg(data?.instagram ?? '');
+        setFb(data?.facebook ?? '');
+      } catch {
+        // ignore load errors
+      }
+    })();
+  }, []);
+
+  function readFileAsDataURL(file: File, cb: (url: string) => void) {
+    const r = new FileReader();
+    r.onload = e => cb(e.target?.result as string);
+    r.readAsDataURL(file);
+  }
+
+  async function handleSave(e: React.SyntheticEvent) {
     e.preventDefault();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    const res = await fetch('/api/store-settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        storeName: storeName.trim(),
+        themeColor,
+        logoUrl,
+        instagram: ig.trim(),
+        facebook: fb.trim(),
+      }),
+    });
+
+    if (res.ok) {
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    }
   }
 
   return (
     <form onSubmit={handleSave} className="space-y-5 max-w-xl">
       <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
         <h2 className="font-semibold text-slate-800 mb-4">Informações da Loja</h2>
+
         <label className="block text-xs font-medium text-slate-500 mb-1.5">Nome da loja</label>
         <input type="text" value={storeName} onChange={e => setStore(e.target.value)}
-          className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500 transition-colors" />
+          className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500 transition-colors mb-4" />
+
+        <label className="block text-xs font-medium text-slate-500 mb-1.5">Cor principal da loja</label>
+        <div className="flex items-center gap-3 mb-4">
+          <input type="color" value={themeColor} onChange={e => setThemeColor(e.target.value)} className="w-12 h-10 rounded cursor-pointer" />
+          <input type="text" value={themeColor} onChange={e => setThemeColor(e.target.value)}
+            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500 transition-colors" />
+        </div>
+
+        <label className="block text-xs font-medium text-slate-500 mb-1.5">Logo da loja</label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={e => {
+            const f = e.target.files?.[0];
+            if (f) readFileAsDataURL(f, setLogoUrl);
+          }}
+          className="w-full text-sm mb-3"
+        />
+        {logoUrl && <img src={logoUrl} alt="Logo" className="h-14 w-auto object-contain rounded border border-slate-200 p-1" />}
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">

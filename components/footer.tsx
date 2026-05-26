@@ -1,6 +1,7 @@
 "use client"
 
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 import { Leaf, Facebook, Instagram, Twitter, Youtube } from 'lucide-react'
 
 const footerLinks = {
@@ -30,14 +31,33 @@ const footerLinks = {
   ],
 }
 
-const socialLinks = [
-  { icon: Facebook, href: '#', label: 'Facebook' },
-  { icon: Instagram, href: '#', label: 'Instagram' },
-  { icon: Twitter, href: '#', label: 'Twitter' },
-  { icon: Youtube, href: '#', label: 'Youtube' },
-]
-
 export function Footer() {
+  const [storeName, setStoreName] = useState('VitaFit Store')
+  const [instagram, setInstagram] = useState('')
+  const [facebook, setFacebook] = useState('')
+
+  useEffect(() => {
+    ;(async () => {
+      try {
+        const res = await fetch('/api/store-settings')
+        if (!res.ok) return
+        const data = await res.json()
+        setStoreName(data?.storeName ?? 'VitaFit Store')
+        setInstagram(data?.instagram ?? '')
+        setFacebook(data?.facebook ?? '')
+      } catch {
+        // ignore
+      }
+    })()
+  }, [])
+
+  const socialLinks = [
+    { icon: Facebook, href: facebook ? `https://facebook.com/${facebook.replace(/^@/, '')}` : '#', label: 'Facebook' },
+    { icon: Instagram, href: instagram ? `https://instagram.com/${instagram.replace(/^@/, '')}` : '#', label: 'Instagram' },
+    { icon: Twitter, href: '#', label: 'Twitter' },
+    { icon: Youtube, href: '#', label: 'Youtube' },
+  ]
+
   return (
     <footer className="border-t border-border bg-muted/30">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -49,7 +69,7 @@ export function Footer() {
                 <Leaf className="h-5 w-5 text-primary-foreground" />
               </div>
               <span className="text-xl font-bold text-foreground">
-                VitaFit<span className="text-primary">Store</span>
+                {storeName}
               </span>
             </Link>
             <p className="mb-6 max-w-xs text-sm text-muted-foreground">
@@ -130,7 +150,7 @@ export function Footer() {
         <div className="mt-12 border-t border-border pt-8">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <p className="text-sm text-muted-foreground">
-              © 2026 VitaFit Store. Todos los derechos reservados.
+              © 2026 {storeName}. Todos los derechos reservados.
             </p>
             <div className="flex items-center gap-4">
               <span className="text-xs text-muted-foreground">Métodos de pago:</span>
