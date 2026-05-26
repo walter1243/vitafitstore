@@ -1,25 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 
+const VALID_STATUSES = ['pending', 'shipped', 'delivered'];
+
 export async function GET() {
   try {
     const rows = await sql`
       SELECT
         o.id,
-        o.customer_name   AS customer,
-        COALESCE(p.name, 'Produto removido') AS product,
+        o.customer_name                               AS customer,
+        COALESCE(p.name, 'Produto removido')          AS product,
         o.status,
-        COALESCE(o.tracking_code, '') AS tracking,
-        COALESCE(o.total_amount, 0)::FLOAT AS total,
-        TO_CHAR(o.created_at, 'YYYY-MM-DD') AS date
+        COALESCE(o.tracking_code, '')                 AS tracking,
+        COALESCE(o.total_amount, 0)::FLOAT            AS total,
+        TO_CHAR(o.created_at, 'YYYY-MM-DD')           AS date
       FROM orders o
       LEFT JOIN products p ON o.product_id = p.id
       ORDER BY o.created_at DESC
     `;
     return NextResponse.json(rows);
-  } catch (err) {
+  } catch (err: any) {
     console.error('[GET /api/orders]', err);
-    return NextResponse.json({ error: 'Database error' }, { status: 500 });
+    return NextResponse.json({ error: err?.message ?? 'Database error' }, { status: 500 });
   }
 }
 
@@ -28,12 +30,10 @@ export async function PATCH(req: NextRequest) {
     const { id, tracking, status } = await req.json();
 
     if (!id) {
-      return NextResponse.json({ error: 'id is required' }, { status: 400 });
+      return NextResponse.json({ error: 'id é obrigatório.' }, { status: 400 });
     }
-
-    const VALID_STATUSES = ['pending', 'shipped', 'delivered'];
     if (status && !VALID_STATUSES.includes(status)) {
-      return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
+      return NextResponse.json({ error: `Status inválido. Use: ${VALID_STATUSES.join(', ')}` }, { status: 400 });
     }
 
     const [order] = await sql`
@@ -47,12 +47,11 @@ export async function PATCH(req: NextRequest) {
     `;
 
     if (!order) {
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Pedido não encontrado.' }, { status: 404 });
     }
-
     return NextResponse.json(order);
-  } catch (err) {
+  } catch (err: any) {
     console.error('[PATCH /api/orders]', err);
-    return NextResponse.json({ error: 'Database error' }, { status: 500 });
+    return NextResponse.json({ error: err?.message ?? 'Database error' }, { status: 500 });
   }
 }

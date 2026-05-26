@@ -2,20 +2,26 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { sql } from "@/lib/db";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) throw new Error('STRIPE_SECRET_KEY não está configurada. Adicione em Vercel → Settings → Environment Variables.');
+  return new Stripe(key);
+}
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { amount, customerName, productId } = body;
 
-    if (!amount || Number(amount) <= 0) {
-      return NextResponse.json({ error: 'amount must be a positive number' }, { status: 400 });
+    const amountNum = Number(amount);
+    if (!amountNum || amountNum <= 0) {
+      return NextResponse.json({ error: 'amount deve ser um número positivo.' }, { status: 400 });
     }
 
-    // Create PaymentIntent — amount in cents
+    const stripe = getStripe();
+
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(Number(amount) * 100),
+      amount: Math.round(amountNum * 100), // centavos
       currency: 'eur',
       automatic_payment_methods: { enabled: true },
       metadata: {
@@ -24,22 +30,21 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Save pending order to DB (status updated later via webhook or frontend callback)
+    // Salva pedido como pending no banco
     await sql`
       INSERT INTO orders (customer_name, product_id, total_amount, status, stripe_payment_id)
       VALUES (
         ${customerName ? String(customerName) : 'Anônimo'},
         ${productId ? Number(productId) : null},
-        ${Number(amount)},
+        ${amountNum},
         'pending',
         ${paymentIntent.id}
       )
     `;
 
     return NextResponse.json({ clientSecret: paymentIntent.client_secret });
-  } catch (err) {
+  } catch (err: any) {
     console.error('[POST /api/checkout]', err);
-    const message = err instanceof Error ? err.message : 'Internal server error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: err?.message ?? 'Erro interno.' }, { status: 500 });
   }
 }
