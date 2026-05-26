@@ -11,6 +11,11 @@ interface ProductCarouselProps {
   title: string;
   subtitle: string;
   categoryLabel?: string;
+  categoryMedia?: {
+    bannerType?: 'image' | 'video';
+    bannerUrl?: string;
+    logoUrl?: string;
+  };
   onViewDetails: (product: Product) => void;
 }
 
@@ -20,7 +25,7 @@ const badgeConfig: Record<string, { text: string; cls: string }> = {
   nuevo: { text: 'Nuevo', cls: 'bg-gradient-to-r from-violet-500 to-purple-500' },
 };
 
-export function ProductCarousel({ products, title, subtitle, categoryLabel, onViewDetails }: ProductCarouselProps) {
+export function ProductCarousel({ products, title, subtitle, categoryLabel, categoryMedia, onViewDetails }: ProductCarouselProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, align: 'start', dragFree: false });
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [addedId, setAddedId] = useState<number | null>(null);
@@ -70,15 +75,47 @@ export function ProductCarousel({ products, title, subtitle, categoryLabel, onVi
       />
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {categoryMedia?.bannerUrl && (
+          <div className="mb-6 overflow-hidden rounded-2xl border border-emerald-500/20 bg-black/20">
+            {categoryMedia.bannerType === 'video' ? (
+              <video
+                src={categoryMedia.bannerUrl}
+                className="w-full h-[160px] sm:h-[220px] object-cover"
+                autoPlay
+                muted
+                loop
+                playsInline
+              />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={categoryMedia.bannerUrl}
+                alt={title}
+                className="w-full h-[160px] sm:h-[220px] object-cover"
+              />
+            )}
+          </div>
+        )}
+
         {/* Section header */}
         <div className="flex items-end justify-between mb-8">
-          <div>
+          <div className="flex items-end gap-3">
+            {categoryMedia?.logoUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={categoryMedia.logoUrl}
+                alt={`${title} logo`}
+                className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-xl border border-emerald-500/30"
+              />
+            )}
+            <div>
             <p className="text-emerald-400 text-sm font-semibold tracking-[0.3em] uppercase mb-2">
               {subtitle}
             </p>
             <h2 className="text-white text-3xl sm:text-4xl font-black tracking-tight">
               {title}
             </h2>
+            </div>
           </div>
           <div className="hidden sm:flex gap-2">
             <button

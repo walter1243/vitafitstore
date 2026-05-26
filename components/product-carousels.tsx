@@ -15,6 +15,15 @@ type DbProduct = {
   stock?: number;
 };
 
+type CategoryMeta = {
+  id: number;
+  name: string;
+  slug: string;
+  bannerType?: 'image' | 'video';
+  bannerUrl?: string;
+  logoUrl?: string;
+};
+
 function normalizeCategory(raw?: string) {
   if (!raw) return 'geral';
   return raw.trim().toLowerCase();
@@ -45,6 +54,7 @@ function toStoreProduct(p: DbProduct): Product {
 export default function ProductCarousels() {
   const [selected, setSelected] = useState<Product | null>(null);
   const [dbProducts, setDbProducts] = useState<DbProduct[]>([]);
+  const [categoryMeta, setCategoryMeta] = useState<Record<string, CategoryMeta>>({});
 
   useEffect(() => {
     (async () => {
@@ -56,6 +66,25 @@ export default function ProductCarousels() {
         setDbProducts(data);
       } catch {
         // fallback handled below
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/categories', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = (await res.json()) as CategoryMeta[];
+        if (!Array.isArray(data)) return;
+        const map: Record<string, CategoryMeta> = {};
+        for (const c of data) {
+          map[c.name.trim().toLowerCase()] = c;
+          map[c.slug] = c;
+        }
+        setCategoryMeta(map);
+      } catch {
+        // ignore category metadata errors
       }
     })();
   }, []);
@@ -100,6 +129,7 @@ export default function ProductCarousels() {
             title={titleFor(category)}
             subtitle="Nutrición premium para tu rendimiento"
             categoryLabel={titleFor(category)}
+            categoryMedia={categoryMeta[category]}
             onViewDetails={setSelected}
           />
         </section>

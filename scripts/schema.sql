@@ -36,6 +36,23 @@ SET position = rp.rn
 FROM ranked_products rp
 WHERE p.id = rp.id AND p.position IS NULL;
 
+-- ── Tabela: categories ─────────────────────────────────────
+CREATE TABLE IF NOT EXISTS categories (
+  id         SERIAL PRIMARY KEY,
+  name       TEXT NOT NULL UNIQUE,
+  slug       TEXT NOT NULL UNIQUE,
+  position   INTEGER NOT NULL DEFAULT 999,
+  enabled    BOOLEAN NOT NULL DEFAULT TRUE,
+  banner_type TEXT DEFAULT 'image',
+  banner_url TEXT,
+  logo_url TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+ALTER TABLE categories ADD COLUMN IF NOT EXISTS banner_type TEXT DEFAULT 'image';
+ALTER TABLE categories ADD COLUMN IF NOT EXISTS banner_url TEXT;
+ALTER TABLE categories ADD COLUMN IF NOT EXISTS logo_url TEXT;
+
 -- ── Tabela: orders ───────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS orders (
   id                 SERIAL PRIMARY KEY,
@@ -82,3 +99,19 @@ CREATE TABLE IF NOT EXISTS store_settings (
 INSERT INTO store_settings (id, store_name, theme_color)
 VALUES (1, 'VitaFit Store', '#10b981')
 ON CONFLICT (id) DO NOTHING;
+
+-- ── Tabela: home_blocks (fase 2) ───────────────────────────
+CREATE TABLE IF NOT EXISTS home_blocks (
+  block_key TEXT PRIMARY KEY,
+  label     TEXT NOT NULL,
+  position  INTEGER NOT NULL,
+  enabled   BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+INSERT INTO home_blocks (block_key, label, position, enabled) VALUES
+('hero', 'Hero Vídeo', 1, TRUE),
+('trust', 'Selos de Confiança', 2, TRUE),
+('products', 'Produtos', 3, TRUE),
+('pin', 'Sessão Pin', 4, TRUE),
+('newsletter', 'Newsletter', 5, TRUE)
+ON CONFLICT (block_key) DO NOTHING;

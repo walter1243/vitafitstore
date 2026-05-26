@@ -22,6 +22,17 @@ type Product = {
   description?: string;
 };
 
+type Category = {
+  id: number;
+  name: string;
+  slug: string;
+  position: number;
+  enabled: boolean;
+  bannerType?: 'image' | 'video';
+  bannerUrl?: string;
+  logoUrl?: string;
+};
+
 type Order = {
   id: number;
   customer: string;
@@ -54,6 +65,7 @@ export default function AdminPage() {
   const [section, setSection]       = useState<Section>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [products, setProducts]     = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [orders, setOrders]         = useState<Order[]>([]);
   const [toasts, setToasts]         = useState<Toast[]>([]);
   const [viewport, setViewport]     = useState('—');
@@ -67,6 +79,7 @@ export default function AdminPage() {
   });
   const [prodImage, setProdImage]   = useState<string | null>(null);
   const [prodDesc, setProdDesc]     = useState('');
+  const [newCategoryName, setNewCategoryName] = useState('');
 
   const addToast = useCallback((type: Toast['type'], msg: string) => {
     const id = ++toastId.current;
@@ -85,15 +98,80 @@ export default function AdminPage() {
 
   async function fetchData() {
     try {
-      const [pr, or] = await Promise.all([fetch('/api/products'), fetch('/api/orders')]);
+      const [pr, or, cr] = await Promise.all([fetch('/api/products'), fetch('/api/orders'), fetch('/api/categories')]);
       if (pr.ok) setProducts(await pr.json());
       if (or.ok) setOrders(await or.json());
+      if (cr.ok) setCategories(await cr.json());
     } catch { /* silently ignore — DB might not be configured yet */ }
+  }
+
+  async function addCategory() {
+    const name = newCategoryName.trim();
+    if (!name) {
+      addToast('error', 'Digite um nome para a categoria.');
+      return;
+    }
+
+    const res = await fetch('/api/categories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (res.ok) {
+      setNewCategoryName('');
+      await fetchData();
+      setProdForm(f => ({ ...f, category: data?.name ?? f.category }));
+      addToast('success', 'Categoria criada com sucesso.');
+    } else {
+      addToast('error', data?.error ?? 'Erro ao criar categoria.');
+    }
+  }
+
+  async function moveCategory(id: number, direction: 'up' | 'down') {
+    const res = await fetch('/api/categories', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'move', id, direction }),
+    });
+
+    if (res.ok) {
+      await fetchData();
+      addToast('success', 'Ordem das categorias atualizada.');
+    } else {
+      const data = await res.json().catch(() => ({}));
+      addToast('error', data?.error ?? 'Falha ao mover categoria.');
+    }
+  }
+
+  async function saveCategoryMedia(id: number, bannerType: 'image' | 'video', bannerUrl: string, logoUrl: string) {
+    const res = await fetch('/api/categories', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'updateMedia',
+        id,
+        bannerType,
+        bannerUrl,
+        logoUrl,
+      }),
+    });
+
+    if (res.ok) {
+      await fetchData();
+      addToast('success', 'Mídia da categoria atualizada.');
+    } else {
+      const data = await res.json().catch(() => ({}));
+      addToast('error', data?.error ?? 'Falha ao salvar mídia da categoria.');
+    }
   }
 
   async function addProduct() {
     if (!prodForm.name.trim()) { addToast('error', 'Nome do produto é obrigatório.'); return; }
     if (!prodForm.price)        { addToast('error', 'Preço é obrigatório.');          return; }
+    if (!prodForm.category.trim()) { addToast('error', 'Selecione uma categoria.'); return; }
 
     setSaving(true);
     try {
@@ -276,15 +354,21 @@ export default function AdminPage() {
           {section === 'products' && (
             <ProductsSection
               products={products}
+              categories={categories}
               showForm={showForm}
               saving={saving}
               form={prodForm}
               image={prodImage}
               desc={prodDesc}
+              newCategoryName={newCategoryName}
               onToggleForm={() => setShowForm(f => !f)}
               onFormChange={(k, v) => setProdForm(f => ({ ...f, [k]: v }))}
               onImageChange={setProdImage}
               onDescChange={setProdDesc}
+              onNewCategoryNameChange={setNewCategoryName}
+              onCreateCategory={addCategory}
+              onMoveCategory={moveCategory}
+              onSaveCategoryMedia={saveCategoryMedia}
               onSubmit={addProduct}
               onDelete={deleteProduct}
               onMove={moveProduct}
@@ -377,17 +461,25 @@ function DashboardSection({ products, orders, revenue, onNavigate }: {
 // ─── Products ─────────────────────────────────────────────────────────────────
 
 function ProductsSection({ products, showForm, saving, form, image, desc,
-  onToggleForm, onFormChange, onImageChange, onDescChange, onSubmit, onDelete, onMove }: {
+  onToggleForm, onFormChange, onImageChange, onDescChange, onSubmit, onDelete, onMove,
+  categories, newCategoryName, onNewCategoryNameChange, onCreateCategory,
+  onMoveCategory, onSaveCategoryMedia }: {
   products: Product[];
+  categories: Category[];
   showForm: boolean;
   saving: boolean;
   form: { name: string; price: string; category: string; stock: string; video: string };
   image: string | null;
   desc: string;
+  newCategoryName: string;
   onToggleForm: () => void;
   onFormChange: (k: string, v: string) => void;
   onImageChange: (v: string | null) => void;
   onDescChange: (v: string) => void;
+  onNewCategoryNameChange: (v: string) => void;
+  onCreateCategory: () => void;
+  onMoveCategory: (id: number, direction: 'up' | 'down') => void;
+  onSaveCategoryMedia: (id: number, bannerType: 'image' | 'video', bannerUrl: string, logoUrl: string) => void;
   onSubmit: () => void;
   onDelete: (id: number, name: string) => void;
   onMove: (id: number, direction: 'up' | 'down') => void;
@@ -395,6 +487,19 @@ function ProductsSection({ products, showForm, saving, form, image, desc,
   const dropRef    = useRef<HTMLDivElement>(null);
   const descRef    = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState(false);
+  const [categoryDrafts, setCategoryDrafts] = useState<Record<number, { bannerType: 'image' | 'video'; bannerUrl: string; logoUrl: string }>>({});
+
+  useEffect(() => {
+    const next: Record<number, { bannerType: 'image' | 'video'; bannerUrl: string; logoUrl: string }> = {};
+    for (const c of categories) {
+      next[c.id] = {
+        bannerType: c.bannerType === 'video' ? 'video' : 'image',
+        bannerUrl: c.bannerUrl ?? '',
+        logoUrl: c.logoUrl ?? '',
+      };
+    }
+    setCategoryDrafts(next);
+  }, [categories]);
 
   // ── Image helpers ────────────────────────────────────────────
   function readFileAsDataURL(file: File, cb: (url: string) => void) {
@@ -449,7 +554,6 @@ function ProductsSection({ products, showForm, saving, form, image, desc,
   const fields = [
     { k: 'name',     label: 'Nome *',       ph: 'Ex: Whey Protein 1kg',   type: 'text'   },
     { k: 'price',    label: 'Preço (€) *',  ph: '29.99',                  type: 'number' },
-    { k: 'category', label: 'Categoria',    ph: 'Ex: Suplementos',        type: 'text'   },
     { k: 'stock',    label: 'Estoque (un.)',ph: '100',                    type: 'number' },
   ];
 
@@ -485,6 +589,111 @@ function ProductsSection({ products, showForm, saving, form, image, desc,
                   />
                 </div>
               ))}
+            </div>
+
+            {/* Categories: create + select */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-500 mb-1.5">Nova categoria</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newCategoryName}
+                    onChange={e => onNewCategoryNameChange(e.target.value)}
+                    placeholder="Ex: Suplementos"
+                    className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500 transition-colors"
+                  />
+                  <button
+                    type="button"
+                    onClick={onCreateCategory}
+                    className="px-3 py-2 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800"
+                  >
+                    Criar
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-500 mb-1.5">Categoria do produto</label>
+                <select
+                  value={form.category}
+                  onChange={e => onFormChange('category', e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500 transition-colors"
+                >
+                  <option value="">Selecione uma categoria</option>
+                  {categories.filter(c => c.enabled).map(c => (
+                    <option key={c.id} value={c.name}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Cards das Categorias (loja)</p>
+              {categories.length === 0 && (
+                <div className="text-xs text-slate-400">Crie uma categoria para configurar banner/logo.</div>
+              )}
+              {categories.map((c, idx) => {
+                const draft = categoryDrafts[c.id] ?? { bannerType: 'image' as const, bannerUrl: '', logoUrl: '' };
+                return (
+                  <div key={c.id} className="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-slate-500 w-5">{idx + 1}</span>
+                      <span className="text-sm font-medium text-slate-800 flex-1">{c.name}</span>
+                      <button type="button" onClick={() => onMoveCategory(c.id, 'up')} className="p-1.5 rounded border border-slate-200 hover:bg-white" title="Subir categoria">
+                        <ArrowUp size={12} />
+                      </button>
+                      <button type="button" onClick={() => onMoveCategory(c.id, 'down')} className="p-1.5 rounded border border-slate-200 hover:bg-white" title="Descer categoria">
+                        <ArrowDown size={12} />
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <select
+                        value={draft.bannerType}
+                        onChange={e => setCategoryDrafts(prev => ({
+                          ...prev,
+                          [c.id]: { ...draft, bannerType: e.target.value === 'video' ? 'video' : 'image' },
+                        }))}
+                        className="px-2.5 py-2 border border-slate-200 rounded-lg text-xs"
+                      >
+                        <option value="image">Banner imagem</option>
+                        <option value="video">Banner vídeo</option>
+                      </select>
+
+                      <input
+                        type="text"
+                        value={draft.bannerUrl}
+                        onChange={e => setCategoryDrafts(prev => ({
+                          ...prev,
+                          [c.id]: { ...draft, bannerUrl: e.target.value },
+                        }))}
+                        placeholder="URL do banner (img/video)"
+                        className="px-2.5 py-2 border border-slate-200 rounded-lg text-xs sm:col-span-2"
+                      />
+
+                      <input
+                        type="text"
+                        value={draft.logoUrl}
+                        onChange={e => setCategoryDrafts(prev => ({
+                          ...prev,
+                          [c.id]: { ...draft, logoUrl: e.target.value },
+                        }))}
+                        placeholder="URL da logo da categoria (opcional)"
+                        className="px-2.5 py-2 border border-slate-200 rounded-lg text-xs sm:col-span-2"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => onSaveCategoryMedia(c.id, draft.bannerType, draft.bannerUrl, draft.logoUrl)}
+                        className="px-3 py-2 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800"
+                      >
+                        Salvar mídia
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
             {/* Video URL */}
@@ -749,11 +958,19 @@ function TrackingSection() {
 // ─── Settings ─────────────────────────────────────────────────────────────────
 
 function SettingsSection() {
+  type HomeBlock = {
+    key: 'hero' | 'trust' | 'products' | 'pin' | 'newsletter';
+    label: string;
+    position: number;
+    enabled: boolean;
+  };
+
   const [ig, setIg] = useState('');
   const [fb, setFb] = useState('');
   const [storeName, setStore] = useState('VitaFit Store');
   const [themeColor, setThemeColor] = useState('#10b981');
   const [logoUrl, setLogoUrl] = useState('');
+  const [homeBlocks, setHomeBlocks] = useState<HomeBlock[]>([]);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -769,6 +986,17 @@ function SettingsSection() {
         setFb(data?.facebook ?? '');
       } catch {
         // ignore load errors
+      }
+    })();
+
+    (async () => {
+      try {
+        const res = await fetch('/api/home-blocks');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (Array.isArray(data)) setHomeBlocks(data);
+      } catch {
+        // ignore block load errors
       }
     })();
   }, []);
@@ -797,6 +1025,34 @@ function SettingsSection() {
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     }
+  }
+
+  async function saveBlocks(nextBlocks: HomeBlock[]) {
+    setHomeBlocks(nextBlocks);
+    await fetch('/api/home-blocks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ blocks: nextBlocks }),
+    });
+  }
+
+  function moveBlock(index: number, direction: 'up' | 'down') {
+    const target = direction === 'up' ? index - 1 : index + 1;
+    if (target < 0 || target >= homeBlocks.length) return;
+
+    const copy = [...homeBlocks];
+    const temp = copy[index];
+    copy[index] = copy[target];
+    copy[target] = temp;
+
+    const normalized = copy.map((b, i) => ({ ...b, position: i + 1 }));
+    void saveBlocks(normalized);
+  }
+
+  function toggleBlock(index: number) {
+    const copy = [...homeBlocks];
+    copy[index] = { ...copy[index], enabled: !copy[index].enabled };
+    void saveBlocks(copy);
   }
 
   return (
@@ -836,6 +1092,32 @@ function SettingsSection() {
               <label className="block text-xs font-medium text-slate-500 mb-1.5">{f.label}</label>
               <input type="text" value={f.value} onChange={e => f.setter(e.target.value)} placeholder={f.ph}
                 className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500 transition-colors" />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+        <h2 className="font-semibold text-slate-800 mb-1">Blocos da Home (Fase 2)</h2>
+        <p className="text-xs text-slate-500 mb-4">Organize a ordem dos blocos da homepage e ative/desative cada bloco.</p>
+        <div className="space-y-2">
+          {homeBlocks.map((block, index) => (
+            <div key={block.key} className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 bg-slate-50">
+              <div className="text-xs font-semibold text-slate-500 w-6">{index + 1}</div>
+              <div className="flex-1">
+                <div className="text-sm font-medium text-slate-800">{block.label}</div>
+                <div className="text-[11px] text-slate-500">key: {block.key}</div>
+              </div>
+              <label className="flex items-center gap-2 text-xs text-slate-600">
+                <input type="checkbox" checked={block.enabled} onChange={() => toggleBlock(index)} />
+                ativo
+              </label>
+              <button onClick={() => moveBlock(index, 'up')} className="p-1.5 rounded border border-slate-200 hover:bg-white" title="Subir">
+                <ArrowUp size={13} />
+              </button>
+              <button onClick={() => moveBlock(index, 'down')} className="p-1.5 rounded border border-slate-200 hover:bg-white" title="Descer">
+                <ArrowDown size={13} />
+              </button>
             </div>
           ))}
         </div>
