@@ -50,6 +50,7 @@ export function ProductCarousel({ products, title, subtitle, onViewDetails }: Pr
 
   const handleAdd = (e: React.MouseEvent, product: Product) => {
     e.stopPropagation();
+    e.preventDefault();
     addItem(product);
     setAddedId(product.id);
     setTimeout(() => setAddedId(null), 1800);

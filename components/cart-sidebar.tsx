@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { X, Minus, Plus, Trash2, ShoppingBag, Truck } from 'lucide-react'
+import Link from 'next/link'
+import { Minus, Plus, Trash2, ShoppingBag, Truck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import {
@@ -16,7 +17,7 @@ import { useCart } from '@/lib/cart-context'
 const FREE_SHIPPING_THRESHOLD = 50
 
 export function CartSidebar() {
-  const { items, isCartOpen, setIsCartOpen, updateQuantity, removeItem, totalPrice, clearCart } = useCart()
+  const { items, isCartOpen, setIsCartOpen, updateQuantity, removeItem, totalPrice } = useCart()
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({})
 
   const remainingForFreeShipping = FREE_SHIPPING_THRESHOLD - totalPrice
@@ -177,10 +178,10 @@ export function CartSidebar() {
                 </div>
               </div>
 
-              <Button className="w-full" size="lg">
-                  <Link href="/checkout">
-                    Finalizar compra com Stripe
-                  </Link>
+              <Button className="w-full" size="lg" asChild>
+                <Link href="/checkout" onClick={() => setIsCartOpen(false)}>
+                  Finalizar compra com Stripe
+                </Link>
               </Button>
               
               <Button

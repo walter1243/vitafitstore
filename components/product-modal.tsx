@@ -11,7 +11,7 @@ import {
   Minus,
   Plus,
 } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useCart } from '@/lib/cart-context';
 import { type Product, productReviews } from '@/lib/products';
 
@@ -70,6 +70,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
       <DialogContent className="max-h-[92vh] max-w-4xl overflow-y-auto p-0 border-0 bg-white rounded-2xl shadow-2xl">
         <DialogHeader className="sr-only">
           <DialogTitle>{product.name}</DialogTitle>
+          <DialogDescription>{product.shortDescription}</DialogDescription>
         </DialogHeader>
 
         <div className="grid md:grid-cols-[55%_45%]">
