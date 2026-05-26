@@ -1,4 +1,3 @@
-import { CartProvider } from '@/lib/cart-context'
 import { Header } from '@/components/header'
 import HeroVideo from '../components/hero-video'
 import { TrustBadges } from '@/components/trust-badges'
@@ -11,8 +10,7 @@ import { UpsellPopup } from '@/components/upsell-popup'
 
 export default function HomePage() {
   return (
-    <CartProvider>
-      <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col">
         <Header />
         <main className="flex-1">
           <HeroVideo />
@@ -26,7 +24,6 @@ export default function HomePage() {
         <Footer />
         <CartSidebar />
         <UpsellPopup />
-      </div>
-    </CartProvider>
+    </div>
   )
 }
