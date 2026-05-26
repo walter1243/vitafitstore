@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import {
   Star,
   ShoppingCart,
@@ -10,6 +11,7 @@ import {
   RotateCcw,
   Minus,
   Plus,
+  Zap,
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useCart } from '@/lib/cart-context';
@@ -35,6 +37,7 @@ const badgeText: Record<string, string> = {
 
 export function ProductModal({ product, onClose }: ProductModalProps) {
   const { addItem } = useCart();
+  const router = useRouter();
   const [imageError, setImageError] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<Tab>('descripcion');
@@ -57,6 +60,12 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
         onClose();
       }, 1200);
     }, 800);
+  };
+
+  const handleBuyNow = () => {
+    for (let i = 0; i < quantity; i++) addItem(product);
+    onClose();
+    router.push('/checkout');
   };
 
   const tabs: { key: Tab; label: string }[] = [
@@ -173,6 +182,14 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
               </div>
               <span className="text-xs text-emerald-600 font-medium">{product.stock} disponibles</span>
             </div>
+
+            {/* Buy now */}
+            <button
+              onClick={handleBuyNow}
+              className="w-full py-3.5 rounded-xl font-bold text-white text-sm flex items-center justify-center gap-2 cursor-pointer mb-2 transition-all duration-200 bg-gray-900 hover:bg-gray-800 border border-emerald-500/30 hover:border-emerald-400/60"
+            >
+              <Zap className="h-4 w-4 text-emerald-400" /> Comprar ahora
+            </button>
 
             {/* Add to cart */}
             <button
