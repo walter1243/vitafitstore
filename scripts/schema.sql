@@ -115,3 +115,44 @@ INSERT INTO home_blocks (block_key, label, position, enabled) VALUES
 ('pin', 'Sessão Pin', 4, TRUE),
 ('newsletter', 'Newsletter', 5, TRUE)
 ON CONFLICT (block_key) DO NOTHING;
+
+-- ── Tabela: suppliers (dropshipping) ───────────────────────
+CREATE TABLE IF NOT EXISTS suppliers (
+  id          SERIAL PRIMARY KEY,
+  name        TEXT NOT NULL,
+  base_url    TEXT NOT NULL,
+  api_key     TEXT,
+  active      BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at  TIMESTAMP DEFAULT NOW()
+);
+
+-- ── Tabela: supplier_orders ─────────────────────────────────
+CREATE TABLE IF NOT EXISTS supplier_orders (
+  id                  SERIAL PRIMARY KEY,
+  order_id            INTEGER REFERENCES orders(id) ON DELETE SET NULL,
+  supplier_id         INTEGER REFERENCES suppliers(id) ON DELETE SET NULL,
+  supplier_order_id   TEXT,
+  status              TEXT NOT NULL DEFAULT 'pending',
+  tracking_code       TEXT,
+  carrier             TEXT,
+  error_message       TEXT,
+  created_at          TIMESTAMP DEFAULT NOW(),
+  updated_at          TIMESTAMP DEFAULT NOW()
+);
+
+-- ── Tabela: automation_settings ─────────────────────────────
+CREATE TABLE IF NOT EXISTS automation_settings (
+  id                    INTEGER PRIMARY KEY DEFAULT 1,
+  automation_enabled    BOOLEAN NOT NULL DEFAULT FALSE,
+  whatsapp_provider     TEXT    DEFAULT 'zapi',        -- zapi | evolution
+  whatsapp_url          TEXT,
+  whatsapp_token        TEXT,
+  sendgrid_key          TEXT,
+  notify_email          TEXT,
+  notify_whatsapp       BOOLEAN NOT NULL DEFAULT TRUE,
+  notify_email_enabled  BOOLEAN NOT NULL DEFAULT FALSE,
+  updated_at            TIMESTAMP DEFAULT NOW()
+);
+
+INSERT INTO automation_settings (id) VALUES (1)
+ON CONFLICT (id) DO NOTHING;

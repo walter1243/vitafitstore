@@ -4,12 +4,13 @@ import {
   LayoutDashboard, Package, ShoppingCart, Truck, Settings,
   Menu, X, Plus, Trash2, ExternalLink, Check, Euro,
   ChevronRight, Upload, Video, AlertCircle, CheckCircle2,
-  ArrowUp, ArrowDown, Monitor,
+  ArrowUp, ArrowDown, Monitor, Zap, ToggleLeft, ToggleRight,
+  MessageCircle, Mail, Globe, RefreshCw,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Section = 'dashboard' | 'products' | 'orders' | 'tracking' | 'settings';
+type Section = 'dashboard' | 'products' | 'orders' | 'tracking' | 'settings' | 'automation';
 
 type Product = {
   id: number;
@@ -56,6 +57,7 @@ const SECTION_LABELS: Record<Section, string> = {
   products: 'Produtos',
   orders: 'Pedidos',
   tracking: 'Rastreio',
+  automation: 'Automação',
   settings: 'Configurações',
 };
 
@@ -251,11 +253,12 @@ export default function AdminPage() {
   }
 
   const navItems: { key: Section; label: string; icon: React.ReactNode; badge?: number }[] = [
-    { key: 'dashboard',  label: 'Dashboard',      icon: <LayoutDashboard size={18} /> },
-    { key: 'products',   label: 'Produtos',        icon: <Package size={18} /> },
-    { key: 'orders',     label: 'Pedidos',         icon: <ShoppingCart size={18} />, badge: pendingCount || undefined },
-    { key: 'tracking',   label: 'Rastreio',        icon: <Truck size={18} /> },
-    { key: 'settings',   label: 'Configurações',   icon: <Settings size={18} /> },
+    { key: 'dashboard',   label: 'Dashboard',      icon: <LayoutDashboard size={18} /> },
+    { key: 'products',    label: 'Produtos',        icon: <Package size={18} /> },
+    { key: 'orders',      label: 'Pedidos',         icon: <ShoppingCart size={18} />, badge: pendingCount || undefined },
+    { key: 'tracking',    label: 'Rastreio',        icon: <Truck size={18} /> },
+    { key: 'automation',  label: 'Automação',       icon: <Zap size={18} /> },
+    { key: 'settings',    label: 'Configurações',   icon: <Settings size={18} /> },
   ];
 
   return (
@@ -375,8 +378,9 @@ export default function AdminPage() {
             />
           )}
           {section === 'orders'   && <OrdersSection   orders={orders}   onUpdateTracking={updateTracking} />}
-          {section === 'tracking' && <TrackingSection />}
-          {section === 'settings' && <SettingsSection />}
+          {section === 'tracking'   && <TrackingSection />}
+          {section === 'automation' && <AutomationSection />}
+          {section === 'settings'   && <SettingsSection />}
         </main>
       </div>
     </div>
@@ -955,7 +959,367 @@ function TrackingSection() {
   );
 }
 
+// ─── Automation ───────────────────────────────────────────────────────────────
+
+type Supplier = {
+  id: number;
+  name: string;
+  base_url: string;
+  api_key?: string;
+  active: boolean;
+};
+
+type AutomationSettings = {
+  automation_enabled: boolean;
+  whatsapp_provider: string;
+  whatsapp_url: string;
+  whatsapp_token: string;
+  sendgrid_key: string;
+  notify_email: string;
+  notify_whatsapp: boolean;
+  notify_email_enabled: boolean;
+};
+
+function AutomationSection() {
+  const [tab, setTab] = useState<'suppliers' | 'config'>('suppliers');
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [settings, setSettings] = useState<Partial<AutomationSettings>>({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  // New supplier form
+  const [newName, setNewName] = useState('');
+  const [newUrl, setNewUrl] = useState('');
+  const [newKey, setNewKey] = useState('');
+  const [addingSupplier, setAddingSupplier] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const [sr, ar] = await Promise.all([
+        fetch('/api/suppliers'),
+        fetch('/api/automation-settings'),
+      ]);
+      if (sr.ok) setSuppliers(await sr.json());
+      if (ar.ok) setSettings(await ar.json());
+      setLoading(false);
+    })();
+  }, []);
+
+  async function addSupplier() {
+    if (!newName || !newUrl) return;
+    setAddingSupplier(true);
+    const res = await fetch('/api/suppliers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newName, baseUrl: newUrl, apiKey: newKey }),
+    });
+    if (res.ok) {
+      const s = await res.json();
+      setSuppliers(prev => [...prev, s]);
+      setNewName(''); setNewUrl(''); setNewKey('');
+    }
+    setAddingSupplier(false);
+  }
+
+  async function toggleSupplier(id: number, active: boolean) {
+    await fetch('/api/suppliers', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, active: !active }),
+    });
+    setSuppliers(prev => prev.map(s => s.id === id ? { ...s, active: !active } : s));
+  }
+
+  async function deleteSupplier(id: number) {
+    await fetch('/api/suppliers', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+    setSuppliers(prev => prev.filter(s => s.id !== id));
+  }
+
+  async function saveSettings() {
+    setSaving(true);
+    await fetch('/api/automation-settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        automationEnabled: settings.automation_enabled,
+        whatsappProvider: settings.whatsapp_provider,
+        whatsappUrl: settings.whatsapp_url,
+        whatsappToken: settings.whatsapp_token,
+        sendgridKey: settings.sendgrid_key,
+        notifyEmail: settings.notify_email,
+        notifyWhatsapp: settings.notify_whatsapp,
+        notifyEmailEnabled: settings.notify_email_enabled,
+      }),
+    });
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2500);
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-40">
+        <RefreshCw size={20} className="animate-spin text-slate-400" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h2 className="font-semibold text-slate-800 flex items-center gap-2">
+              <Zap size={18} className="text-amber-500" /> Automação Dropshipping
+            </h2>
+            <p className="text-sm text-slate-500 mt-0.5">
+              Verificação de estoque, pedidos automáticos e notificações ao cliente
+            </p>
+          </div>
+          {/* Master toggle */}
+          <button
+            onClick={() => setSettings(p => ({ ...p, automation_enabled: !p.automation_enabled }))}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors
+              ${settings.automation_enabled
+                ? 'bg-green-600 text-white hover:bg-green-700'
+                : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+          >
+            {settings.automation_enabled
+              ? <><ToggleRight size={18} /> Automação ON</>
+              : <><ToggleLeft  size={18} /> Automação OFF</>}
+          </button>
+        </div>
+
+        {/* Pipeline visual */}
+        <div className="mt-5 flex items-center gap-1 flex-wrap text-xs text-slate-500 overflow-x-auto">
+          {[
+            { icon: <ShoppingCart size={13} />, label: 'Compra' },
+            { icon: <Globe size={13} />,        label: 'Estoque' },
+            { icon: <Package size={13} />,      label: 'Pedido' },
+            { icon: <Truck size={13} />,        label: 'Envio' },
+            { icon: <MessageCircle size={13} />,label: 'WhatsApp' },
+            { icon: <Mail size={13} />,         label: 'E-mail' },
+          ].map((step, i, arr) => (
+            <span key={i} className="flex items-center gap-1">
+              <span className={`flex items-center gap-1 px-2 py-1 rounded-full
+                ${settings.automation_enabled ? 'bg-green-50 text-green-700' : 'bg-slate-50 text-slate-400'}`}>
+                {step.icon}{step.label}
+              </span>
+              {i < arr.length - 1 && <ChevronRight size={12} className="text-slate-300" />}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-2">
+        {(['suppliers', 'config'] as const).map(t => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors
+              ${tab === t ? 'bg-green-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}
+          >
+            {t === 'suppliers' ? 'Fornecedores' : 'WhatsApp & Email'}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'suppliers' && (
+        <div className="space-y-4">
+          {/* Add supplier form */}
+          <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+            <h3 className="font-medium text-slate-700 mb-4 flex items-center gap-2">
+              <Plus size={15} /> Adicionar Fornecedor
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <input
+                className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30"
+                placeholder="Nome do fornecedor"
+                value={newName} onChange={e => setNewName(e.target.value)}
+              />
+              <input
+                className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30"
+                placeholder="Base URL da API"
+                value={newUrl} onChange={e => setNewUrl(e.target.value)}
+              />
+              <input
+                className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30"
+                placeholder="API Key (opcional)"
+                value={newKey} onChange={e => setNewKey(e.target.value)}
+              />
+            </div>
+            <button
+              onClick={addSupplier}
+              disabled={addingSupplier || !newName || !newUrl}
+              className="mt-3 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+            >
+              {addingSupplier ? 'Adicionando…' : 'Adicionar Fornecedor'}
+            </button>
+          </div>
+
+          {/* Supplier list */}
+          {suppliers.length === 0 ? (
+            <div className="bg-white rounded-xl border border-dashed border-slate-200 p-8 text-center text-slate-400 text-sm">
+              Nenhum fornecedor cadastrado. Adicione um acima.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {suppliers.map(s => (
+                <div key={s.id} className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 flex items-center gap-4 flex-wrap">
+                  <div className={`w-2 h-2 rounded-full ${s.active ? 'bg-green-500' : 'bg-slate-300'}`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-slate-800 text-sm">{s.name}</p>
+                    <p className="text-xs text-slate-400 truncate">{s.base_url}</p>
+                    {s.api_key && (
+                      <p className="text-xs text-slate-400 font-mono">
+                        key: {s.api_key.slice(0, 8)}•••
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => toggleSupplier(s.id, s.active)}
+                      className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors
+                        ${s.active ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                    >
+                      {s.active ? 'Ativo' : 'Inativo'}
+                    </button>
+                    <button
+                      onClick={() => deleteSupplier(s.id)}
+                      className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Webhook info */}
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
+            <p className="font-medium mb-1 flex items-center gap-1.5">
+              <Globe size={14} /> Webhook de rastreio do fornecedor
+            </p>
+            <p className="font-mono text-xs bg-white/60 border border-amber-200 rounded px-3 py-2 mt-2 break-all">
+              POST https://vitafitstore.vercel.app/api/webhook/tracking
+            </p>
+            <p className="text-xs mt-2 text-amber-700">
+              Body: <code className="font-mono">{'{ "fornecedor_pedido_id": "ID", "codigo_rastreio": "AA000000000BR", "transportadora": "Correios" }'}</code>
+            </p>
+          </div>
+        </div>
+      )}
+
+      {tab === 'config' && (
+        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5 space-y-5">
+          {/* WhatsApp */}
+          <div>
+            <h3 className="font-medium text-slate-700 mb-3 flex items-center gap-2">
+              <MessageCircle size={15} className="text-green-600" /> WhatsApp
+            </h3>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-slate-600 w-32">Provider</span>
+                <select
+                  value={settings.whatsapp_provider ?? 'zapi'}
+                  onChange={e => setSettings(p => ({ ...p, whatsapp_provider: e.target.value }))}
+                  className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30"
+                >
+                  <option value="zapi">Z-API (pago)</option>
+                  <option value="evolution">Evolution API (open-source)</option>
+                </select>
+              </div>
+              <label className="flex flex-col gap-1">
+                <span className="text-sm text-slate-600">
+                  {settings.whatsapp_provider === 'evolution'
+                    ? 'Evolution API URL (ex: http://localhost:8080)'
+                    : 'Z-API URL (ex: https://api.z-api.io/instances/ID/token/TOKEN)'}
+                </span>
+                <input
+                  className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30"
+                  placeholder="https://..."
+                  value={settings.whatsapp_url ?? ''}
+                  onChange={e => setSettings(p => ({ ...p, whatsapp_url: e.target.value }))}
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-sm text-slate-600">
+                  {settings.whatsapp_provider === 'evolution' ? 'API Key' : 'Client-Token'}
+                </span>
+                <input
+                  type="password"
+                  className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30"
+                  placeholder="Token secreto"
+                  value={settings.whatsapp_token ?? ''}
+                  onChange={e => setSettings(p => ({ ...p, whatsapp_token: e.target.value }))}
+                />
+              </label>
+              <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.notify_whatsapp ?? true}
+                  onChange={e => setSettings(p => ({ ...p, notify_whatsapp: e.target.checked }))}
+                  className="w-4 h-4 accent-green-600"
+                />
+                Enviar notificações por WhatsApp
+              </label>
+            </div>
+          </div>
+
+          <hr className="border-slate-100" />
+
+          {/* Email */}
+          <div>
+            <h3 className="font-medium text-slate-700 mb-3 flex items-center gap-2">
+              <Mail size={15} className="text-blue-600" /> E-mail (SendGrid)
+            </h3>
+            <div className="space-y-3">
+              <label className="flex flex-col gap-1">
+                <span className="text-sm text-slate-600">SendGrid API Key</span>
+                <input
+                  type="password"
+                  className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30"
+                  placeholder="SG.xxxxxxxxxxxx"
+                  value={settings.sendgrid_key ?? ''}
+                  onChange={e => setSettings(p => ({ ...p, sendgrid_key: e.target.value }))}
+                />
+              </label>
+              <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.notify_email_enabled ?? false}
+                  onChange={e => setSettings(p => ({ ...p, notify_email_enabled: e.target.checked }))}
+                  className="w-4 h-4 accent-blue-600"
+                />
+                Enviar notificações por e-mail
+              </label>
+            </div>
+          </div>
+
+          <button
+            onClick={saveSettings}
+            disabled={saving}
+            className="px-6 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors flex items-center gap-2"
+          >
+            {saving ? <RefreshCw size={14} className="animate-spin" /> : saved ? <Check size={14} /> : null}
+            {saving ? 'Salvando…' : saved ? 'Salvo!' : 'Salvar Configurações'}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Settings ─────────────────────────────────────────────────────────────────
+
 
 function SettingsSection() {
   type HomeBlock = {

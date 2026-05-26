@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { sql } from "@/lib/db";
+import { processOrder } from "@/lib/order-orchestrator";
 
 function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -83,6 +84,21 @@ export async function POST(req: NextRequest) {
         `;
       } catch (dbErr) {
         console.error('[checkout] DB insert error (non-fatal):', dbErr);
+      }
+
+      // Dispara orquestrador de dropshipping de forma assíncrona (não bloqueia resposta)
+      try {
+        const [newOrder] = await sql`
+          SELECT id FROM orders WHERE stripe_payment_id = ${pi.id} LIMIT 1
+        `;
+        if (newOrder?.id) {
+          // Fire-and-forget: não aguarda para não atrasar o cliente
+          processOrder(newOrder.id).catch((e: unknown) =>
+            console.error('[checkout] Orchestrator error:', e)
+          );
+        }
+      } catch (_) {
+        // Orquestrador é não-crítico
       }
 
       return NextResponse.json({ success: true });
