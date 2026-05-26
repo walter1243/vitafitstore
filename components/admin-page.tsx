@@ -967,6 +967,8 @@ type Supplier = {
   base_url: string;
   api_key?: string;
   active: boolean;
+  scraper_url_template?: string;
+  scraper_stock_selector?: string;
 };
 
 type AutomationSettings = {
@@ -981,7 +983,7 @@ type AutomationSettings = {
 };
 
 function AutomationSection() {
-  const [tab, setTab] = useState<'suppliers' | 'config'>('suppliers');
+  const [tab, setTab] = useState<'suppliers' | 'scraper' | 'import' | 'config'>('suppliers');
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [settings, setSettings] = useState<Partial<AutomationSettings>>({});
   const [loading, setLoading] = useState(true);
@@ -1118,15 +1120,20 @@ function AutomationSection() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2">
-        {(['suppliers', 'config'] as const).map(t => (
+      <div className="flex gap-2 flex-wrap">
+        {([
+          { key: 'suppliers', label: 'Fornecedores (API)' },
+          { key: 'scraper',   label: 'Sem Key (Scraper)' },
+          { key: 'import',    label: 'Importar Produtos' },
+          { key: 'config',    label: 'WhatsApp & Email'  },
+        ] as const).map(t => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
+            key={t.key}
+            onClick={() => setTab(t.key)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors
-              ${tab === t ? 'bg-green-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}
+              ${tab === t.key ? 'bg-green-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}
           >
-            {t === 'suppliers' ? 'Fornecedores' : 'WhatsApp & Email'}
+            {t.label}
           </button>
         ))}
       </div>
@@ -1216,6 +1223,24 @@ function AutomationSection() {
             </p>
           </div>
         </div>
+      )}
+
+      {tab === 'scraper' && (
+        <ScraperTab suppliers={suppliers} onSaveSupplier={async (id: number, scraperUrlTemplate: string, scraperStockSelector: string) => {
+          const res = await fetch('/api/suppliers', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, scraperUrlTemplate, scraperStockSelector }),
+          });
+          if (res.ok) {
+            const updated = await res.json();
+            setSuppliers(prev => prev.map(s => s.id === id ? { ...s, ...updated } : s));
+          }
+        }} />
+      )}
+
+      {tab === 'import' && (
+        <ImportTab onImportDone={() => { /* reload products outside scope */ }} />
       )}
 
       {tab === 'config' && (
@@ -1314,6 +1339,449 @@ function AutomationSection() {
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Scraper Tab ─────────────────────────────────────────────────────────────
+
+function ScraperTab({
+  suppliers,
+  onSaveSupplier,
+}: {
+  suppliers: Supplier[];
+  onSaveSupplier: (id: number, urlTpl: string, selector: string) => Promise<void>;
+}) {
+  const [expanded, setExpanded] = useState<number | null>(null);
+  const [urlTpl, setUrlTpl]     = useState('');
+  const [selector, setSelector] = useState('');
+  const [testUrl, setTestUrl]   = useState('');
+  const [testing, setTesting]   = useState(false);
+  const [testResult, setTestResult] = useState<{ stock: number | null; priceRaw: string | null; error?: string } | null>(null);
+  const [saving, setSaving]     = useState(false);
+
+  function openSupplier(s: Supplier) {
+    setExpanded(s.id);
+    setUrlTpl(s.scraper_url_template ?? '');
+    setSelector(s.scraper_stock_selector ?? '');
+    setTestUrl('');
+    setTestResult(null);
+  }
+
+  async function runTest() {
+    if (!testUrl || !selector) return;
+    setTesting(true);
+    setTestResult(null);
+    const res = await fetch('/api/suppliers/scrape-test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: testUrl, stockSelector: selector }),
+    });
+    const data = await res.json();
+    setTestResult(res.ok ? { stock: data.stock, priceRaw: data.priceRaw } : { stock: null, priceRaw: null, error: data.error });
+    setTesting(false);
+  }
+
+  async function save(id: number) {
+    setSaving(true);
+    await onSaveSupplier(id, urlTpl, selector);
+    setSaving(false);
+    setExpanded(null);
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-800">
+        <p className="font-medium mb-1">🤖 Scraper — fornecedores sem API</p>
+        <p>Configure a URL do produto (use <code className="font-mono bg-white/60 px-1 rounded">{'{sku}'}</code> como placeholder) e o seletor CSS do elemento que mostra o estoque. O robô vai buscar o HTML e extrair o número automaticamente.</p>
+        <p className="mt-1 text-xs text-blue-600">Suporte: <code className="font-mono">#id</code>, <code className="font-mono">.classe</code>, <code className="font-mono">tag.classe</code>, <code className="font-mono">[data-attr]</code></p>
+      </div>
+
+      {suppliers.length === 0 ? (
+        <div className="bg-white rounded-xl border border-dashed border-slate-200 p-8 text-center text-slate-400 text-sm">
+          Cadastre fornecedores na aba "Fornecedores (API)" primeiro.
+        </div>
+      ) : (
+        suppliers.map(s => (
+          <div key={s.id} className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+            <button
+              onClick={() => { setExpanded(expanded === s.id ? null : s.id); openSupplier(s); }}
+              className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className={`w-2 h-2 rounded-full ${s.scraper_url_template ? 'bg-blue-500' : 'bg-slate-200'}`} />
+                <span className="font-medium text-slate-800 text-sm">{s.name}</span>
+                {s.scraper_url_template && (
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">scraper ativo</span>
+                )}
+              </div>
+              <ChevronRight size={16} className={`text-slate-400 transition-transform ${expanded === s.id ? 'rotate-90' : ''}`} />
+            </button>
+
+            {expanded === s.id && (
+              <div className="border-t border-slate-100 p-4 space-y-3">
+                <label className="flex flex-col gap-1">
+                  <span className="text-xs font-medium text-slate-600">URL do Produto (com {'{sku}'})</span>
+                  <input
+                    className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 font-mono"
+                    placeholder="https://fornecedor.com/produto/{sku}"
+                    value={urlTpl}
+                    onChange={e => setUrlTpl(e.target.value)}
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-xs font-medium text-slate-600">Seletor CSS do Estoque</span>
+                  <input
+                    className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 font-mono"
+                    placeholder=".quantidade-estoque ou #stock ou [data-stock]"
+                    value={selector}
+                    onChange={e => setSelector(e.target.value)}
+                  />
+                </label>
+
+                {/* Test area */}
+                <div className="bg-slate-50 rounded-lg p-3 space-y-2">
+                  <p className="text-xs font-medium text-slate-600">Testar com URL real</p>
+                  <div className="flex gap-2">
+                    <input
+                      className="flex-1 border border-slate-200 bg-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                      placeholder="Cole a URL de um produto para testar"
+                      value={testUrl}
+                      onChange={e => setTestUrl(e.target.value)}
+                    />
+                    <button
+                      onClick={runTest}
+                      disabled={testing || !testUrl || !selector}
+                      className="px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center gap-1.5"
+                    >
+                      {testing ? <RefreshCw size={13} className="animate-spin" /> : <Globe size={13} />}
+                      Testar
+                    </button>
+                  </div>
+                  {testResult && (
+                    <div className={`text-sm rounded-lg px-3 py-2 ${testResult.error ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
+                      {testResult.error
+                        ? `❌ Erro: ${testResult.error}`
+                        : `✅ Estoque encontrado: ${testResult.stock ?? '(não numérico)'} unidades`
+                      }
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => save(s.id)}
+                    disabled={saving}
+                    className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                  >
+                    {saving ? 'Salvando…' : 'Salvar Scraper'}
+                  </button>
+                  <button
+                    onClick={() => setExpanded(null)}
+                    className="px-4 py-2 bg-slate-100 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
+
+// ─── Import Tab ───────────────────────────────────────────────────────────────
+
+type ImportProduct = {
+  sku: string;
+  name: string;
+  category: string;
+  cost: number;
+  salePrice: number;
+  stock: number;
+  image: string;
+  description: string;
+};
+
+function parseCSV(text: string): ImportProduct[] {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/["']/g, ''));
+  return lines.slice(1).map(line => {
+    const values = line.match(/(".*?"|[^,]+|(?<=,)(?=,)|^(?=,)|(?<=,)$)/g) ?? line.split(',');
+    const clean  = values.map(v => v.replace(/^"|"$/g, '').trim());
+    const get    = (keys: string[]) => clean[keys.map(k => headers.indexOf(k)).find(i => i >= 0) ?? -1] ?? '';
+    const cost   = parseFloat(get(['preco_custo', 'custo', 'cost', 'price'])) || 0;
+    return {
+      sku:         get(['sku', 'codigo', 'code', 'id']),
+      name:        get(['nome', 'name', 'produto', 'product']),
+      category:    get(['categoria', 'category', 'cat']) || 'Geral',
+      cost,
+      salePrice:   parseFloat(get(['preco_venda', 'preco', 'sale_price'])) || +(cost * 1.4).toFixed(2),
+      stock:       parseInt(get(['estoque', 'stock', 'qty', 'quantidade'])) || 0,
+      image:       get(['imagem', 'image', 'foto', 'img']),
+      description: get(['descricao', 'description', 'desc']),
+    };
+  }).filter(p => p.name);
+}
+
+function ImportTab({ onImportDone }: { onImportDone: () => void }) {
+  const [step, setStep]             = useState<'upload' | 'select' | 'done'>('upload');
+  const [allProducts, setAllProducts] = useState<ImportProduct[]>([]);
+  const [selected, setSelected]     = useState<Record<string, ImportProduct>>({});
+  const [search, setSearch]         = useState('');
+  const [filterCat, setFilterCat]   = useState('todas');
+  const [margin, setMargin]         = useState(40);
+  const [importing, setImporting]   = useState(false);
+  const [importedCount, setImportedCount] = useState(0);
+
+  const categories = [...new Set(allProducts.map(p => p.category))];
+
+  const filtered = allProducts.filter(p => {
+    const q = search.toLowerCase();
+    return (
+      (p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)) &&
+      (filterCat === 'todas' || p.category === filterCat)
+    );
+  });
+
+  function loadFile(file: File) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const text = (e.target?.result as string) ?? '';
+      const parsed = parseCSV(text).map(p => ({
+        ...p,
+        salePrice: +(p.cost * (1 + margin / 100)).toFixed(2),
+      }));
+      setAllProducts(parsed);
+      setSelected({});
+      setStep('select');
+    };
+    reader.readAsText(file, 'UTF-8');
+  }
+
+  function toggleProduct(p: ImportProduct) {
+    setSelected(prev => {
+      const next = { ...prev };
+      if (next[p.sku || p.name]) delete next[p.sku || p.name];
+      else next[p.sku || p.name] = p;
+      return next;
+    });
+  }
+
+  function selectAll()   { const m: Record<string, ImportProduct> = {}; filtered.forEach(p => m[p.sku || p.name] = p); setSelected(m); }
+  function deselectAll() { setSelected({}); }
+
+  function editPrice(key: string, val: string) {
+    const num = parseFloat(val) || 0;
+    setSelected(prev => ({ ...prev, [key]: { ...prev[key], salePrice: num } }));
+    setAllProducts(prev => prev.map(p => (p.sku || p.name) === key ? { ...p, salePrice: num } : p));
+  }
+
+  function recalcMargin(m: number) {
+    setMargin(m);
+    setAllProducts(prev => prev.map(p => ({ ...p, salePrice: +(p.cost * (1 + m / 100)).toFixed(2) })));
+  }
+
+  async function confirmImport() {
+    setImporting(true);
+    const list = Object.values(selected);
+    const res = await fetch('/api/products/import-batch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        products: list.map(p => ({
+          name: p.name,
+          price: p.salePrice,
+          category: p.category,
+          stock: p.stock,
+          image: p.image || null,
+          description: p.description || null,
+        })),
+      }),
+    });
+    const data = await res.json();
+    setImportedCount(data.imported ?? list.length);
+    setImporting(false);
+    setStep('done');
+    onImportDone();
+  }
+
+  const selCount = Object.keys(selected).length;
+
+  if (step === 'upload') {
+    return (
+      <div className="space-y-4">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 max-w-lg">
+          <h3 className="font-medium text-slate-800 mb-1 flex items-center gap-2">
+            <Upload size={16} className="text-green-600" /> Importar Catálogo do Fornecedor
+          </h3>
+          <p className="text-sm text-slate-500 mb-4">Carregue um arquivo CSV com os produtos. Colunas reconhecidas: <span className="font-mono text-xs">nome, preco_custo, estoque, categoria, imagem, sku</span></p>
+
+          <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-xl p-8 cursor-pointer hover:border-green-400 hover:bg-green-50/30 transition-colors">
+            <Upload size={28} className="text-slate-300 mb-2" />
+            <span className="text-sm text-slate-500">Clique para selecionar o CSV</span>
+            <span className="text-xs text-slate-400 mt-1">Formato: .csv (UTF-8)</span>
+            <input
+              type="file"
+              accept=".csv,.txt"
+              className="hidden"
+              onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); }}
+            />
+          </label>
+
+          <div className="mt-4">
+            <label className="flex items-center justify-between text-sm text-slate-600 mb-1">
+              <span>Margem de lucro padrão</span>
+              <strong className="text-green-700">{margin}%</strong>
+            </label>
+            <input
+              type="range" min={5} max={200} value={margin}
+              onChange={e => setMargin(Number(e.target.value))}
+              className="w-full accent-green-600"
+            />
+          </div>
+        </div>
+
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-500 max-w-lg">
+          <p className="font-medium text-slate-700 mb-1">Exemplo de CSV aceito:</p>
+          <pre className="font-mono bg-white rounded p-2 border border-slate-200 overflow-x-auto">{`sku,nome,preco_custo,estoque,categoria,imagem\nWHEY001,Whey Protein 1kg,89.90,42,Proteínas,https://...\nCREA001,Creatina 300g,45.00,18,Performance,https://...`}</pre>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 'done') {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-10 text-center max-w-md">
+        <CheckCircle2 size={48} className="text-green-500 mx-auto mb-3" />
+        <h3 className="font-semibold text-slate-800 text-lg mb-1">Importação concluída!</h3>
+        <p className="text-slate-500 text-sm">{importedCount} produtos adicionados à sua loja.</p>
+        <button
+          onClick={() => { setStep('upload'); setAllProducts([]); setSelected({}); }}
+          className="mt-5 px-5 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
+        >
+          Importar mais
+        </button>
+      </div>
+    );
+  }
+
+  // step === 'select'
+  return (
+    <div className="space-y-4">
+      {/* Filters bar */}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 flex flex-wrap gap-3 items-center">
+        <input
+          className="flex-1 min-w-[160px] border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30"
+          placeholder="🔍 Buscar produto..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+        <select
+          value={filterCat}
+          onChange={e => setFilterCat(e.target.value)}
+          className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none"
+        >
+          <option value="todas">Todas categorias</option>
+          {categories.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+        <div className="flex items-center gap-2 text-sm text-slate-600">
+          <span>Margem:</span>
+          <input
+            type="number" min={0} max={500} value={margin}
+            onChange={e => recalcMargin(Number(e.target.value))}
+            className="w-16 border border-slate-200 rounded-lg px-2 py-1 text-sm text-center"
+          />
+          <span>%</span>
+        </div>
+        <button onClick={selectAll}   className="text-xs px-3 py-1.5 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors">Todos</button>
+        <button onClick={deselectAll} className="text-xs px-3 py-1.5 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors">Nenhum</button>
+        <span className="text-xs text-slate-400">{filtered.length} produtos</span>
+      </div>
+
+      {/* Product grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+        {filtered.map(p => {
+          const key  = p.sku || p.name;
+          const isSel = !!selected[key];
+          const selP  = selected[key] ?? p;
+          const profit = selP.salePrice - p.cost;
+          return (
+            <div
+              key={key}
+              onClick={() => toggleProduct(p)}
+              className={`relative bg-white rounded-xl border-2 cursor-pointer transition-all overflow-hidden
+                ${isSel ? 'border-green-500 shadow-md shadow-green-100' : 'border-slate-200 hover:border-slate-300'}`}
+            >
+              {/* Checkbox badge */}
+              <div className={`absolute top-2 left-2 w-5 h-5 rounded flex items-center justify-center text-white text-xs font-bold z-10
+                ${isSel ? 'bg-green-500' : 'bg-white/80 border border-slate-300 text-slate-400'}`}>
+                {isSel ? '✓' : ''}
+              </div>
+
+              {/* Image */}
+              <div className="aspect-square bg-slate-50">
+                {p.image
+                  ? <img src={p.image} alt={p.name} className="w-full h-full object-cover" onError={e => (e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" fill="%23f1f5f9"/><text x="40" y="44" text-anchor="middle" fill="%2394a3b8" font-size="24">📦</text></svg>')} />
+                  : <div className="w-full h-full flex items-center justify-center text-3xl">📦</div>
+                }
+              </div>
+
+              {/* Info */}
+              <div className="p-2">
+                <p className="text-xs font-medium text-slate-800 leading-tight line-clamp-2">{p.name}</p>
+                <p className="text-xs text-slate-400 mt-0.5">{p.category}</p>
+
+                <div className="mt-1.5 space-y-0.5">
+                  <p className="text-xs text-slate-500">Custo: <span className="font-mono">R${p.cost.toFixed(2)}</span></p>
+                  <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                    <span className="text-xs text-slate-600">Venda:</span>
+                    <input
+                      type="number"
+                      value={isSel ? selP.salePrice : p.salePrice}
+                      onChange={e => { if (!isSel) toggleProduct(p); editPrice(key, e.target.value); }}
+                      onClick={e => e.stopPropagation()}
+                      className="w-full border border-slate-200 rounded px-1 py-0.5 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-green-500/50"
+                    />
+                  </div>
+                  <p className={`text-xs font-medium ${profit >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                    Lucro: R${profit.toFixed(2)}
+                  </p>
+                  <p className="text-xs text-slate-400">📦 {p.stock} un.</p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Sticky footer */}
+      <div className="sticky bottom-0 bg-white/95 backdrop-blur border-t border-slate-200 rounded-xl shadow-lg p-4 flex items-center justify-between gap-4">
+        <span className="text-sm text-slate-600">
+          {selCount > 0
+            ? <span className="text-green-700 font-medium">✅ {selCount} produto(s) selecionado(s)</span>
+            : 'Clique nos cards para selecionar'}
+        </span>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setStep('upload')}
+            className="px-4 py-2 bg-slate-100 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors"
+          >
+            ← Voltar
+          </button>
+          <button
+            onClick={confirmImport}
+            disabled={selCount === 0 || importing}
+            className="px-5 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors flex items-center gap-2"
+          >
+            {importing ? <RefreshCw size={14} className="animate-spin" /> : <Upload size={14} />}
+            {importing ? 'Importando…' : `Importar ${selCount} produto(s)`}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

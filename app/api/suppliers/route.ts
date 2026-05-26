@@ -4,21 +4,27 @@ import { sql } from '@/lib/db'
 async function ensureTable() {
   await sql`
     CREATE TABLE IF NOT EXISTS suppliers (
-      id         SERIAL PRIMARY KEY,
-      name       TEXT NOT NULL,
-      base_url   TEXT NOT NULL,
-      api_key    TEXT,
-      active     BOOLEAN NOT NULL DEFAULT TRUE,
-      created_at TIMESTAMP DEFAULT NOW()
+      id                     SERIAL PRIMARY KEY,
+      name                   TEXT NOT NULL,
+      base_url               TEXT NOT NULL,
+      api_key                TEXT,
+      active                 BOOLEAN NOT NULL DEFAULT TRUE,
+      scraper_url_template   TEXT,
+      scraper_stock_selector TEXT,
+      created_at             TIMESTAMP DEFAULT NOW()
     )
   `
+  // Idempotent migration for existing DBs
+  await sql`ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS scraper_url_template   TEXT`
+  await sql`ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS scraper_stock_selector TEXT`
 }
 
 export async function GET() {
   try {
     await ensureTable()
     const suppliers = await sql`
-      SELECT id, name, base_url, api_key, active, created_at
+      SELECT id, name, base_url, api_key, active,
+             scraper_url_template, scraper_stock_selector, created_at
       FROM suppliers
       ORDER BY id
     `
@@ -48,18 +54,20 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { id, name, baseUrl, apiKey, active } = await req.json()
+    const { id, name, baseUrl, apiKey, active, scraperUrlTemplate, scraperStockSelector } = await req.json()
     if (!id) return NextResponse.json({ error: 'id obrigatório' }, { status: 400 })
 
     const [row] = await sql`
       UPDATE suppliers
       SET
-        name     = COALESCE(${name ?? null}, name),
-        base_url = COALESCE(${baseUrl ?? null}, base_url),
-        api_key  = COALESCE(${apiKey ?? null}, api_key),
-        active   = COALESCE(${active ?? null}, active)
+        name                   = COALESCE(${name ?? null}, name),
+        base_url               = COALESCE(${baseUrl ?? null}, base_url),
+        api_key                = COALESCE(${apiKey ?? null}, api_key),
+        active                 = COALESCE(${active ?? null}, active),
+        scraper_url_template   = COALESCE(${scraperUrlTemplate ?? null}, scraper_url_template),
+        scraper_stock_selector = COALESCE(${scraperStockSelector ?? null}, scraper_stock_selector)
       WHERE id = ${id}
-      RETURNING id, name, base_url, api_key, active
+      RETURNING id, name, base_url, api_key, active, scraper_url_template, scraper_stock_selector
     `
     return NextResponse.json(row)
   } catch (err) {

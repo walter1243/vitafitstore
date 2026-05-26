@@ -118,12 +118,14 @@ ON CONFLICT (block_key) DO NOTHING;
 
 -- ── Tabela: suppliers (dropshipping) ───────────────────────
 CREATE TABLE IF NOT EXISTS suppliers (
-  id          SERIAL PRIMARY KEY,
-  name        TEXT NOT NULL,
-  base_url    TEXT NOT NULL,
-  api_key     TEXT,
-  active      BOOLEAN NOT NULL DEFAULT TRUE,
-  created_at  TIMESTAMP DEFAULT NOW()
+  id                    SERIAL PRIMARY KEY,
+  name                  TEXT NOT NULL,
+  base_url              TEXT NOT NULL,
+  api_key               TEXT,
+  active                BOOLEAN NOT NULL DEFAULT TRUE,
+  scraper_url_template  TEXT,   -- ex: https://site.com/produto/{sku}
+  scraper_stock_selector TEXT,  -- ex: .quantidade-estoque
+  created_at            TIMESTAMP DEFAULT NOW()
 );
 
 -- ── Tabela: supplier_orders ─────────────────────────────────
