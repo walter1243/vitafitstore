@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 type Category = {
   id: number;
   name: string;
@@ -54,7 +57,9 @@ export async function GET() {
       ORDER BY position ASC, name ASC
     `;
 
-    return NextResponse.json(rows as Category[]);
+    return NextResponse.json(rows as Category[], {
+      headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" },
+    });
   } catch (err: any) {
     console.error("[GET /api/categories]", err);
     return NextResponse.json({ error: err?.message ?? "Erro ao listar categorias." }, { status: 500 });
@@ -101,7 +106,10 @@ export async function POST(req: NextRequest) {
                 COALESCE(logo_url, '') AS "logoUrl"
     `;
 
-    return NextResponse.json(category, { status: 201 });
+    return NextResponse.json(category, {
+      status: 201,
+      headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" },
+    });
   } catch (err: any) {
     console.error("[POST /api/categories]", err);
     return NextResponse.json({ error: err?.message ?? "Erro ao criar categoria." }, { status: 500 });
@@ -151,7 +159,9 @@ export async function PATCH(req: NextRequest) {
 
       await sql`UPDATE categories SET position = ${target.position} WHERE id = ${current.id}`;
       await sql`UPDATE categories SET position = ${current.position} WHERE id = ${target.id}`;
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true }, {
+        headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" },
+      });
     }
 
     if (action === 'updateMedia') {
@@ -174,7 +184,9 @@ export async function PATCH(req: NextRequest) {
         WHERE id = ${id}
       `;
 
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true }, {
+        headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" },
+      });
     }
 
     return NextResponse.json({ error: 'Ação inválida.' }, { status: 400 });
@@ -216,7 +228,9 @@ export async function DELETE(req: NextRequest) {
       `;
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true }, {
+      headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" },
+    });
   } catch (err: any) {
     console.error('[DELETE /api/categories]', err);
     return NextResponse.json({ error: err?.message ?? 'Erro ao excluir categoria.' }, { status: 500 });

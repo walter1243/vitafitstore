@@ -61,29 +61,93 @@ const footerSections: Record<FooterSectionKey, FooterSectionConfig> = {
   },
 }
 
+type CategoryMeta = {
+  id: number
+  name: string
+  slug: string
+  enabled?: boolean
+}
+
+function slugifyCategory(raw?: string) {
+  if (!raw) return 'geral'
+  return raw
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+}
+
+function toCategoryAnchor(raw?: string) {
+  const slug = slugifyCategory(raw)
+  if (slug === 'salud') return '#salud'
+  if (slug === 'fitness') return '#fitness'
+  return `#cat-${slug}`
+}
+
+function normalizeInstagramHref(input: string) {
+  const value = String(input || '').trim()
+  if (!value) return ''
+  if (value.startsWith('http://') || value.startsWith('https://')) return value
+  return `https://instagram.com/${value.replace(/^@/, '')}`
+}
+
 export function Footer() {
   const [storeName, setStoreName] = useState('VitaFit Store')
   const [instagram, setInstagram] = useState('')
   const [whatsapp, setWhatsapp] = useState('')
   const [activePopup, setActivePopup] = useState<FooterSectionKey | null>(null)
+  const [categories, setCategories] = useState<CategoryMeta[]>([])
 
   useEffect(() => {
     ;(async () => {
       try {
-        const res = await fetch('/api/store-settings', { cache: 'no-store' })
-        if (!res.ok) return
-        const data = await res.json()
-        setStoreName(data?.storeName ?? 'VitaFit Store')
-        setInstagram(data?.instagram ?? '')
-        setWhatsapp(data?.whatsapp ?? '')
+        const [settingsRes, categoriesRes] = await Promise.all([
+          fetch('/api/store-settings', { cache: 'no-store' }),
+          fetch('/api/categories', { cache: 'no-store' }),
+        ])
+
+        if (settingsRes.ok) {
+          const data = await settingsRes.json()
+          setStoreName(data?.storeName ?? 'VitaFit Store')
+          setInstagram(data?.instagram ?? '')
+          setWhatsapp(data?.whatsapp ?? '')
+        }
+
+        if (categoriesRes.ok) {
+          const data = await categoriesRes.json()
+          if (Array.isArray(data)) {
+            setCategories(data.filter((c: CategoryMeta) => c?.enabled !== false))
+          }
+        }
       } catch {
         // ignore
       }
     })()
   }, [])
 
+  const dynamicSections: Record<FooterSectionKey, FooterSectionConfig> = {
+    ...footerSections,
+    productos: {
+      title: 'Productos',
+      description: 'Explora categorias creadas en el panel admin y navega directo en la vitrina.',
+      items: categories.length
+        ? categories.map((category) => ({
+            title: category.name,
+            description: 'Categoria activa en la tienda.',
+            href: toCategoryAnchor(category.slug || category.name),
+          }))
+        : [
+            { title: 'Sin categorias activas', description: 'Crea categorias no admin para aparecer aqui.', href: '#productos' },
+          ],
+    },
+  }
+
+  const instagramHref = normalizeInstagramHref(instagram)
+
   const socialLinks = [
-    instagram.trim() && { icon: Instagram, href: `https://instagram.com/${instagram.replace(/^@/, '')}`, label: 'Instagram' },
+    instagramHref && { icon: Instagram, href: instagramHref, label: 'Instagram' },
     whatsapp.trim() && {
       icon: MessageCircle,
       href: whatsapp.startsWith('http')
@@ -103,7 +167,7 @@ export function Footer() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-base font-semibold text-slate-900">{footerSections[activePopup].title}</h3>
+                <h3 className="text-base font-semibold text-slate-900">{dynamicSections[activePopup].title}</h3>
                 <button
                   type="button"
                   onClick={() => setActivePopup(null)}
@@ -114,10 +178,10 @@ export function Footer() {
                 </button>
               </div>
 
-              <p className="mb-3 text-sm leading-relaxed text-slate-600">{footerSections[activePopup].description}</p>
+              <p className="mb-3 text-sm leading-relaxed text-slate-600">{dynamicSections[activePopup].description}</p>
 
               <div className="space-y-2">
-                {footerSections[activePopup].items.map((item) => (
+                {dynamicSections[activePopup].items.map((item) => (
                   <div key={item.title} className="rounded-lg border border-slate-200 p-3">
                     {item.href ? (
                       <Link
@@ -147,9 +211,9 @@ export function Footer() {
                       <MessageCircle size={14} /> WhatsApp SAC
                     </a>
                   )}
-                  {instagram.trim() && (
+                  {instagramHref && (
                     <a
-                      href={`https://instagram.com/${instagram.replace(/^@/, '')}`}
+                      href={instagramHref}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700"
@@ -188,29 +252,31 @@ export function Footer() {
             {/* Social Links */}
             <div className="flex items-center gap-4">
               {socialLinks.map((social) => (
-                <Link
+                <a
                   key={social.label}
                   href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
                   aria-label={social.label}
                 >
                   <social.icon className="h-5 w-5" />
-                </Link>
+                </a>
               ))}
             </div>
           </div>
 
           {/* Links com popup */}
-          {(Object.keys(footerSections) as FooterSectionKey[]).map((sectionKey) => (
+          {(Object.keys(dynamicSections) as FooterSectionKey[]).map((sectionKey) => (
             <div key={sectionKey}>
               <button
                 type="button"
                 onClick={() => setActivePopup(sectionKey)}
                 className="mb-2 text-left font-semibold text-foreground transition-colors hover:text-primary"
               >
-                {footerSections[sectionKey].title}
+                {dynamicSections[sectionKey].title}
               </button>
-              <p className="text-sm text-muted-foreground">{footerSections[sectionKey].description}</p>
+              <p className="text-sm text-muted-foreground">{dynamicSections[sectionKey].description}</p>
             </div>
           ))}
         </div>

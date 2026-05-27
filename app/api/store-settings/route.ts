@@ -22,6 +22,24 @@ const DEFAULT_SETTINGS = {
 
 async function ensureStoreSettingsColumns() {
   await sql`
+    CREATE TABLE IF NOT EXISTS store_settings (
+      id SERIAL PRIMARY KEY,
+      store_name TEXT NOT NULL DEFAULT 'VitaFit Store',
+      logo_url TEXT,
+      theme_color TEXT NOT NULL DEFAULT '#10b981',
+      instagram TEXT,
+      whatsapp TEXT,
+      whatsapp_floating_enabled BOOLEAN DEFAULT TRUE,
+      whatsapp_greeting TEXT,
+      whatsapp_order_template TEXT,
+      whatsapp_tracking_template TEXT,
+      whatsapp_future_template TEXT,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
+  await sql`
     ALTER TABLE store_settings
     ADD COLUMN IF NOT EXISTS whatsapp TEXT,
     ADD COLUMN IF NOT EXISTS whatsapp_floating_enabled BOOLEAN DEFAULT TRUE,
@@ -29,6 +47,12 @@ async function ensureStoreSettingsColumns() {
     ADD COLUMN IF NOT EXISTS whatsapp_order_template TEXT,
     ADD COLUMN IF NOT EXISTS whatsapp_tracking_template TEXT,
     ADD COLUMN IF NOT EXISTS whatsapp_future_template TEXT
+  `;
+
+  await sql`
+    INSERT INTO store_settings (id, store_name, logo_url, theme_color)
+    VALUES (1, ${DEFAULT_SETTINGS.storeName}, NULL, ${DEFAULT_SETTINGS.themeColor})
+    ON CONFLICT (id) DO NOTHING
   `;
 }
 
