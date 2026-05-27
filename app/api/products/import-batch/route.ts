@@ -4,6 +4,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
+import { requireAdmin } from '@/lib/admin-auth'
 
 interface ImportProduct {
   name: string
@@ -19,6 +20,9 @@ interface ImportProduct {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req)
+    if (!auth.ok) return auth.response
+
     const { products }: { products: ImportProduct[] } = await req.json()
 
     if (!Array.isArray(products) || products.length === 0) {

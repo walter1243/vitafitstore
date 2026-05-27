@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server";
 import { sql } from "@/lib/db";
+import { getAdminSessionFromRequest, ensureAdminUsersTable } from '@/lib/admin-auth';
+import type { NextRequest } from 'next/server';
 
-export async function POST() {
+export async function POST(req: NextRequest) {
   try {
+    await ensureAdminUsersTable();
+    const session = getAdminSessionFromRequest(req);
+    if (!session) {
+      return NextResponse.json({ ok: false, error: 'Sessão inválida. Faça login.' }, { status: 401 });
+    }
+
     const migrations: { name: string; ok: boolean; error?: string }[] = [];
 
     async function run(name: string, fn: () => Promise<any>) {
@@ -106,6 +114,20 @@ export async function POST() {
         quantity           INTEGER NOT NULL DEFAULT 1,
         created_at         TIMESTAMP DEFAULT NOW(),
         UNIQUE (kit_id, related_product_id)
+      )
+    `);
+
+    await run('admin_users.create', () => sql`
+      CREATE TABLE IF NOT EXISTS admin_users (
+        id            SERIAL PRIMARY KEY,
+        username      TEXT NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL,
+        display_name  TEXT NOT NULL,
+        photo_url     TEXT,
+        role          TEXT NOT NULL DEFAULT 'admin',
+        active        BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at    TIMESTAMP DEFAULT NOW(),
+        updated_at    TIMESTAMP DEFAULT NOW()
       )
     `);
 

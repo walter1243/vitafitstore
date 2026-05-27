@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
+import { requireAdmin } from '@/lib/admin-auth'
 
 async function ensureTable() {
   await sql`
@@ -31,6 +32,9 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req)
+    if (!auth.ok) return auth.response
+
     await ensureTable()
     const {
       automationEnabled,

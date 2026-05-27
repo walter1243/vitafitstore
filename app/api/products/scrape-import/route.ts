@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -144,6 +145,9 @@ async function detectAndScrape(url: string): Promise<ScrapedProduct[]> {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (!auth.ok) return auth.response;
+
     const body = await req.json();
     const { url, margin = 40 } = body as { url?: string; margin?: number };
 

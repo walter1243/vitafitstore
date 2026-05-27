@@ -2,12 +2,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { BlocosEditor, type BlocosEditorHandle } from '@/components/configuracoes/BlocosEditor';
 import { AdminKitsSection } from '@/components/admin-kits-section';
+import { AdminUsersManager } from '@/components/admin-users-manager';
 import {
   LayoutDashboard, Package, ShoppingCart, Truck, Settings,
   Menu, X, Plus, Trash2, ExternalLink, Check, Euro,
   ChevronRight, Upload, Video, AlertCircle, CheckCircle2,
   ArrowUp, ArrowDown, Monitor, Zap, ToggleLeft, ToggleRight,
-  MessageCircle, Mail, Globe, RefreshCw,
+  MessageCircle, Mail, Globe, RefreshCw, LogOut,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -56,6 +57,15 @@ type Order = {
 };
 
 type Toast = { id: number; type: 'success' | 'error'; msg: string };
+
+type AdminUserSession = {
+  userId: number;
+  username: string;
+  displayName: string;
+  photoUrl: string;
+  role: string;
+  exp: number;
+};
 
 type PriceCalcResponse = {
   base_price_calculated: number;
@@ -1004,14 +1014,18 @@ function OrdersSection({ orders, onUpdateTracking }: {
 
 // ─── Root component ───────────────────────────────────────────────────────────
 
-export default function AdminPage() {
+export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSession }) {
   const [section, setSection] = useState<Section>('dashboard');
+  const [adminUser, setAdminUser] = useState<AdminUserSession>(initialAdmin);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [toasts, setToasts] = useState<Toast[]>([]);
-  const [viewport, setViewport] = useState('—');
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [pwdCurrent, setPwdCurrent] = useState('');
+  const [pwdNext, setPwdNext] = useState('');
+  const [pwdSaving, setPwdSaving] = useState(false);
   const toastId = useRef(0);
 
   const [showForm, setShowForm] = useState(false);
@@ -1035,10 +1049,18 @@ export default function AdminPage() {
   useEffect(() => { void fetchData(); }, []);
 
   useEffect(() => {
-    const updateViewport = () => setViewport(`${window.innerWidth}x${window.innerHeight}px`);
-    updateViewport();
-    window.addEventListener('resize', updateViewport);
-    return () => window.removeEventListener('resize', updateViewport);
+    (async () => {
+      try {
+        const res = await fetch('/api/admin/auth/me', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data?.user) {
+          setAdminUser(data.user);
+        }
+      } catch {
+        // ignore me refresh errors
+      }
+    })();
   }, []);
 
   async function fetchData() {
@@ -1251,6 +1273,42 @@ export default function AdminPage() {
     if (window.innerWidth < 1024) setSidebarOpen(false);
   }
 
+  async function logout() {
+    try {
+      await fetch('/api/admin/auth/logout', { method: 'POST' });
+    } finally {
+      window.location.href = '/admin/login';
+    }
+  }
+
+  async function changeMyPassword() {
+    if (!pwdCurrent.trim() || !pwdNext.trim()) {
+      addToast('error', 'Preencha senha atual e nova senha.');
+      return;
+    }
+    setPwdSaving(true);
+    try {
+      const res = await fetch('/api/admin/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword: pwdCurrent, newPassword: pwdNext }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        addToast('error', data?.error ?? 'Falha ao trocar senha.');
+        return;
+      }
+      setPwdCurrent('');
+      setPwdNext('');
+      setProfileMenuOpen(false);
+      addToast('success', 'Senha atualizada com sucesso.');
+    } catch {
+      addToast('error', 'Erro de conexão ao trocar senha.');
+    } finally {
+      setPwdSaving(false);
+    }
+  }
+
   const navItems: { key: Section; label: string; icon: React.ReactNode; badge?: number }[] = [
     { key: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
     { key: 'products', label: 'Produtos', icon: <Package size={18} /> },
@@ -1348,15 +1406,66 @@ export default function AdminPage() {
             <Menu size={20} className="text-white/70" />
           </button>
           <h1 className="flex-1 text-sm font-semibold text-white sm:text-base">{SECTION_LABELS[section]}</h1>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <span className="hidden items-center gap-1.5 rounded-full bg-white/5 px-2.5 py-1 text-[11px] text-white/60 md:flex">
-              <Monitor size={13} /> {viewport}
-            </span>
-            <span className="hidden items-center gap-1.5 rounded-full bg-green-500/10 px-3 py-1 text-xs font-medium text-green-400 sm:flex">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" />
-              Ao vivo
-            </span>
-            <div className="flex h-8 w-8 select-none items-center justify-center rounded-full bg-green-600 text-sm font-bold text-white">A</div>
+          <div className="relative flex items-center">
+            <button
+              type="button"
+              onClick={() => setProfileMenuOpen(v => !v)}
+              className="group inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2 py-1 transition-all hover:bg-white/10"
+            >
+              <div className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-green-600 text-xs font-bold text-white transition-transform group-hover:scale-105">
+                {adminUser.photoUrl ? (
+                  <img src={adminUser.photoUrl} alt={adminUser.displayName} className="h-full w-full object-cover" />
+                ) : (
+                  (adminUser.displayName || adminUser.username || 'A').charAt(0).toUpperCase()
+                )}
+              </div>
+              <div className="hidden max-w-[160px] truncate text-xs font-semibold text-white/85 sm:block">
+                {adminUser.displayName || adminUser.username}
+              </div>
+            </button>
+
+            <div className={`absolute right-0 top-12 z-40 w-[300px] origin-top-right rounded-2xl border border-white/10 bg-[#151927] p-3 shadow-2xl transition-all duration-200 ${profileMenuOpen ? 'pointer-events-auto scale-100 opacity-100' : 'pointer-events-none scale-95 opacity-0'}`}>
+              <div className="mb-2 border-b border-white/10 pb-2">
+                <div className="text-sm font-semibold text-white">Conta: {adminUser.displayName || adminUser.username}</div>
+                <div className="text-[11px] uppercase tracking-wide text-white/45">{adminUser.role}</div>
+              </div>
+
+              <label className="mb-1 block text-[11px] font-medium text-white/50">Senha atual</label>
+              <input
+                type="password"
+                value={pwdCurrent}
+                onChange={e => setPwdCurrent(e.target.value)}
+                className="mb-2 w-full rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-xs text-white outline-none"
+                placeholder="Digite a senha atual"
+              />
+
+              <label className="mb-1 block text-[11px] font-medium text-white/50">Nova senha</label>
+              <input
+                type="password"
+                value={pwdNext}
+                onChange={e => setPwdNext(e.target.value)}
+                className="mb-3 w-full rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-xs text-white outline-none"
+                placeholder="Mínimo 8 caracteres"
+              />
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={changeMyPassword}
+                  disabled={pwdSaving}
+                  className="flex-1 rounded-lg bg-green-600 px-3 py-2 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-60"
+                >
+                  {pwdSaving ? 'Salvando...' : 'Trocar senha'}
+                </button>
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="inline-flex items-center gap-1 rounded-lg border border-red-500/30 px-3 py-2 text-xs font-semibold text-red-300 hover:bg-red-500/10"
+                >
+                  <LogOut size={12} /> Sair
+                </button>
+              </div>
+            </div>
           </div>
         </header>
 
@@ -2923,6 +3032,8 @@ function SettingsSection({
           </div>
         </div>
       </div>
+
+      <AdminUsersManager />
 
       {saveError && (
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">

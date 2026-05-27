@@ -192,3 +192,16 @@ CREATE TABLE IF NOT EXISTS product_kit_items (
   created_at         TIMESTAMP DEFAULT NOW(),
   UNIQUE (kit_id, related_product_id)
 );
+
+-- ── Tabela: admin_users (acesso ao painel admin) ──────────
+CREATE TABLE IF NOT EXISTS admin_users (
+  id            SERIAL PRIMARY KEY,
+  username      TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  display_name  TEXT NOT NULL,
+  photo_url     TEXT,
+  role          TEXT NOT NULL DEFAULT 'admin',
+  active        BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at    TIMESTAMP DEFAULT NOW(),
+  updated_at    TIMESTAMP DEFAULT NOW()
+);

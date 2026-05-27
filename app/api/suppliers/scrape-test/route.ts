@@ -5,6 +5,7 @@
  * Suporta: #id, .class, [data-attr], tag.class
  */
 import { NextRequest, NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/admin-auth'
 
 interface ScrapeTestBody {
   url: string
@@ -63,6 +64,9 @@ function extractBySelector(html: string, selector: string): string | null {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req)
+    if (!auth.ok) return auth.response
+
     const body: ScrapeTestBody = await req.json()
     const { url, stockSelector, priceSelector } = body
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
+import { requireAdmin } from "@/lib/admin-auth";
 
 const VALID_STATUSES = ['pending', 'shipped', 'delivered'];
 
@@ -33,6 +34,9 @@ export async function GET() {
 
 export async function PATCH(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (!auth.ok) return auth.response;
+
     const { id, tracking, status } = await req.json();
 
     if (!id) {
