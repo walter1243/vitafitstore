@@ -409,6 +409,14 @@ function OrderSummary({ items, totalPrice, shipping, total }: {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-white text-xs font-medium truncate">{item.product.name}</p>
+                {item.product.shortDescription && (
+                  <p className="text-[10px] text-gray-500 line-clamp-2">{item.product.shortDescription}</p>
+                )}
+                {String(item.product.name || '').startsWith('Kit ') && (
+                  <p className="mt-0.5 inline-flex rounded-full border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-300">
+                    Total consolidado do kit
+                  </p>
+                )}
                 <p className="text-gray-500 text-xs">× {item.quantity}</p>
               </div>
               <p className="text-emerald-400 font-semibold text-xs shrink-0">

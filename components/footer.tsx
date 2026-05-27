@@ -2,49 +2,63 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { Leaf, Instagram, MessageCircle, X } from 'lucide-react'
+import { Leaf, Instagram, Mail, MessageCircle, PhoneCall, X } from 'lucide-react'
 
-const footerLinks = {
-  productos: [
-    { label: 'Suplementos', href: '#salud' },
-    { label: 'Vitaminas', href: '#salud' },
-    { label: 'Accesorios Fitness', href: '#fitness' },
-    { label: 'Ofertas', href: '#productos' },
-  ],
-  empresa: [
-    { label: 'Sobre nosotros', href: '#nosotros' },
-    { label: 'Blog', href: '#' },
-    { label: 'Trabaja con nosotros', href: '#' },
-    { label: 'Contacto', href: '#' },
-  ],
-  ayuda: [
-    { label: 'Preguntas frecuentes', href: '#' },
-    { label: 'Envíos y entregas', href: '#' },
-    { label: 'Devoluciones', href: '#' },
-    { label: 'Formas de pago', href: '#' },
-  ],
-  legal: [
-    { label: 'Aviso legal', href: '#' },
-    { label: 'Política de privacidad', href: '#' },
-    { label: 'Cookies', href: '#' },
-    { label: 'Términos y condiciones', href: '#' },
-  ],
+type FooterSectionKey = 'productos' | 'empresa' | 'ayuda' | 'legal'
+
+type FooterItem = {
+  title: string
+  description: string
+  href?: string
 }
 
-type FooterSectionKey = keyof typeof footerLinks
+type FooterSectionConfig = {
+  title: string
+  description: string
+  items: FooterItem[]
+}
 
-const footerSections: { key: FooterSectionKey; title: string }[] = [
-  { key: 'productos', title: 'Productos' },
-  { key: 'empresa', title: 'Empresa' },
-  { key: 'ayuda', title: 'Ayuda' },
-  { key: 'legal', title: 'Legal' },
-]
-
-const footerSectionText: Record<FooterSectionKey, string> = {
-  productos: 'Encuentra rápidamente las categorías y productos que buscas en la tienda.',
-  empresa: 'Conoce mejor VitaFit, nuestros canales y la información institucional.',
-  ayuda: 'Centro de atención al cliente y SAC para pedidos, entregas, cambios y pagos.',
-  legal: 'Documentos oficiales de privacidad, cookies y condiciones de la tienda.',
+const footerSections: Record<FooterSectionKey, FooterSectionConfig> = {
+  productos: {
+    title: 'Productos',
+    description: 'Explora categorias de la tienda y encuentra rapidamente lo que buscas.',
+    items: [
+      { title: 'Suplementos', description: 'Nutricion deportiva para energia y recuperacion.', href: '#salud' },
+      { title: 'Vitaminas', description: 'Soporte diario para bienestar y defensas.', href: '#salud' },
+      { title: 'Accesorios Fitness', description: 'Complementos para tu rutina de entrenamiento.', href: '#fitness' },
+      { title: 'Ofertas', description: 'Productos destacados con promociones activas.', href: '#productos' },
+    ],
+  },
+  empresa: {
+    title: 'Empresa',
+    description: 'Informacion institucional y canales oficiales de VitaFit.',
+    items: [
+      { title: 'Sobre nosotros', description: 'Conoce nuestra mision y compromiso con la calidad.', href: '#nosotros' },
+      { title: 'Atencion comercial', description: 'Lunes a viernes, 9:00 a 18:00 (Madrid).' },
+      { title: 'Email corporativo', description: 'sac@vitafitstore.com' },
+      { title: 'Colaboraciones', description: 'Escribenos para alianzas y afiliaciones.' },
+    ],
+  },
+  ayuda: {
+    title: 'Ayuda y SAC',
+    description: 'Soporte profesional para pedidos, pagos, cambios y entregas.',
+    items: [
+      { title: 'SAC WhatsApp', description: 'Respuesta rapida por chat para estado de pedido.' },
+      { title: 'Envios y entregas', description: 'Plazo medio de 2 a 5 dias habiles en Espana.' },
+      { title: 'Devoluciones', description: 'Solicitud de cambio o devolucion en hasta 14 dias.' },
+      { title: 'Pagos y facturacion', description: 'Tarjeta, PayPal y metodos locales compatibles.' },
+    ],
+  },
+  legal: {
+    title: 'Legal',
+    description: 'Documentos y politicas para una compra segura y transparente.',
+    items: [
+      { title: 'Aviso legal', description: 'Identificacion y terminos de uso de la plataforma.' },
+      { title: 'Politica de privacidad', description: 'Tratamiento de datos personales y consentimiento.' },
+      { title: 'Politica de cookies', description: 'Uso de cookies tecnicas y analiticas.' },
+      { title: 'Terminos y condiciones', description: 'Reglas de compra, entrega y garantia.' },
+    ],
+  },
 }
 
 export function Footer() {
@@ -56,7 +70,7 @@ export function Footer() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res = await fetch('/api/store-settings')
+        const res = await fetch('/api/store-settings', { cache: 'no-store' })
         if (!res.ok) return
         const data = await res.json()
         setStoreName(data?.storeName ?? 'VitaFit Store')
@@ -89,9 +103,7 @@ export function Footer() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-base font-semibold text-slate-900">
-                  {footerSections.find(s => s.key === activePopup)?.title}
-                </h3>
+                <h3 className="text-base font-semibold text-slate-900">{footerSections[activePopup].title}</h3>
                 <button
                   type="button"
                   onClick={() => setActivePopup(null)}
@@ -102,23 +114,57 @@ export function Footer() {
                 </button>
               </div>
 
-              <p className="mb-3 text-sm leading-relaxed text-slate-600">
-                {footerSectionText[activePopup]}
-              </p>
+              <p className="mb-3 text-sm leading-relaxed text-slate-600">{footerSections[activePopup].description}</p>
 
-              <ul className="space-y-2">
-                {footerLinks[activePopup].map((link) => (
-                  <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      onClick={() => setActivePopup(null)}
-                      className="block rounded-lg px-3 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-100 hover:text-emerald-700"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
+              <div className="space-y-2">
+                {footerSections[activePopup].items.map((item) => (
+                  <div key={item.title} className="rounded-lg border border-slate-200 p-3">
+                    {item.href ? (
+                      <Link
+                        href={item.href}
+                        onClick={() => setActivePopup(null)}
+                        className="text-sm font-semibold text-slate-800 transition-colors hover:text-emerald-700"
+                      >
+                        {item.title}
+                      </Link>
+                    ) : (
+                      <p className="text-sm font-semibold text-slate-800">{item.title}</p>
+                    )}
+                    <p className="mt-1 text-xs leading-relaxed text-slate-500">{item.description}</p>
+                  </div>
                 ))}
-              </ul>
+              </div>
+
+              {activePopup === 'ayuda' && (
+                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  {whatsapp.trim() && (
+                    <a
+                      href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white"
+                    >
+                      <MessageCircle size={14} /> WhatsApp SAC
+                    </a>
+                  )}
+                  {instagram.trim() && (
+                    <a
+                      href={`https://instagram.com/${instagram.replace(/^@/, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700"
+                    >
+                      <Instagram size={14} /> Instagram
+                    </a>
+                  )}
+                  <a
+                    href="mailto:sac@vitafitstore.com"
+                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700"
+                  >
+                    <Mail size={14} /> Email SAC
+                  </a>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -155,16 +201,16 @@ export function Footer() {
           </div>
 
           {/* Links com popup */}
-          {footerSections.map((section) => (
-            <div key={section.key}>
+          {(Object.keys(footerSections) as FooterSectionKey[]).map((sectionKey) => (
+            <div key={sectionKey}>
               <button
                 type="button"
-                onClick={() => setActivePopup(section.key)}
+                onClick={() => setActivePopup(sectionKey)}
                 className="mb-2 text-left font-semibold text-foreground transition-colors hover:text-primary"
               >
-                {section.title}
+                {footerSections[sectionKey].title}
               </button>
-              <p className="text-sm text-muted-foreground">Haz clic para abrir</p>
+              <p className="text-sm text-muted-foreground">{footerSections[sectionKey].description}</p>
             </div>
           ))}
         </div>
@@ -176,6 +222,7 @@ export function Footer() {
               © 2026 {storeName}. Todos los derechos reservados.
             </p>
             <div className="flex items-center gap-4">
+              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><PhoneCall className="h-3.5 w-3.5" /> SAC comercial</span>
               <span className="text-xs text-muted-foreground">Métodos de pago:</span>
               <div className="flex items-center gap-2">
                 <div className="rounded bg-card px-2 py-1 text-xs font-medium text-muted-foreground">Visa</div>

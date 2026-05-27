@@ -175,3 +175,20 @@ CREATE TABLE IF NOT EXISTS customer_access_tokens (
   expires_at    TIMESTAMP NOT NULL,
   used_at       TIMESTAMP
 );
+
+-- ── Tabelas: kits de produtos (venda combinada) ───────────
+CREATE TABLE IF NOT EXISTS product_kits (
+  id              SERIAL PRIMARY KEY,
+  base_product_id INTEGER NOT NULL UNIQUE REFERENCES products(id) ON DELETE CASCADE,
+  created_at      TIMESTAMP DEFAULT NOW(),
+  updated_at      TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS product_kit_items (
+  id                 SERIAL PRIMARY KEY,
+  kit_id             INTEGER NOT NULL REFERENCES product_kits(id) ON DELETE CASCADE,
+  related_product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  quantity           INTEGER NOT NULL DEFAULT 1,
+  created_at         TIMESTAMP DEFAULT NOW(),
+  UNIQUE (kit_id, related_product_id)
+);

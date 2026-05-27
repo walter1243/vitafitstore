@@ -139,6 +139,9 @@ export function CartSidebar() {
             {/* ── Items ─────────────────────────────────── */}
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
               {items.map((item) => (
+                (() => {
+                  const isKitProduct = item.product.name.startsWith('Kit ')
+                  return (
                 <div
                   key={item.product.id}
                   className="flex gap-3 p-3 rounded-2xl"
@@ -176,6 +179,16 @@ export function CartSidebar() {
                         <h4 className="font-semibold text-white text-sm line-clamp-1 leading-tight">
                           {item.product.name}
                         </h4>
+                        {item.product.shortDescription && (
+                          <p className="mt-0.5 line-clamp-2 text-[11px] text-gray-500">
+                            {item.product.shortDescription}
+                          </p>
+                        )}
+                        {isKitProduct && (
+                          <p className="mt-1 inline-flex rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
+                            Preço consolidado do kit
+                          </p>
+                        )}
                         <p className="text-emerald-400 text-sm font-bold mt-0.5">
                           {item.product.price.toFixed(2)}€
                         </p>
@@ -197,6 +210,7 @@ export function CartSidebar() {
                           background: 'rgba(255,255,255,0.06)',
                           border: '1px solid rgba(255,255,255,0.08)',
                         }}
+                        title={isKitProduct ? 'Quantidade de kits' : 'Quantidade de unidades'}
                       >
                         <button
                           onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
@@ -220,6 +234,8 @@ export function CartSidebar() {
                     </div>
                   </div>
                 </div>
+                  )
+                })()
               ))}
             </div>
 

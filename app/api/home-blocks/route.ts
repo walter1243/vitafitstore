@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 type HomeBlock = {
   key: string;
   label: string;
@@ -49,10 +52,14 @@ export async function GET() {
       ORDER BY position ASC
     `;
 
-    return NextResponse.json(rows);
+    return NextResponse.json(rows, {
+      headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" },
+    });
   } catch (err: any) {
     console.error("[GET /api/home-blocks]", err);
-    return NextResponse.json(DEFAULT_BLOCKS);
+    return NextResponse.json(DEFAULT_BLOCKS, {
+      headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" },
+    });
   }
 }
 
@@ -81,7 +88,9 @@ export async function POST(req: NextRequest) {
       ORDER BY position ASC
     `;
 
-    return NextResponse.json({ success: true, blocks: rows });
+    return NextResponse.json({ success: true, blocks: rows }, {
+      headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" },
+    });
   } catch (err: any) {
     console.error("[POST /api/home-blocks]", err);
     return NextResponse.json({ error: err?.message ?? "Erro ao salvar blocos." }, { status: 500 });

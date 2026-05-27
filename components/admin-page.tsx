@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { BlocosEditor, type BlocosEditorHandle } from '@/components/configuracoes/BlocosEditor';
+import { AdminKitsSection } from '@/components/admin-kits-section';
 import {
   LayoutDashboard, Package, ShoppingCart, Truck, Settings,
   Menu, X, Plus, Trash2, ExternalLink, Check, Euro,
@@ -114,7 +115,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   const [mainFileInfo, setMainFileInfo] = useState<{ name: string; size: number } | null>(null);
   const [formTab, setFormTab] = useState<'dados' | 'upsell'>('dados');
   const [upsellCategoryFilter, setUpsellCategoryFilter] = useState('');
-  const [productViewTab, setProductViewTab] = useState<'products' | 'cards'>('products');
+  const [productViewTab, setProductViewTab] = useState<'products' | 'cards' | 'kits'>('products');
   const [productsSearch, setProductsSearch] = useState('');
   const [categoryDrafts, setCategoryDrafts] = useState<Record<number, { bannerType: 'image' | 'video'; bannerUrl: string; logoUrl: string }>>({});
   const [pricingForm, setPricingForm] = useState({
@@ -337,12 +338,16 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
               {productViewTab === 'products' ? <Package size={16} className="text-green-500" /> : <Settings size={16} className="text-green-500" />}
               {productViewTab === 'products'
                 ? (showForm ? (editingProductId ? 'Editar Produto' : 'Novo Produto') : 'Produtos')
-                : 'Categorias'}
+                : productViewTab === 'cards'
+                  ? 'Categorias'
+                  : 'Kits'}
             </h2>
             <p className="mt-1 text-xs text-white/50">
               {productViewTab === 'products'
                 ? 'Formulário em blocos com imagem principal, galeria e conteúdo rico.'
-                : 'Gerencie apenas os nomes das categorias da loja.'}
+                : productViewTab === 'cards'
+                  ? 'Gerencie apenas os nomes das categorias da loja.'
+                  : 'Monte kits vinculando produto principal e itens complementares.'}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -360,6 +365,13 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                 className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${productViewTab === 'cards' ? 'bg-green-600 text-white' : 'text-white/60 hover:bg-white/5'}`}
               >
                 + categoria
+              </button>
+              <button
+                type="button"
+                onClick={() => setProductViewTab('kits')}
+                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${productViewTab === 'kits' ? 'bg-green-600 text-white' : 'text-white/60 hover:bg-white/5'}`}
+              >
+                Kits
               </button>
             </div>
             {productViewTab === 'products' && (
@@ -782,6 +794,10 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
             </div>
           </div>
         )}
+
+        {productViewTab === 'kits' && (
+          <AdminKitsSection products={products} />
+        )}
       </div>
 
       {productViewTab === 'products' && (
@@ -798,7 +814,54 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
             className="w-full rounded-xl border border-white/10 bg-[#22263a] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40 sm:max-w-sm"
           />
         </div>
-        <table className="w-full text-sm">
+
+        <div className="space-y-3 md:hidden">
+          {filteredProducts.map(p => {
+            const stock = p.stock ?? 0;
+            const stockClass = stock > 10 ? 'text-emerald-400' : stock > 0 ? 'text-amber-400' : 'text-red-400';
+            const preview = p.mainImage ?? p.image;
+            return (
+              <div key={p.id} className="rounded-xl border border-white/10 bg-[#111827] p-3">
+                <div className="flex items-start gap-3">
+                  {preview ? (
+                    <img src={preview} alt={p.name} className="h-14 w-14 shrink-0 rounded-xl border border-white/10 object-cover" />
+                  ) : (
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5"><Package size={15} className="text-white/40" /></div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-semibold text-white">{p.name}</div>
+                    <div className="mt-1 text-xs text-white/50">{p.category || 'Sem categoria'}</div>
+                    <div className="mt-1 text-xs font-semibold text-white">€{(p.price ?? 0).toFixed(2)}</div>
+                    <div className={`mt-1 text-xs font-semibold ${stockClass}`}>{stock} un.</div>
+                  </div>
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onEditProduct(p)}
+                    className="flex-1 rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-white/80 transition-colors hover:bg-white/5"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onDelete(p.id, p.name)}
+                    className="flex-1 rounded-lg border border-red-500/20 px-3 py-2 text-xs font-semibold text-red-300 transition-colors hover:bg-red-500/10 hover:text-red-200"
+                  >
+                    Excluir
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+          {filteredProducts.length === 0 && (
+            <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-8 text-center text-sm text-white/45">
+              {normalizedProductsSearch ? 'Nenhum produto encontrado para a busca.' : 'Nenhum produto cadastrado ainda'}
+            </div>
+          )}
+        </div>
+
+        <table className="hidden w-full text-sm md:table">
           <thead className="bg-[#0f1117]">
             <tr>
               {['Produto', 'Categoria', 'Preço', 'Estoque', 'Ações'].map(h => (
@@ -2609,12 +2672,14 @@ function SettingsSection({
   const [themeColor, setThemeColor] = useState('#10b981');
   const [logoUrl, setLogoUrl] = useState('');
   const [saved, setSaved] = useState(false);
+  const [savingConfig, setSavingConfig] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const blocosEditorRef = useRef<BlocosEditorHandle>(null);
 
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch('/api/store-settings');
+        const res = await fetch('/api/store-settings', { cache: 'no-store' });
         if (!res.ok) return;
         const data = await res.json();
         setStore(data?.storeName ?? 'VitaFit Store');
@@ -2642,33 +2707,60 @@ function SettingsSection({
 
   async function handleSave(e: React.SyntheticEvent) {
     e.preventDefault();
-    const [settingsRes] = await Promise.all([
-      fetch('/api/store-settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          storeName: storeName.trim(),
-          themeColor,
-          logoUrl,
-          instagram: ig.trim(),
-          whatsapp: wa.trim(),
-          whatsappFloatingEnabled: waFloatingEnabled,
-          whatsappGreeting: waGreeting.trim(),
-          whatsappOrderTemplate: waOrderTemplate.trim(),
-          whatsappTrackingTemplate: waTrackingTemplate.trim(),
-          whatsappFutureTemplate: waFutureTemplate.trim(),
-        }),
-      }),
-      fetch('/api/home-blocks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ blocks: blocosEditorRef.current?.getValue() ?? [] }),
-      }),
-    ]);
+    setSavingConfig(true);
+    setSaveError('');
+    setSaved(false);
 
-    if (settingsRes.ok) {
+    const timeout = (ms: number) => new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms));
+
+    try {
+      const [settingsRes, blocksRes] = await Promise.race([
+        Promise.all([
+          fetch('/api/store-settings', {
+            method: 'POST',
+            cache: 'no-store',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              storeName: storeName.trim(),
+              themeColor,
+              logoUrl,
+              instagram: ig.trim(),
+              whatsapp: wa.trim(),
+              whatsappFloatingEnabled: waFloatingEnabled,
+              whatsappGreeting: waGreeting.trim(),
+              whatsappOrderTemplate: waOrderTemplate.trim(),
+              whatsappTrackingTemplate: waTrackingTemplate.trim(),
+              whatsappFutureTemplate: waFutureTemplate.trim(),
+            }),
+          }),
+          fetch('/api/home-blocks', {
+            method: 'POST',
+            cache: 'no-store',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ blocks: blocosEditorRef.current?.getValue() ?? [] }),
+          }),
+        ]),
+        timeout(15000),
+      ]) as [Response, Response];
+
+      if (!settingsRes.ok || !blocksRes.ok) {
+        const settingsErr = await settingsRes.json().catch(() => ({} as any));
+        const blocksErr = await blocksRes.json().catch(() => ({} as any));
+        const msg = settingsErr?.error || blocksErr?.error || 'Nao foi possivel salvar as configuracoes.';
+        setSaveError(msg);
+        return;
+      }
+
       setSaved(true);
-      setTimeout(() => setSaved(false), 2500);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err: any) {
+      if (err?.message === 'timeout') {
+        setSaveError('A solicitacao demorou demais. Tente salvar novamente.');
+      } else {
+        setSaveError('Erro de conexao ao salvar.');
+      }
+    } finally {
+      setSavingConfig(false);
     }
   }
 
@@ -2832,12 +2924,19 @@ function SettingsSection({
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      {saveError && (
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+          {saveError}
+        </div>
+      )}
+
+      <div className="flex flex-wrap items-center gap-3">
         <button type="submit"
-          className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer">
-          <Check size={15} />Salvar configurações
+          disabled={savingConfig}
+          className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60">
+          {savingConfig ? <RefreshCw size={15} className="animate-spin" /> : <Check size={15} />}Salvar configurações
         </button>
-        {saved && <span className="text-green-600 text-sm font-medium flex items-center gap-1"><Check size={14} />Salvo!</span>}
+        {saved && <span className="flex items-center gap-1 text-sm font-medium text-green-600"><Check size={14} />Salvo com sucesso.</span>}
       </div>
     </form>
   );

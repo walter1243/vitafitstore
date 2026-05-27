@@ -89,6 +89,26 @@ export async function POST() {
       )
     `);
 
+    // product kits
+    await run('product_kits.create', () => sql`
+      CREATE TABLE IF NOT EXISTS product_kits (
+        id              SERIAL PRIMARY KEY,
+        base_product_id INTEGER NOT NULL UNIQUE REFERENCES products(id) ON DELETE CASCADE,
+        created_at      TIMESTAMP DEFAULT NOW(),
+        updated_at      TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await run('product_kit_items.create', () => sql`
+      CREATE TABLE IF NOT EXISTS product_kit_items (
+        id                 SERIAL PRIMARY KEY,
+        kit_id             INTEGER NOT NULL REFERENCES product_kits(id) ON DELETE CASCADE,
+        related_product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+        quantity           INTEGER NOT NULL DEFAULT 1,
+        created_at         TIMESTAMP DEFAULT NOW(),
+        UNIQUE (kit_id, related_product_id)
+      )
+    `);
+
     const failed = migrations.filter(m => !m.ok);
     return NextResponse.json({
       ok: failed.length === 0,

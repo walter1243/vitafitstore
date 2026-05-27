@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const DEFAULT_SETTINGS = {
   storeName: "VitaFit Store",
   logoUrl: "",
@@ -46,10 +49,14 @@ export async function GET() {
       LIMIT 1
     `;
 
-    return NextResponse.json(row ?? DEFAULT_SETTINGS);
+    return NextResponse.json(row ?? DEFAULT_SETTINGS, {
+      headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" },
+    });
   } catch (err: any) {
     console.error("[GET /api/store-settings]", err);
-    return NextResponse.json(DEFAULT_SETTINGS);
+    return NextResponse.json(DEFAULT_SETTINGS, {
+      headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" },
+    });
   }
 }
 
@@ -109,7 +116,9 @@ export async function POST(req: NextRequest) {
         whatsapp_future_template = EXCLUDED.whatsapp_future_template
     `;
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true }, {
+      headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" },
+    });
   } catch (err: any) {
     console.error("[POST /api/store-settings]", err);
     return NextResponse.json({ error: err?.message ?? "Erro ao salvar configurações." }, { status: 500 });
