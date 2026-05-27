@@ -85,10 +85,10 @@ export default function PinScrollSection() {
           Por qué VitaFit
         </p>
         <h2 className="text-white text-4xl md:text-5xl font-black tracking-tight">
-          Destaques <span className="text-emerald-400">VitaFit</span>
+          Destacados <span className="text-emerald-400">VitaFit</span>
         </h2>
         <p className="text-gray-500 text-base mt-3 max-w-lg mx-auto">
-          Lo que nos hace diferentes — calidad, transparencia y resultados reales.
+          Lo que nos hace diferentes: calidad, transparencia y resultados reales.
         </p>
       </div>
 

@@ -193,10 +193,10 @@ export default function HotProductsCarousel() {
       {/* Title */}
       <div className="relative z-10 text-center mb-6 select-none px-4">
         <p className="text-emerald-400 text-sm font-semibold tracking-[0.3em] uppercase mb-2">
-          Línea Premium
+          Línea premium
         </p>
         <h2 className="text-white text-4xl md:text-5xl font-black tracking-tight">
-          Nuestros <span className="text-emerald-400">Suplementos</span>
+          Nuestros <span className="text-emerald-400">suplementos</span>
         </h2>
         <p className="text-gray-500 text-sm mt-2">Arrastra para explorar</p>
       </div>
@@ -253,7 +253,7 @@ export default function HotProductsCarousel() {
           <img
             ref={imgRef}
             src={p0.image}
-            alt="Produto"
+            alt="Producto"
             className="relative z-10 w-56 h-56 object-contain drop-shadow-2xl"
             style={{ filter: 'drop-shadow(0 0 30px rgba(16,185,129,0.4))' }}
             draggable={false}
@@ -308,7 +308,7 @@ export default function HotProductsCarousel() {
               height: '8px',
               background: i === dotIndex ? '#10b981' : 'rgba(255,255,255,0.2)',
             }}
-            aria-label={`Produto ${i + 1}`}
+            aria-label={`Producto ${i + 1}`}
           />
         ))}
       </div>

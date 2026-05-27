@@ -23,6 +23,12 @@ export async function processOrder(orderId: number): Promise<OrchestratorResult>
     FROM automation_settings
     WHERE id = 1
   `
+
+  const [storeSettings] = await sql`
+    SELECT whatsapp_order_template
+    FROM store_settings
+    WHERE id = 1
+  `
   if (!settings?.automation_enabled) {
     console.log('[Orchestrator] Automação desabilitada, pulando.')
     return { success: false, reason: 'automation_disabled' }
@@ -90,13 +96,15 @@ export async function processOrder(orderId: number): Promise<OrchestratorResult>
 
     const dispatch = await dispatchOrderToSupplier(clientOrder, supplier)
 
-    // 5. Notifica cliente via WhatsApp (confirmação de pedido)
+    // 5. Notifica cliente via WhatsApp
     if (settings.notify_whatsapp && order.customer_phone) {
       await sendConfirmationWhatsApp({
         phone: order.customer_phone,
         name: order.customer_name ?? 'Cliente',
+        orderId: order.id,
         productName: order.product_name ?? 'seu produto',
         estimatedDays: supplier.estimatedDays,
+        customTemplate: storeSettings?.whatsapp_order_template ?? undefined,
       })
     }
 

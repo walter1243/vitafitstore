@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { Leaf, Facebook, Instagram, Twitter, Youtube, X } from 'lucide-react'
+import { Leaf, Instagram, MessageCircle, X } from 'lucide-react'
 
 const footerLinks = {
   productos: [
@@ -41,16 +41,16 @@ const footerSections: { key: FooterSectionKey; title: string }[] = [
 ]
 
 const footerSectionText: Record<FooterSectionKey, string> = {
-  productos: 'Encontre rapidamente as categorias e produtos que voce procura na vitrine.',
-  empresa: 'Conheca melhor a VitaFit, nossos canais e informacoes institucionais.',
-  ayuda: 'Central de suporte para pedidos, entregas, trocas e formas de pagamento.',
-  legal: 'Documentos oficiais de privacidade, cookies e termos de uso da loja.',
+  productos: 'Encuentra rápidamente las categorías y productos que buscas en la tienda.',
+  empresa: 'Conoce mejor VitaFit, nuestros canales y la información institucional.',
+  ayuda: 'Centro de atención al cliente y SAC para pedidos, entregas, cambios y pagos.',
+  legal: 'Documentos oficiales de privacidad, cookies y condiciones de la tienda.',
 }
 
 export function Footer() {
   const [storeName, setStoreName] = useState('VitaFit Store')
   const [instagram, setInstagram] = useState('')
-  const [facebook, setFacebook] = useState('')
+  const [whatsapp, setWhatsapp] = useState('')
   const [activePopup, setActivePopup] = useState<FooterSectionKey | null>(null)
 
   useEffect(() => {
@@ -61,7 +61,7 @@ export function Footer() {
         const data = await res.json()
         setStoreName(data?.storeName ?? 'VitaFit Store')
         setInstagram(data?.instagram ?? '')
-        setFacebook(data?.facebook ?? '')
+        setWhatsapp(data?.whatsapp ?? '')
       } catch {
         // ignore
       }
@@ -69,11 +69,15 @@ export function Footer() {
   }, [])
 
   const socialLinks = [
-    { icon: Facebook, href: facebook ? `https://facebook.com/${facebook.replace(/^@/, '')}` : '#', label: 'Facebook' },
-    { icon: Instagram, href: instagram ? `https://instagram.com/${instagram.replace(/^@/, '')}` : '#', label: 'Instagram' },
-    { icon: Twitter, href: '#', label: 'Twitter' },
-    { icon: Youtube, href: '#', label: 'Youtube' },
-  ]
+    instagram.trim() && { icon: Instagram, href: `https://instagram.com/${instagram.replace(/^@/, '')}`, label: 'Instagram' },
+    whatsapp.trim() && {
+      icon: MessageCircle,
+      href: whatsapp.startsWith('http')
+        ? whatsapp
+        : `https://wa.me/${whatsapp.replace(/\D/g, '')}`,
+      label: 'WhatsApp',
+    },
+  ].filter(Boolean) as { icon: typeof Instagram; href: string; label: string }[]
 
   return (
     <footer className="border-t border-border bg-muted/30">
@@ -160,7 +164,7 @@ export function Footer() {
               >
                 {section.title}
               </button>
-              <p className="text-sm text-muted-foreground">Clique para abrir</p>
+              <p className="text-sm text-muted-foreground">Haz clic para abrir</p>
             </div>
           ))}
         </div>

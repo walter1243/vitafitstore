@@ -383,8 +383,8 @@ const inputCls = [
 
 // ─── Order Summary ────────────────────────────────────────────────────────────
 
-function OrderSummary({ items, totalPrice, shipping, total, FREE_SHIP }: {
-  items: any[]; totalPrice: number; shipping: number; total: number; FREE_SHIP: number;
+function OrderSummary({ items, totalPrice, shipping, total }: {
+  items: any[]; totalPrice: number; shipping: number; total: number;
 }) {
   return (
     <div className="space-y-4">
@@ -429,11 +429,6 @@ function OrderSummary({ items, totalPrice, shipping, total, FREE_SHIP }: {
               ? <span className="text-emerald-400 font-medium flex items-center gap-1"><Truck size={10} /> Gratis</span>
               : <span className="text-white">€{shipping.toFixed(2)}</span>}
           </div>
-          {totalPrice < FREE_SHIP && (
-            <p className="text-[10px] text-gray-600 flex items-center gap-1">
-              <Truck size={9} /> +€{(FREE_SHIP - totalPrice).toFixed(2)} para envío gratis
-            </p>
-          )}
           <div className="border-t pt-2.5" style={{ borderColor: 'rgba(16,185,129,0.1)' }}>
             <div className="flex justify-between">
               <span className="font-bold text-white text-sm">Total</span>
@@ -446,7 +441,7 @@ function OrderSummary({ items, totalPrice, shipping, total, FREE_SHIP }: {
       <div className="rounded-2xl p-4 grid grid-cols-2 gap-2"
         style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(16,185,129,0.08)' }}>
         {[
-          { icon: <Truck size={14} className="text-emerald-500" />, label: 'Envío Gratis', sub: '+€50' },
+          { icon: <Truck size={14} className="text-emerald-500" />, label: 'Envío', sub: 'Calculado al finalizar' },
           { icon: <RotateCcw size={14} className="text-emerald-500" />, label: 'Devolución', sub: '30 días' },
           { icon: <Lock size={14} className="text-emerald-500" />, label: 'SSL 256-bit', sub: 'Seguro' },
           { icon: <Package size={14} className="text-emerald-500" />, label: 'Entrega', sub: '2–3 días' },
@@ -472,10 +467,6 @@ function CheckoutFormInner() {
   const stripe = useStripe();
   const elements = useElements();
 
-  const FREE_SHIP = 50;
-  const shipping  = totalPrice >= FREE_SHIP ? 0 : 4.99;
-  const total     = totalPrice + shipping;
-
   const [step, setStep] = useState<1 | 2>(1);
 
   // Card visual state (live)
@@ -496,6 +487,69 @@ function CheckoutFormInner() {
   const [postal,  setPostal]  = useState('');
   const [city,    setCity]    = useState('');
   const [country, setCountry] = useState('PT');
+
+  const [quoteLoading, setQuoteLoading] = useState(false);
+  const [quoteError, setQuoteError] = useState('');
+  const [quote, setQuote] = useState<{ subtotal: number; shipping: number; total: number } | null>(null);
+
+  const checkoutItems = items.map((item) => ({
+    productId: item.product.id,
+    quantity: item.quantity,
+  }));
+
+  useEffect(() => {
+    if (checkoutItems.length === 0) {
+      setQuote(null);
+      setQuoteError('');
+      return;
+    }
+
+    const ctrl = new AbortController();
+    const timer = setTimeout(async () => {
+      setQuoteLoading(true);
+      try {
+        const res = await fetch('/api/checkout/quote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items: checkoutItems,
+            country,
+            postalCode: postal,
+          }),
+          signal: ctrl.signal,
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          setQuote(null);
+          setQuoteError(data?.error ?? 'Não foi possível calcular o checkout.');
+          return;
+        }
+
+        setQuoteError('');
+        setQuote({
+          subtotal: Number(data.subtotal ?? 0),
+          shipping: Number(data.shipping ?? 0),
+          total: Number(data.total ?? 0),
+        });
+      } catch (error: any) {
+        if (error?.name === 'AbortError') return;
+        setQuote(null);
+        setQuoteError('Não foi possível calcular o checkout.');
+      } finally {
+        setQuoteLoading(false);
+      }
+    }, 150);
+
+    return () => {
+      ctrl.abort();
+      clearTimeout(timer);
+    };
+  }, [country, postal, items]);
+
+  const shipping = quote?.shipping ?? 0;
+  const total = quote?.total ?? totalPrice;
+  const subtotal = quote?.subtotal ?? totalPrice;
 
   const [errors,   setErrors]   = useState<Record<string, string>>({});
   const [loading,  setLoading]  = useState(false);
@@ -551,6 +605,10 @@ function CheckoutFormInner() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!validateStep2()) return;
+    if (!quote || quote.total <= 0) {
+      setApiError('Não foi possível calcular o total do pedido. Tente novamente.');
+      return;
+    }
 
     setLoading(true);
     setApiError('');
@@ -584,7 +642,7 @@ function CheckoutFormInner() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount:       total,
+          items: checkoutItems,
           customerName: name.trim(),
           customerEmail: email.trim(),
           customerPhone: phone.trim(),
@@ -592,7 +650,6 @@ function CheckoutFormInner() {
           postalCode: postal.trim(),
           city: city.trim(),
           country,
-          productId:    items[0]?.product.id ?? null,
           paymentMethodId: pmResult.paymentMethod.id,
         }),
       });
@@ -791,13 +848,20 @@ function CheckoutFormInner() {
         </div>
       )}
 
+      {quoteError && (
+        <div className="rounded-xl px-4 py-3 text-sm text-red-400 flex items-center gap-2"
+          style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+          <ShieldCheck size={15} /> {quoteError}
+        </div>
+      )}
+
       <div className="flex gap-3">
         <button type="button" onClick={() => setStep(1)}
           className="flex items-center gap-1.5 px-5 py-4 rounded-xl font-semibold text-sm text-gray-400 hover:text-white transition-colors cursor-pointer"
           style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
           <ChevronLeft size={16} /> Volver
         </button>
-        <button type="submit" disabled={loading}
+        <button type="submit" disabled={loading || quoteLoading || !!quoteError || !quote}
           className="flex-1 flex items-center justify-center gap-2 rounded-xl py-4 font-bold text-base text-white disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
           style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 8px 32px rgba(16,185,129,0.25)' }}>
           {loading
@@ -837,7 +901,10 @@ function CheckoutFormInner() {
 
           {/* RIGHT */}
           <div className="lg:sticky lg:top-8 lg:self-start">
-            <OrderSummary items={items} totalPrice={totalPrice} shipping={shipping} total={total} FREE_SHIP={FREE_SHIP} />
+            <OrderSummary items={items} totalPrice={subtotal} shipping={shipping} total={total} />
+            {quoteLoading && (
+              <p className="mt-2 text-center text-xs text-gray-500">Actualizando total...</p>
+            )}
           </div>
 
         </div>

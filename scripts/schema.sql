@@ -93,10 +93,12 @@ CREATE TABLE IF NOT EXISTS store_settings (
   logo_url    TEXT,
   theme_color TEXT NOT NULL DEFAULT '#10b981',
   instagram   TEXT,
-  facebook    TEXT,
+  whatsapp    TEXT,
   created_at  TIMESTAMP DEFAULT NOW(),
   updated_at  TIMESTAMP DEFAULT NOW()
 );
+
+ALTER TABLE store_settings ADD COLUMN IF NOT EXISTS whatsapp TEXT;
 
 INSERT INTO store_settings (id, store_name, theme_color)
 VALUES (1, 'VitaFit Store', '#10b981')
@@ -160,3 +162,16 @@ CREATE TABLE IF NOT EXISTS automation_settings (
 
 INSERT INTO automation_settings (id) VALUES (1)
 ON CONFLICT (id) DO NOTHING;
+
+-- ── Tabela: customer_access_tokens ──────────────────────────
+CREATE TABLE IF NOT EXISTS customer_access_tokens (
+  id            SERIAL PRIMARY KEY,
+  order_id      INTEGER NOT NULL UNIQUE REFERENCES orders(id) ON DELETE CASCADE,
+  token_hash    TEXT NOT NULL UNIQUE,
+  channel_phone TEXT,
+  channel_email TEXT,
+  status        TEXT NOT NULL DEFAULT 'active',
+  created_at    TIMESTAMP DEFAULT NOW(),
+  expires_at    TIMESTAMP NOT NULL,
+  used_at       TIMESTAMP
+);

@@ -235,7 +235,7 @@ export function Header() {
             }}
           >
             <div className="flex justify-between items-center p-6 border-b border-white/8">
-              <span className="text-lg font-bold text-white">Menu</span>
+              <span className="text-lg font-bold text-white">Menú</span>
               <button
                 onClick={() => setMobileOpen(false)}
                 className="p-2 rounded-xl border border-white/15 text-white/70 hover:text-white cursor-pointer"

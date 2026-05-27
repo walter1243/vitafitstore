@@ -49,8 +49,8 @@ function toStoreProduct(p: DbProduct): Product {
     id: Number(p.id),
     name: p.name,
     slug: p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-    description: p.description || 'Produto premium VitaFit.',
-    shortDescription: (p.description || 'Produto premium VitaFit.').replace(/<[^>]+>/g, ' ').slice(0, 80),
+    description: p.description || 'Producto premium VitaFit.',
+    shortDescription: (p.description || 'Producto premium VitaFit.').replace(/<[^>]+>/g, ' ').slice(0, 80),
     price: Number(p.price || 0),
     image: p.image || '/images/collagen.jpg',
     mainImage: p.image || '/images/collagen.jpg',
@@ -60,9 +60,9 @@ function toStoreProduct(p: DbProduct): Product {
     rating: 4.8,
     reviews: 120,
     stock: Number(p.stock || 0),
-    benefits: ['Qualidade premium', 'Entrega rápida', 'Produto verificado', 'Suporte especializado'],
-    ingredients: p.description || 'Detalhes não informados.',
-    usage: 'Siga as instruções da embalagem.',
+    benefits: ['Calidad premium', 'Entrega rápida', 'Producto verificado', 'Soporte especializado'],
+    ingredients: p.description || 'Detalles no informados.',
+    usage: 'Sigue las instrucciones del envase.',
     emoji: '✨',
     gradient: category === 'fitness' ? 'from-blue-400 to-indigo-600' : 'from-emerald-400 to-green-600',
   };
@@ -75,9 +75,9 @@ export default function ProductCarousels() {
   const [orderedCategories, setOrderedCategories] = useState<CategoryMeta[]>([]);
 
   function titleFor(category: string) {
-    if (category === 'geral') return 'Produtos';
-    if (category === 'salud') return 'Suplementos & Cápsulas';
-    if (category === 'fitness') return 'Moda Fit';
+    if (category === 'geral') return 'Productos';
+    if (category === 'salud') return 'Suplementos y cápsulas';
+    if (category === 'fitness') return 'Moda fit';
     return category
       .split(/\s+/)
       .map((part) => part.charAt(0).toUpperCase() + part.slice(1))

@@ -69,18 +69,18 @@ export function Hero() {
 
           {/* Heading */}
           <h1 className="mb-5 max-w-4xl text-5xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl" style={{ fontFamily: 'var(--font-heading)' }}>
-            Seu bem-estar,{' '}
+            Tu bienestar,{' '}
             <span className="relative">
               <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
-                nossa missão
+                nuestra misión
               </span>
               <span className="absolute -bottom-2 left-0 right-0 h-px bg-gradient-to-r from-emerald-400/0 via-emerald-400/60 to-emerald-400/0" />
             </span>
           </h1>
 
           <p className="mx-auto mb-10 max-w-2xl text-lg text-white/60 leading-relaxed" style={{ fontFamily: 'var(--font-body)' }}>
-            Suplementos premium certificados para emagrecimento, saúde e bem-estar.
-            Resultados reais, formulações naturais. Entrega em toda Espanha em 2-3 dias.
+            Suplementos premium certificados para adelgazamiento, salud y bienestar.
+            Resultados reales, formulaciones naturales. Entrega en toda España en 2-3 días.
           </p>
 
           {/* CTA Buttons */}
@@ -91,7 +91,7 @@ export function Hero() {
               asChild
             >
               <a href="#categorias">
-                Ver produtos
+                Ver productos
                 <ArrowRight className="h-5 w-5" />
               </a>
             </Button>
@@ -101,7 +101,7 @@ export function Hero() {
               className="px-8 py-6 text-base rounded-xl border-white/20 text-white/80 hover:bg-white/10 hover:text-white transition-all duration-300"
               asChild
             >
-              <a href="#nosotros">Conhecer VitaFit</a>
+              <a href="#nosotros">Conocer VitaFit</a>
             </Button>
           </div>
 
@@ -119,7 +119,7 @@ export function Hero() {
           <div className="mt-12 flex items-center divide-x divide-white/10 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm overflow-hidden">
             {[
               { value: "50K+", label: "Clientes felices" },
-              { value: "4.9★", label: "Valoração média" },
+              { value: "4.9★", label: "Valoración media" },
               { value: "100%", label: "Natural" },
               { value: "2-3d", label: "Entrega rápida" },
             ].map(stat => (

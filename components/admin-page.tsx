@@ -56,6 +56,13 @@ type Order = {
 
 type Toast = { id: number; type: 'success' | 'error'; msg: string };
 
+type PriceCalcResponse = {
+  base_price_calculated: number;
+  suggested_retail_price: number;
+  actual_profit_eur: number;
+  actual_margin_percentage: number;
+};
+
 const SECTION_LABELS: Record<Section, string> = {
   dashboard: 'Dashboard',
   products: 'Produtos',
@@ -108,7 +115,18 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   const [formTab, setFormTab] = useState<'dados' | 'upsell'>('dados');
   const [upsellCategoryFilter, setUpsellCategoryFilter] = useState('');
   const [productViewTab, setProductViewTab] = useState<'products' | 'cards'>('products');
+  const [productsSearch, setProductsSearch] = useState('');
   const [categoryDrafts, setCategoryDrafts] = useState<Record<number, { bannerType: 'image' | 'video'; bannerUrl: string; logoUrl: string }>>({});
+  const [pricingForm, setPricingForm] = useState({
+    costPrice: '',
+    freightShare: '3.00',
+    gatewayFee: '0.029',
+    ivaTax: '0.10',
+    targetMargin: '0.20',
+  });
+  const [pricingLoading, setPricingLoading] = useState(false);
+  const [pricingError, setPricingError] = useState('');
+  const [pricingResult, setPricingResult] = useState<PriceCalcResponse | null>(null);
 
   useEffect(() => {
     const next: Record<number, { bannerType: 'image' | 'video'; bannerUrl: string; logoUrl: string }> = {};
@@ -127,6 +145,88 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
       descRef.current.innerHTML = desc;
     }
   }, [desc, showForm]);
+
+  function parseDecimalInput(value: string) {
+    return Number(String(value ?? '').trim().replace(',', '.'));
+  }
+
+  const hasCostInput = pricingForm.costPrice.trim().length > 0;
+  const hasNegativeProfit = (pricingResult?.actual_profit_eur ?? 0) < 0;
+  const normalizedProductsSearch = productsSearch.trim().toLowerCase();
+  const filteredProducts = normalizedProductsSearch
+    ? products.filter(p =>
+      p.name.toLowerCase().includes(normalizedProductsSearch)
+      || (p.category ?? '').toLowerCase().includes(normalizedProductsSearch)
+    )
+    : products;
+
+  useEffect(() => {
+    if (!showForm || !hasCostInput) {
+      setPricingError('');
+      setPricingResult(null);
+      return;
+    }
+
+    const payload = {
+      cost_price: parseDecimalInput(pricingForm.costPrice),
+      freight_share: parseDecimalInput(pricingForm.freightShare),
+      gateway_fee: parseDecimalInput(pricingForm.gatewayFee),
+      iva_tax: parseDecimalInput(pricingForm.ivaTax),
+      target_margin: parseDecimalInput(pricingForm.targetMargin),
+    };
+
+    if (Object.values(payload).some(value => Number.isNaN(value))) {
+      setPricingResult(null);
+      setPricingError('Preencha os campos de precificação com números válidos.');
+      return;
+    }
+
+    const ctrl = new AbortController();
+    const timer = setTimeout(async () => {
+      setPricingLoading(true);
+      try {
+        const res = await fetch('/api/calculate-price', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: ctrl.signal,
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setPricingResult(null);
+          setPricingError(data?.error ?? 'Não foi possível calcular o preço sugerido.');
+          return;
+        }
+        setPricingError('');
+        setPricingResult(data as PriceCalcResponse);
+      } catch (error: any) {
+        if (error?.name === 'AbortError') return;
+        setPricingResult(null);
+        setPricingError('Não foi possível calcular o preço sugerido.');
+      } finally {
+        setPricingLoading(false);
+      }
+    }, 350);
+
+    return () => {
+      ctrl.abort();
+      clearTimeout(timer);
+    };
+  }, [
+    hasCostInput,
+    pricingForm.costPrice,
+    pricingForm.freightShare,
+    pricingForm.gatewayFee,
+    pricingForm.ivaTax,
+    pricingForm.targetMargin,
+    showForm,
+  ]);
+
+  useEffect(() => {
+    if (!pricingResult) return;
+    if (form.price.trim()) return;
+    onFormChange('price', pricingResult.suggested_retail_price.toFixed(2));
+  }, [form.price, onFormChange, pricingResult]);
 
   function readFileAsDataURL(file: File, cb: (url: string) => void) {
     const r = new FileReader();
@@ -237,12 +337,12 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
               {productViewTab === 'products' ? <Package size={16} className="text-green-500" /> : <Settings size={16} className="text-green-500" />}
               {productViewTab === 'products'
                 ? (showForm ? (editingProductId ? 'Editar Produto' : 'Novo Produto') : 'Produtos')
-                : 'Cards das categorias (loja)'}
+                : 'Categorias'}
             </h2>
             <p className="mt-1 text-xs text-white/50">
               {productViewTab === 'products'
                 ? 'Formulário em blocos com imagem principal, galeria e conteúdo rico.'
-                : 'Configure o banner e a logo dos cards de categoria em uma aba separada do cadastro de produtos.'}
+                : 'Gerencie apenas os nomes das categorias da loja.'}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -259,7 +359,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                 onClick={() => setProductViewTab('cards')}
                 className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${productViewTab === 'cards' ? 'bg-green-600 text-white' : 'text-white/60 hover:bg-white/5'}`}
               >
-                Cards da loja
+                + categoria
               </button>
             </div>
             {productViewTab === 'products' && (
@@ -316,6 +416,119 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                     <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white/70">
                       €{(Number(form.price || 0) || 0).toFixed(2)}
                     </div>
+                  </div>
+
+                  <div className="sm:col-span-2 rounded-2xl border border-white/10 bg-[#111523] p-4">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/55">Precificação inteligente</h4>
+                      {pricingLoading && <span className="text-[11px] text-white/45">Calculando...</span>}
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                      <div>
+                        <label className="mb-1 block text-[11px] font-medium text-white/50">Custo do fornecedor (€)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={pricingForm.costPrice}
+                          onChange={e => setPricingForm(prev => ({ ...prev, costPrice: e.target.value }))}
+                          placeholder="15.00"
+                          className="w-full rounded-xl border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-[11px] font-medium text-white/50">Frete rateado (€)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={pricingForm.freightShare}
+                          onChange={e => setPricingForm(prev => ({ ...prev, freightShare: e.target.value }))}
+                          placeholder="3.00"
+                          className="w-full rounded-xl border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-[11px] font-medium text-white/50">Taxa gateway</label>
+                        <input
+                          type="number"
+                          step="0.001"
+                          value={pricingForm.gatewayFee}
+                          onChange={e => setPricingForm(prev => ({ ...prev, gatewayFee: e.target.value }))}
+                          placeholder="0.029"
+                          className="w-full rounded-xl border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-[11px] font-medium text-white/50">IVA</label>
+                        <input
+                          type="number"
+                          step="0.001"
+                          value={pricingForm.ivaTax}
+                          onChange={e => setPricingForm(prev => ({ ...prev, ivaTax: e.target.value }))}
+                          placeholder="0.10"
+                          className="w-full rounded-xl border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-[11px] font-medium text-white/50">Margem alvo</label>
+                        <input
+                          type="number"
+                          step="0.001"
+                          value={pricingForm.targetMargin}
+                          onChange={e => setPricingForm(prev => ({ ...prev, targetMargin: e.target.value }))}
+                          placeholder="0.20"
+                          className="w-full rounded-xl border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                        />
+                      </div>
+                    </div>
+
+                    {pricingError && (
+                      <div className="mt-3 rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-300">
+                        {pricingError}
+                      </div>
+                    )}
+
+                    {pricingResult && !pricingError && (
+                      <div className={`mt-3 rounded-xl border px-3 py-3 text-xs ${hasNegativeProfit ? 'border-red-500/30 bg-red-500/10 text-red-200' : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200'}`}>
+                        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                          <div>
+                            <div className="text-white/55">Preço base</div>
+                            <div className="text-sm font-semibold text-white">€{pricingResult.base_price_calculated.toFixed(2)}</div>
+                          </div>
+                          <div>
+                            <div className="text-white/55">Preço sugerido</div>
+                            <div className="text-sm font-semibold text-white">€{pricingResult.suggested_retail_price.toFixed(2)}</div>
+                          </div>
+                          <div>
+                            <div className="text-white/55">Lucro real</div>
+                            <div className={`text-sm font-semibold ${hasNegativeProfit ? 'text-red-300' : 'text-emerald-300'}`}>
+                              €{pricingResult.actual_profit_eur.toFixed(2)}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-white/55">Margem real</div>
+                            <div className={`text-sm font-semibold ${hasNegativeProfit ? 'text-red-300' : 'text-emerald-300'}`}>
+                              {pricingResult.actual_margin_percentage.toFixed(2)}%
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                          <span className={hasNegativeProfit ? 'text-red-200' : 'text-emerald-200'}>
+                            {hasNegativeProfit
+                              ? 'Alerta: preço atual gera prejuízo. O cadastro ficará bloqueado até ajustar os custos ou aplicar um preço viável.'
+                              : 'Cenário saudável: você pode aplicar o preço sugerido automaticamente no campo de preço.'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => onFormChange('price', pricingResult.suggested_retail_price.toFixed(2))}
+                            className="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-green-700"
+                          >
+                            Aplicar preço sugerido
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </section>
@@ -520,7 +733,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
               <button
                 type="button"
                 onClick={onSubmit}
-                disabled={saving || !form.name.trim() || !form.price.trim()}
+                disabled={saving || !form.name.trim() || !form.price.trim() || hasNegativeProfit}
                 className="flex items-center gap-2 rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {saving ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : <Check size={15} />}
@@ -551,49 +764,17 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
 
             <div className="space-y-3">
               {categories.length === 0 && (
-                <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-xs text-white/45">Crie categorias para liberar a edição de banner e logo.</div>
+                <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-xs text-white/45">Crie categorias para organizar os produtos da loja.</div>
               )}
               {categories.map((c, idx) => {
-                const draft = categoryDrafts[c.id] ?? { bannerType: 'image' as const, bannerUrl: '', logoUrl: '' };
                 return (
-                  <div key={c.id} className="space-y-3 rounded-2xl border border-white/10 bg-[#0f1117] p-4">
+                  <div key={c.id} className="rounded-2xl border border-white/10 bg-[#0f1117] p-4">
                     <div className="flex items-center gap-2">
                       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/5 text-xs font-semibold text-white/50">{idx + 1}</span>
                       <span className="flex-1 text-sm font-medium text-white">{c.name}</span>
                       <button type="button" onClick={() => onMoveCategory(c.id, 'up')} className="rounded-lg border border-white/10 p-2 text-white/60 hover:bg-white/5" title="Subir categoria"><ArrowUp size={12} /></button>
                       <button type="button" onClick={() => onMoveCategory(c.id, 'down')} className="rounded-lg border border-white/10 p-2 text-white/60 hover:bg-white/5" title="Descer categoria"><ArrowDown size={12} /></button>
                       <button type="button" onClick={() => onDeleteCategory(c.id, c.name)} className="rounded-lg border border-red-500/30 p-2 text-red-300 hover:bg-red-500/10" title="Excluir categoria"><Trash2 size={12} /></button>
-                    </div>
-                    <div className="grid gap-2 sm:grid-cols-3">
-                      <select
-                        value={draft.bannerType}
-                        onChange={e => setCategoryDrafts(prev => ({ ...prev, [c.id]: { ...draft, bannerType: e.target.value === 'video' ? 'video' : 'image' } }))}
-                        className="rounded-xl border border-white/10 bg-[#22263a] px-3 py-2 text-xs text-white outline-none"
-                      >
-                        <option value="image">Banner imagem</option>
-                        <option value="video">Banner vídeo</option>
-                      </select>
-                      <input
-                        type="text"
-                        value={draft.bannerUrl}
-                        onChange={e => setCategoryDrafts(prev => ({ ...prev, [c.id]: { ...draft, bannerUrl: e.target.value } }))}
-                        placeholder="URL do banner (img/video)"
-                        className="rounded-xl border border-white/10 bg-[#22263a] px-3 py-2 text-xs text-white outline-none sm:col-span-2"
-                      />
-                      <input
-                        type="text"
-                        value={draft.logoUrl}
-                        onChange={e => setCategoryDrafts(prev => ({ ...prev, [c.id]: { ...draft, logoUrl: e.target.value } }))}
-                        placeholder="URL da logo da categoria (opcional)"
-                        className="rounded-xl border border-white/10 bg-[#22263a] px-3 py-2 text-xs text-white outline-none sm:col-span-2"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => onSaveCategoryMedia(c.id, draft.bannerType, draft.bannerUrl, draft.logoUrl)}
-                        className="rounded-xl bg-white/5 px-3 py-2 text-xs font-semibold text-white hover:bg-white/10"
-                      >
-                        Salvar mídia
-                      </button>
                     </div>
                   </div>
                 );
@@ -604,7 +785,19 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
       </div>
 
       {productViewTab === 'products' && (
-      <TableCard title={`Todos os produtos (${products.length})`} icon={<Package size={15} className="text-green-500" />}>
+      <TableCard
+        title={`Todos os produtos (${filteredProducts.length}${normalizedProductsSearch ? ` de ${products.length}` : ''})`}
+        icon={<Package size={15} className="text-green-500" />}
+      >
+        <div className="mb-4 flex flex-wrap gap-2">
+          <input
+            type="text"
+            value={productsSearch}
+            onChange={e => setProductsSearch(e.target.value)}
+            placeholder="Buscar produto por nome ou categoria"
+            className="w-full rounded-xl border border-white/10 bg-[#22263a] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40 sm:max-w-sm"
+          />
+        </div>
         <table className="w-full text-sm">
           <thead className="bg-[#0f1117]">
             <tr>
@@ -614,7 +807,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
             </tr>
           </thead>
           <tbody className="divide-y divide-white/10">
-            {products.map(p => {
+            {filteredProducts.map(p => {
               const stock = p.stock ?? 0;
               const stockClass = stock > 10 ? 'text-emerald-400' : stock > 0 ? 'text-amber-400' : 'text-red-400';
               const preview = p.mainImage ?? p.image;
@@ -661,9 +854,11 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                 </tr>
               );
             })}
-            {products.length === 0 && (
+            {filteredProducts.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-5 py-10 text-center text-sm text-white/45">Nenhum produto cadastrado ainda</td>
+                <td colSpan={5} className="px-5 py-10 text-center text-sm text-white/45">
+                  {normalizedProductsSearch ? 'Nenhum produto encontrado para a busca.' : 'Nenhum produto cadastrado ainda'}
+                </td>
               </tr>
             )}
           </tbody>
@@ -1281,12 +1476,13 @@ type AutomationSettings = {
 };
 
 function AutomationSection() {
-  const [tab, setTab] = useState<'suppliers' | 'scraper' | 'import' | 'config'>('suppliers');
+  const [tab, setTab] = useState<'suppliers' | 'scraper' | 'import' | 'espiar' | 'config'>('suppliers');
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [settings, setSettings] = useState<Partial<AutomationSettings>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [notice, setNotice] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
 
   // New supplier form
   const [newName, setNewName] = useState('');
@@ -1295,70 +1491,136 @@ function AutomationSection() {
   const [addingSupplier, setAddingSupplier] = useState(false);
 
   useEffect(() => {
+    if (!notice) return;
+    const timer = setTimeout(() => setNotice(null), 4500);
+    return () => clearTimeout(timer);
+  }, [notice]);
+
+  useEffect(() => {
     (async () => {
-      const [sr, ar] = await Promise.all([
-        fetch('/api/suppliers'),
-        fetch('/api/automation-settings'),
-      ]);
-      if (sr.ok) setSuppliers(await sr.json());
-      if (ar.ok) setSettings(await ar.json());
-      setLoading(false);
+      try {
+        const [sr, ar] = await Promise.all([
+          fetch('/api/suppliers'),
+          fetch('/api/automation-settings'),
+        ]);
+        if (sr.ok) setSuppliers(await sr.json());
+        if (ar.ok) setSettings(await ar.json());
+        if (!sr.ok || !ar.ok) {
+          setNotice({ type: 'error', msg: 'Falha ao carregar configurações de automação.' });
+        }
+      } catch {
+        setNotice({ type: 'error', msg: 'Erro de conexão ao carregar automação.' });
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
   async function addSupplier() {
-    if (!newName || !newUrl) return;
-    setAddingSupplier(true);
-    const res = await fetch('/api/suppliers', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newName, baseUrl: newUrl, apiKey: newKey }),
-    });
-    if (res.ok) {
-      const s = await res.json();
-      setSuppliers(prev => [...prev, s]);
-      setNewName(''); setNewUrl(''); setNewKey('');
+    if (!newName || !newUrl) {
+      setNotice({ type: 'error', msg: 'Preencha nome e URL do fornecedor.' });
+      return;
     }
-    setAddingSupplier(false);
+
+    setAddingSupplier(true);
+    try {
+      const res = await fetch('/api/suppliers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName, baseUrl: newUrl, apiKey: newKey }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setNotice({ type: 'error', msg: data?.error ?? 'Erro ao adicionar fornecedor.' });
+        return;
+      }
+
+      setSuppliers(prev => [...prev, data]);
+      setNewName(''); setNewUrl(''); setNewKey('');
+      setNotice({ type: 'success', msg: 'Fornecedor adicionado com sucesso.' });
+    } catch {
+      setNotice({ type: 'error', msg: 'Erro de conexão ao adicionar fornecedor.' });
+    } finally {
+      setAddingSupplier(false);
+    }
   }
 
   async function toggleSupplier(id: number, active: boolean) {
-    await fetch('/api/suppliers', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, active: !active }),
-    });
-    setSuppliers(prev => prev.map(s => s.id === id ? { ...s, active: !active } : s));
+    try {
+      const res = await fetch('/api/suppliers', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, active: !active }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setNotice({ type: 'error', msg: data?.error ?? 'Erro ao atualizar fornecedor.' });
+        return;
+      }
+
+      setSuppliers(prev => prev.map(s => s.id === id ? { ...s, active: !active } : s));
+      setNotice({ type: 'success', msg: `Fornecedor ${!active ? 'ativado' : 'desativado'} com sucesso.` });
+    } catch {
+      setNotice({ type: 'error', msg: 'Erro de conexão ao atualizar fornecedor.' });
+    }
   }
 
   async function deleteSupplier(id: number) {
-    await fetch('/api/suppliers', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
-    });
-    setSuppliers(prev => prev.filter(s => s.id !== id));
+    try {
+      const res = await fetch('/api/suppliers', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setNotice({ type: 'error', msg: data?.error ?? 'Erro ao remover fornecedor.' });
+        return;
+      }
+
+      setSuppliers(prev => prev.filter(s => s.id !== id));
+      setNotice({ type: 'success', msg: 'Fornecedor removido com sucesso.' });
+    } catch {
+      setNotice({ type: 'error', msg: 'Erro de conexão ao remover fornecedor.' });
+    }
   }
 
   async function saveSettings() {
+    const hasWhatsappApi = Boolean(settings.whatsapp_token?.trim());
+    const hasEmailApi = Boolean(settings.sendgrid_key?.trim());
+
     setSaving(true);
-    await fetch('/api/automation-settings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        automationEnabled: settings.automation_enabled,
-        whatsappProvider: settings.whatsapp_provider,
-        whatsappUrl: settings.whatsapp_url,
-        whatsappToken: settings.whatsapp_token,
-        sendgridKey: settings.sendgrid_key,
-        notifyEmail: settings.notify_email,
-        notifyWhatsapp: settings.notify_whatsapp,
-        notifyEmailEnabled: settings.notify_email_enabled,
-      }),
-    });
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    try {
+      const res = await fetch('/api/automation-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          automationEnabled: settings.automation_enabled,
+          whatsappProvider: settings.whatsapp_provider ?? 'zapi',
+          whatsappUrl: settings.whatsapp_url,
+          whatsappToken: settings.whatsapp_token,
+          sendgridKey: settings.sendgrid_key,
+          notifyEmail: settings.notify_email,
+          notifyWhatsapp: hasWhatsappApi,
+          notifyEmailEnabled: hasEmailApi,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setSaved(false);
+        setNotice({ type: 'error', msg: data?.error ?? 'Erro ao salvar configurações.' });
+        return;
+      }
+
+      setSaved(true);
+      setNotice({ type: 'success', msg: 'Configurações salvas com sucesso.' });
+      setTimeout(() => setSaved(false), 2500);
+    } catch {
+      setSaved(false);
+      setNotice({ type: 'error', msg: 'Erro de conexão ao salvar configurações.' });
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (loading) {
@@ -1423,6 +1685,7 @@ function AutomationSection() {
           { key: 'suppliers', label: 'Fornecedores (API)' },
           { key: 'scraper',   label: 'Sem Key (Scraper)' },
           { key: 'import',    label: 'Importar Produtos' },
+          { key: 'espiar',    label: '🔍 Espiar Loja'    },
           { key: 'config',    label: 'WhatsApp & Email'  },
         ] as const).map(t => (
           <button
@@ -1435,6 +1698,15 @@ function AutomationSection() {
           </button>
         ))}
       </div>
+
+      {notice && (
+        <div className={`rounded-xl border px-4 py-3 text-sm ${notice.type === 'success' ? 'border-green-500/30 bg-green-500/10 text-green-200' : 'border-red-500/30 bg-red-500/10 text-red-200'}`}>
+          <div className="flex items-center gap-2">
+            {notice.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+            <span>{notice.msg}</span>
+          </div>
+        </div>
+      )}
 
       {tab === 'suppliers' && (
         <div className="space-y-4">
@@ -1530,16 +1802,21 @@ function AutomationSection() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id, scraperUrlTemplate, scraperStockSelector }),
           });
-          if (res.ok) {
-            const updated = await res.json();
-            setSuppliers(prev => prev.map(s => s.id === id ? { ...s, ...updated } : s));
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            setNotice({ type: 'error', msg: data?.error ?? 'Falha ao salvar scraper.' });
+            throw new Error(data?.error ?? 'Falha ao salvar scraper.');
           }
+          setSuppliers(prev => prev.map(s => s.id === id ? { ...s, ...data } : s));
+          setNotice({ type: 'success', msg: 'Configuração de scraper salva com sucesso.' });
         }} />
       )}
 
       {tab === 'import' && (
         <ImportTab onImportDone={() => { /* reload products outside scope */ }} />
       )}
+
+      {tab === 'espiar' && <EspiarLojaTab />}
 
       {tab === 'config' && (
         <div className="space-y-5 rounded-2xl border border-white/10 bg-[#1a1d27] p-5 shadow-none">
@@ -1549,50 +1826,15 @@ function AutomationSection() {
               <MessageCircle size={15} className="text-green-500" /> WhatsApp
             </h3>
             <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <span className="w-32 text-sm text-white/60">Provider</span>
-                <select
-                  value={settings.whatsapp_provider ?? 'zapi'}
-                  onChange={e => setSettings(p => ({ ...p, whatsapp_provider: e.target.value }))}
-                  className="rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
-                >
-                  <option value="zapi">Z-API (pago)</option>
-                  <option value="evolution">Evolution API (open-source)</option>
-                </select>
-              </div>
               <label className="flex flex-col gap-1">
-                <span className="text-sm text-white/60">
-                  {settings.whatsapp_provider === 'evolution'
-                    ? 'Evolution API URL (ex: http://localhost:8080)'
-                    : 'Z-API URL (ex: https://api.z-api.io/instances/ID/token/TOKEN)'}
-                </span>
-                <input
-                  className="rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
-                  placeholder="https://..."
-                  value={settings.whatsapp_url ?? ''}
-                  onChange={e => setSettings(p => ({ ...p, whatsapp_url: e.target.value }))}
-                />
-              </label>
-              <label className="flex flex-col gap-1">
-                <span className="text-sm text-white/60">
-                  {settings.whatsapp_provider === 'evolution' ? 'API Key' : 'Client-Token'}
-                </span>
+                <span className="text-sm text-white/60">API do WhatsApp</span>
                 <input
                   type="password"
                   className="rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
-                  placeholder="Token secreto"
+                  placeholder="Cole sua API key/token"
                   value={settings.whatsapp_token ?? ''}
                   onChange={e => setSettings(p => ({ ...p, whatsapp_token: e.target.value }))}
                 />
-              </label>
-              <label className="flex cursor-pointer items-center gap-2 text-sm text-white/60">
-                <input
-                  type="checkbox"
-                  checked={settings.notify_whatsapp ?? true}
-                  onChange={e => setSettings(p => ({ ...p, notify_whatsapp: e.target.checked }))}
-                  className="w-4 h-4 accent-green-600"
-                />
-                Enviar notificações por WhatsApp
               </label>
             </div>
           </div>
@@ -1606,7 +1848,7 @@ function AutomationSection() {
             </h3>
             <div className="space-y-3">
               <label className="flex flex-col gap-1">
-                <span className="text-sm text-white/60">SendGrid API Key</span>
+                <span className="text-sm text-white/60">API do E-mail (SendGrid)</span>
                 <input
                   type="password"
                   className="rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
@@ -1614,15 +1856,6 @@ function AutomationSection() {
                   value={settings.sendgrid_key ?? ''}
                   onChange={e => setSettings(p => ({ ...p, sendgrid_key: e.target.value }))}
                 />
-              </label>
-              <label className="flex cursor-pointer items-center gap-2 text-sm text-white/60">
-                <input
-                  type="checkbox"
-                  checked={settings.notify_email_enabled ?? false}
-                  onChange={e => setSettings(p => ({ ...p, notify_email_enabled: e.target.checked }))}
-                  className="w-4 h-4 accent-blue-600"
-                />
-                Enviar notificações por e-mail
               </label>
             </div>
           </div>
@@ -1682,9 +1915,12 @@ function ScraperTab({
 
   async function save(id: number) {
     setSaving(true);
-    await onSaveSupplier(id, urlTpl, selector);
-    setSaving(false);
-    setExpanded(null);
+    try {
+      await onSaveSupplier(id, urlTpl, selector);
+      setExpanded(null);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -1823,6 +2059,259 @@ function parseCSV(text: string): ImportProduct[] {
       description: get(['descricao', 'description', 'desc']),
     };
   }).filter(p => p.name);
+}
+
+// ─── EspiarLojaTab ────────────────────────────────────────────────────────────
+
+type EspiarProduct = {
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+  images: string[];
+  stock: number;
+  url: string;
+  source: string;
+  suggestedPrice: number;
+};
+
+function EspiarLojaTab() {
+  const [url, setUrl]               = useState('');
+  const [margin, setMargin]         = useState(40);
+  const [loading, setLoading]       = useState(false);
+  const [source, setSource]         = useState('');
+  const [products, setProducts]     = useState<EspiarProduct[]>([]);
+  const [selected, setSelected]     = useState<Set<number>>(new Set());
+  const [prices, setPrices]         = useState<Record<number, number>>({});
+  const [importing, setImporting]   = useState(false);
+  const [doneCount, setDoneCount]   = useState<number | null>(null);
+  const [error, setError]           = useState('');
+
+  async function handleScrape() {
+    if (!url.trim()) return;
+    setLoading(true);
+    setError('');
+    setProducts([]);
+    setSelected(new Set());
+    setPrices({});
+    setDoneCount(null);
+    try {
+      const res = await fetch('/api/products/scrape-import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: url.trim(), margin }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setError(data.error ?? 'Nenhum produto encontrado nessa URL.');
+      } else {
+        setSource(data.source ?? '');
+        const list: EspiarProduct[] = data.products ?? [];
+        setProducts(list);
+        const initPrices: Record<number, number> = {};
+        list.forEach((p, i) => { initPrices[i] = p.suggestedPrice; });
+        setPrices(initPrices);
+      }
+    } catch (e: any) {
+      setError(e?.message ?? 'Erro de rede');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function toggleAll() {
+    if (selected.size === products.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(products.map((_, i) => i)));
+    }
+  }
+
+  function toggleOne(i: number) {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i);
+      else next.add(i);
+      return next;
+    });
+  }
+
+  async function handleImport() {
+    if (selected.size === 0) return;
+    setImporting(true);
+    const list = Array.from(selected).map(i => {
+      const p = products[i];
+      return {
+        name: p.name,
+        price: prices[i] ?? p.suggestedPrice,
+        description: p.description || null,
+        image: p.image || null,
+        additionalImages: p.images ?? [],
+        stock: p.stock ?? 0,
+      };
+    });
+    try {
+      const res = await fetch('/api/products/import-batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ products: list }),
+      });
+      const data = await res.json();
+      setDoneCount(data.imported ?? list.length);
+      setSelected(new Set());
+    } catch (e: any) {
+      setError(e?.message ?? 'Erro ao importar');
+    } finally {
+      setImporting(false);
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Search bar */}
+      <div className="rounded-2xl border border-white/10 bg-[#1a1d27] p-5 space-y-4">
+        <h3 className="flex items-center gap-2 font-medium text-white">
+          <span className="text-lg">🔍</span> Espiar &amp; Importar Produtos de Qualquer Loja
+        </h3>
+        <p className="text-sm text-white/50">
+          Cole a URL de uma loja concorrente ou fornecedor. Suporta Shopify, WooCommerce e sites genéricos.
+        </p>
+
+        <div className="flex gap-2">
+          <input
+            className="flex-1 rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+            placeholder="https://loja-concorrente.com/produtos"
+            value={url}
+            onChange={e => setUrl(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleScrape()}
+          />
+          <button
+            onClick={handleScrape}
+            disabled={loading || !url.trim()}
+            className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700 disabled:opacity-50"
+          >
+            {loading ? <RefreshCw size={14} className="animate-spin" /> : <Globe size={14} />}
+            {loading ? 'Buscando…' : 'Buscar'}
+          </button>
+        </div>
+
+        <div className="flex items-center gap-4 flex-wrap">
+          <label className="flex items-center gap-2 text-sm text-white/60">
+            <span>Margem de lucro:</span>
+            <input
+              type="number" min={0} max={500} value={margin}
+              onChange={e => setMargin(Number(e.target.value))}
+              className="w-16 rounded-lg border border-white/10 bg-[#22263a] px-2 py-1 text-center text-sm text-white outline-none focus:border-green-500/40"
+            />
+            <span>%</span>
+          </label>
+          <div className="flex gap-2 text-xs text-white/40">
+            <span className="rounded-full bg-green-500/10 text-green-300 px-2 py-0.5">Shopify ✓</span>
+            <span className="rounded-full bg-blue-500/10 text-blue-300 px-2 py-0.5">WooCommerce ✓</span>
+            <span className="rounded-full bg-white/10 px-2 py-0.5">Site genérico ✓</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Error */}
+      {error && (
+        <div className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-300">
+          <AlertCircle size={15} /> {error}
+        </div>
+      )}
+
+      {/* Success banner */}
+      {doneCount !== null && (
+        <div className="flex items-center gap-2 rounded-xl border border-green-500/20 bg-green-500/10 p-4 text-sm text-green-300">
+          <CheckCircle2 size={15} /> {doneCount} produto(s) importado(s) com sucesso!
+        </div>
+      )}
+
+      {/* Results */}
+      {products.length > 0 && (
+        <div className="space-y-3">
+          {/* Toolbar */}
+          <div className="flex items-center justify-between flex-wrap gap-3 rounded-xl border border-white/10 bg-[#1a1d27] px-4 py-3">
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-white/60">
+                <span className="font-medium text-white">{products.length}</span> produtos via{' '}
+                <span className="text-green-400">{source}</span>
+              </span>
+              <button
+                onClick={toggleAll}
+                className="text-xs rounded-lg bg-white/5 px-3 py-1.5 transition-colors hover:bg-white/10"
+              >
+                {selected.size === products.length ? 'Desmarcar todos' : 'Selecionar todos'}
+              </button>
+            </div>
+            <button
+              onClick={handleImport}
+              disabled={selected.size === 0 || importing}
+              className="flex items-center gap-2 rounded-lg bg-green-600 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700 disabled:opacity-50"
+            >
+              {importing ? <RefreshCw size={14} className="animate-spin" /> : <Upload size={14} />}
+              {importing ? 'Importando…' : `Importar ${selected.size} produto(s)`}
+            </button>
+          </div>
+
+          {/* Product grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            {products.map((p, i) => {
+              const isSel = selected.has(i);
+              const salePrice = prices[i] ?? p.suggestedPrice;
+              const profit = salePrice - p.price;
+              return (
+                <div
+                  key={i}
+                  onClick={() => toggleOne(i)}
+                  className={`relative cursor-pointer overflow-hidden rounded-xl border-2 transition-all
+                    ${isSel ? 'border-green-500 bg-white/5' : 'border-white/10 bg-[#1a1d27] hover:border-white/20'}`}
+                >
+                  <div className={`absolute top-2 left-2 w-5 h-5 rounded flex items-center justify-center text-xs font-bold z-10
+                    ${isSel ? 'bg-green-500 text-white' : 'bg-white/10 border border-white/10 text-white/40'}`}>
+                    {isSel ? '✓' : ''}
+                  </div>
+
+                  <div className="aspect-square bg-[#11131a]">
+                    {p.image
+                      ? <img src={p.image} alt={p.name} className="w-full h-full object-cover"
+                          onError={e => { e.currentTarget.style.display = 'none'; }} />
+                      : <div className="w-full h-full flex items-center justify-center text-3xl">📦</div>
+                    }
+                  </div>
+
+                  <div className="p-2">
+                    <p className="line-clamp-2 text-xs font-medium leading-tight text-white">{p.name}</p>
+
+                    <div className="mt-1.5 space-y-0.5">
+                      <p className="text-xs text-white/55">Custo: <span className="font-mono text-white/80">€{p.price.toFixed(2)}</span></p>
+                      <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                        <span className="text-xs text-white/60">Venda:</span>
+                        <input
+                          type="number"
+                          value={salePrice}
+                          onChange={e => {
+                            if (!isSel) toggleOne(i);
+                            setPrices(prev => ({ ...prev, [i]: parseFloat(e.target.value) || 0 }));
+                          }}
+                          onClick={e => e.stopPropagation()}
+                          className="w-full rounded border border-white/10 bg-[#22263a] px-1 py-0.5 text-xs font-mono text-white outline-none focus:border-green-500/40"
+                        />
+                      </div>
+                      <p className={`text-xs font-medium ${profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        Lucro: €{profit.toFixed(2)}
+                      </p>
+                      <p className="text-xs text-white/40">📦 {p.stock} un.</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function ImportTab({ onImportDone }: { onImportDone: () => void }) {
@@ -2110,7 +2599,12 @@ function SettingsSection({
   };
 
   const [ig, setIg] = useState('');
-  const [fb, setFb] = useState('');
+  const [wa, setWa] = useState('');
+  const [waFloatingEnabled, setWaFloatingEnabled] = useState(true);
+  const [waGreeting, setWaGreeting] = useState('Hola! Bienvenido a VitaFit Store. En que puedo ayudarte hoy?');
+  const [waOrderTemplate, setWaOrderTemplate] = useState('Hola {name}! Gracias por tu compra en VitaFit. Tu pedido #{orderId} esta confirmado y ya estamos preparando {productName}. {eta}');
+  const [waTrackingTemplate, setWaTrackingTemplate] = useState('Hola {name}! Buenas noticias: tu pedido #{orderId} ya fue enviado. Transportista: {carrier}. Codigo: {trackingCode}. Rastreo: {trackingUrl}');
+  const [waFutureTemplate, setWaFutureTemplate] = useState('Hola {name}! Este es un mensaje futuro editable para nuevas automatizaciones.');
   const [storeName, setStore] = useState('VitaFit Store');
   const [themeColor, setThemeColor] = useState('#10b981');
   const [logoUrl, setLogoUrl] = useState('');
@@ -2127,7 +2621,12 @@ function SettingsSection({
         setThemeColor(data?.themeColor ?? '#10b981');
         setLogoUrl(data?.logoUrl ?? '');
         setIg(data?.instagram ?? '');
-        setFb(data?.facebook ?? '');
+        setWa(data?.whatsapp ?? '+34 601 678 657');
+        setWaFloatingEnabled(Boolean(data?.whatsappFloatingEnabled ?? true));
+        setWaGreeting(data?.whatsappGreeting ?? 'Hola! Bienvenido a VitaFit Store. En que puedo ayudarte hoy?');
+        setWaOrderTemplate(data?.whatsappOrderTemplate ?? 'Hola {name}! Gracias por tu compra en VitaFit. Tu pedido #{orderId} esta confirmado y ya estamos preparando {productName}. {eta}');
+        setWaTrackingTemplate(data?.whatsappTrackingTemplate ?? 'Hola {name}! Buenas noticias: tu pedido #{orderId} ya fue enviado. Transportista: {carrier}. Codigo: {trackingCode}. Rastreo: {trackingUrl}');
+        setWaFutureTemplate(data?.whatsappFutureTemplate ?? 'Hola {name}! Este es un mensaje futuro editable para nuevas automatizaciones.');
       } catch {
         // ignore load errors
       }
@@ -2152,7 +2651,12 @@ function SettingsSection({
           themeColor,
           logoUrl,
           instagram: ig.trim(),
-          facebook: fb.trim(),
+          whatsapp: wa.trim(),
+          whatsappFloatingEnabled: waFloatingEnabled,
+          whatsappGreeting: waGreeting.trim(),
+          whatsappOrderTemplate: waOrderTemplate.trim(),
+          whatsappTrackingTemplate: waTrackingTemplate.trim(),
+          whatsappFutureTemplate: waFutureTemplate.trim(),
         }),
       }),
       fetch('/api/home-blocks', {
@@ -2260,15 +2764,71 @@ function SettingsSection({
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-[#1a1d27] p-5 shadow-none">
-        <h2 className="mb-4 font-semibold text-white">Redes Sociais</h2>
+        <h2 className="mb-4 font-semibold text-white">WhatsApp e Redes Sociais</h2>
         <div className="space-y-4">
-          {[{label:'Instagram',value:ig,setter:setIg,ph:'@vitafit'},{label:'Facebook',value:fb,setter:setFb,ph:'VitaFit'}].map(f => (
+          {[{label:'Instagram',value:ig,setter:setIg,ph:'@vitafit'},{label:'WhatsApp',value:wa,setter:setWa,ph:'+34 601 678 657'}].map(f => (
             <div key={f.label}>
               <label className="mb-1.5 block text-xs font-medium text-white/50">{f.label}</label>
               <input type="text" value={f.value} onChange={e => f.setter(e.target.value)} placeholder={f.ph}
                 className="w-full rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40" />
             </div>
           ))}
+
+          <p className="text-xs text-white/45">Esse numero e usado no botao da vitrine. Troque aqui sempre que precisar.</p>
+
+          <label className="flex items-center gap-2 rounded-lg border border-white/10 bg-[#111827] px-3 py-2 text-sm text-white/80">
+            <input
+              type="checkbox"
+              checked={waFloatingEnabled}
+              onChange={e => setWaFloatingEnabled(e.target.checked)}
+              className="h-4 w-4 rounded border-white/20 bg-transparent accent-green-500"
+            />
+            Mostrar botão flutuante do WhatsApp na vitrine
+          </label>
+
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-white/50">Mensagem de saudação (espanhol)</label>
+            <textarea
+              value={waGreeting}
+              onChange={e => setWaGreeting(e.target.value)}
+              rows={3}
+              placeholder="Hola! Bienvenido a VitaFit Store. En que puedo ayudarte hoy?"
+              className="w-full rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-white/50">Mensagem automatica de pedido (humanizada)</label>
+            <textarea
+              value={waOrderTemplate}
+              onChange={e => setWaOrderTemplate(e.target.value)}
+              rows={4}
+              className="w-full rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+            />
+            <p className="mt-1 text-[11px] text-white/40">Variaveis: {'{name}'} {'{orderId}'} {'{productName}'} {'{eta}'}</p>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-white/50">Mensagem automatica de rastreio (humanizada)</label>
+            <textarea
+              value={waTrackingTemplate}
+              onChange={e => setWaTrackingTemplate(e.target.value)}
+              rows={4}
+              className="w-full rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+            />
+            <p className="mt-1 text-[11px] text-white/40">Variaveis: {'{name}'} {'{orderId}'} {'{carrier}'} {'{trackingCode}'} {'{trackingUrl}'}</p>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-white/50">Mensagem futura (template livre)</label>
+            <textarea
+              value={waFutureTemplate}
+              onChange={e => setWaFutureTemplate(e.target.value)}
+              rows={4}
+              className="w-full rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+            />
+            <p className="mt-1 text-[11px] text-white/40">Use este campo para preparar novos textos sem perder no futuro.</p>
+          </div>
         </div>
       </div>
 

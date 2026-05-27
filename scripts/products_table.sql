@@ -6,8 +6,10 @@ CREATE TABLE IF NOT EXISTS products (
     price NUMERIC,
     category TEXT,
     image TEXT,
+    additional_images JSONB NOT NULL DEFAULT '[]'::jsonb,
     stock INTEGER,
     video TEXT,
+    position INTEGER,
     created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -17,4 +19,6 @@ ALTER TABLE products ADD COLUMN IF NOT EXISTS image TEXT;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS description TEXT;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS category TEXT;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS stock INTEGER;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS additional_images JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS position INTEGER;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW();

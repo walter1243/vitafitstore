@@ -2,6 +2,28 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { sql } from "@/lib/db";
 import { processOrder } from "@/lib/order-orchestrator";
+import { resolveShipping } from '@/lib/checkout-pricing';
+
+type CheckoutItemInput = {
+  productId: number;
+  quantity: number;
+};
+
+function parseItems(rawItems: unknown): CheckoutItemInput[] {
+  if (!Array.isArray(rawItems)) return [];
+
+  return rawItems
+    .map((item) => {
+      const productId = Number((item as any)?.productId);
+      const quantity = Number((item as any)?.quantity ?? 1);
+      return { productId, quantity };
+    })
+    .filter((item) => Number.isFinite(item.productId) && item.productId > 0 && Number.isFinite(item.quantity) && item.quantity > 0)
+    .map((item) => ({
+      productId: Math.trunc(item.productId),
+      quantity: Math.trunc(item.quantity),
+    }));
+}
 
 function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -13,7 +35,6 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const {
-      amount,
       customerName,
       customerEmail,
       customerPhone,
@@ -21,17 +42,46 @@ export async function POST(req: NextRequest) {
       postalCode,
       city,
       country,
-      productId,
+      items,
       paymentMethodId,
     } = body;
 
-    const amountNum = Number(amount);
-    if (!amountNum || amountNum <= 0) {
-      return NextResponse.json({ error: 'Importe inválido.' }, { status: 400 });
+    const normalizedItems = parseItems(items);
+    if (normalizedItems.length === 0) {
+      return NextResponse.json({ error: 'Carrinho vazio.' }, { status: 400 });
     }
 
     if (!paymentMethodId || typeof paymentMethodId !== 'string') {
       return NextResponse.json({ error: 'Método de pago inválido.' }, { status: 400 });
+    }
+
+    const productIds = [...new Set(normalizedItems.map((item) => item.productId))];
+    const productRows = await sql`
+      SELECT id, price
+      FROM products
+      WHERE id = ANY(${productIds})
+    `;
+
+    const priceById = new Map<number, number>();
+    for (const row of productRows as any[]) {
+      priceById.set(Number(row.id), Number(row.price));
+    }
+
+    const missing = productIds.filter((id) => !priceById.has(id));
+    if (missing.length > 0) {
+      return NextResponse.json({ error: 'Há produtos inválidos no carrinho.' }, { status: 400 });
+    }
+
+    const subtotal = normalizedItems.reduce((sum, item) => {
+      const unitPrice = priceById.get(item.productId) ?? 0;
+      return sum + unitPrice * item.quantity;
+    }, 0);
+
+    const shipping = resolveShipping(subtotal, String(country ?? 'ES'));
+    const amountNum = Number((subtotal + shipping).toFixed(2));
+
+    if (!amountNum || amountNum <= 0) {
+      return NextResponse.json({ error: 'Importe inválido.' }, { status: 400 });
     }
 
     const stripe = getStripe();
@@ -47,7 +97,9 @@ export async function POST(req: NextRequest) {
         customerName: customerName ?? 'Anônimo',
         customerEmail: customerEmail ?? '',
         customerPhone: customerPhone ?? '',
-        productId: productId ? String(productId) : '',
+        productId: normalizedItems[0]?.productId ? String(normalizedItems[0].productId) : '',
+        subtotal: subtotal.toFixed(2),
+        shipping: shipping.toFixed(2),
       },
     });
 
@@ -76,7 +128,7 @@ export async function POST(req: NextRequest) {
             ${postalCode ? String(postalCode) : null},
             ${city ? String(city) : null},
             ${country ? String(country) : null},
-            ${productId ? Number(productId) : null},
+            ${normalizedItems[0]?.productId ? Number(normalizedItems[0].productId) : null},
             ${amountNum},
             'pending',
             ${pi.id}

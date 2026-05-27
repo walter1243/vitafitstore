@@ -62,30 +62,22 @@ export async function POST(req: NextRequest) {
       WHERE id = ${supplierOrder.order_id}
     `
 
+    const [storeSettings] = await sql`
+      SELECT whatsapp_tracking_template
+      FROM store_settings
+      WHERE id = 1
+    `
+
     // Notifica cliente via WhatsApp
     if (order?.customer_phone) {
       await sendTrackingWhatsApp({
         phone: order.customer_phone,
         name: order.customer_name ?? 'Cliente',
+        orderId: Number(supplierOrder.order_id),
         trackingCode,
         carrier,
-      })
-    }
-
-    // Notifica por e-mail se SendGrid configurado
-    const sendgridKey =
-      process.env.SENDGRID_KEY ??
-      (
-        await sql`SELECT sendgrid_key, notify_email FROM automation_settings WHERE id = 1`
-      )[0]?.sendgrid_key
-
-    if (sendgridKey && order?.customer_email) {
-      await sendTrackingEmail({
-        apiKey: sendgridKey,
-        toEmail: order.customer_email,
-        toName: order.customer_name ?? 'Cliente',
-        trackingCode,
-        carrier,
+        trackingUrl: `https://www.linkcorreios.com.br/?id=${trackingCode}`,
+        customTemplate: storeSettings?.whatsapp_tracking_template ?? undefined,
       })
     }
 
@@ -96,42 +88,3 @@ export async function POST(req: NextRequest) {
   }
 }
 
-/** Envia e-mail de rastreio via SendGrid */
-async function sendTrackingEmail(opts: {
-  apiKey: string
-  toEmail: string
-  toName: string
-  trackingCode: string
-  carrier: string
-}) {
-  const { apiKey, toEmail, toName, trackingCode, carrier } = opts
-  const trackingUrl = `https://www.linkcorreios.com.br/?id=${trackingCode}`
-
-  await fetch('https://api.sendgrid.com/v3/mail/send', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      personalizations: [{ to: [{ email: toEmail, name: toName }] }],
-      from: { email: process.env.SENDGRID_FROM_EMAIL ?? 'noreply@vitafitstore.com.br', name: 'VitaFit Store' },
-      subject: `📦 Seu pedido foi despachado! Rastreio: ${trackingCode}`,
-      content: [
-        {
-          type: 'text/html',
-          value: `
-            <h2>Olá, ${toName}!</h2>
-            <p>Seu pedido foi <strong>despachado</strong> com sucesso!</p>
-            <p><strong>Transportadora:</strong> ${carrier}<br/>
-               <strong>Código de Rastreio:</strong> ${trackingCode}</p>
-            <p><a href="${trackingUrl}" style="background:#22c55e;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;">
-              Rastrear Pedido
-            </a></p>
-            <p style="color:#888;font-size:12px;">VitaFit Store</p>
-          `,
-        },
-      ],
-    }),
-  })
-}

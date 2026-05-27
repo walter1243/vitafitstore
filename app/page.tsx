@@ -8,6 +8,7 @@ import { Newsletter } from '@/components/newsletter'
 import { Footer } from '@/components/footer'
 import { CartSidebar } from '@/components/cart-sidebar'
 import { UpsellPopup } from '@/components/upsell-popup'
+import { WhatsAppFloating } from '@/components/whatsapp-floating'
 import { sql } from '@/lib/db'
 
 type HomeBlock = {
@@ -65,6 +66,7 @@ export default async function HomePage() {
           ))}
         </main>
         <Footer />
+        <WhatsAppFloating />
         <CartSidebar />
         <UpsellPopup />
     </div>
