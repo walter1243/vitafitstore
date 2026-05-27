@@ -82,6 +82,7 @@ export default function AdminPage() {
   });
   const [prodImage, setProdImage]   = useState<string | null>(null);
   const [prodDesc, setProdDesc]     = useState('');
+  const [prodUpsellIds, setProdUpsellIds] = useState<number[]>([]);
   const [newCategoryName, setNewCategoryName] = useState('');
 
   const addToast = useCallback((type: Toast['type'], msg: string) => {
@@ -189,6 +190,7 @@ export default function AdminPage() {
           video:       prodForm.video.trim() || null,
           description: prodDesc || null,
           image:       prodImage,
+          upsellIds:   prodUpsellIds,
         }),
       });
 
@@ -199,6 +201,7 @@ export default function AdminPage() {
         setProdForm({ name: '', price: '', category: '', stock: '', video: '' });
         setProdImage(null);
         setProdDesc('');
+        setProdUpsellIds([]);
         setShowForm(false);
         addToast('success', `"${data.name}" cadastrado com sucesso!`);
       } else {
@@ -364,11 +367,13 @@ export default function AdminPage() {
               form={prodForm}
               image={prodImage}
               desc={prodDesc}
+              upsellIds={prodUpsellIds}
               newCategoryName={newCategoryName}
               onToggleForm={() => setShowForm(f => !f)}
               onFormChange={(k, v) => setProdForm(f => ({ ...f, [k]: v }))}
               onImageChange={setProdImage}
               onDescChange={setProdDesc}
+              onUpsellChange={setProdUpsellIds}
               onNewCategoryNameChange={setNewCategoryName}
               onCreateCategory={addCategory}
               onMoveCategory={moveCategory}
@@ -465,8 +470,8 @@ function DashboardSection({ products, orders, revenue, onNavigate }: {
 
 // ─── Products ─────────────────────────────────────────────────────────────────
 
-function ProductsSection({ products, showForm, saving, form, image, desc,
-  onToggleForm, onFormChange, onImageChange, onDescChange, onSubmit, onDelete, onMove,
+function ProductsSection({ products, showForm, saving, form, image, desc, upsellIds,
+  onToggleForm, onFormChange, onImageChange, onDescChange, onUpsellChange, onSubmit, onDelete, onMove,
   categories, newCategoryName, onNewCategoryNameChange, onCreateCategory,
   onMoveCategory, onSaveCategoryMedia }: {
   products: Product[];
@@ -476,11 +481,13 @@ function ProductsSection({ products, showForm, saving, form, image, desc,
   form: { name: string; price: string; category: string; stock: string; video: string };
   image: string | null;
   desc: string;
+  upsellIds: number[];
   newCategoryName: string;
   onToggleForm: () => void;
   onFormChange: (k: string, v: string) => void;
   onImageChange: (v: string | null) => void;
   onDescChange: (v: string) => void;
+  onUpsellChange: (ids: number[]) => void;
   onNewCategoryNameChange: (v: string) => void;
   onCreateCategory: () => void;
   onMoveCategory: (id: number, direction: 'up' | 'down') => void;
@@ -492,6 +499,8 @@ function ProductsSection({ products, showForm, saving, form, image, desc,
   const dropRef    = useRef<HTMLDivElement>(null);
   const descRef    = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState(false);
+  const [formTab, setFormTab] = useState<'dados' | 'upsell'>('dados');
+  const [upsellCategoryFilter, setUpsellCategoryFilter] = useState('');
   const [categoryDrafts, setCategoryDrafts] = useState<Record<number, { bannerType: 'image' | 'video'; bannerUrl: string; logoUrl: string }>>({});
 
   useEffect(() => {
@@ -578,7 +587,30 @@ function ProductsSection({ products, showForm, saving, form, image, desc,
         </div>
 
         {showForm && (
-          <div className="p-4 sm:p-5 space-y-4">
+          <>
+            {/* ── Tab bar ── */}
+            <div className="flex border-b border-slate-100 px-4 sm:px-5">
+              {(['dados', 'upsell'] as const).map(tab => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setFormTab(tab)}
+                  className={`relative px-4 py-3 text-sm font-medium transition-colors cursor-pointer ${
+                    formTab === tab ? 'text-green-600' : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  {tab === 'dados'
+                    ? 'Dados do Produto'
+                    : `Upsell${upsellIds.length > 0 ? ` (${upsellIds.length})` : ''}`}
+                  {formTab === tab && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-green-500 rounded-full" />
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <div className="p-4 sm:p-5 space-y-4">
+            {formTab === 'dados' && (<>
             {/* Basic fields */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {fields.map(f => (
@@ -771,9 +803,110 @@ function ProductsSection({ products, showForm, saving, form, image, desc,
                 </div>
               )}
             </div>
+            </>)}
 
-            {/* Submit */}
-            <div className="flex justify-end pt-1">
+            {/* ── Upsell tab ── */}
+            {formTab === 'upsell' && (
+              <div className="space-y-4">
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Selecione os produtos sugeridos ao cliente quando este produto for adicionado ao carrinho (venda casada).
+                </p>
+
+                {/* Chips dos selecionados */}
+                {upsellIds.length > 0 && (
+                  <div className="flex flex-wrap gap-2 p-3 bg-green-50 rounded-xl border border-green-100">
+                    <span className="text-xs font-semibold text-green-700 w-full mb-0.5">Selecionados:</span>
+                    {upsellIds.map(id => {
+                      const p = products.find(x => x.id === id);
+                      if (!p) return null;
+                      return (
+                        <span key={id} className="flex items-center gap-1.5 px-2.5 py-1 bg-white border border-green-200 text-green-800 text-xs rounded-full font-medium shadow-sm">
+                          {p.name}
+                          <button
+                            type="button"
+                            onClick={() => onUpsellChange(upsellIds.filter(x => x !== id))}
+                            className="hover:text-red-500 cursor-pointer ml-0.5"
+                          >
+                            <X size={11} />
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Filtro por categoria */}
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1.5">Filtrar por categoria</label>
+                  <select
+                    value={upsellCategoryFilter}
+                    onChange={e => setUpsellCategoryFilter(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500 transition-colors bg-white"
+                  >
+                    <option value="">Todas as categorias</option>
+                    {categories.map(c => (
+                      <option key={c.id} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Lista de produtos */}
+                <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+                  {products
+                    .filter(p => !upsellCategoryFilter || p.category === upsellCategoryFilter)
+                    .map(p => {
+                      const checked = upsellIds.includes(p.id);
+                      return (
+                        <label
+                          key={p.id}
+                          className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
+                            checked
+                              ? 'border-green-200 bg-green-50'
+                              : 'border-slate-100 bg-white hover:bg-slate-50'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() =>
+                              onUpsellChange(
+                                checked
+                                  ? upsellIds.filter(x => x !== p.id)
+                                  : [...upsellIds, p.id]
+                              )
+                            }
+                            className="accent-green-500 w-4 h-4 flex-shrink-0"
+                          />
+                          {p.image ? (
+                            <img
+                              src={p.image}
+                              alt={p.name}
+                              className="w-9 h-9 rounded-lg object-cover border border-slate-100 flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                              <Package size={14} className="text-slate-400" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-slate-800 truncate">{p.name}</div>
+                            <div className="text-xs text-slate-400">
+                              {p.category || '—'} • €{(p.price ?? 0).toFixed(2)}
+                            </div>
+                          </div>
+                          {checked && <Check size={14} className="text-green-500 flex-shrink-0" />}
+                        </label>
+                      );
+                    })}
+                  {products.filter(p => !upsellCategoryFilter || p.category === upsellCategoryFilter).length === 0 && (
+                    <p className="text-xs text-slate-400 text-center py-6">Nenhum produto nesta categoria.</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Submit — sempre visível */}
+            <div className="flex justify-end pt-1 border-t border-slate-100">
               <button
                 onClick={onSubmit}
                 disabled={saving}
@@ -783,6 +916,7 @@ function ProductsSection({ products, showForm, saving, form, image, desc,
               </button>
             </div>
           </div>
+          </>
         )}
       </div>
 
