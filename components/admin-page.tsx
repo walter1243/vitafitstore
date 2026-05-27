@@ -68,7 +68,7 @@ const SECTION_LABELS: Record<Section, string> = {
 function ProductsSection({ products, showForm, saving, form, image, additionalImages, desc, upsellIds,
   onToggleForm, onFormChange, onImageChange, onAdditionalImagesChange, onDescChange, onUpsellChange, onSubmit, onDelete, onMove,
   categories, newCategoryName, onNewCategoryNameChange, onCreateCategory,
-  onMoveCategory, onSaveCategoryMedia, editingProductId, onEditProduct }: {
+  onMoveCategory, onSaveCategoryMedia, onDeleteCategory, editingProductId, onEditProduct }: {
   products: Product[];
   categories: Category[];
   showForm: boolean;
@@ -91,6 +91,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   onCreateCategory: () => void;
   onMoveCategory: (id: number, direction: 'up' | 'down') => void;
   onSaveCategoryMedia: (id: number, bannerType: 'image' | 'video', bannerUrl: string, logoUrl: string) => void;
+  onDeleteCategory: (id: number, name: string) => void;
   onSubmit: () => void;
   onDelete: (id: number, name: string) => void;
   onMove: (id: number, direction: 'up' | 'down') => void;
@@ -561,6 +562,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                       <span className="flex-1 text-sm font-medium text-white">{c.name}</span>
                       <button type="button" onClick={() => onMoveCategory(c.id, 'up')} className="rounded-lg border border-white/10 p-2 text-white/60 hover:bg-white/5" title="Subir categoria"><ArrowUp size={12} /></button>
                       <button type="button" onClick={() => onMoveCategory(c.id, 'down')} className="rounded-lg border border-white/10 p-2 text-white/60 hover:bg-white/5" title="Descer categoria"><ArrowDown size={12} /></button>
+                      <button type="button" onClick={() => onDeleteCategory(c.id, c.name)} className="rounded-lg border border-red-500/30 p-2 text-red-300 hover:bg-red-500/10" title="Excluir categoria"><Trash2 size={12} /></button>
                     </div>
                     <div className="grid gap-2 sm:grid-cols-3">
                       <select
@@ -763,6 +765,8 @@ export default function AdminPage() {
   const [prodDesc, setProdDesc] = useState('');
   const [prodUpsellIds, setProdUpsellIds] = useState<number[]>([]);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [pendingCategoryDelete, setPendingCategoryDelete] = useState<{ id: number; name: string } | null>(null);
+  const [deletingCategory, setDeletingCategory] = useState(false);
 
   const addToast = useCallback((type: Toast['type'], msg: string) => {
     const id = ++toastId.current;
@@ -845,6 +849,33 @@ export default function AdminPage() {
       const data = await res.json().catch(() => ({}));
       addToast('error', data?.error ?? 'Falha ao salvar mídia da categoria.');
     }
+  }
+
+  async function deleteCategory(id: number, name: string) {
+    setPendingCategoryDelete({ id, name });
+  }
+
+  async function confirmDeleteCategory() {
+    if (!pendingCategoryDelete || deletingCategory) return;
+    setDeletingCategory(true);
+
+    const { id, name } = pendingCategoryDelete;
+
+    const res = await fetch(`/api/categories?id=${id}`, {
+      method: 'DELETE',
+    });
+
+    if (res.ok) {
+      await fetchData();
+      addToast('success', `Categoria \"${name}\" removida.`);
+      setProdForm(f => (f.category === name ? { ...f, category: '' } : f));
+      setPendingCategoryDelete(null);
+    } else {
+      const data = await res.json().catch(() => ({}));
+      addToast('error', data?.error ?? 'Falha ao remover categoria.');
+    }
+
+    setDeletingCategory(false);
   }
 
   function resetProductForm() {
@@ -973,6 +1004,39 @@ export default function AdminPage() {
 
   return (
     <div className="flex min-h-screen bg-[#0f1117] text-white">
+      {pendingCategoryDelete && (
+        <div className="fixed inset-0 z-[260] flex items-center justify-center bg-black/70 px-4">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#1a1d27] p-5 shadow-2xl">
+            <h3 className="text-base font-semibold text-white">Excluir categoria</h3>
+            <p className="mt-2 text-sm text-white/70">
+              Tem certeza que deseja excluir a categoria <strong className="text-white">{pendingCategoryDelete.name}</strong>?
+            </p>
+            <p className="mt-2 text-xs text-white/45">
+              Os produtos dessa categoria serão movidos para "geral" na vitrine.
+            </p>
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setPendingCategoryDelete(null)}
+                disabled={deletingCategory}
+                className="rounded-lg border border-white/10 px-4 py-2 text-sm text-white/70 transition-colors hover:bg-white/5 disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteCategory}
+                disabled={deletingCategory}
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+              >
+                {deletingCategory ? 'Excluindo...' : 'Excluir categoria'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="fixed top-4 right-4 z-[200] flex w-[calc(100vw-2rem)] max-w-sm flex-col gap-2 pointer-events-none">
         {toasts.map(t => (
           <div
@@ -1064,6 +1128,7 @@ export default function AdminPage() {
               onCreateCategory={addCategory}
               onMoveCategory={moveCategory}
               onSaveCategoryMedia={saveCategoryMedia}
+              onDeleteCategory={deleteCategory}
               onSubmit={addProduct}
               onDelete={deleteProduct}
               onMove={moveProduct}

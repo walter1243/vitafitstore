@@ -20,6 +20,8 @@ type CategoryMeta = {
   id: number;
   name: string;
   slug: string;
+  position?: number;
+  enabled?: boolean;
   bannerType?: 'image' | 'video';
   bannerUrl?: string;
   logoUrl?: string;
@@ -58,7 +60,8 @@ function toStoreProduct(p: DbProduct): Product {
 export default function ProductCarousels() {
   const [selected, setSelected] = useState<Product | null>(null);
   const [dbProducts, setDbProducts] = useState<DbProduct[]>([]);
-  const [categoryMeta, setCategoryMeta] = useState<Record<string, CategoryMeta>>({});
+  const [categoryMetaByKey, setCategoryMetaByKey] = useState<Record<string, CategoryMeta>>({});
+  const [orderedCategories, setOrderedCategories] = useState<CategoryMeta[]>([]);
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -97,7 +100,7 @@ export default function ProductCarousels() {
   }, []);
 
   useEffect(() => {
-    (async () => {
+    const loadCategories = async () => {
       try {
         const res = await fetch('/api/categories', { cache: 'no-store' });
         if (!res.ok) return;
@@ -105,14 +108,37 @@ export default function ProductCarousels() {
         if (!Array.isArray(data)) return;
         const map: Record<string, CategoryMeta> = {};
         for (const c of data) {
-          map[c.name.trim().toLowerCase()] = c;
-          map[c.slug] = c;
+          const key = normalizeCategory(c.name);
+          map[key] = c;
+          map[normalizeCategory(c.slug)] = c;
         }
-        setCategoryMeta(map);
+        setCategoryMetaByKey(map);
+        setOrderedCategories(data);
       } catch {
         // ignore category metadata errors
       }
-    })();
+    };
+
+    void loadCategories();
+
+    const intervalId = window.setInterval(() => {
+      void loadCategories();
+    }, 15000);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        void loadCategories();
+      }
+    };
+
+    window.addEventListener('focus', handleVisibility);
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', handleVisibility);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, []);
 
   const grouped = useMemo(() => {
@@ -124,17 +150,35 @@ export default function ProductCarousels() {
         if (!map.has(key)) map.set(key, []);
         map.get(key)!.push(toStoreProduct(p));
       }
-      return Array.from(map.entries());
+    } else {
+      const fallback = [...healthProducts, ...fitnessProducts];
+      for (const p of fallback) {
+        const key = normalizeCategory(p.category);
+        if (!map.has(key)) map.set(key, []);
+        map.get(key)!.push(p);
+      }
     }
 
-    const fallback = [...healthProducts, ...fitnessProducts];
-    for (const p of fallback) {
-      const key = normalizeCategory(p.category);
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(p);
+    const result: Array<{ key: string; title: string; items: Product[]; meta?: CategoryMeta }> = [];
+    const used = new Set<string>();
+
+    for (const cat of orderedCategories) {
+      if (cat.enabled === false) continue;
+      const key = normalizeCategory(cat.name);
+      const items = map.get(key) ?? [];
+      if (!items.length) continue;
+      result.push({ key, title: cat.name, items, meta: cat });
+      used.add(key);
     }
-    return Array.from(map.entries());
-  }, [dbProducts]);
+
+    for (const [key, items] of map.entries()) {
+      if (!items.length || used.has(key)) continue;
+      const meta = categoryMetaByKey[key];
+      result.push({ key, title: meta?.name ?? titleFor(key), items, meta });
+    }
+
+    return result;
+  }, [dbProducts, orderedCategories, categoryMetaByKey]);
 
   const titleFor = (category: string) => {
     if (category === 'geral') return 'Produtos';
@@ -148,14 +192,14 @@ export default function ProductCarousels() {
 
   return (
     <>
-      {grouped.map(([category, items]) => (
-        <section key={category} id={category === 'salud' ? 'salud' : category === 'fitness' ? 'fitness' : `cat-${category}`}>
+      {grouped.map(({ key, title, items, meta }) => (
+        <section key={key} id={key === 'salud' ? 'salud' : key === 'fitness' ? 'fitness' : `cat-${key}`}>
           <ProductCarousel
             products={items}
-            title={titleFor(category)}
+            title={title}
             subtitle="Nutrición premium para tu rendimiento"
-            categoryLabel={titleFor(category)}
-            categoryMedia={categoryMeta[category]}
+            categoryLabel={title}
+            categoryMedia={meta}
             onViewDetails={setSelected}
           />
         </section>

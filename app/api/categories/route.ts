@@ -183,3 +183,42 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: err?.message ?? 'Erro ao atualizar categoria.' }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    await ensureTable();
+
+    const id = Number(req.nextUrl.searchParams.get('id'));
+    if (!id) {
+      return NextResponse.json({ error: 'ID inválido.' }, { status: 400 });
+    }
+
+    const [category] = await sql`
+      SELECT id, name
+      FROM categories
+      WHERE id = ${id}
+      LIMIT 1
+    `;
+
+    if (!category) {
+      return NextResponse.json({ error: 'Categoria não encontrada.' }, { status: 404 });
+    }
+
+    const deletedName = String(category.name ?? '').trim();
+
+    await sql`DELETE FROM categories WHERE id = ${id}`;
+
+    if (deletedName) {
+      await sql`
+        UPDATE products
+        SET category = 'geral'
+        WHERE LOWER(TRIM(COALESCE(category, ''))) = LOWER(${deletedName})
+      `;
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    console.error('[DELETE /api/categories]', err);
+    return NextResponse.json({ error: err?.message ?? 'Erro ao excluir categoria.' }, { status: 500 });
+  }
+}
