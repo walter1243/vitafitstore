@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { BlocosEditor, type BlocosEditorHandle } from '@/components/configuracoes/BlocosEditor';
 import {
   LayoutDashboard, Package, ShoppingCart, Truck, Settings,
   Menu, X, Plus, Trash2, ExternalLink, Check, Euro,
@@ -1804,6 +1805,7 @@ function SettingsSection() {
   const [logoUrl, setLogoUrl] = useState('');
   const [homeBlocks, setHomeBlocks] = useState<HomeBlock[]>([]);
   const [saved, setSaved] = useState(false);
+  const blocosEditorRef = useRef<BlocosEditorHandle>(null);
 
   useEffect(() => {
     (async () => {
@@ -1841,19 +1843,26 @@ function SettingsSection() {
 
   async function handleSave(e: React.SyntheticEvent) {
     e.preventDefault();
-    const res = await fetch('/api/store-settings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        storeName: storeName.trim(),
-        themeColor,
-        logoUrl,
-        instagram: ig.trim(),
-        facebook: fb.trim(),
+    const [settingsRes] = await Promise.all([
+      fetch('/api/store-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          storeName: storeName.trim(),
+          themeColor,
+          logoUrl,
+          instagram: ig.trim(),
+          facebook: fb.trim(),
+        }),
       }),
-    });
+      fetch('/api/home-blocks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blocks: blocosEditorRef.current?.getValue() ?? [] }),
+      }),
+    ]);
 
-    if (res.ok) {
+    if (settingsRes.ok) {
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     }
@@ -1930,29 +1939,8 @@ function SettingsSection() {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
-        <h2 className="font-semibold text-slate-800 mb-1">Blocos da Home (Fase 2)</h2>
-        <p className="text-xs text-slate-500 mb-4">Organize a ordem dos blocos da homepage e ative/desative cada bloco.</p>
-        <div className="space-y-2">
-          {homeBlocks.map((block, index) => (
-            <div key={block.key} className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 bg-slate-50">
-              <div className="text-xs font-semibold text-slate-500 w-6">{index + 1}</div>
-              <div className="flex-1">
-                <div className="text-sm font-medium text-slate-800">{block.label}</div>
-                <div className="text-[11px] text-slate-500">key: {block.key}</div>
-              </div>
-              <label className="flex items-center gap-2 text-xs text-slate-600">
-                <input type="checkbox" checked={block.enabled} onChange={() => toggleBlock(index)} />
-                ativo
-              </label>
-              <button onClick={() => moveBlock(index, 'up')} className="p-1.5 rounded border border-slate-200 hover:bg-white" title="Subir">
-                <ArrowUp size={13} />
-              </button>
-              <button onClick={() => moveBlock(index, 'down')} className="p-1.5 rounded border border-slate-200 hover:bg-white" title="Descer">
-                <ArrowDown size={13} />
-              </button>
-            </div>
-          ))}
-        </div>
+        <h2 className="font-semibold text-slate-800 mb-4">Blocos da Home (Fase 2)</h2>
+        <BlocosEditor ref={blocosEditorRef} />
       </div>
 
       <div className="flex items-center gap-3">
