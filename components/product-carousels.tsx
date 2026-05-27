@@ -63,6 +63,16 @@ export default function ProductCarousels() {
   const [categoryMetaByKey, setCategoryMetaByKey] = useState<Record<string, CategoryMeta>>({});
   const [orderedCategories, setOrderedCategories] = useState<CategoryMeta[]>([]);
 
+  function titleFor(category: string) {
+    if (category === 'geral') return 'Produtos';
+    if (category === 'salud') return 'Suplementos & Cápsulas';
+    if (category === 'fitness') return 'Moda Fit';
+    return category
+      .split(/\s+/)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
+  }
+
   useEffect(() => {
     const loadProducts = async () => {
       try {
@@ -179,16 +189,6 @@ export default function ProductCarousels() {
 
     return result;
   }, [dbProducts, orderedCategories, categoryMetaByKey]);
-
-  const titleFor = (category: string) => {
-    if (category === 'geral') return 'Produtos';
-    if (category === 'salud') return 'Suplementos & Cápsulas';
-    if (category === 'fitness') return 'Moda Fit';
-    return category
-      .split(/\s+/)
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-      .join(' ');
-  };
 
   return (
     <>
