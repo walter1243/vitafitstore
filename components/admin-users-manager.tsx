@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Check, LogOut, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Check, LogOut, Pencil, Plus, Trash2, Upload, UserRound } from 'lucide-react';
 
 type AdminUser = {
   id: number;
@@ -22,6 +22,28 @@ export function AdminUsersManager() {
   const [newUser, setNewUser] = useState({ username: '', displayName: '', password: '', photoUrl: '' });
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingPassword, setEditingPassword] = useState('');
+  const createPhotoInputRef = useRef<HTMLInputElement>(null);
+  const editPhotoInputRef = useRef<Record<number, HTMLInputElement | null>>({});
+
+  function readFileAsDataURL(file: File, cb: (url: string) => void) {
+    const reader = new FileReader();
+    reader.onload = (e) => cb(String(e.target?.result ?? ''));
+    reader.readAsDataURL(file);
+  }
+
+  function setCreatePhoto(file: File | null) {
+    if (!file) return;
+    readFileAsDataURL(file, (url) => {
+      setNewUser((prev) => ({ ...prev, photoUrl: url }));
+    });
+  }
+
+  function setUserPhoto(userId: number, file: File | null) {
+    if (!file) return;
+    readFileAsDataURL(file, (url) => {
+      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, photoUrl: url } : u)));
+    });
+  }
 
   async function loadUsers() {
     setLoading(true);
@@ -120,11 +142,40 @@ export function AdminUsersManager() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-white/10 bg-[#1a1d27] p-5 shadow-none">
-        <h2 className="mb-3 font-semibold text-white">Segurança e usuários do painel</h2>
-        <p className="mb-4 text-xs text-white/50">Crie novos acessos com foto, atualize senha e encerre sessão quando necessário.</p>
+      <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-[#1f2436] to-[#161a29] p-5 shadow-none">
+        <h2 className="mb-1 font-semibold text-white">Painel de Login e Usuários</h2>
+        <p className="mb-4 text-xs text-white/55">Cadastre acessos e fotos direto aqui por colar, abrir arquivo ou galeria no mobile.</p>
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div
+            tabIndex={0}
+            onPaste={(e) => {
+              for (const item of e.clipboardData.items) {
+                if (!item.type.startsWith('image/')) continue;
+                const file = item.getAsFile();
+                if (file) setCreatePhoto(file);
+                e.preventDefault();
+                break;
+              }
+            }}
+            className="group flex min-h-[90px] cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-white/15 bg-[#0f1320] p-3 text-center text-xs text-white/55 transition-colors hover:border-green-500/40"
+            onClick={() => createPhotoInputRef.current?.click()}
+          >
+            {newUser.photoUrl ? (
+              <img src={newUser.photoUrl} alt="Nova foto" className="h-12 w-12 rounded-full object-cover" />
+            ) : (
+              <UserRound size={18} className="mb-1 text-green-300" />
+            )}
+            <span>Colar foto (Ctrl+V) ou abrir arquivo</span>
+            <input
+              ref={createPhotoInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => setCreatePhoto(e.target.files?.[0] ?? null)}
+            />
+          </div>
+
           <input
             value={newUser.username}
             onChange={(e) => setNewUser((p) => ({ ...p, username: e.target.value }))}
@@ -142,12 +193,6 @@ export function AdminUsersManager() {
             onChange={(e) => setNewUser((p) => ({ ...p, password: e.target.value }))}
             type="password"
             placeholder="Senha"
-            className="rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white outline-none"
-          />
-          <input
-            value={newUser.photoUrl}
-            onChange={(e) => setNewUser((p) => ({ ...p, photoUrl: e.target.value }))}
-            placeholder="URL da foto (opcional)"
             className="rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white outline-none"
           />
         </div>
@@ -188,12 +233,35 @@ export function AdminUsersManager() {
             {users.map((user) => (
               <div key={user.id} className="rounded-xl border border-white/10 bg-[#0f1117] p-3">
                 <div className="flex flex-wrap items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-green-600/20">
+                  <div
+                    tabIndex={0}
+                    onPaste={(e) => {
+                      for (const item of e.clipboardData.items) {
+                        if (!item.type.startsWith('image/')) continue;
+                        const file = item.getAsFile();
+                        if (file) setUserPhoto(user.id, file);
+                        e.preventDefault();
+                        break;
+                      }
+                    }}
+                    className="group flex h-10 w-10 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-green-600/20 ring-2 ring-transparent transition hover:ring-green-500/40"
+                    onClick={() => editPhotoInputRef.current[user.id]?.click()}
+                    title="Clique para escolher foto ou cole com Ctrl+V"
+                  >
                     {user.photoUrl ? (
                       <img src={user.photoUrl} alt={user.displayName || user.username} className="h-full w-full object-cover" />
                     ) : (
                       <span className="text-xs font-bold text-green-200">{(user.displayName || user.username || 'U').charAt(0).toUpperCase()}</span>
                     )}
+                    <input
+                      ref={(el) => {
+                        editPhotoInputRef.current[user.id] = el;
+                      }}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => setUserPhoto(user.id, e.target.files?.[0] ?? null)}
+                    />
                   </div>
 
                   <input
@@ -208,12 +276,9 @@ export function AdminUsersManager() {
                     className="min-w-[130px] rounded-lg border border-white/10 bg-[#22263a] px-2 py-1.5 text-xs text-white outline-none"
                   />
 
-                  <input
-                    value={user.photoUrl || ''}
-                    onChange={(e) => setUsers((prev) => prev.map((it) => it.id === user.id ? { ...it, photoUrl: e.target.value } : it))}
-                    placeholder="URL da foto"
-                    className="min-w-[170px] flex-1 rounded-lg border border-white/10 bg-[#22263a] px-2 py-1.5 text-xs text-white outline-none"
-                  />
+                  <div className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-[#111827] px-2 py-1 text-[11px] text-white/55">
+                    <Upload size={11} /> Foto por arquivo/colar
+                  </div>
 
                   <button
                     type="button"

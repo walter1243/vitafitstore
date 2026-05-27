@@ -13,6 +13,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const username = String(body?.username ?? '').trim().toLowerCase();
     const password = String(body?.password ?? '');
+    const rememberMe = Boolean(body?.rememberMe ?? true);
 
     if (!username || !password) {
       return NextResponse.json({ error: 'Usuário e senha são obrigatórios.' }, { status: 400 });
@@ -29,13 +30,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Credenciais inválidas.' }, { status: 401 });
     }
 
+    const maxAgeSec = rememberMe ? 60 * 60 * 24 * 30 : 60 * 60 * 12;
+
     const token = createSessionToken({
       userId: Number(user.id),
       username: String(user.username),
       displayName: String(user.display_name || user.username),
       photoUrl: String(user.photo_url || ''),
       role: String(user.role || 'admin'),
-    });
+    }, maxAgeSec);
 
     const response = NextResponse.json({
       success: true,
@@ -48,7 +51,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    response.cookies.set(buildAuthCookie(token));
+    response.cookies.set(buildAuthCookie(token, maxAgeSec));
     return response;
   } catch (err: any) {
     console.error('[POST /api/admin/auth/login]', err);

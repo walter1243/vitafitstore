@@ -2,12 +2,14 @@
 
 import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Leaf, Lock, User } from 'lucide-react';
+import { Eye, EyeOff, Leaf, Lock, User } from 'lucide-react';
 
 export function AdminLoginForm() {
   const router = useRouter();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -19,7 +21,7 @@ export function AdminLoginForm() {
       const res = await fetch('/api/admin/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, rememberMe }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -84,12 +86,30 @@ export function AdminLoginForm() {
                   <input
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     className="h-11 w-full bg-transparent text-sm text-white outline-none placeholder:text-white/30"
                     placeholder="Digite sua senha"
                     autoComplete="current-password"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="text-white/45 transition-colors hover:text-white/80"
+                    title={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  >
+                    {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
                 </div>
+              </label>
+
+              <label className="flex items-center gap-2 text-xs text-white/65">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4 w-4 rounded border-white/20 bg-transparent accent-emerald-500"
+                />
+                Manter conectado neste dispositivo
               </label>
 
               {error && (

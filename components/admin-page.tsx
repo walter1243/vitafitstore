@@ -1023,6 +1023,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
   const [orders, setOrders] = useState<Order[]>([]);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [accountPanelOpen, setAccountPanelOpen] = useState(false);
   const [pwdCurrent, setPwdCurrent] = useState('');
   const [pwdNext, setPwdNext] = useState('');
   const [pwdSaving, setPwdSaving] = useState(false);
@@ -1459,6 +1460,16 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
                 </button>
                 <button
                   type="button"
+                  onClick={() => {
+                    setProfileMenuOpen(false);
+                    setAccountPanelOpen(true);
+                  }}
+                  className="rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-white/80 hover:bg-white/5"
+                >
+                  Painel
+                </button>
+                <button
+                  type="button"
                   onClick={logout}
                   className="inline-flex items-center gap-1 rounded-lg border border-red-500/30 px-3 py-2 text-xs font-semibold text-red-300 hover:bg-red-500/10"
                 >
@@ -1468,6 +1479,27 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
             </div>
           </div>
         </header>
+
+        {accountPanelOpen && (
+          <div className="fixed inset-0 z-[260] flex items-center justify-center bg-black/70 p-4" onClick={() => setAccountPanelOpen(false)}>
+            <div className="max-h-[88vh] w-full max-w-4xl overflow-y-auto rounded-2xl border border-white/10 bg-[#101522] p-4 sm:p-5" onClick={(e) => e.stopPropagation()}>
+              <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-3">
+                <div>
+                  <h3 className="text-base font-semibold text-white">Painel de Login e Usuários</h3>
+                  <p className="text-xs text-white/55">Gerencie usuários, foto de perfil e acesso sem sair desta área.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAccountPanelOpen(false)}
+                  className="rounded-lg border border-white/10 p-2 text-white/70 hover:bg-white/5"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+              <AdminUsersManager />
+            </div>
+          </div>
+        )}
 
         <main className="flex-1 bg-[#0f1117] p-4 sm:p-6">
           {section === 'dashboard' && <DashboardSection products={products} orders={orders} revenue={revenue} onNavigate={navigate} />}
@@ -3032,9 +3064,6 @@ function SettingsSection({
           </div>
         </div>
       </div>
-
-      <AdminUsersManager />
-
       {saveError && (
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
           {saveError}

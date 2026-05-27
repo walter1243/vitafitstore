@@ -14,6 +14,12 @@ export type AdminSession = {
   exp: number;
 };
 
+function getDefaultSessionMaxAgeSec() {
+  const fromEnv = Number(process.env.ADMIN_SESSION_MAX_AGE_SEC ?? 0);
+  if (Number.isFinite(fromEnv) && fromEnv > 0) return Math.floor(fromEnv);
+  return 60 * 60 * 24 * 30;
+}
+
 function getSecret() {
   return process.env.ADMIN_AUTH_SECRET || process.env.NEXTAUTH_SECRET || 'change-me-admin-auth-secret';
 }
@@ -30,7 +36,7 @@ function signPayload(payloadB64: string) {
   return createHmac('sha256', getSecret()).update(payloadB64).digest('base64url');
 }
 
-export function createSessionToken(session: Omit<AdminSession, 'exp'>, maxAgeSec = 60 * 60 * 12) {
+export function createSessionToken(session: Omit<AdminSession, 'exp'>, maxAgeSec = getDefaultSessionMaxAgeSec()) {
   const payload: AdminSession = {
     ...session,
     exp: Math.floor(Date.now() / 1000) + maxAgeSec,
@@ -137,7 +143,7 @@ export async function requireAdmin(req: NextRequest) {
   return { ok: true as const, session };
 }
 
-export function buildAuthCookie(token: string) {
+export function buildAuthCookie(token: string, maxAgeSec = getDefaultSessionMaxAgeSec()) {
   return {
     name: ADMIN_COOKIE_NAME,
     value: token,
@@ -145,7 +151,7 @@ export function buildAuthCookie(token: string) {
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax' as const,
     path: '/',
-    maxAge: 60 * 60 * 12,
+    maxAge: maxAgeSec,
   };
 }
 
