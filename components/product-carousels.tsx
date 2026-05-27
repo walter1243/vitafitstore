@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ProductCarousel } from './product-carousel';
 import { ProductModal } from './product-modal';
-import { healthProducts, fitnessProducts, type Product } from '@/lib/products';
+import { type Product } from '@/lib/products';
 
 type DbProduct = {
   id: number;
@@ -165,19 +165,10 @@ export default function ProductCarousels() {
   const grouped = useMemo(() => {
     const map = new Map<string, Product[]>();
 
-    if (dbProducts.length) {
-      for (const p of dbProducts) {
-        const key = normalizeCategory(p.category);
-        if (!map.has(key)) map.set(key, []);
-        map.get(key)!.push(toStoreProduct(p));
-      }
-    } else {
-      const fallback = [...healthProducts, ...fitnessProducts];
-      for (const p of fallback) {
-        const key = normalizeCategory(p.category);
-        if (!map.has(key)) map.set(key, []);
-        map.get(key)!.push(p);
-      }
+    for (const p of dbProducts) {
+      const key = normalizeCategory(p.category);
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(toStoreProduct(p));
     }
 
     const result: Array<{ key: string; title: string; items: Product[]; meta?: CategoryMeta; anchorId: string }> = [];
@@ -208,7 +199,7 @@ export default function ProductCarousels() {
   return (
     <>
       {grouped.map(({ key, title, items, meta, anchorId }) => (
-        <section key={key} id={anchorId}>
+        <section key={key} id={anchorId} className="scroll-mt-24 sm:scroll-mt-28">
           <ProductCarousel
             products={items}
             title={title}

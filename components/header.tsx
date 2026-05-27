@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ShoppingCart, Menu, X, Leaf } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 
@@ -11,7 +11,28 @@ type CategoryMeta = {
   position?: number;
 };
 
-function toAnchor(slug: string) {
+type DbProduct = {
+  category?: string;
+};
+
+function normalizeCategory(raw?: string) {
+  if (!raw) return 'geral';
+  return raw.trim().toLowerCase();
+}
+
+function slugifyCategory(raw?: string) {
+  if (!raw) return 'geral';
+  return raw
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+
+function toAnchor(raw?: string) {
+  const slug = slugifyCategory(raw);
   if (slug === 'salud') return '#salud';
   if (slug === 'fitness') return '#fitness';
   return `#cat-${slug}`;
@@ -19,8 +40,6 @@ function toAnchor(slug: string) {
 
 const fallbackNavLinks = [
   { href: '#productos', label: 'Productos' },
-  { href: '#salud', label: 'Salud y Bienestar' },
-  { href: '#fitness', label: 'Fitness' },
   { href: '#nosotros', label: 'Nosotros' },
 ];
 
@@ -32,6 +51,7 @@ export function Header() {
   const [logoUrl, setLogoUrl] = useState('');
   const [themeColor, setThemeColor] = useState('#10b981');
   const [categories, setCategories] = useState<CategoryMeta[]>([]);
+  const [products, setProducts] = useState<DbProduct[]>([]);
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20);
@@ -66,18 +86,33 @@ export function Header() {
       }
     };
 
+    const loadProducts = async () => {
+      try {
+        const res = await fetch('/api/products', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = (await res.json()) as DbProduct[];
+        if (!Array.isArray(data)) return;
+        setProducts(data);
+      } catch {
+        // ignore product load errors
+      }
+    };
+
     void loadStoreSettings();
     void loadCategories();
+    void loadProducts();
 
     const intervalId = window.setInterval(() => {
       void loadStoreSettings();
       void loadCategories();
+      void loadProducts();
     }, 15000);
 
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
         void loadStoreSettings();
         void loadCategories();
+        void loadProducts();
       }
     };
 
@@ -91,10 +126,17 @@ export function Header() {
     };
   }, []);
 
-  const navLinks = categories.length
+  const categoriesWithProducts = useMemo(() => {
+    if (!categories.length) return [] as CategoryMeta[];
+
+    const used = new Set(products.map((p) => normalizeCategory(p.category)));
+    return categories.filter((c) => used.has(normalizeCategory(c.name)) || used.has(normalizeCategory(c.slug)));
+  }, [categories, products]);
+
+  const navLinks = categoriesWithProducts.length
     ? [
         { href: '#productos', label: 'Productos' },
-        ...categories.map((c) => ({ href: toAnchor(c.slug), label: c.name })),
+        ...categoriesWithProducts.map((c) => ({ href: toAnchor(c.slug || c.name), label: c.name })),
         { href: '#nosotros', label: 'Nosotros' },
       ]
     : fallbackNavLinks;
