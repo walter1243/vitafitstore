@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ShieldCheck, Lock, Truck, RotateCcw,
   Package, ChevronRight, ChevronLeft,

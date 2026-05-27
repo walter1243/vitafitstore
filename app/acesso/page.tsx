@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { AlertCircle, CheckCircle2, Loader2, ShieldCheck } from 'lucide-react';
 
@@ -35,7 +36,7 @@ function reasonToMessage(reason?: string) {
   }
 }
 
-export default function AcessoPage() {
+function AcessoPageContent() {
   const searchParams = useSearchParams();
   const initialToken = useMemo(() => searchParams.get('token')?.trim() ?? '', [searchParams]);
 
@@ -170,5 +171,20 @@ export default function AcessoPage() {
         </section>
       </div>
     </main>
+  );
+}
+
+export default function AcessoPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-[#0f1117] px-4 py-10 text-white sm:px-6">
+        <div className="mx-auto flex w-full max-w-2xl items-center justify-center rounded-2xl border border-white/10 bg-[#1a1d27] p-8">
+          <Loader2 size={18} className="animate-spin" />
+          <span className="ml-2 text-sm text-white/70">Carregando acesso...</span>
+        </div>
+      </main>
+    }>
+      <AcessoPageContent />
+    </Suspense>
   );
 }
