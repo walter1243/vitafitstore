@@ -35,12 +35,12 @@ export function BlocoArrastavel({
     <div
       ref={setNodeRef}
       style={style}
-      className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm"
+      className="overflow-hidden rounded-xl border border-white/10 bg-[#101522] shadow-none"
     >
-      <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 select-none">
+      <div className="flex items-center gap-2 bg-[#161c2b] px-4 py-3 select-none">
         <button
           type="button"
-          className="text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing flex-shrink-0 touch-none"
+          className="text-white/35 hover:text-white/70 cursor-grab active:cursor-grabbing flex-shrink-0 touch-none"
           {...attributes}
           {...listeners}
           aria-label="Arrastar bloco"
@@ -64,7 +64,7 @@ export function BlocoArrastavel({
         </button>
 
         <span
-          className={`flex-1 text-sm font-semibold ${enabled ? 'text-slate-800' : 'text-slate-400'}`}
+          className={`flex-1 text-sm font-semibold ${enabled ? 'text-white' : 'text-white/45'}`}
         >
           {title}
         </span>
@@ -72,7 +72,7 @@ export function BlocoArrastavel({
         <button
           type="button"
           onClick={onToggleExpanded}
-          className="text-slate-400 hover:text-slate-600 cursor-pointer flex-shrink-0"
+          className="text-white/45 hover:text-white/75 cursor-pointer flex-shrink-0"
           aria-label={expanded ? 'Recolher' : 'Expandir'}
         >
           {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -80,7 +80,7 @@ export function BlocoArrastavel({
       </div>
 
       {expanded && (
-        <div className="px-4 py-4 border-t border-slate-100">{children}</div>
+        <div className="border-t border-white/10 px-4 py-4 text-white">{children}</div>
       )}
     </div>
   );

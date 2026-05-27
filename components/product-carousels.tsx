@@ -32,6 +32,17 @@ function normalizeCategory(raw?: string) {
   return raw.trim().toLowerCase();
 }
 
+function slugifyCategory(raw?: string) {
+  if (!raw) return 'geral';
+  return raw
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+
 function toStoreProduct(p: DbProduct): Product {
   const category = normalizeCategory(p.category);
   return {
@@ -169,7 +180,7 @@ export default function ProductCarousels() {
       }
     }
 
-    const result: Array<{ key: string; title: string; items: Product[]; meta?: CategoryMeta }> = [];
+    const result: Array<{ key: string; title: string; items: Product[]; meta?: CategoryMeta; anchorId: string }> = [];
     const used = new Set<string>();
 
     for (const cat of orderedCategories) {
@@ -177,14 +188,18 @@ export default function ProductCarousels() {
       const key = normalizeCategory(cat.name);
       const items = map.get(key) ?? [];
       if (!items.length) continue;
-      result.push({ key, title: cat.name, items, meta: cat });
+      const slug = slugifyCategory(cat.slug || cat.name);
+      const anchorId = slug === 'salud' ? 'salud' : slug === 'fitness' ? 'fitness' : `cat-${slug}`;
+      result.push({ key, title: cat.name, items, meta: cat, anchorId });
       used.add(key);
     }
 
     for (const [key, items] of map.entries()) {
       if (!items.length || used.has(key)) continue;
       const meta = categoryMetaByKey[key];
-      result.push({ key, title: meta?.name ?? titleFor(key), items, meta });
+      const slug = slugifyCategory(meta?.slug || key);
+      const anchorId = slug === 'salud' ? 'salud' : slug === 'fitness' ? 'fitness' : `cat-${slug}`;
+      result.push({ key, title: meta?.name ?? titleFor(key), items, meta, anchorId });
     }
 
     return result;
@@ -192,8 +207,8 @@ export default function ProductCarousels() {
 
   return (
     <>
-      {grouped.map(({ key, title, items, meta }) => (
-        <section key={key} id={key === 'salud' ? 'salud' : key === 'fitness' ? 'fitness' : `cat-${key}`}>
+      {grouped.map(({ key, title, items, meta, anchorId }) => (
+        <section key={key} id={anchorId}>
           <ProductCarousel
             products={items}
             title={title}

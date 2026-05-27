@@ -4,7 +4,20 @@ import { useState, useEffect } from 'react';
 import { ShoppingCart, Menu, X, Leaf } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 
-const navLinks = [
+type CategoryMeta = {
+  name: string;
+  slug: string;
+  enabled?: boolean;
+  position?: number;
+};
+
+function toAnchor(slug: string) {
+  if (slug === 'salud') return '#salud';
+  if (slug === 'fitness') return '#fitness';
+  return `#cat-${slug}`;
+}
+
+const fallbackNavLinks = [
   { href: '#productos', label: 'Productos' },
   { href: '#salud', label: 'Salud y Bienestar' },
   { href: '#fitness', label: 'Fitness' },
@@ -18,6 +31,7 @@ export function Header() {
   const [storeName, setStoreName] = useState('VitaFit Store');
   const [logoUrl, setLogoUrl] = useState('');
   const [themeColor, setThemeColor] = useState('#10b981');
+  const [categories, setCategories] = useState<CategoryMeta[]>([]);
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20);
@@ -26,9 +40,9 @@ export function Header() {
   }, []);
 
   useEffect(() => {
-    (async () => {
+    const loadStoreSettings = async () => {
       try {
-        const res = await fetch('/api/store-settings');
+        const res = await fetch('/api/store-settings', { cache: 'no-store' });
         if (!res.ok) return;
         const data = await res.json();
         setStoreName(data?.storeName ?? 'VitaFit Store');
@@ -37,8 +51,53 @@ export function Header() {
       } catch {
         // ignore settings load errors
       }
-    })();
+    };
+
+    const loadCategories = async () => {
+      try {
+        const res = await fetch('/api/categories', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = (await res.json()) as CategoryMeta[];
+        if (!Array.isArray(data)) return;
+        const enabled = data.filter(c => c.enabled !== false);
+        setCategories(enabled);
+      } catch {
+        // ignore category load errors
+      }
+    };
+
+    void loadStoreSettings();
+    void loadCategories();
+
+    const intervalId = window.setInterval(() => {
+      void loadStoreSettings();
+      void loadCategories();
+    }, 15000);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        void loadStoreSettings();
+        void loadCategories();
+      }
+    };
+
+    window.addEventListener('focus', handleVisibility);
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', handleVisibility);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, []);
+
+  const navLinks = categories.length
+    ? [
+        { href: '#productos', label: 'Productos' },
+        ...categories.map((c) => ({ href: toAnchor(c.slug), label: c.name })),
+        { href: '#nosotros', label: 'Nosotros' },
+      ]
+    : fallbackNavLinks;
 
   return (
     <>
