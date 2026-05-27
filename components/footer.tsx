@@ -97,6 +97,7 @@ export function Footer() {
   const [storeName, setStoreName] = useState('VitaFit Store')
   const [instagram, setInstagram] = useState('')
   const [whatsapp, setWhatsapp] = useState('')
+  const [email, setEmail] = useState('')
   const [activePopup, setActivePopup] = useState<FooterSectionKey | null>(null)
   const [categories, setCategories] = useState<CategoryMeta[]>([])
 
@@ -113,6 +114,7 @@ export function Footer() {
           setStoreName(data?.storeName ?? 'VitaFit Store')
           setInstagram(data?.instagram ?? '')
           setWhatsapp(data?.whatsapp ?? '')
+          setEmail(data?.email ?? '')
         }
 
         if (categoriesRes.ok) {
@@ -142,9 +144,18 @@ export function Footer() {
             { title: 'Sin categorias activas', description: 'Crea categorias no admin para aparecer aqui.', href: '#productos' },
           ],
     },
+    empresa: {
+      ...footerSections.empresa,
+      items: footerSections.empresa.items.map((item) =>
+        item.title === 'Email corporativo'
+          ? { ...item, description: email.trim() || 'sac@vitafitstore.com' }
+          : item,
+      ),
+    },
   }
 
   const instagramHref = normalizeInstagramHref(instagram)
+  const emailHref = email.trim() ? `mailto:${email.trim()}` : ''
 
   const socialLinks = [
     instagramHref && { icon: Instagram, href: instagramHref, label: 'Instagram' },
@@ -155,6 +166,7 @@ export function Footer() {
         : `https://wa.me/${whatsapp.replace(/\D/g, '')}`,
       label: 'WhatsApp',
     },
+    emailHref && { icon: Mail, href: emailHref, label: 'Email' },
   ].filter(Boolean) as { icon: typeof Instagram; href: string; label: string }[]
 
   return (
@@ -221,12 +233,14 @@ export function Footer() {
                       <Instagram size={14} /> Instagram
                     </a>
                   )}
-                  <a
-                    href="mailto:sac@vitafitstore.com"
-                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700"
-                  >
-                    <Mail size={14} /> Email SAC
-                  </a>
+                  {(emailHref || true) && (
+                    <a
+                      href={emailHref || 'mailto:sac@vitafitstore.com'}
+                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700"
+                    >
+                      <Mail size={14} /> Email SAC
+                    </a>
+                  )}
                 </div>
               )}
             </div>

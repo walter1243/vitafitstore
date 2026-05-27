@@ -11,6 +11,7 @@ const DEFAULT_SETTINGS = {
   themeColor: "#10b981",
   instagram: "",
   whatsapp: "+34 601 678 657",
+  email: "",
   whatsappFloatingEnabled: true,
   whatsappGreeting: "Hola! Bienvenido a VitaFit Store. En que puedo ayudarte hoy?",
   whatsappOrderTemplate:
@@ -30,6 +31,7 @@ async function ensureStoreSettingsColumns() {
       theme_color TEXT NOT NULL DEFAULT '#10b981',
       instagram TEXT,
       whatsapp TEXT,
+      email TEXT,
       whatsapp_floating_enabled BOOLEAN DEFAULT TRUE,
       whatsapp_greeting TEXT,
       whatsapp_order_template TEXT,
@@ -43,6 +45,7 @@ async function ensureStoreSettingsColumns() {
   await sql`
     ALTER TABLE store_settings
     ADD COLUMN IF NOT EXISTS whatsapp TEXT,
+    ADD COLUMN IF NOT EXISTS email TEXT,
     ADD COLUMN IF NOT EXISTS whatsapp_floating_enabled BOOLEAN DEFAULT TRUE,
     ADD COLUMN IF NOT EXISTS whatsapp_greeting TEXT,
     ADD COLUMN IF NOT EXISTS whatsapp_order_template TEXT,
@@ -64,6 +67,7 @@ export async function GET() {
       SELECT store_name AS "storeName", logo_url AS "logoUrl", theme_color AS "themeColor",
              instagram,
              whatsapp,
+             email,
              COALESCE(whatsapp_floating_enabled, TRUE) AS "whatsappFloatingEnabled",
              COALESCE(whatsapp_greeting, ${DEFAULT_SETTINGS.whatsappGreeting}) AS "whatsappGreeting",
              COALESCE(whatsapp_order_template, ${DEFAULT_SETTINGS.whatsappOrderTemplate}) AS "whatsappOrderTemplate",
@@ -97,6 +101,7 @@ export async function POST(req: NextRequest) {
     const themeColor = String(body.themeColor ?? DEFAULT_SETTINGS.themeColor).trim() || DEFAULT_SETTINGS.themeColor;
     const instagram = String(body.instagram ?? "").trim();
     const whatsapp = String(body.whatsapp ?? "").trim();
+    const email = String(body.email ?? "").trim();
     const whatsappFloatingEnabled = Boolean(body.whatsappFloatingEnabled ?? DEFAULT_SETTINGS.whatsappFloatingEnabled);
     const whatsappGreeting = String(body.whatsappGreeting ?? DEFAULT_SETTINGS.whatsappGreeting).trim() || DEFAULT_SETTINGS.whatsappGreeting;
     const whatsappOrderTemplate = String(body.whatsappOrderTemplate ?? DEFAULT_SETTINGS.whatsappOrderTemplate).trim() || DEFAULT_SETTINGS.whatsappOrderTemplate;
@@ -111,6 +116,7 @@ export async function POST(req: NextRequest) {
         theme_color,
         instagram,
         whatsapp,
+        email,
         whatsapp_floating_enabled,
         whatsapp_greeting,
         whatsapp_order_template,
@@ -124,6 +130,7 @@ export async function POST(req: NextRequest) {
         ${themeColor},
         ${instagram || null},
         ${whatsapp || null},
+        ${email || null},
         ${whatsappFloatingEnabled},
         ${whatsappGreeting},
         ${whatsappOrderTemplate},
@@ -137,6 +144,7 @@ export async function POST(req: NextRequest) {
         theme_color = EXCLUDED.theme_color,
         instagram = EXCLUDED.instagram,
         whatsapp = EXCLUDED.whatsapp,
+        email = EXCLUDED.email,
         whatsapp_floating_enabled = EXCLUDED.whatsapp_floating_enabled,
         whatsapp_greeting = EXCLUDED.whatsapp_greeting,
         whatsapp_order_template = EXCLUDED.whatsapp_order_template,

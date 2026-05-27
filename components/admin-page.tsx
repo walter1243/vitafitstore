@@ -342,7 +342,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   return (
     <div className="space-y-5 text-white">
       <div className="rounded-2xl border border-white/10 bg-[#1a1d27] shadow-none">
-        <div className="flex items-center justify-between gap-3 border-b border-white/10 px-5 py-4">
+        <div className="flex flex-col gap-3 border-b border-white/10 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="flex items-center gap-2 text-sm sm:text-base font-semibold text-white">
               {productViewTab === 'products' ? <Package size={16} className="text-green-500" /> : <Settings size={16} className="text-green-500" />}
@@ -360,35 +360,37 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                   : 'Monte kits vinculando produto principal e itens complementares.'}
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center rounded-xl border border-white/10 bg-[#0f1117] p-1">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+            <div className="w-full overflow-x-auto rounded-xl border border-white/10 bg-[#0f1117] p-1 sm:w-auto">
+              <div className="flex min-w-max items-center gap-1">
               <button
                 type="button"
                 onClick={() => setProductViewTab('products')}
-                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${productViewTab === 'products' ? 'bg-green-600 text-white' : 'text-white/60 hover:bg-white/5'}`}
+                className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${productViewTab === 'products' ? 'bg-green-600 text-white' : 'text-white/60 hover:bg-white/5'}`}
               >
                 Produtos
               </button>
               <button
                 type="button"
                 onClick={() => setProductViewTab('cards')}
-                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${productViewTab === 'cards' ? 'bg-green-600 text-white' : 'text-white/60 hover:bg-white/5'}`}
+                className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${productViewTab === 'cards' ? 'bg-green-600 text-white' : 'text-white/60 hover:bg-white/5'}`}
               >
                 + categoria
               </button>
               <button
                 type="button"
                 onClick={() => setProductViewTab('kits')}
-                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${productViewTab === 'kits' ? 'bg-green-600 text-white' : 'text-white/60 hover:bg-white/5'}`}
+                className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${productViewTab === 'kits' ? 'bg-green-600 text-white' : 'text-white/60 hover:bg-white/5'}`}
               >
                 Kits
               </button>
+              </div>
             </div>
             {productViewTab === 'products' && (
               <button
                 type="button"
                 onClick={onToggleForm}
-                className="flex items-center gap-1.5 rounded-xl bg-green-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-green-700"
+                className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-green-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-green-700 sm:w-auto sm:shrink-0"
               >
                 {showForm ? <><X size={13} />Fechar</> : <><Plus size={13} />Novo produto</>}
               </button>
@@ -2804,6 +2806,7 @@ function SettingsSection({
 
   const [ig, setIg] = useState('');
   const [wa, setWa] = useState('');
+  const [email, setEmail] = useState('');
   const [waFloatingEnabled, setWaFloatingEnabled] = useState(true);
   const [waGreeting, setWaGreeting] = useState('Hola! Bienvenido a VitaFit Store. En que puedo ayudarte hoy?');
   const [waOrderTemplate, setWaOrderTemplate] = useState('Hola {name}! Gracias por tu compra en VitaFit. Tu pedido #{orderId} esta confirmado y ya estamos preparando {productName}. {eta}');
@@ -2828,6 +2831,7 @@ function SettingsSection({
         setLogoUrl(data?.logoUrl ?? '');
         setIg(data?.instagram ?? '');
         setWa(data?.whatsapp ?? '+34 601 678 657');
+        setEmail(data?.email ?? '');
         setWaFloatingEnabled(Boolean(data?.whatsappFloatingEnabled ?? true));
         setWaGreeting(data?.whatsappGreeting ?? 'Hola! Bienvenido a VitaFit Store. En que puedo ayudarte hoy?');
         setWaOrderTemplate(data?.whatsappOrderTemplate ?? 'Hola {name}! Gracias por tu compra en VitaFit. Tu pedido #{orderId} esta confirmado y ya estamos preparando {productName}. {eta}');
@@ -2867,6 +2871,7 @@ function SettingsSection({
               logoUrl,
               instagram: ig.trim(),
               whatsapp: wa.trim(),
+              email: email.trim(),
               whatsappFloatingEnabled: waFloatingEnabled,
               whatsappGreeting: waGreeting.trim(),
               whatsappOrderTemplate: waOrderTemplate.trim(),
@@ -2999,7 +3004,11 @@ function SettingsSection({
       <div className="rounded-2xl border border-white/10 bg-[#1a1d27] p-5 shadow-none">
         <h2 className="mb-4 font-semibold text-white">WhatsApp e Redes Sociais</h2>
         <div className="space-y-4">
-          {[{label:'Instagram',value:ig,setter:setIg,ph:'@vitafit'},{label:'WhatsApp',value:wa,setter:setWa,ph:'+34 601 678 657'}].map(f => (
+          {[
+            { label: 'Instagram', value: ig, setter: setIg, ph: '@vitafit' },
+            { label: 'WhatsApp', value: wa, setter: setWa, ph: '+34 601 678 657' },
+            { label: 'E-mail', value: email, setter: setEmail, ph: 'contato@vitafitstore.com' },
+          ].map(f => (
             <div key={f.label}>
               <label className="mb-1.5 block text-xs font-medium text-white/50">{f.label}</label>
               <input type="text" value={f.value} onChange={e => f.setter(e.target.value)} placeholder={f.ph}
@@ -3007,7 +3016,7 @@ function SettingsSection({
             </div>
           ))}
 
-          <p className="text-xs text-white/45">Esse numero e usado no botao da vitrine. Troque aqui sempre que precisar.</p>
+          <p className="text-xs text-white/45">WhatsApp e e-mail aparecem nos ícones de contato da vitrine. Atualize aqui sempre que precisar.</p>
 
           <label className="flex items-center gap-2 rounded-lg border border-white/10 bg-[#111827] px-3 py-2 text-sm text-white/80">
             <input
