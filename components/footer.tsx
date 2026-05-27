@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { Leaf, Facebook, Instagram, Twitter, Youtube } from 'lucide-react'
+import { Leaf, Facebook, Instagram, Twitter, Youtube, X } from 'lucide-react'
 
 const footerLinks = {
   productos: [
@@ -31,10 +31,20 @@ const footerLinks = {
   ],
 }
 
+type FooterSectionKey = keyof typeof footerLinks
+
+const footerSections: { key: FooterSectionKey; title: string }[] = [
+  { key: 'productos', title: 'Productos' },
+  { key: 'empresa', title: 'Empresa' },
+  { key: 'ayuda', title: 'Ayuda' },
+  { key: 'legal', title: 'Legal' },
+]
+
 export function Footer() {
   const [storeName, setStoreName] = useState('VitaFit Store')
   const [instagram, setInstagram] = useState('')
   const [facebook, setFacebook] = useState('')
+  const [activePopup, setActivePopup] = useState<FooterSectionKey | null>(null)
 
   useEffect(() => {
     ;(async () => {
@@ -61,6 +71,43 @@ export function Footer() {
   return (
     <footer className="border-t border-border bg-muted/30">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        {activePopup && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-4" onClick={() => setActivePopup(null)}>
+            <div
+              className="w-full max-w-md rounded-2xl border border-border bg-background p-5 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-base font-semibold text-foreground">
+                  {footerSections.find(s => s.key === activePopup)?.title}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setActivePopup(null)}
+                  className="rounded-lg border border-border p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  aria-label="Fechar popup"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <ul className="space-y-2">
+                {footerLinks[activePopup].map((link) => (
+                  <li key={link.label}>
+                    <Link
+                      href={link.href}
+                      onClick={() => setActivePopup(null)}
+                      className="block rounded-lg px-3 py-2 text-sm text-foreground/85 transition-colors hover:bg-muted hover:text-primary"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
+
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-6">
           {/* Brand */}
           <div className="lg:col-span-2">
@@ -92,58 +139,19 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Links */}
-          <div>
-            <h3 className="mb-4 font-semibold text-foreground">Productos</h3>
-            <ul className="space-y-3">
-              {footerLinks.productos.map((link) => (
-                <li key={link.label}>
-                  <Link href={link.href} className="text-sm text-muted-foreground hover:text-primary">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="mb-4 font-semibold text-foreground">Empresa</h3>
-            <ul className="space-y-3">
-              {footerLinks.empresa.map((link) => (
-                <li key={link.label}>
-                  <Link href={link.href} className="text-sm text-muted-foreground hover:text-primary">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="mb-4 font-semibold text-foreground">Ayuda</h3>
-            <ul className="space-y-3">
-              {footerLinks.ayuda.map((link) => (
-                <li key={link.label}>
-                  <Link href={link.href} className="text-sm text-muted-foreground hover:text-primary">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="mb-4 font-semibold text-foreground">Legal</h3>
-            <ul className="space-y-3">
-              {footerLinks.legal.map((link) => (
-                <li key={link.label}>
-                  <Link href={link.href} className="text-sm text-muted-foreground hover:text-primary">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Links com popup */}
+          {footerSections.map((section) => (
+            <div key={section.key}>
+              <button
+                type="button"
+                onClick={() => setActivePopup(section.key)}
+                className="mb-2 text-left font-semibold text-foreground transition-colors hover:text-primary"
+              >
+                {section.title}
+              </button>
+              <p className="text-sm text-muted-foreground">Clique para abrir</p>
+            </div>
+          ))}
         </div>
 
         {/* Bottom */}

@@ -1,7 +1,6 @@
 'use client';
 import { useState } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 import {
   Star,
   ShoppingCart,
@@ -11,7 +10,6 @@ import {
   RotateCcw,
   Minus,
   Plus,
-  Zap,
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useCart } from '@/lib/cart-context';
@@ -37,7 +35,6 @@ const badgeText: Record<string, string> = {
 
 export function ProductModal({ product, onClose }: ProductModalProps) {
   const { addItem } = useCart();
-  const router = useRouter();
   const [imageError, setImageError] = useState(false);
   const [activeImage, setActiveImage] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -67,12 +64,6 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
     }, 800);
   };
 
-  const handleBuyNow = () => {
-    for (let i = 0; i < quantity; i++) addItem(product);
-    onClose();
-    router.push('/checkout');
-  };
-
   const tabs: { key: Tab; label: string }[] = [
     { key: 'descripcion', label: 'Descripción' },
     { key: 'ingredientes', label: 'Ingredientes' },
@@ -90,15 +81,15 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
 
   return (
     <Dialog open={!!product} onOpenChange={() => onClose()}>
-      <DialogContent className="max-h-[92vh] max-w-4xl overflow-y-auto p-0 border-0 bg-white rounded-2xl shadow-2xl">
+      <DialogContent className="max-h-[92vh] max-w-[calc(100%-1rem)] overflow-hidden rounded-2xl border-0 bg-white p-0 shadow-2xl sm:max-w-[calc(100%-2rem)] lg:max-w-5xl xl:max-w-6xl">
         <DialogHeader className="sr-only">
           <DialogTitle>{product.name}</DialogTitle>
           <DialogDescription>{product.shortDescription}</DialogDescription>
         </DialogHeader>
 
-        <div className="grid md:grid-cols-[55%_45%]">
+        <div className="grid lg:grid-cols-[56%_44%]">
           {/* Image side */}
-          <div className="relative aspect-square md:aspect-auto md:min-h-[520px] bg-gray-50 rounded-t-2xl md:rounded-l-2xl md:rounded-tr-none overflow-hidden">
+          <div className="relative aspect-[4/3] bg-gray-50 overflow-hidden lg:aspect-auto lg:min-h-[560px] lg:rounded-l-2xl lg:rounded-tr-none">
             {!imageError && displayImage ? (
               <Image
                 src={displayImage}
@@ -124,7 +115,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
           </div>
 
           {/* Details side */}
-          <div className="flex flex-col p-6 md:p-8 overflow-y-auto max-h-[92vh]">
+          <div className="flex max-h-[92vh] flex-col overflow-y-auto p-4 sm:p-6 lg:p-8">
             <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 mb-2">
               {product.category === 'salud' ? 'Salud y Bienestar' : 'Fitness'}
             </p>
@@ -177,7 +168,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
             </div>
 
             {/* Quantity */}
-            <div className="flex items-center gap-3 mb-4">
+            <div className="mb-4 flex flex-wrap items-center gap-2 sm:gap-3">
               <span className="text-sm font-medium text-gray-700">Cantidad:</span>
               <div className="flex items-center rounded-xl border border-gray-200 overflow-hidden">
                 <button
@@ -197,19 +188,11 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
               <span className="text-xs text-emerald-600 font-medium">{product.stock} disponibles</span>
             </div>
 
-            {/* Buy now */}
-            <button
-              onClick={handleBuyNow}
-              className="w-full py-3.5 rounded-xl font-bold text-white text-sm flex items-center justify-center gap-2 cursor-pointer mb-2 transition-all duration-200 bg-gray-900 hover:bg-gray-800 border border-emerald-500/30 hover:border-emerald-400/60"
-            >
-              <Zap className="h-4 w-4 text-emerald-400" /> Comprar ahora
-            </button>
-
             {/* Add to cart */}
             <button
               onClick={handleAddToCart}
               disabled={adding || added}
-              className={`w-full py-4 rounded-xl font-bold text-white text-base flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer mb-3
+              className={`mb-3 flex w-full items-center justify-center gap-2 rounded-xl py-4 text-base font-bold text-white transition-all duration-300 cursor-pointer
                 ${
                   added
                     ? 'bg-emerald-500'

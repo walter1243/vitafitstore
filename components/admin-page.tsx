@@ -1144,7 +1144,6 @@ export default function AdminPage() {
               onNewCategoryNameChange={setNewCategoryName}
               onCreateCategory={addCategory}
               onMoveCategory={moveCategory}
-              onSaveCategoryMedia={saveCategoryMedia}
               onDeleteCategory={deleteCategory}
             />
           )}
@@ -2094,7 +2093,6 @@ function SettingsSection({
   onNewCategoryNameChange,
   onCreateCategory,
   onMoveCategory,
-  onSaveCategoryMedia,
   onDeleteCategory,
 }: {
   categories: Category[];
@@ -2102,7 +2100,6 @@ function SettingsSection({
   onNewCategoryNameChange: (v: string) => void;
   onCreateCategory: () => void;
   onMoveCategory: (id: number, direction: 'up' | 'down') => void;
-  onSaveCategoryMedia: (id: number, bannerType: 'image' | 'video', bannerUrl: string, logoUrl: string) => void;
   onDeleteCategory: (id: number, name: string) => void;
 }) {
   type HomeBlock = {
@@ -2117,22 +2114,8 @@ function SettingsSection({
   const [storeName, setStore] = useState('VitaFit Store');
   const [themeColor, setThemeColor] = useState('#10b981');
   const [logoUrl, setLogoUrl] = useState('');
-  const [homeBlocks, setHomeBlocks] = useState<HomeBlock[]>([]);
   const [saved, setSaved] = useState(false);
   const blocosEditorRef = useRef<BlocosEditorHandle>(null);
-  const [categoryDrafts, setCategoryDrafts] = useState<Record<number, { bannerType: 'image' | 'video'; bannerUrl: string; logoUrl: string }>>({});
-
-  useEffect(() => {
-    const next: Record<number, { bannerType: 'image' | 'video'; bannerUrl: string; logoUrl: string }> = {};
-    for (const c of categories) {
-      next[c.id] = {
-        bannerType: c.bannerType === 'video' ? 'video' : 'image',
-        bannerUrl: c.bannerUrl ?? '',
-        logoUrl: c.logoUrl ?? '',
-      };
-    }
-    setCategoryDrafts(next);
-  }, [categories]);
 
   useEffect(() => {
     (async () => {
@@ -2150,16 +2133,6 @@ function SettingsSection({
       }
     })();
 
-    (async () => {
-      try {
-        const res = await fetch('/api/home-blocks');
-        if (!res.ok) return;
-        const data = await res.json();
-        if (Array.isArray(data)) setHomeBlocks(data);
-      } catch {
-        // ignore block load errors
-      }
-    })();
   }, []);
 
   function readFileAsDataURL(file: File, cb: (url: string) => void) {
@@ -2195,109 +2168,19 @@ function SettingsSection({
     }
   }
 
-  async function saveBlocks(nextBlocks: HomeBlock[]) {
-    setHomeBlocks(nextBlocks);
-    await fetch('/api/home-blocks', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ blocks: nextBlocks }),
-    });
-  }
-
-  function moveBlock(index: number, direction: 'up' | 'down') {
-    const target = direction === 'up' ? index - 1 : index + 1;
-    if (target < 0 || target >= homeBlocks.length) return;
-
-    const copy = [...homeBlocks];
-    const temp = copy[index];
-    copy[index] = copy[target];
-    copy[target] = temp;
-
-    const normalized = copy.map((b, i) => ({ ...b, position: i + 1 }));
-    void saveBlocks(normalized);
-  }
-
-  function toggleBlock(index: number) {
-    const copy = [...homeBlocks];
-    copy[index] = { ...copy[index], enabled: !copy[index].enabled };
-    void saveBlocks(copy);
+  function handleStoreLogoPaste(e: React.ClipboardEvent<HTMLDivElement>) {
+    for (const item of e.clipboardData.items) {
+      if (!item.type.startsWith('image/')) continue;
+      e.preventDefault();
+      const file = item.getAsFile();
+      if (!file) continue;
+      readFileAsDataURL(file, setLogoUrl);
+      return;
+    }
   }
 
   return (
-    <form onSubmit={handleSave} className="space-y-5 max-w-xl">
-      <div className="rounded-2xl border border-white/10 bg-[#1a1d27] p-5 shadow-none">
-        <h2 className="mb-1 font-semibold text-white">Categorias da Loja</h2>
-        <p className="mb-4 text-xs text-white/50">Crie categorias, organize a ordem e configure banner/logo dos cards da vitrine.</p>
-
-        <div className="mb-3 flex gap-2">
-          <input
-            type="text"
-            value={newCategoryName}
-            onChange={e => onNewCategoryNameChange(e.target.value)}
-            placeholder="Ex: Suplementos"
-            className="flex-1 rounded-xl border border-white/10 bg-[#22263a] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
-          />
-          <button
-            type="button"
-            onClick={onCreateCategory}
-            className="rounded-xl bg-green-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-green-700"
-          >
-            Criar categoria
-          </button>
-        </div>
-
-        <div className="space-y-3">
-          {categories.length === 0 && (
-            <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-xs text-white/60">Crie categorias para liberar a edição de banner e logo.</div>
-          )}
-          {categories.map((c, idx) => {
-            const draft = categoryDrafts[c.id] ?? { bannerType: 'image' as const, bannerUrl: '', logoUrl: '' };
-            return (
-              <div key={c.id} className="space-y-3 rounded-2xl border border-white/10 bg-[#0f1117] p-4">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-xs font-semibold text-white/70">{idx + 1}</span>
-                  <span className="flex-1 text-sm font-semibold text-white">{c.name}</span>
-                  <button type="button" onClick={() => onMoveCategory(c.id, 'up')} className="rounded-lg border border-white/15 p-2 text-white/70 hover:bg-white/10" title="Subir categoria"><ArrowUp size={12} /></button>
-                  <button type="button" onClick={() => onMoveCategory(c.id, 'down')} className="rounded-lg border border-white/15 p-2 text-white/70 hover:bg-white/10" title="Descer categoria"><ArrowDown size={12} /></button>
-                  <button type="button" onClick={() => onDeleteCategory(c.id, c.name)} className="rounded-lg border border-red-500/40 p-2 text-red-300 hover:bg-red-500/15" title="Excluir categoria"><Trash2 size={12} /></button>
-                </div>
-                <div className="grid gap-2 sm:grid-cols-3">
-                  <select
-                    value={draft.bannerType}
-                    onChange={e => setCategoryDrafts(prev => ({ ...prev, [c.id]: { ...draft, bannerType: e.target.value === 'video' ? 'video' : 'image' } }))}
-                    className="rounded-xl border border-white/10 bg-[#22263a] px-3 py-2 text-xs text-white outline-none"
-                  >
-                    <option value="image">Banner imagem</option>
-                    <option value="video">Banner vídeo</option>
-                  </select>
-                  <input
-                    type="text"
-                    value={draft.bannerUrl}
-                    onChange={e => setCategoryDrafts(prev => ({ ...prev, [c.id]: { ...draft, bannerUrl: e.target.value } }))}
-                    placeholder="URL do banner (img/video)"
-                    className="rounded-xl border border-white/10 bg-[#22263a] px-3 py-2 text-xs text-white placeholder:text-white/35 outline-none sm:col-span-2"
-                  />
-                  <input
-                    type="text"
-                    value={draft.logoUrl}
-                    onChange={e => setCategoryDrafts(prev => ({ ...prev, [c.id]: { ...draft, logoUrl: e.target.value } }))}
-                    placeholder="URL da logo da categoria (opcional)"
-                    className="rounded-xl border border-white/10 bg-[#22263a] px-3 py-2 text-xs text-white placeholder:text-white/35 outline-none sm:col-span-2"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => onSaveCategoryMedia(c.id, draft.bannerType, draft.bannerUrl, draft.logoUrl)}
-                    className="rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white hover:bg-white/15"
-                  >
-                    Salvar mídia
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
+    <form onSubmit={handleSave} className="mx-auto w-full max-w-2xl space-y-5">
       <div className="rounded-2xl border border-white/10 bg-[#1a1d27] p-5 shadow-none">
         <h2 className="mb-4 font-semibold text-white">Informações da Loja</h2>
 
@@ -2306,13 +2189,20 @@ function SettingsSection({
           className="mb-4 w-full rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40" />
 
         <label className="mb-1.5 block text-xs font-medium text-white/50">Cor principal da loja</label>
-        <div className="flex items-center gap-3 mb-4">
-          <input type="color" value={themeColor} onChange={e => setThemeColor(e.target.value)} className="w-12 h-10 rounded cursor-pointer" />
+        <div className="mb-4 grid gap-2 sm:grid-cols-[44px_1fr]">
+          <input type="color" value={themeColor} onChange={e => setThemeColor(e.target.value)} className="h-10 w-11 rounded cursor-pointer" />
           <input type="text" value={themeColor} onChange={e => setThemeColor(e.target.value)}
             className="w-full rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40" />
         </div>
 
         <label className="mb-1.5 block text-xs font-medium text-white/50">Logo da loja</label>
+        <div
+          tabIndex={0}
+          onPaste={handleStoreLogoPaste}
+          className="mb-3 rounded-xl border border-dashed border-white/15 bg-[#121728] p-3 text-xs text-white/65 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/30"
+        >
+          Cole a nova logo aqui com Ctrl+V.
+        </div>
         <input
           type="file"
           accept="image/*"
@@ -2326,6 +2216,50 @@ function SettingsSection({
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-[#1a1d27] p-5 shadow-none">
+        <h2 className="mb-4 font-semibold text-white">Blocos da Home (Fase 2)</h2>
+        <BlocosEditor ref={blocosEditorRef} />
+      </div>
+
+      <div className="rounded-2xl border border-white/10 bg-[#1a1d27] p-5 shadow-none">
+        <h2 className="mb-1 font-semibold text-white">Categorias da Loja</h2>
+        <p className="mb-4 text-xs text-white/50">Crie categorias pelo nome. A vitrine usa carrossel dinâmico automaticamente.</p>
+
+        <div className="mb-3 flex gap-2">
+          <input
+            type="text"
+            value={newCategoryName}
+            onChange={e => onNewCategoryNameChange(e.target.value)}
+            placeholder="Digite o nome da categoria"
+            className="flex-1 rounded-xl border border-white/10 bg-[#22263a] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+          />
+          <button
+            type="button"
+            onClick={onCreateCategory}
+            className="rounded-xl bg-green-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-green-700"
+          >
+            Criar categoria
+          </button>
+        </div>
+
+        <div className="space-y-3">
+          {categories.length === 0 && (
+            <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-xs text-white/60">Crie categorias para mostrar novos carrosséis na vitrine.</div>
+          )}
+          {categories.map((c, idx) => (
+            <div key={c.id} className="rounded-2xl border border-white/10 bg-[#0f1117] p-4">
+              <div className="flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-xs font-semibold text-white/70">{idx + 1}</span>
+                <span className="flex-1 text-sm font-semibold text-white">{c.name}</span>
+                <button type="button" onClick={() => onMoveCategory(c.id, 'up')} className="rounded-lg border border-white/15 p-2 text-white/70 hover:bg-white/10" title="Subir categoria"><ArrowUp size={12} /></button>
+                <button type="button" onClick={() => onMoveCategory(c.id, 'down')} className="rounded-lg border border-white/15 p-2 text-white/70 hover:bg-white/10" title="Descer categoria"><ArrowDown size={12} /></button>
+                <button type="button" onClick={() => onDeleteCategory(c.id, c.name)} className="rounded-lg border border-red-500/40 p-2 text-red-300 hover:bg-red-500/15" title="Excluir categoria"><Trash2 size={12} /></button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-white/10 bg-[#1a1d27] p-5 shadow-none">
         <h2 className="mb-4 font-semibold text-white">Redes Sociais</h2>
         <div className="space-y-4">
           {[{label:'Instagram',value:ig,setter:setIg,ph:'@vitafit'},{label:'Facebook',value:fb,setter:setFb,ph:'VitaFit'}].map(f => (
@@ -2336,11 +2270,6 @@ function SettingsSection({
             </div>
           ))}
         </div>
-      </div>
-
-      <div className="rounded-2xl border border-white/10 bg-[#1a1d27] p-5 shadow-none">
-        <h2 className="mb-4 font-semibold text-white">Blocos da Home (Fase 2)</h2>
-        <BlocosEditor ref={blocosEditorRef} />
       </div>
 
       <div className="flex items-center gap-3">
