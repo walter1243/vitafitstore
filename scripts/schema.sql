@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS products (
   price       NUMERIC(10,2) NOT NULL DEFAULT 0,
   category    TEXT,
   image       TEXT,        -- base64 ou URL da imagem principal
+  additional_images JSONB   NOT NULL DEFAULT '[]'::jsonb,
   video       TEXT,        -- URL do vídeo (YouTube, MP4, etc.)
   position    INTEGER,
   stock       INTEGER     DEFAULT 0,
@@ -21,6 +22,7 @@ CREATE TABLE IF NOT EXISTS products (
 ALTER TABLE products ADD COLUMN IF NOT EXISTS description TEXT;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS category    TEXT;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS image       TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS additional_images JSONB NOT NULL DEFAULT '[]'::jsonb;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS video       TEXT;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS position    INTEGER;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS stock       INTEGER DEFAULT 0;

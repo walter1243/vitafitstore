@@ -13,6 +13,9 @@ export interface Product {
   price: number
   originalPrice?: number
   image: string
+  mainImage?: string
+  additionalImages?: string[]
+  videoUrl?: string
   category: 'salud' | 'fitness'
   badge?: 'mas-vendido' | 'oferta' | 'nuevo'
   rating: number

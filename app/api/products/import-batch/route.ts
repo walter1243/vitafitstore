@@ -11,6 +11,7 @@ interface ImportProduct {
   category?: string
   stock?: number
   image?: string
+  additionalImages?: string[]
   description?: string
   sku?: string
   video?: string
@@ -43,13 +44,14 @@ export async function POST(req: NextRequest) {
         pos += 1
         const [row] = await sql`
           INSERT INTO products
-            (name, price, category, stock, image, description, video, position)
+            (name, price, category, stock, image, additional_images, description, video, position)
           VALUES (
             ${p.name},
             ${Number(p.price)},
             ${p.category ?? 'Geral'},
             ${p.stock ?? 0},
             ${p.image ?? null},
+            ${JSON.stringify(Array.isArray(p.additionalImages) ? p.additionalImages : [])},
             ${p.description ?? null},
             ${p.video ?? null},
             ${pos}

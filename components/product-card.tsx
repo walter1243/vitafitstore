@@ -51,7 +51,7 @@ export function ProductCard({ product, onViewDetails }: ProductCardProps) {
       <div className="relative aspect-square overflow-hidden bg-gray-50">
         {!imageError ? (
           <Image
-            src={product.image}
+            src={product.mainImage ?? product.image}
             alt={product.name}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-[1.08]"

@@ -170,7 +170,7 @@ export function ProductCarousel({ products, title, subtitle, categoryLabel, cate
                     {/* Image */}
                     <div className="relative aspect-square overflow-hidden bg-white/5">
                       <Image
-                        src={product.image}
+                        src={product.mainImage ?? product.image}
                         alt={product.name}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-[1.07]"

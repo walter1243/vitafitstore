@@ -11,6 +11,7 @@ type DbProduct = {
   price: number;
   category?: string;
   image?: string;
+  additionalImages?: string[];
   video?: string;
   stock?: number;
 };
@@ -39,6 +40,9 @@ function toStoreProduct(p: DbProduct): Product {
     shortDescription: (p.description || 'Produto premium VitaFit.').replace(/<[^>]+>/g, ' ').slice(0, 80),
     price: Number(p.price || 0),
     image: p.image || '/images/collagen.jpg',
+    mainImage: p.image || '/images/collagen.jpg',
+    additionalImages: Array.isArray(p.additionalImages) ? p.additionalImages : [],
+    videoUrl: p.video || '',
     category: category === 'fitness' ? 'fitness' : 'salud',
     rating: 4.8,
     reviews: 120,
@@ -57,17 +61,39 @@ export default function ProductCarousels() {
   const [categoryMeta, setCategoryMeta] = useState<Record<string, CategoryMeta>>({});
 
   useEffect(() => {
-    (async () => {
+    const loadProducts = async () => {
       try {
         const res = await fetch('/api/products', { cache: 'no-store' });
         if (!res.ok) return;
         const data = (await res.json()) as DbProduct[];
-        if (!Array.isArray(data) || data.length === 0) return;
+        if (!Array.isArray(data)) return;
         setDbProducts(data);
       } catch {
         // fallback handled below
       }
-    })();
+    };
+
+    void loadProducts();
+
+    // Keep storefront list fresh after admin edits/deletes without manual reload.
+    const intervalId = window.setInterval(() => {
+      void loadProducts();
+    }, 15000);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        void loadProducts();
+      }
+    };
+
+    window.addEventListener('focus', handleVisibility);
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', handleVisibility);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, []);
 
   useEffect(() => {

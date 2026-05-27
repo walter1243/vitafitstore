@@ -39,6 +39,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
   const { addItem } = useCart();
   const router = useRouter();
   const [imageError, setImageError] = useState(false);
+  const [activeImage, setActiveImage] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<Tab>('descripcion');
   const [adding, setAdding] = useState(false);
@@ -47,6 +48,10 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
   if (!product) return null;
 
   const reviews = productReviews[product.id] || [];
+  const mainImage = product.mainImage ?? product.image;
+  const galleryImages = [mainImage, ...(product.additionalImages ?? [])].filter(Boolean) as string[];
+  const displayImage = activeImage ?? mainImage;
+  const videoUrl = product.videoUrl ?? '';
 
   const handleAddToCart = () => {
     setAdding(true);
@@ -74,6 +79,15 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
     { key: 'resenas', label: `Reseñas (${reviews.length})` },
   ];
 
+  function isYouTubeUrl(url: string) {
+    return /(?:youtube\.com|youtu\.be)/i.test(url);
+  }
+
+  function toYouTubeEmbed(url: string) {
+    const match = url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{6,})/i);
+    return match ? `https://www.youtube.com/embed/${match[1]}` : url;
+  }
+
   return (
     <Dialog open={!!product} onOpenChange={() => onClose()}>
       <DialogContent className="max-h-[92vh] max-w-4xl overflow-y-auto p-0 border-0 bg-white rounded-2xl shadow-2xl">
@@ -85,9 +99,9 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
         <div className="grid md:grid-cols-[55%_45%]">
           {/* Image side */}
           <div className="relative aspect-square md:aspect-auto md:min-h-[520px] bg-gray-50 rounded-t-2xl md:rounded-l-2xl md:rounded-tr-none overflow-hidden">
-            {!imageError ? (
+            {!imageError && displayImage ? (
               <Image
-                src={product.image}
+                src={displayImage}
                 alt={product.name}
                 fill
                 className="object-cover"
@@ -235,6 +249,44 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
 
             {/* Tabs */}
             <div className="border-t border-gray-100 pt-4 flex-1">
+              {galleryImages.length > 1 && (
+                <div className="mb-5">
+                  <div className="grid grid-cols-4 gap-2">
+                    {galleryImages.map((src, index) => (
+                      <button
+                        key={`${src}-${index}`}
+                        type="button"
+                        onClick={() => {
+                          setActiveImage(src);
+                          setImageError(false);
+                        }}
+                        className={`relative aspect-square overflow-hidden rounded-lg border transition-colors ${
+                          displayImage === src ? 'border-emerald-500' : 'border-gray-200'
+                        }`}
+                      >
+                        <Image src={src} alt={`${product.name} ${index + 1}`} fill className="object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {videoUrl && (
+                <div className="mb-5 overflow-hidden rounded-2xl border border-gray-200 bg-black">
+                  {isYouTubeUrl(videoUrl) ? (
+                    <iframe
+                      className="h-56 w-full md:h-72"
+                      src={toYouTubeEmbed(videoUrl)}
+                      title={`${product.name} vídeo`}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <video src={videoUrl} controls className="h-56 w-full object-cover md:h-72" />
+                  )}
+                </div>
+              )}
+
               <div className="flex border-b border-gray-100 mb-4 -mx-0">
                 {tabs.map((tab) => (
                   <button
@@ -252,7 +304,9 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
               </div>
 
               <div className="text-sm text-gray-600 leading-relaxed">
-                {activeTab === 'descripcion' && <p>{product.description}</p>}
+                {activeTab === 'descripcion' && (
+                  <div dangerouslySetInnerHTML={{ __html: product.description }} />
+                )}
                 {activeTab === 'ingredientes' && (
                   <p>{product.ingredients ?? 'Ingredientes no disponibles para este producto.'}</p>
                 )}
