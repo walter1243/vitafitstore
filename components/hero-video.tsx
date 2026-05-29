@@ -149,9 +149,9 @@ export default function HeroVideo() {
           className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold mb-4 sm:mb-6 drop-shadow-2xl leading-[1.05] tracking-tight"
           style={{ fontFamily: 'var(--font-heading)' }}
         >
-          <span className="block text-white">Bienvenido a</span>
+          <span className="block text-white">Suplementos Deportivos</span>
           <span className="block bg-gradient-to-r from-emerald-300 via-green-400 to-teal-300 bg-clip-text text-transparent">
-            VitaFit Store
+            Europeos en España
           </span>
         </h1>
 
