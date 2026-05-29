@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import {
   Star, ShoppingCart, Check, Lock, Truck, RotateCcw,
-  Minus, Plus, X, ChevronLeft, ChevronRight, Play,
+  Minus, Plus, X, ChevronLeft, ChevronRight, Play, ChevronDown,
 } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 import { type Product, productReviews } from '@/lib/products';
@@ -12,8 +12,6 @@ interface ProductModalProps {
   product: Product | null;
   onClose: () => void;
 }
-
-type Tab = 'descripcion' | 'ingredientes' | 'resenas';
 
 const badgeStyles: Record<string, string> = {
   'mas-vendido': 'bg-emerald-500',
@@ -45,9 +43,9 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
   const [activeImage, setActiveImage] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
   const [quantity, setQuantity] = useState(1);
-  const [activeTab, setActiveTab] = useState<Tab>('descripcion');
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const thumbsRef = useRef<HTMLDivElement>(null);
 
@@ -56,9 +54,9 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
       setActiveImage(null);
       setImageError(false);
       setQuantity(1);
-      setActiveTab('descripcion');
       setAdded(false);
       setAdding(false);
+      setDetailOpen(false);
     }
   }, [product?.id]);
 
@@ -115,12 +113,6 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
     setActiveImage(next);
     setImageError(false);
   }
-
-  const tabs: { key: Tab; label: string }[] = [
-    { key: 'descripcion', label: 'Descripción' },
-    { key: 'ingredientes', label: 'Ingredientes' },
-    { key: 'resenas', label: `Reseñas (${reviews.length})` },
-  ];
 
   return (
     /* Overlay */
@@ -333,76 +325,48 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
               </div>
             </div>
 
-            {/* ── Tabs section ── */}
-            <div className="flex-1 px-5 sm:px-7 pb-4">
-              {/* Video (if any) */}
-              {videoUrl && (
-                <div className="mb-5 overflow-hidden rounded-2xl bg-black border border-white/10">
-                  {isYouTubeUrl(videoUrl) ? (
-                    <iframe
-                      className="h-48 w-full sm:h-56"
-                      src={toYouTubeEmbed(videoUrl)}
-                      title={`${product.name} vídeo`}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                  ) : (
-                    <video src={videoUrl} controls className="h-48 w-full object-cover sm:h-56" />
-                  )}
-                </div>
-              )}
-
-              {/* Tab bar */}
-              <div className="flex border-b border-white/10 mb-4">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.key}
-                    onClick={() => setActiveTab(tab.key)}
-                    className={`relative px-4 py-2.5 text-sm font-medium transition-all duration-200 cursor-pointer whitespace-nowrap
-                      ${activeTab === tab.key ? 'text-emerald-400' : 'text-white/40 hover:text-white/70'}`}
-                  >
-                    {tab.label}
-                    {activeTab === tab.key && (
-                      <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-emerald-500" />
-                    )}
-                  </button>
-                ))}
-              </div>
-
-              {/* Tab content */}
-              <div className="text-sm leading-relaxed text-white/65">
-                {activeTab === 'descripcion' && (
+            {/* ── Expandable description preview ── */}
+            <div className="px-5 sm:px-7 pb-2">
+              <button
+                onClick={() => setDetailOpen(true)}
+                className="w-full text-left group cursor-pointer"
+                aria-label="Ver descripción completa"
+              >
+                <div className="relative overflow-hidden rounded-2xl border border-white/8 bg-white/4 px-4 pt-3.5 pb-0">
+                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-400 mb-1.5">Descripción</p>
+                  {/* Truncated HTML preview — 3 lines */}
                   <div
-                    className="prose prose-invert prose-sm max-w-none prose-p:text-white/65 prose-li:text-white/65"
+                    className="text-sm leading-relaxed text-white/60 line-clamp-3 prose prose-invert prose-sm max-w-none prose-p:text-white/60 prose-p:my-0"
                     dangerouslySetInnerHTML={{ __html: product.description }}
                   />
-                )}
-                {activeTab === 'ingredientes' && (
-                  <p className="text-white/65">
-                    {product.ingredients ?? 'Ingredientes no disponibles para este producto.'}
-                  </p>
-                )}
-                {activeTab === 'resenas' && (
-                  <div className="space-y-3">
-                    {reviews.length === 0 && (
-                      <p className="text-white/40">Sin reseñas todavía.</p>
-                    )}
-                    {reviews.map((review) => (
-                      <div key={review.id} className="rounded-xl border border-white/8 bg-white/4 p-3.5">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-semibold text-white text-sm">{review.author}</span>
-                          <span className="text-xs text-white/30">{review.date}</span>
-                        </div>
-                        <div className="mb-2">
-                          <StarRating rating={review.rating} />
-                        </div>
-                        <p className="text-white/60 text-xs leading-relaxed">{review.comment}</p>
-                      </div>
-                    ))}
+                  {/* Fade gradient at bottom */}
+                  <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-[#1a1d27] to-transparent pointer-events-none" />
+                  {/* Expand row */}
+                  <div className="relative flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold text-emerald-400 group-hover:text-emerald-300 transition-colors">
+                    Ver más
+                    <ChevronDown size={14} className="group-hover:translate-y-0.5 transition-transform" />
                   </div>
-                )}
-              </div>
+                </div>
+              </button>
             </div>
+
+            {/* ── Reviews strip ── */}
+            {reviews.length > 0 && (
+              <div className="px-5 sm:px-7 pb-4 mt-1">
+                <div className="space-y-2">
+                  {reviews.slice(0, 2).map((review) => (
+                    <div key={review.id} className="rounded-xl border border-white/8 bg-white/4 p-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-semibold text-white text-xs">{review.author}</span>
+                        <span className="text-[10px] text-white/30">{review.date}</span>
+                      </div>
+                      <StarRating rating={review.rating} size="sm" />
+                      <p className="text-white/55 text-xs leading-relaxed mt-1 line-clamp-2">{review.comment}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* ── STICKY CTA — desktop: inside scroll | mobile: fixed bottom ── */}
             <div className="sticky bottom-0 border-t border-white/10 bg-[#0f1117]/95 backdrop-blur-sm px-5 py-4 sm:px-7 lg:block">
@@ -428,6 +392,121 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
             </div>
           </div>
         </div>
+
+        {/* ── DETAIL DRAWER — slides up over the modal ── */}
+        {detailOpen && (
+          <div className="absolute inset-0 z-30 flex flex-col rounded-t-3xl sm:rounded-3xl overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 sm:px-7 bg-[#13151f] border-b border-white/10 shrink-0">
+              <div>
+                <h3 className="text-sm font-bold text-white leading-tight">{product.name}</h3>
+                <p className="text-xs text-white/40 mt-0.5">Información detallada del producto</p>
+              </div>
+              <button
+                onClick={() => setDetailOpen(false)}
+                aria-label="Cerrar descripción"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/60 hover:bg-white/20 hover:text-white transition-all cursor-pointer shrink-0"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Scrollable body */}
+            <div className="flex-1 overflow-y-auto bg-[#0f1117] px-5 py-5 sm:px-7 space-y-6">
+
+              {/* Full description */}
+              <section>
+                <h4 className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-400 mb-3">Descripción</h4>
+                <div
+                  className="prose prose-invert prose-sm max-w-none text-white/70 prose-p:text-white/70 prose-li:text-white/70 prose-headings:text-white"
+                  dangerouslySetInnerHTML={{ __html: product.description }}
+                />
+              </section>
+
+              {/* Additional images grid */}
+              {(product.additionalImages ?? []).length > 0 && (
+                <section>
+                  <h4 className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-400 mb-3">Fotos del producto</h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {[product.mainImage ?? product.image, ...(product.additionalImages ?? [])].filter(Boolean).map((src, i) => (
+                      <div key={i} className="relative aspect-square overflow-hidden rounded-xl border border-white/10 bg-[#090b10]">
+                        <Image
+                          src={src as string}
+                          alt={`${product.name} ${i + 1}`}
+                          fill
+                          className="object-contain p-2"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Video */}
+              {videoUrl && (
+                <section>
+                  <h4 className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-400 mb-3">Vídeo</h4>
+                  <div className="overflow-hidden rounded-2xl bg-black border border-white/10">
+                    {isYouTubeUrl(videoUrl) ? (
+                      <iframe
+                        className="h-52 w-full sm:h-64"
+                        src={toYouTubeEmbed(videoUrl)}
+                        title={`${product.name} vídeo`}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    ) : (
+                      <video src={videoUrl} controls className="h-52 w-full object-cover sm:h-64" />
+                    )}
+                  </div>
+                </section>
+              )}
+
+              {/* Ingredients */}
+              {product.ingredients && (
+                <section>
+                  <h4 className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-400 mb-3">Ingredientes</h4>
+                  <p className="text-sm text-white/65 leading-relaxed">{product.ingredients}</p>
+                </section>
+              )}
+
+              {/* Reviews */}
+              {reviews.length > 0 && (
+                <section>
+                  <h4 className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-400 mb-3">
+                    Reseñas ({reviews.length})
+                  </h4>
+                  <div className="space-y-3">
+                    {reviews.map((review) => (
+                      <div key={review.id} className="rounded-xl border border-white/8 bg-white/4 p-3.5">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-semibold text-white text-sm">{review.author}</span>
+                          <span className="text-xs text-white/30">{review.date}</span>
+                        </div>
+                        <StarRating rating={review.rating} />
+                        <p className="text-white/60 text-xs leading-relaxed mt-2">{review.comment}</p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              <div className="h-4" />
+            </div>
+
+            {/* Footer CTA */}
+            <div className="border-t border-white/10 bg-[#0f1117]/95 backdrop-blur-sm px-5 py-4 sm:px-7 shrink-0">
+              <button
+                onClick={() => { setDetailOpen(false); handleAddToCart(); }}
+                disabled={adding || added}
+                className="flex w-full items-center justify-center gap-2.5 rounded-2xl py-4 text-base font-bold text-white bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 transition-all cursor-pointer disabled:opacity-70"
+              >
+                <ShoppingCart className="h-5 w-5" />
+                Añadir al carrito &nbsp;·&nbsp; {(product.price * quantity).toFixed(2)}€
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
