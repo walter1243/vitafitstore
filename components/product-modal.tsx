@@ -1,17 +1,10 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import {
-  Star,
-  ShoppingCart,
-  Check,
-  Lock,
-  Truck,
-  RotateCcw,
-  Minus,
-  Plus,
+  Star, ShoppingCart, Check, Lock, Truck, RotateCcw,
+  Minus, Plus, X, ChevronLeft, ChevronRight, Play,
 } from 'lucide-react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useCart } from '@/lib/cart-context';
 import { type Product, productReviews } from '@/lib/products';
 
@@ -33,14 +26,48 @@ const badgeText: Record<string, string> = {
   nuevo: 'Nuevo',
 };
 
+function StarRating({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'md' }) {
+  const sz = size === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4';
+  return (
+    <div className="flex">
+      {[...Array(5)].map((_, i) => (
+        <Star
+          key={i}
+          className={`${sz} ${i < Math.floor(rating) ? 'fill-amber-400 text-amber-400' : 'fill-white/10 text-white/10'}`}
+        />
+      ))}
+    </div>
+  );
+}
+
 export function ProductModal({ product, onClose }: ProductModalProps) {
   const { addItem } = useCart();
-  const [imageError, setImageError] = useState(false);
   const [activeImage, setActiveImage] = useState<string | null>(null);
+  const [imageError, setImageError] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<Tab>('descripcion');
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const thumbsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (product) {
+      setActiveImage(null);
+      setImageError(false);
+      setQuantity(1);
+      setActiveTab('descripcion');
+      setAdded(false);
+      setAdding(false);
+    }
+  }, [product?.id]);
+
+  // Lock body scroll while open
+  useEffect(() => {
+    if (!product) return;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, [product]);
 
   if (!product) return null;
 
@@ -50,7 +77,19 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
   const displayImage = activeImage ?? mainImage;
   const videoUrl = product.videoUrl ?? '';
 
-  const handleAddToCart = () => {
+  const discount = product.originalPrice
+    ? Math.round((1 - product.price / product.originalPrice) * 100)
+    : null;
+
+  function isYouTubeUrl(url: string) {
+    return /(?:youtube\.com|youtu\.be)/i.test(url);
+  }
+  function toYouTubeEmbed(url: string) {
+    const match = url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{6,})/i);
+    return match ? `https://www.youtube.com/embed/${match[1]}?autoplay=0&rel=0` : url;
+  }
+
+  function handleAddToCart() {
     setAdding(true);
     setTimeout(() => {
       for (let i = 0; i < quantity; i++) addItem(product);
@@ -61,8 +100,21 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
         setQuantity(1);
         onClose();
       }, 1200);
-    }, 800);
-  };
+    }, 700);
+  }
+
+  function prevImage() {
+    const idx = galleryImages.indexOf(displayImage ?? '');
+    const prev = galleryImages[(idx - 1 + galleryImages.length) % galleryImages.length];
+    setActiveImage(prev);
+    setImageError(false);
+  }
+  function nextImage() {
+    const idx = galleryImages.indexOf(displayImage ?? '');
+    const next = galleryImages[(idx + 1) % galleryImages.length];
+    setActiveImage(next);
+    setImageError(false);
+  }
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'descripcion', label: 'Descripción' },
@@ -70,262 +122,313 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
     { key: 'resenas', label: `Reseñas (${reviews.length})` },
   ];
 
-  function isYouTubeUrl(url: string) {
-    return /(?:youtube\.com|youtu\.be)/i.test(url);
-  }
-
-  function toYouTubeEmbed(url: string) {
-    const match = url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{6,})/i);
-    return match ? `https://www.youtube.com/embed/${match[1]}` : url;
-  }
-
   return (
-    <Dialog open={!!product} onOpenChange={() => onClose()}>
-      <DialogContent className="max-h-[92vh] max-w-[calc(100%-1rem)] overflow-hidden rounded-2xl border-0 bg-white p-0 shadow-2xl sm:max-w-[calc(100%-2rem)] lg:max-w-5xl xl:max-w-6xl">
-        <DialogHeader className="sr-only">
-          <DialogTitle>{product.name}</DialogTitle>
-          <DialogDescription>{product.shortDescription}</DialogDescription>
-        </DialogHeader>
+    /* Overlay */
+    <div
+      className="fixed inset-0 z-[200] flex items-end justify-center sm:items-center"
+      role="dialog"
+      aria-modal="true"
+      aria-label={product.name}
+    >
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        onClick={onClose}
+      />
 
-        <div className="grid lg:grid-cols-[56%_44%]">
-          {/* Image side */}
-          <div className="relative aspect-[4/3] bg-gray-50 overflow-hidden lg:aspect-auto lg:min-h-[560px] lg:rounded-l-2xl lg:rounded-tr-none">
-            {!imageError && displayImage ? (
-              <Image
-                src={displayImage}
-                alt={product.name}
-                fill
-                className="object-cover"
-                onError={() => setImageError(true)}
-              />
-            ) : (
-              <div
-                className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${product.gradient}`}
-              >
-                <span className="text-8xl">{product.emoji}</span>
+      {/* Modal panel */}
+      <div className="relative z-10 flex w-full flex-col bg-[#0f1117] shadow-2xl
+        rounded-t-3xl sm:rounded-3xl
+        max-h-[95dvh] sm:max-h-[92vh]
+        sm:w-[calc(100%-2rem)] lg:w-full lg:max-w-5xl xl:max-w-6xl
+        animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300">
+
+        {/* ── Close button ── */}
+        <button
+          onClick={onClose}
+          aria-label="Cerrar"
+          className="absolute top-4 right-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/60 hover:bg-white/20 hover:text-white transition-all cursor-pointer"
+        >
+          <X size={16} />
+        </button>
+
+        {/* ─────────────────────────────────────────────────────────── */}
+        {/*  LAYOUT: mobile = single col scroll | desktop = two col    */}
+        {/* ─────────────────────────────────────────────────────────── */}
+        <div className="flex flex-col overflow-hidden lg:grid lg:grid-cols-[52%_48%] lg:max-h-[92vh]">
+
+          {/* ── IMAGE COLUMN ── */}
+          <div className="flex flex-col bg-[#090b10] lg:rounded-l-3xl">
+            {/* Main image */}
+            <div className="relative overflow-hidden
+              h-[280px] xs:h-[320px] sm:h-[380px]
+              lg:flex-1 lg:h-auto lg:min-h-[380px]
+              lg:rounded-l-3xl">
+              {!imageError && displayImage ? (
+                <Image
+                  src={displayImage}
+                  alt={product.name}
+                  fill
+                  className="object-contain p-4 lg:p-8 transition-opacity duration-300"
+                  onError={() => setImageError(true)}
+                  priority
+                />
+              ) : (
+                <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${product.gradient}`}>
+                  <span className="text-9xl">{product.emoji}</span>
+                </div>
+              )}
+
+              {/* Badge */}
+              {product.badge && (
+                <span className={`absolute top-4 left-4 ${badgeStyles[product.badge]} text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg`}>
+                  {badgeText[product.badge]}
+                </span>
+              )}
+
+              {/* Discount pill */}
+              {discount && (
+                <span className="absolute top-4 right-12 bg-rose-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                  -{discount}%
+                </span>
+              )}
+
+              {/* Prev/Next arrows — only when multiple images */}
+              {galleryImages.length > 1 && (
+                <>
+                  <button
+                    onClick={prevImage}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/60 transition-all cursor-pointer"
+                    aria-label="Imagen anterior"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <button
+                    onClick={nextImage}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/60 transition-all cursor-pointer"
+                    aria-label="Imagen siguiente"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Thumbnail strip */}
+            {galleryImages.length > 1 && (
+              <div ref={thumbsRef} className="flex gap-2 overflow-x-auto px-4 py-3 scrollbar-none">
+                {galleryImages.map((src, i) => (
+                  <button
+                    key={`${src}-${i}`}
+                    onClick={() => { setActiveImage(src); setImageError(false); }}
+                    className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border-2 transition-all cursor-pointer ${displayImage === src ? 'border-emerald-500' : 'border-white/10 hover:border-white/30'}`}
+                  >
+                    <Image src={src} alt={`${product.name} ${i + 1}`} fill className="object-cover" />
+                  </button>
+                ))}
+                {videoUrl && (
+                  <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border-2 border-white/10 flex items-center justify-center bg-white/5">
+                    <Play size={20} className="text-white/60" />
+                  </div>
+                )}
               </div>
-            )}
-            {product.badge && (
-              <span
-                className={`absolute top-4 left-4 ${badgeStyles[product.badge]} text-white text-sm font-bold px-4 py-1.5 rounded-full shadow-md`}
-              >
-                {badgeText[product.badge]}
-              </span>
             )}
           </div>
 
-          {/* Details side */}
-          <div className="flex max-h-[92vh] flex-col overflow-y-auto p-4 sm:p-6 lg:p-8">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 mb-2">
-              {product.category === 'salud' ? 'Salud y Bienestar' : 'Fitness'}
-            </p>
+          {/* ── DETAILS COLUMN ── */}
+          <div
+            ref={scrollRef}
+            className="flex flex-col overflow-y-auto
+              max-h-[calc(95dvh-280px)] sm:max-h-[calc(92vh-380px)]
+              lg:max-h-[92vh]
+              pb-safe"
+          >
+            <div className="flex flex-col gap-0 px-5 pt-5 pb-4 sm:px-7 sm:pt-6">
 
-            <h2
-              className="text-2xl font-bold text-gray-900 mb-2 leading-tight"
-              style={{ fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em' }}
-            >
-              {product.name}
-            </h2>
+              {/* Category */}
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.15em] text-emerald-400">
+                {product.category === 'salud' ? 'Salud y Bienestar' : 'Fitness & Performance'}
+              </p>
 
-            {/* Stars */}
-            <div className="flex items-center gap-2 mb-4">
-              <div className="flex">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`h-4 w-4 ${
-                      i < Math.floor(product.rating)
-                        ? 'fill-amber-400 text-amber-400'
-                        : 'fill-gray-200 text-gray-200'
-                    }`}
-                  />
+              {/* Product name */}
+              <h2 className="text-xl font-bold leading-tight text-white sm:text-2xl"
+                style={{ fontFamily: 'var(--font-heading, inherit)', letterSpacing: '-0.02em' }}>
+                {product.name}
+              </h2>
+
+              {/* Stars + review count */}
+              <div className="mt-2.5 flex items-center gap-2.5">
+                <StarRating rating={product.rating} />
+                <span className="text-sm font-semibold text-amber-400">{product.rating}</span>
+                <span className="text-sm text-white/40 cursor-pointer hover:text-white/60 transition-colors">
+                  ({product.reviews} reseñas)
+                </span>
+              </div>
+
+              {/* Price block */}
+              <div className="mt-4 flex items-baseline gap-3">
+                <span className="text-4xl font-black text-white">{product.price.toFixed(2)}€</span>
+                {product.originalPrice && (
+                  <>
+                    <span className="text-lg font-medium text-white/30 line-through">{product.originalPrice.toFixed(2)}€</span>
+                    <span className="rounded-md bg-rose-500/20 px-2 py-0.5 text-xs font-bold text-rose-400">
+                      Ahorras {(product.originalPrice - product.price).toFixed(2)}€
+                    </span>
+                  </>
+                )}
+              </div>
+
+              {/* Benefits */}
+              <div className="mt-4 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                {product.benefits.slice(0, 4).map((b, i) => (
+                  <div key={i} className="flex items-center gap-2 text-sm text-white/75">
+                    <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-500/20">
+                      <Check className="h-2.5 w-2.5 text-emerald-400" />
+                    </div>
+                    {b}
+                  </div>
                 ))}
               </div>
-              <span className="text-sm font-semibold text-gray-700">{product.rating}</span>
-              <span className="text-sm text-gray-400 underline decoration-dotted cursor-pointer">
-                ({product.reviews} reseñas)
-              </span>
-            </div>
 
-            {/* Price */}
-            <div className="flex items-baseline gap-3 mb-5">
-              <span className="text-4xl font-bold text-gray-900">{product.price.toFixed(2)}€</span>
-              {product.originalPrice && (
-                <span className="text-xl text-gray-400 line-through">
-                  {product.originalPrice.toFixed(2)}€
+              {/* Divider */}
+              <div className="my-4 h-px bg-white/8" />
+
+              {/* Quantity selector */}
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-medium text-white/60">Cantidad</span>
+                <div className="flex items-center rounded-xl border border-white/10 bg-white/5 overflow-hidden">
+                  <button
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="flex h-10 w-10 items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all cursor-pointer"
+                    aria-label="Reducir cantidad"
+                  >
+                    <Minus className="h-4 w-4" />
+                  </button>
+                  <span className="w-10 text-center text-base font-bold text-white">{quantity}</span>
+                  <button
+                    onClick={() => setQuantity(q => q + 1)}
+                    className="flex h-10 w-10 items-center justify-center text-white/60 hover:bg-white/10 hover:text-white transition-all cursor-pointer"
+                    aria-label="Aumentar cantidad"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
+                <span className="text-xs font-medium text-emerald-400">
+                  {product.stock} disponibles
                 </span>
-              )}
-            </div>
-
-            {/* Benefits */}
-            <div className="grid grid-cols-2 gap-1.5 mb-5">
-              {product.benefits.slice(0, 4).map((b, i) => (
-                <div key={i} className="flex items-center gap-1.5 text-sm text-gray-600">
-                  <Check className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
-                  {b}
-                </div>
-              ))}
-            </div>
-
-            {/* Quantity */}
-            <div className="mb-4 flex flex-wrap items-center gap-2 sm:gap-3">
-              <span className="text-sm font-medium text-gray-700">Cantidad:</span>
-              <div className="flex items-center rounded-xl border border-gray-200 overflow-hidden">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="h-10 w-10 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
-                >
-                  <Minus className="h-4 w-4" />
-                </button>
-                <span className="w-12 text-center font-semibold text-gray-900">{quantity}</span>
-                <button
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="h-10 w-10 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
               </div>
-              <span className="text-xs text-emerald-600 font-medium">{product.stock} disponibles</span>
-            </div>
 
-            {/* Add to cart */}
-            <button
-              onClick={handleAddToCart}
-              disabled={adding || added}
-              className={`mb-3 flex w-full items-center justify-center gap-2 rounded-xl py-4 text-base font-bold text-white transition-all duration-300 cursor-pointer
-                ${
-                  added
-                    ? 'bg-emerald-500'
-                    : adding
-                    ? 'bg-gray-700'
-                    : 'bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 hover:shadow-[0_0_24px_rgba(34,197,94,0.35)]'
-                }`}
-            >
-              {added ? (
-                <>
-                  <Check className="h-5 w-5" /> ¡Añadido!
-                </>
-              ) : adding ? (
-                <>
-                  <span className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
-                  Procesando...
-                </>
-              ) : (
-                <>
-                  <ShoppingCart className="h-5 w-5" /> Añadir al carrito
-                </>
-              )}
-            </button>
-
-            {/* Trust strip */}
-            <div className="flex items-center justify-center gap-4 text-xs text-gray-500 mb-5">
-              <span className="flex items-center gap-1">
-                <Lock className="h-3.5 w-3.5 text-emerald-500" /> Pago seguro
-              </span>
-              <span className="flex items-center gap-1">
-                <Truck className="h-3.5 w-3.5 text-emerald-500" /> Envío gratis
-              </span>
-              <span className="flex items-center gap-1">
-                <RotateCcw className="h-3.5 w-3.5 text-emerald-500" /> 30 días
-              </span>
-            </div>
-
-            {/* Tabs */}
-            <div className="border-t border-gray-100 pt-4 flex-1">
-              {galleryImages.length > 1 && (
-                <div className="mb-5">
-                  <div className="grid grid-cols-4 gap-2">
-                    {galleryImages.map((src, index) => (
-                      <button
-                        key={`${src}-${index}`}
-                        type="button"
-                        onClick={() => {
-                          setActiveImage(src);
-                          setImageError(false);
-                        }}
-                        className={`relative aspect-square overflow-hidden rounded-lg border transition-colors ${
-                          displayImage === src ? 'border-emerald-500' : 'border-gray-200'
-                        }`}
-                      >
-                        <Image src={src} alt={`${product.name} ${index + 1}`} fill className="object-cover" />
-                      </button>
-                    ))}
+              {/* Trust strip */}
+              <div className="mt-4 flex items-center justify-between rounded-2xl border border-white/8 bg-white/4 px-4 py-3">
+                {[
+                  { icon: <Lock className="h-3.5 w-3.5 text-emerald-400" />, label: 'Pago seguro' },
+                  { icon: <Truck className="h-3.5 w-3.5 text-emerald-400" />, label: 'Envío gratis' },
+                  { icon: <RotateCcw className="h-3.5 w-3.5 text-emerald-400" />, label: '30 días' },
+                ].map((item, i) => (
+                  <div key={i} className="flex flex-col items-center gap-1">
+                    {item.icon}
+                    <span className="text-[10px] font-medium text-white/50">{item.label}</span>
                   </div>
-                </div>
-              )}
+                ))}
+              </div>
+            </div>
 
+            {/* ── Tabs section ── */}
+            <div className="flex-1 px-5 sm:px-7 pb-4">
+              {/* Video (if any) */}
               {videoUrl && (
-                <div className="mb-5 overflow-hidden rounded-2xl border border-gray-200 bg-black">
+                <div className="mb-5 overflow-hidden rounded-2xl bg-black border border-white/10">
                   {isYouTubeUrl(videoUrl) ? (
                     <iframe
-                      className="h-56 w-full md:h-72"
+                      className="h-48 w-full sm:h-56"
                       src={toYouTubeEmbed(videoUrl)}
                       title={`${product.name} vídeo`}
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
                     />
                   ) : (
-                    <video src={videoUrl} controls className="h-56 w-full object-cover md:h-72" />
+                    <video src={videoUrl} controls className="h-48 w-full object-cover sm:h-56" />
                   )}
                 </div>
               )}
 
-              <div className="flex border-b border-gray-100 mb-4 -mx-0">
+              {/* Tab bar */}
+              <div className="flex border-b border-white/10 mb-4">
                 {tabs.map((tab) => (
                   <button
                     key={tab.key}
                     onClick={() => setActiveTab(tab.key)}
-                    className={`relative px-4 py-2.5 text-sm font-medium transition-colors duration-200 cursor-pointer
-                      ${activeTab === tab.key ? 'text-emerald-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`relative px-4 py-2.5 text-sm font-medium transition-all duration-200 cursor-pointer whitespace-nowrap
+                      ${activeTab === tab.key ? 'text-emerald-400' : 'text-white/40 hover:text-white/70'}`}
                   >
                     {tab.label}
                     {activeTab === tab.key && (
-                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-500 rounded-full" />
+                      <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-emerald-500" />
                     )}
                   </button>
                 ))}
               </div>
 
-              <div className="text-sm text-gray-600 leading-relaxed">
+              {/* Tab content */}
+              <div className="text-sm leading-relaxed text-white/65">
                 {activeTab === 'descripcion' && (
-                  <div dangerouslySetInnerHTML={{ __html: product.description }} />
+                  <div
+                    className="prose prose-invert prose-sm max-w-none prose-p:text-white/65 prose-li:text-white/65"
+                    dangerouslySetInnerHTML={{ __html: product.description }}
+                  />
                 )}
                 {activeTab === 'ingredientes' && (
-                  <p>{product.ingredients ?? 'Ingredientes no disponibles para este producto.'}</p>
+                  <p className="text-white/65">
+                    {product.ingredients ?? 'Ingredientes no disponibles para este producto.'}
+                  </p>
                 )}
                 {activeTab === 'resenas' && (
                   <div className="space-y-3">
                     {reviews.length === 0 && (
-                      <p className="text-gray-400">Sin reseñas todavía.</p>
+                      <p className="text-white/40">Sin reseñas todavía.</p>
                     )}
                     {reviews.map((review) => (
-                      <div key={review.id} className="bg-gray-50 rounded-xl p-3">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="font-semibold text-gray-800 text-sm">{review.author}</span>
-                          <span className="text-xs text-gray-400">{review.date}</span>
+                      <div key={review.id} className="rounded-xl border border-white/8 bg-white/4 p-3.5">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-semibold text-white text-sm">{review.author}</span>
+                          <span className="text-xs text-white/30">{review.date}</span>
                         </div>
-                        <div className="flex mb-1.5">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`h-3 w-3 ${
-                                i < review.rating
-                                  ? 'fill-amber-400 text-amber-400'
-                                  : 'fill-gray-200 text-gray-200'
-                              }`}
-                            />
-                          ))}
+                        <div className="mb-2">
+                          <StarRating rating={review.rating} />
                         </div>
-                        <p className="text-gray-600 text-xs leading-relaxed">{review.comment}</p>
+                        <p className="text-white/60 text-xs leading-relaxed">{review.comment}</p>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
             </div>
+
+            {/* ── STICKY CTA — desktop: inside scroll | mobile: fixed bottom ── */}
+            <div className="sticky bottom-0 border-t border-white/10 bg-[#0f1117]/95 backdrop-blur-sm px-5 py-4 sm:px-7 lg:block">
+              <button
+                onClick={handleAddToCart}
+                disabled={adding || added}
+                className={`flex w-full items-center justify-center gap-2.5 rounded-2xl py-4 text-base font-bold text-white transition-all duration-300 cursor-pointer
+                  ${added
+                    ? 'bg-emerald-500'
+                    : adding
+                    ? 'bg-slate-700'
+                    : 'bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 hover:shadow-[0_0_28px_rgba(34,197,94,0.4)] active:scale-[0.98]'
+                  }`}
+              >
+                {added ? (
+                  <><Check className="h-5 w-5" /> ¡Añadido al carrito!</>
+                ) : adding ? (
+                  <><span className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Procesando...</>
+                ) : (
+                  <><ShoppingCart className="h-5 w-5" /> Añadir al carrito &nbsp;·&nbsp; {(product.price * quantity).toFixed(2)}€</>
+                )}
+              </button>
+            </div>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }

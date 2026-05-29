@@ -969,11 +969,14 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
 
 // ─── Orders ───────────────────────────────────────────────────────────────────
 
-function OrdersSection({ orders, onUpdateTracking }: {
+function OrdersSection({ orders, onUpdateTracking, onRefresh }: {
   orders: Order[];
   onUpdateTracking: (id: number, tracking: string, status: Order['status']) => void;
+  onRefresh: () => void;
 }) {
   const [inputs, setInputs] = useState<Record<number, string>>({});
+  const [forwarding, setForwarding] = useState<Record<number, boolean>>({});
+  const [forwardResult, setForwardResult] = useState<Record<number, { ok: boolean; msg: string }>>({});
 
   useEffect(() => {
     setInputs(Object.fromEntries(orders.map(o => [o.id, o.tracking ?? ''])));
@@ -982,6 +985,29 @@ function OrdersSection({ orders, onUpdateTracking }: {
   function save(id: number) {
     const tracking = inputs[id] ?? '';
     onUpdateTracking(id, tracking, tracking ? 'shipped' : 'pending');
+  }
+
+  async function forwardToSupplier(id: number) {
+    setForwarding(s => ({ ...s, [id]: true }));
+    setForwardResult(s => ({ ...s, [id]: { ok: false, msg: '' } }));
+    try {
+      const res = await fetch('/api/orders/forward-to-supplier', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_id: id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok) {
+        setForwardResult(s => ({ ...s, [id]: { ok: true, msg: data.message ?? 'Encaminhado com sucesso' } }));
+        onRefresh();
+      } else {
+        setForwardResult(s => ({ ...s, [id]: { ok: false, msg: data.error ?? data.message ?? 'Erro ao encaminhar' } }));
+      }
+    } catch (e: any) {
+      setForwardResult(s => ({ ...s, [id]: { ok: false, msg: e?.message ?? 'Erro de rede' } }));
+    } finally {
+      setForwarding(s => ({ ...s, [id]: false }));
+    }
   }
 
   return (
@@ -1018,6 +1044,17 @@ function OrdersSection({ orders, onUpdateTracking }: {
               className="flex cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-lg bg-green-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700">
               <Check size={14} />Salvar
             </button>
+            <button
+              onClick={() => forwardToSupplier(o.id)}
+              disabled={forwarding[o.id]}
+              title="Encaminhar pedido ao fornecedor por Shopify, e-mail ou WhatsApp"
+              className="flex cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-lg border border-blue-500/30 bg-blue-600/15 px-3 py-2 text-sm font-medium text-blue-300 transition-colors hover:bg-blue-600/25 disabled:opacity-50"
+            >
+              {forwarding[o.id]
+                ? <RefreshCw size={14} className="animate-spin" />
+                : <Truck size={14} />}
+              {forwarding[o.id] ? 'Enviando…' : 'Encaminhar'}
+            </button>
             {o.tracking && (
               <a href={`https://www.correos.es/es/es/herramientas/localizador/envios?numero=${o.tracking}`}
                 target="_blank" rel="noopener noreferrer"
@@ -1026,6 +1063,17 @@ function OrdersSection({ orders, onUpdateTracking }: {
               </a>
             )}
           </div>
+
+          {forwardResult[o.id]?.msg && (
+            <div className={`mt-3 flex items-center gap-2 rounded-lg px-3 py-2 text-xs ${
+              forwardResult[o.id].ok
+                ? 'bg-green-500/10 text-green-300 border border-green-500/20'
+                : 'bg-red-500/10 text-red-300 border border-red-500/20'
+            }`}>
+              {forwardResult[o.id].ok ? <CheckCircle2 size={13} /> : <AlertCircle size={13} />}
+              {forwardResult[o.id].msg}
+            </div>
+          )}
         </div>
       ))}
       {orders.length === 0 && (
@@ -1598,7 +1646,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
             />
           )}
           {section === 'import-supplier' && <ImportSupplierSection onImportToStore={preFillFromSupplier} />}
-          {section === 'orders' && <OrdersSection orders={orders} onUpdateTracking={updateTracking} />}
+          {section === 'orders' && <OrdersSection orders={orders} onUpdateTracking={updateTracking} onRefresh={fetchData} />}
           {section === 'tracking' && <TrackingSection />}
           {section === 'automation' && <AutomationSection />}
           {section === 'settings' && (
