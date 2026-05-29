@@ -147,13 +147,13 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
         {/* ─────────────────────────────────────────────────────────── */}
         {/*  LAYOUT: mobile = single col scroll | desktop = two col    */}
         {/* ─────────────────────────────────────────────────────────── */}
-        <div className="flex flex-col overflow-hidden lg:grid lg:grid-cols-[52%_48%] lg:max-h-[92vh]">
+        <div className="flex flex-1 min-h-0 flex-col overflow-hidden lg:grid lg:grid-cols-[52%_48%]">
 
           {/* ── IMAGE COLUMN ── */}
-          <div className="flex flex-col bg-[#090b10] lg:rounded-l-3xl">
+          <div className="shrink-0 flex flex-col bg-[#090b10] lg:rounded-l-3xl lg:shrink lg:min-h-0">
             {/* Main image */}
             <div className="relative overflow-hidden
-              h-[280px] xs:h-[320px] sm:h-[380px]
+              h-[240px] sm:h-[320px]
               lg:flex-1 lg:h-auto lg:min-h-[380px]
               lg:rounded-l-3xl">
               {!imageError && displayImage ? (
@@ -228,12 +228,10 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
           </div>
 
           {/* ── DETAILS COLUMN ── */}
+          <div className="flex flex-1 min-h-0 flex-col overflow-hidden">
           <div
             ref={scrollRef}
-            className="flex flex-col overflow-y-auto
-              max-h-[calc(95dvh-280px)] sm:max-h-[calc(92vh-380px)]
-              lg:max-h-[92vh]
-              pb-safe"
+            className="flex-1 min-h-0 overflow-y-auto overscroll-contain"
           >
             <div className="flex flex-col gap-0 px-5 pt-5 pb-4 sm:px-7 sm:pt-6">
 
@@ -368,8 +366,10 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
               </div>
             )}
 
-            {/* ── STICKY CTA — desktop: inside scroll | mobile: fixed bottom ── */}
-            <div className="sticky bottom-0 border-t border-white/10 bg-[#0f1117]/95 backdrop-blur-sm px-5 py-4 sm:px-7 lg:block">
+          </div>
+
+            {/* ── CTA — fora do scroll, sempre visível no rodapé ── */}
+            <div className="shrink-0 border-t border-white/10 bg-[#0f1117]/95 backdrop-blur-sm px-5 py-4 sm:px-7">
               <button
                 onClick={handleAddToCart}
                 disabled={adding || added}
