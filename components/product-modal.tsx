@@ -60,11 +60,22 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
     }
   }, [product?.id]);
 
-  // Lock body scroll while open
+  // Lock body scroll — iOS-safe: salva posição, fixa o body, restaura ao fechar
   useEffect(() => {
     if (!product) return;
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
+    const scrollY = window.scrollY;
+    const body = document.body;
+    body.style.position = 'fixed';
+    body.style.top = `-${scrollY}px`;
+    body.style.width = '100%';
+    body.style.overflowY = 'scroll';
+    return () => {
+      body.style.position = '';
+      body.style.top = '';
+      body.style.width = '';
+      body.style.overflowY = '';
+      window.scrollTo({ top: scrollY, behavior: 'instant' as ScrollBehavior });
+    };
   }, [product]);
 
   if (!product) return null;
@@ -128,10 +139,10 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
         onClick={onClose}
       />
 
-      {/* Modal panel */}
+      {/* Modal panel — altura explícita no mobile para flex-1 funcionar */}
       <div className="relative z-10 flex w-full flex-col bg-[#0f1117] shadow-2xl
         rounded-t-3xl sm:rounded-3xl
-        max-h-[95dvh] sm:max-h-[92vh]
+        h-[92dvh] sm:h-auto sm:max-h-[92vh]
         sm:w-[calc(100%-2rem)] lg:w-full lg:max-w-5xl xl:max-w-6xl
         animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300">
 
@@ -232,6 +243,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
           <div
             ref={scrollRef}
             className="flex-1 min-h-0 overflow-y-auto overscroll-contain"
+            style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
           >
             <div className="flex flex-col gap-0 px-5 pt-5 pb-4 sm:px-7 sm:pt-6">
 
