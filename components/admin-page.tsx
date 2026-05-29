@@ -5,7 +5,7 @@ import { AdminKitsSection } from '@/components/admin-kits-section';
 import { AdminUsersManager } from '@/components/admin-users-manager';
 import {
   LayoutDashboard, Package, ShoppingCart, Truck, Settings,
-  Menu, X, Plus, Trash2, ExternalLink, Check, Euro,
+  Menu, X, Plus, Trash2, ExternalLink, Check, Euro, PackageSearch,
   ChevronRight, Upload, Video, AlertCircle, CheckCircle2,
   ArrowUp, ArrowDown, Monitor, Zap, ToggleLeft, ToggleRight,
   MessageCircle, Mail, Globe, RefreshCw, LogOut,
@@ -13,7 +13,7 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Section = 'dashboard' | 'products' | 'orders' | 'tracking' | 'settings' | 'automation';
+type Section = 'dashboard' | 'products' | 'orders' | 'tracking' | 'settings' | 'automation' | 'import-supplier';
 
 type Product = {
   id: number;
@@ -27,6 +27,9 @@ type Product = {
   videoUrl?: string;
   video?: string;
   description?: string;
+  sourceStoreUrl?: string;
+  sourceProductUrl?: string;
+  costPrice?: number;
 };
 
 type Category = {
@@ -81,12 +84,14 @@ const SECTION_LABELS: Record<Section, string> = {
   tracking: 'Rastreio',
   automation: 'Automação',
   settings: 'Editar loja',
+  'import-supplier': 'Importar Produtos',
 };
 
 function ProductsSection({ products, showForm, saving, form, image, additionalImages, desc, upsellIds,
   onToggleForm, onFormChange, onImageChange, onAdditionalImagesChange, onDescChange, onUpsellChange, onSubmit, onDelete, onMove,
   categories, newCategoryName, onNewCategoryNameChange, onCreateCategory,
-  onMoveCategory, onSaveCategoryMedia, onDeleteCategory, editingProductId, onEditProduct }: {
+  onMoveCategory, onSaveCategoryMedia, onDeleteCategory, editingProductId, onEditProduct,
+  importSourceUrl, importSourceProductUrl, initialCostPrice }: {
   products: Product[];
   categories: Category[];
   showForm: boolean;
@@ -98,6 +103,9 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   upsellIds: number[];
   newCategoryName: string;
   editingProductId: number | null;
+  importSourceUrl?: string;
+  importSourceProductUrl?: string;
+  initialCostPrice?: string;
   onToggleForm: () => void;
   onEditProduct: (p: Product) => void;
   onFormChange: (k: string, v: string) => void;
@@ -138,6 +146,12 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   const [pricingLoading, setPricingLoading] = useState(false);
   const [pricingError, setPricingError] = useState('');
   const [pricingResult, setPricingResult] = useState<PriceCalcResponse | null>(null);
+
+  useEffect(() => {
+    if (initialCostPrice) {
+      setPricingForm(prev => ({ ...prev, costPrice: initialCostPrice }));
+    }
+  }, [initialCostPrice]);
 
   useEffect(() => {
     const next: Record<number, { bannerType: 'image' | 'video'; bannerUrl: string; logoUrl: string }> = {};
@@ -400,6 +414,15 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
 
         {productViewTab === 'products' && showForm && (
           <div className="space-y-5 p-5">
+            {importSourceUrl && (
+              <div className="flex items-center gap-2 rounded-xl border border-blue-500/20 bg-blue-500/10 px-4 py-2.5 text-sm text-blue-300">
+                <PackageSearch size={15} className="shrink-0" />
+                <span>Importado de: <a href={importSourceUrl} target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-blue-200">{importSourceUrl}</a></span>
+                {importSourceProductUrl && (
+                  <a href={importSourceProductUrl} target="_blank" rel="noreferrer" className="ml-auto shrink-0 text-xs underline underline-offset-2 hover:text-blue-200">Ver produto original</a>
+                )}
+              </div>
+            )}
             <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
               <section className="rounded-2xl border border-white/10 bg-[#0f1117] p-5 shadow-none">
                 <div className="mb-4 flex items-center gap-2">
@@ -1039,6 +1062,9 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
   const [prodAdditionalImages, setProdAdditionalImages] = useState<string[]>([]);
   const [prodDesc, setProdDesc] = useState('');
   const [prodUpsellIds, setProdUpsellIds] = useState<number[]>([]);
+  const [prodSourceStoreUrl, setProdSourceStoreUrl] = useState('');
+  const [prodSourceProductUrl, setProdSourceProductUrl] = useState('');
+  const [prodImportCostPrice, setProdImportCostPrice] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
   const [pendingCategoryDelete, setPendingCategoryDelete] = useState<{ id: number; name: string } | null>(null);
   const [deletingCategory, setDeletingCategory] = useState(false);
@@ -1168,6 +1194,9 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
     setProdAdditionalImages([]);
     setProdDesc('');
     setProdUpsellIds([]);
+    setProdSourceStoreUrl('');
+    setProdSourceProductUrl('');
+    setProdImportCostPrice('');
   }
 
   function startEditProduct(product: Product) {
@@ -1182,8 +1211,34 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
     setProdImage(product.mainImage ?? product.image ?? null);
     setProdAdditionalImages(Array.isArray(product.additionalImages) ? product.additionalImages : []);
     setProdDesc(product.description ?? '');
+    setProdSourceStoreUrl(product.sourceStoreUrl ?? '');
+    setProdSourceProductUrl(product.sourceProductUrl ?? '');
+    setProdImportCostPrice(product.costPrice != null ? String(product.costPrice) : '');
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function preFillFromSupplier(data: {
+    name: string;
+    price: number;
+    description: string;
+    image: string;
+    additionalImages: string[];
+    sourceStoreUrl: string;
+    sourceProductUrl: string;
+    costPrice: number;
+  }) {
+    setEditingProductId(null);
+    setProdForm({ name: data.name, price: String(data.price), category: '', stock: '99', videoUrl: '' });
+    setProdImage(data.image || null);
+    setProdAdditionalImages(data.additionalImages ?? []);
+    setProdDesc(data.description || '');
+    setProdUpsellIds([]);
+    setProdSourceStoreUrl(data.sourceStoreUrl || '');
+    setProdSourceProductUrl(data.sourceProductUrl || '');
+    setProdImportCostPrice(data.costPrice > 0 ? data.costPrice.toFixed(2) : '');
+    navigate('products');
+    setShowForm(true);
   }
 
   async function addProduct() {
@@ -1209,6 +1264,9 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
           image: prodImage,
           additionalImages: prodAdditionalImages,
           upsellIds: prodUpsellIds,
+          sourceStoreUrl: prodSourceStoreUrl || null,
+          sourceProductUrl: prodSourceProductUrl || null,
+          costPrice: prodImportCostPrice ? parseFloat(prodImportCostPrice) : null,
         }),
       });
 
@@ -1315,6 +1373,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
   const navItems: { key: Section; label: string; icon: React.ReactNode; badge?: number }[] = [
     { key: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
     { key: 'products', label: 'Produtos', icon: <Package size={18} /> },
+    { key: 'import-supplier', label: 'Importar Produtos', icon: <PackageSearch size={18} /> },
     { key: 'orders', label: 'Pedidos', icon: <ShoppingCart size={18} />, badge: pendingCount || undefined },
     { key: 'tracking', label: 'Rastreio', icon: <Truck size={18} /> },
     { key: 'automation', label: 'Automação', icon: <Zap size={18} /> },
@@ -1533,8 +1592,12 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
               onSubmit={addProduct}
               onDelete={deleteProduct}
               onMove={moveProduct}
+              importSourceUrl={prodSourceStoreUrl || undefined}
+              importSourceProductUrl={prodSourceProductUrl || undefined}
+              initialCostPrice={prodImportCostPrice || undefined}
             />
           )}
+          {section === 'import-supplier' && <ImportSupplierSection onImportToStore={preFillFromSupplier} />}
           {section === 'orders' && <OrdersSection orders={orders} onUpdateTracking={updateTracking} />}
           {section === 'tracking' && <TrackingSection />}
           {section === 'automation' && <AutomationSection />}
@@ -2265,6 +2328,283 @@ function parseCSV(text: string): ImportProduct[] {
       description: get(['descricao', 'description', 'desc']),
     };
   }).filter(p => p.name);
+}
+
+// ─── ImportSupplierSection ────────────────────────────────────────────────────
+
+type SupplierProduct = {
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+  images: string[];
+  stock: number;
+  url: string;
+  source: string;
+  suggestedPrice: number;
+};
+
+type ImportToStoreData = {
+  name: string;
+  price: number;
+  description: string;
+  image: string;
+  additionalImages: string[];
+  sourceStoreUrl: string;
+  sourceProductUrl: string;
+  costPrice: number;
+};
+
+function ImportSupplierSection({ onImportToStore }: { onImportToStore: (data: ImportToStoreData) => void }) {
+  const [url, setUrl]                   = useState('');
+  const [margin, setMargin]             = useState(40);
+  const [loading, setLoading]           = useState(false);
+  const [products, setProducts]         = useState<SupplierProduct[]>([]);
+  const [storeOrigin, setStoreOrigin]   = useState('');
+  const [sourceLabel, setSourceLabel]   = useState('');
+  const [error, setError]               = useState('');
+  const [drawer, setDrawer]             = useState<SupplierProduct | null>(null);
+  const [drawerImg, setDrawerImg]       = useState(0);
+
+  async function handleSearch() {
+    if (!url.trim()) return;
+    setLoading(true);
+    setError('');
+    setProducts([]);
+    setDrawer(null);
+    try {
+      const res = await fetch('/api/products/scrape-import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: url.trim(), margin }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setError(data.error ?? 'Nenhum produto encontrado nessa URL.');
+      } else {
+        setSourceLabel(data.source ?? '');
+        setStoreOrigin(new URL(url.trim()).origin);
+        const list: SupplierProduct[] = data.products ?? [];
+        setProducts(list);
+        if (list.length === 1) { setDrawer(list[0]); setDrawerImg(0); }
+      }
+    } catch (e: any) {
+      setError(e?.message ?? 'Erro de rede');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function openDrawer(p: SupplierProduct) {
+    setDrawer(p);
+    setDrawerImg(0);
+  }
+
+  function importProduct(p: SupplierProduct) {
+    onImportToStore({
+      name: p.name,
+      price: p.suggestedPrice,
+      description: p.description,
+      image: p.image,
+      additionalImages: p.images ?? [],
+      sourceStoreUrl: storeOrigin || url,
+      sourceProductUrl: p.url,
+      costPrice: p.price,
+    });
+    setDrawer(null);
+  }
+
+  const drawerImages = drawer ? [drawer.image, ...(drawer.images ?? [])].filter(Boolean) : [];
+
+  return (
+    <div className="space-y-5">
+      {/* Header card */}
+      <div className="rounded-2xl border border-white/10 bg-[#1a1d27] p-5 space-y-4">
+        <div>
+          <h2 className="flex items-center gap-2 font-semibold text-white">
+            <PackageSearch size={18} className="text-green-400" /> Importar Produtos de Distribuidoras
+          </h2>
+          <p className="mt-1 text-sm text-white/50">
+            Cole a URL da distribuidora ou de um produto específico. Funciona com Shopify, WooCommerce e sites genéricos.
+          </p>
+        </div>
+
+        <div className="flex gap-2">
+          <input
+            className="flex-1 rounded-lg border border-white/10 bg-[#22263a] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+            placeholder="https://distribuidora.com/products"
+            value={url}
+            onChange={e => setUrl(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleSearch()}
+          />
+          <button
+            onClick={handleSearch}
+            disabled={loading || !url.trim()}
+            className="flex items-center gap-2 rounded-lg bg-green-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-green-700 disabled:opacity-50"
+          >
+            {loading ? <RefreshCw size={14} className="animate-spin" /> : <Globe size={14} />}
+            {loading ? 'Buscando…' : 'Buscar'}
+          </button>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-4">
+          <label className="flex items-center gap-2 text-sm text-white/60">
+            Margem de lucro:
+            <input
+              type="number" min={0} max={500} value={margin}
+              onChange={e => setMargin(Number(e.target.value))}
+              className="w-16 rounded-lg border border-white/10 bg-[#22263a] px-2 py-1 text-center text-sm text-white outline-none focus:border-green-500/40"
+            />
+            %
+          </label>
+          <div className="flex gap-2 text-xs text-white/40">
+            <span className="rounded-full bg-green-500/10 text-green-300 px-2 py-0.5">Shopify ✓</span>
+            <span className="rounded-full bg-blue-500/10 text-blue-300 px-2 py-0.5">WooCommerce ✓</span>
+            <span className="rounded-full bg-white/10 px-2 py-0.5">Site genérico ✓</span>
+          </div>
+        </div>
+      </div>
+
+      {error && (
+        <div className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-300">
+          <AlertCircle size={15} /> {error}
+        </div>
+      )}
+
+      {/* Product catalog grid */}
+      {products.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-sm text-white/60 px-1">
+            <span className="font-medium text-white">{products.length}</span> produtos encontrados via
+            <span className="text-green-400 font-medium">{sourceLabel}</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            {products.map((p, i) => (
+              <div key={i} className="overflow-hidden rounded-xl border border-white/10 bg-[#1a1d27] hover:border-white/20 transition-all">
+                <div className="aspect-square bg-[#11131a]">
+                  {p.image
+                    ? <img src={p.image} alt={p.name} className="w-full h-full object-cover" onError={e => { e.currentTarget.style.display = 'none'; }} />
+                    : <div className="w-full h-full flex items-center justify-center text-3xl">📦</div>
+                  }
+                </div>
+                <div className="p-2.5">
+                  <p className="line-clamp-2 text-xs font-medium leading-tight text-white mb-1.5">{p.name}</p>
+                  <p className="text-xs text-white/45">Custo: <span className="font-mono">€{p.price.toFixed(2)}</span></p>
+                  <p className="text-xs text-green-400 font-medium">Venda: <span className="font-mono">€{p.suggestedPrice.toFixed(2)}</span></p>
+                  <button
+                    onClick={() => openDrawer(p)}
+                    className="mt-2 w-full rounded-lg bg-white/5 px-2 py-1.5 text-xs font-medium text-white/80 transition-colors hover:bg-green-600 hover:text-white"
+                  >
+                    Ver produto →
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Product detail drawer */}
+      {drawer && (
+        <div className="fixed inset-0 z-[250] flex justify-end" onClick={() => setDrawer(null)}>
+          <div className="absolute inset-0 bg-black/60" />
+          <div
+            className="relative z-10 flex h-full w-full max-w-md flex-col bg-[#12151f] shadow-2xl overflow-y-auto"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Drawer header */}
+            <div className="flex items-center justify-between border-b border-white/10 px-5 py-4 sticky top-0 bg-[#12151f] z-10">
+              <h3 className="font-semibold text-white text-sm">Detalhes do Produto</h3>
+              <button onClick={() => setDrawer(null)} className="text-white/40 hover:text-white transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Main image */}
+            {drawerImages.length > 0 && (
+              <div className="relative bg-[#0f1117] aspect-square">
+                <img
+                  src={drawerImages[drawerImg]}
+                  alt={drawer.name}
+                  className="w-full h-full object-contain"
+                  onError={e => { e.currentTarget.style.display = 'none'; }}
+                />
+              </div>
+            )}
+
+            {/* Thumbnail row */}
+            {drawerImages.length > 1 && (
+              <div className="flex gap-2 px-5 py-3 overflow-x-auto">
+                {drawerImages.map((img, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setDrawerImg(i)}
+                    className={`w-14 h-14 rounded-lg overflow-hidden border-2 shrink-0 transition-all ${drawerImg === i ? 'border-green-500' : 'border-white/10'}`}
+                  >
+                    <img src={img} alt="" className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Product info */}
+            <div className="flex-1 px-5 py-4 space-y-4">
+              <h2 className="text-base font-semibold text-white leading-snug">{drawer.name}</h2>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl border border-white/10 bg-[#1a1d27] p-3">
+                  <p className="text-xs text-white/45 mb-0.5">Custo (distribuidora)</p>
+                  <p className="text-lg font-bold text-white">€{drawer.price.toFixed(2)}</p>
+                </div>
+                <div className="rounded-xl border border-green-500/20 bg-green-500/10 p-3">
+                  <p className="text-xs text-green-300/70 mb-0.5">Venda sugerida (+{margin}%)</p>
+                  <p className="text-lg font-bold text-green-300">€{drawer.suggestedPrice.toFixed(2)}</p>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs text-white/45 mb-1.5">Lucro estimado</p>
+                <p className="text-sm font-semibold text-green-400">
+                  €{(drawer.suggestedPrice - drawer.price).toFixed(2)} por venda
+                </p>
+              </div>
+
+              {drawer.description && (
+                <div>
+                  <p className="text-xs text-white/45 mb-1.5">Descrição</p>
+                  <p className="text-sm text-white/70 leading-relaxed line-clamp-6">{drawer.description}</p>
+                </div>
+              )}
+
+              <div>
+                <p className="text-xs text-white/45 mb-1">Estoque disponível</p>
+                <p className="text-sm text-white/70">📦 {drawer.stock} unidades</p>
+              </div>
+
+              <div>
+                <p className="text-xs text-white/45 mb-1">Produto original</p>
+                <a href={drawer.url} target="_blank" rel="noreferrer" className="text-xs text-blue-400 underline underline-offset-2 break-all hover:text-blue-300">
+                  {drawer.url}
+                </a>
+              </div>
+            </div>
+
+            {/* Import button */}
+            <div className="sticky bottom-0 border-t border-white/10 bg-[#12151f] px-5 py-4">
+              <button
+                onClick={() => importProduct(drawer)}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-green-700 active:scale-[0.98]"
+              >
+                <PackageSearch size={16} />
+                Importar para Minha Loja
+              </button>
+              <p className="mt-2 text-center text-xs text-white/35">Você poderá editar todos os dados antes de salvar</p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ─── EspiarLojaTab ────────────────────────────────────────────────────────────

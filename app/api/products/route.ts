@@ -13,7 +13,6 @@ function parseAdditionalImages(value: unknown): string[] {
   if (Array.isArray(value)) {
     return value.map(item => String(item).trim()).filter(Boolean);
   }
-
   if (typeof value === 'string' && value.trim()) {
     try {
       const parsed = JSON.parse(value);
@@ -24,7 +23,6 @@ function parseAdditionalImages(value: unknown): string[] {
       return value.split(',').map(item => item.trim()).filter(Boolean);
     }
   }
-
   return [];
 }
 
@@ -33,9 +31,12 @@ function normalizeProduct(row: any) {
     ...row,
     price: row.price != null ? Number(row.price) : 0,
     stock: row.stock != null ? Number(row.stock) : 0,
+    costPrice: row.cost_price != null ? Number(row.cost_price) : null,
     additionalImages: parseAdditionalImages(row.additional_images ?? row.additionalImages),
     mainImage: row.image ?? row.mainImage ?? '',
     videoUrl: row.video ?? row.videoUrl ?? '',
+    sourceStoreUrl: row.source_store_url ?? null,
+    sourceProductUrl: row.source_product_url ?? null,
   };
 }
 
@@ -43,6 +44,7 @@ export async function GET() {
   try {
     const rows = await sql`
       SELECT id, name, description, price, category, image, additional_images, video, stock, position,
+             source_store_url, source_product_url, cost_price,
              created_at AS "createdAt"
       FROM products
       ORDER BY COALESCE(position, 999999), created_at DESC
@@ -60,7 +62,11 @@ export async function POST(req: NextRequest) {
     if (!auth.ok) return auth.response;
 
     const body = await req.json();
-    const { name, description, price, category, image, mainImage, video, videoUrl, stock, additionalImages } = body;
+    const {
+      name, description, price, category, image, mainImage,
+      video, videoUrl, stock, additionalImages,
+      sourceStoreUrl, sourceProductUrl, costPrice,
+    } = body;
 
     if (!name?.trim()) {
       return NextResponse.json({ error: 'O campo "nome" é obrigatório.' }, { status: 400 });
@@ -72,9 +78,10 @@ export async function POST(req: NextRequest) {
     const nextMainImage = String(mainImage ?? image ?? '').trim();
     const nextVideoUrl = String(videoUrl ?? video ?? '').trim();
     const nextAdditionalImages = parseAdditionalImages(additionalImages);
+    const nextCostPrice = costPrice != null && !isNaN(Number(costPrice)) ? Number(costPrice) : null;
 
     const [product] = await sql`
-      INSERT INTO products (name, description, price, category, image, additional_images, video, stock, position)
+      INSERT INTO products (name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price)
       VALUES (
         ${String(name).trim()},
         ${description ? String(description) : null},
@@ -84,9 +91,12 @@ export async function POST(req: NextRequest) {
         ${JSON.stringify(nextAdditionalImages)},
         ${nextVideoUrl || null},
         ${Number(stock ?? 0)},
-        COALESCE((SELECT MAX(position) + 1 FROM products), 1)
+        COALESCE((SELECT MAX(position) + 1 FROM products), 1),
+        ${sourceStoreUrl ? String(sourceStoreUrl).trim() : null},
+        ${sourceProductUrl ? String(sourceProductUrl).trim() : null},
+        ${nextCostPrice}
       )
-      RETURNING id, name, description, price, category, image, additional_images, video, stock, position
+      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price
     `;
 
     return NextResponse.json(normalizeProduct(product), { status: 201 });
@@ -161,6 +171,9 @@ export async function PATCH(req: NextRequest) {
     const videoUrl = String(body.videoUrl ?? body.video ?? '').trim();
     const additionalImages = parseAdditionalImages(body.additionalImages);
     const stock = Number(body.stock ?? 0);
+    const sourceStoreUrl = body.sourceStoreUrl ? String(body.sourceStoreUrl).trim() : null;
+    const sourceProductUrl = body.sourceProductUrl ? String(body.sourceProductUrl).trim() : null;
+    const costPrice = body.costPrice != null && !isNaN(Number(body.costPrice)) ? Number(body.costPrice) : null;
 
     if (!name) {
       return NextResponse.json({ error: 'O campo "nome" é obrigatório.' }, { status: 400 });
@@ -172,16 +185,19 @@ export async function PATCH(req: NextRequest) {
     const [product] = await sql`
       UPDATE products
       SET
-        name = ${name},
-        description = ${description || null},
-        price = ${price},
-        category = ${category || null},
-        image = ${mainImage || null},
+        name              = ${name},
+        description       = ${description || null},
+        price             = ${price},
+        category          = ${category || null},
+        image             = ${mainImage || null},
         additional_images = ${JSON.stringify(additionalImages)},
-        video = ${videoUrl || null},
-        stock = ${stock}
+        video             = ${videoUrl || null},
+        stock             = ${stock},
+        source_store_url  = COALESCE(${sourceStoreUrl}, source_store_url),
+        source_product_url = COALESCE(${sourceProductUrl}, source_product_url),
+        cost_price        = COALESCE(${costPrice}, cost_price)
       WHERE id = ${id}
-      RETURNING id, name, description, price, category, image, additional_images, video, stock, position
+      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price
     `;
 
     if (!product) {
@@ -211,4 +227,3 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: err?.message ?? 'Erro ao deletar produto.' }, { status: 500 });
   }
 }
-

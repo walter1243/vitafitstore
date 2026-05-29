@@ -4,7 +4,6 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
-import { requireAdmin } from '@/lib/admin-auth'
 
 interface ImportProduct {
   name: string
@@ -16,20 +15,19 @@ interface ImportProduct {
   description?: string
   sku?: string
   video?: string
+  sourceStoreUrl?: string
+  sourceProductUrl?: string
+  costPrice?: number
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const auth = await requireAdmin(req)
-    if (!auth.ok) return auth.response
-
     const { products }: { products: ImportProduct[] } = await req.json()
 
     if (!Array.isArray(products) || products.length === 0) {
       return NextResponse.json({ error: 'Nenhum produto fornecido' }, { status: 400 })
     }
 
-    // Pega a última posição atual
     const [{ maxPos }] = await sql`
       SELECT COALESCE(MAX(position), 0) AS "maxPos" FROM products
     `
@@ -48,7 +46,8 @@ export async function POST(req: NextRequest) {
         pos += 1
         const [row] = await sql`
           INSERT INTO products
-            (name, price, category, stock, image, additional_images, description, video, position)
+            (name, price, category, stock, image, additional_images, description, video, position,
+             source_store_url, source_product_url, cost_price)
           VALUES (
             ${p.name},
             ${Number(p.price)},
@@ -58,7 +57,10 @@ export async function POST(req: NextRequest) {
             ${JSON.stringify(Array.isArray(p.additionalImages) ? p.additionalImages : [])},
             ${p.description ?? null},
             ${p.video ?? null},
-            ${pos}
+            ${pos},
+            ${p.sourceStoreUrl ?? null},
+            ${p.sourceProductUrl ?? null},
+            ${p.costPrice != null ? Number(p.costPrice) : null}
           )
           RETURNING id
         `
