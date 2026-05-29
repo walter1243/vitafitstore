@@ -8,36 +8,13 @@ import {
 import { useCart } from '@/lib/cart-context';
 import Link from 'next/link';
 import Image from 'next/image';
-import { CardElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js';
+import {
+  CardNumberElement, CardExpiryElement, CardCvcElement,
+  Elements, useElements, useStripe,
+} from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '');
-
-// ─── Utils ───────────────────────────────────────────────────────────────────
-
-function detectBrand(num: string): string {
-  const n = num.replace(/\s/g, '');
-  if (/^4/.test(n)) return 'visa';
-  if (/^5[1-5]/.test(n) || /^2[2-7]/.test(n)) return 'mastercard';
-  if (/^3[47]/.test(n)) return 'amex';
-  if (/^6/.test(n)) return 'discover';
-  return 'unknown';
-}
-
-function formatNumber(val: string): string {
-  const digits = val.replace(/\D/g, '').slice(0, 16);
-  return digits.replace(/(\d{4})(?=\d)/g, '$1 ');
-}
-
-function formatExpiry(val: string): string {
-  const d = val.replace(/\D/g, '').slice(0, 4);
-  return d.length > 2 ? d.slice(0, 2) + '/' + d.slice(2) : d;
-}
-
-function cardDisplayNumber(rawDigits: string): string {
-  const padded = rawDigits.padEnd(16, '•');
-  return [padded.slice(0, 4), padded.slice(4, 8), padded.slice(8, 12), padded.slice(12)].join(' ');
-}
 
 // ─── Brand logos ──────────────────────────────────────────────────────────────
 
@@ -85,15 +62,11 @@ function BrandOnCard({ brand }: { brand: string }) {
 // ─── Credit Card Visual ───────────────────────────────────────────────────────
 
 function CreditCardVisual({
-  name, number, expiry, cvv, flipped, brand,
+  name, flipped, brand,
 }: {
-  name: string; number: string; expiry: string; cvv: string;
-  flipped: boolean; brand: string;
+  name: string; flipped: boolean; brand: string;
 }) {
-  const rawDigits = number.replace(/\s/g, '');
-  const displayNum = cardDisplayNumber(rawDigits);
-  const displayName = name.trim().toUpperCase() || 'SEU NOME AQUI';
-  const displayExpiry = expiry || 'MM/AA';
+  const displayName = name.trim().toUpperCase() || 'TU NOMBRE AQUÍ';
 
   return (
     <div className="mx-auto select-none w-full" style={{ maxWidth: 300, height: 182, perspective: '1200px' }}>
@@ -118,7 +91,6 @@ function CreditCardVisual({
             style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 55%)' }} />
 
           <div className="relative flex justify-between items-start z-10">
-            {/* Chip */}
             <div className="w-9 h-6 rounded-md"
               style={{ background: 'linear-gradient(135deg, #fbbf24, #d97706)' }}>
               <div className="w-full h-full flex">
@@ -128,19 +100,19 @@ function CreditCardVisual({
             <BrandOnCard brand={brand} />
           </div>
 
-          {/* Card number */}
-          <div className="relative z-10 text-white font-mono text-sm sm:text-base tracking-[0.18em] text-center drop-shadow">
-            {displayNum}
+          {/* Card number (always masked for PCI compliance) */}
+          <div className="relative z-10 text-white font-mono text-sm sm:text-base tracking-[0.22em] text-center drop-shadow">
+            •••• •••• •••• ••••
           </div>
 
           <div className="relative z-10 flex justify-between items-end">
             <div>
-              <p className="text-white/50 text-[9px] uppercase tracking-widest mb-0.5">Titular do cartão</p>
+              <p className="text-white/50 text-[9px] uppercase tracking-widest mb-0.5">Titular</p>
               <p className="text-white font-semibold text-xs tracking-wide truncate max-w-[170px]">{displayName}</p>
             </div>
             <div className="text-right">
-              <p className="text-white/50 text-[9px] uppercase tracking-widest mb-0.5">Validade</p>
-              <p className="text-white font-semibold text-xs">{displayExpiry}</p>
+              <p className="text-white/50 text-[9px] uppercase tracking-widest mb-0.5">Válido hasta</p>
+              <p className="text-white font-semibold text-xs">MM/AA</p>
             </div>
           </div>
         </div>
@@ -160,9 +132,7 @@ function CreditCardVisual({
             <p className="text-white/40 text-[9px] uppercase tracking-widest mb-1">CVV / CVC</p>
             <div className="rounded-lg h-8 flex items-center justify-end px-3"
               style={{ background: 'rgba(255,255,255,0.08)' }}>
-              <span className="text-white/70 tracking-widest text-sm font-mono">
-                {cvv ? cvv.replace(/./g, '•') : '•••'}
-              </span>
+              <span className="text-white/70 tracking-widest text-sm font-mono">•••</span>
             </div>
           </div>
           <div className="absolute bottom-3 left-0 right-0 flex justify-between px-4 items-center">
@@ -197,10 +167,6 @@ function SuccessScreen({ name }: { name: string }) {
           60%  { opacity: 1; transform: translateY(10px) scale(1.05); }
           100% { opacity: 1; transform: translateY(0) scale(1); }
         }
-        @keyframes boxClose {
-          0%   { transform: translateY(0); }
-          100% { transform: translateY(-8px); }
-        }
         @keyframes slideDelivery {
           0%   { opacity: 1; transform: translateX(0); }
           80%  { opacity: 1; transform: translateX(0); }
@@ -227,9 +193,7 @@ function SuccessScreen({ name }: { name: string }) {
         className="fixed inset-0 z-50 flex flex-col items-center justify-center px-6 text-center"
         style={{ background: '#0a0f0a' }}
       >
-        {/* Scene */}
         <div className="relative flex flex-col items-center mb-8">
-          {/* Truck / delivery trail dots */}
           <div className="anim-dots absolute right-[-40px] top-[60px] flex gap-1.5">
             {[0, 1, 2].map(i => (
               <div key={i} className="w-1.5 h-1.5 rounded-full bg-emerald-500"
@@ -237,17 +201,12 @@ function SuccessScreen({ name }: { name: string }) {
             ))}
           </div>
 
-          {/* Delivery box scene */}
           <div className="anim-box flex flex-col items-center">
-            {/* Product drops in */}
             <div className="anim-product text-3xl mb-0.5">📦</div>
-
-            {/* Box */}
             <div
               className="relative w-24 h-20 rounded-xl flex items-end justify-center pb-2"
               style={{ background: 'linear-gradient(135deg, #059669, #047857)' }}
             >
-              {/* Box lid */}
               <div
                 className="absolute -top-3 left-0 right-0 h-5 rounded-t-xl flex items-center justify-center"
                 style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}
@@ -255,22 +214,15 @@ function SuccessScreen({ name }: { name: string }) {
                 <div className="w-8 h-0.5 rounded-full bg-white/30" />
               </div>
               <span className="text-xs font-bold text-white/80 tracking-wider">VITAFIT</span>
-
-              {/* Tape strip */}
               <div className="absolute top-0.5 left-1/2 -translate-x-1/2 w-10 h-1.5 rounded-full opacity-50"
                 style={{ background: '#fbbf24' }} />
             </div>
-
-            {/* Wheels */}
             <div className="flex gap-12 -mt-1">
-              <div className="w-4 h-4 rounded-full border-2 border-emerald-500"
-                style={{ background: '#0a0f0a' }} />
-              <div className="w-4 h-4 rounded-full border-2 border-emerald-500"
-                style={{ background: '#0a0f0a' }} />
+              <div className="w-4 h-4 rounded-full border-2 border-emerald-500" style={{ background: '#0a0f0a' }} />
+              <div className="w-4 h-4 rounded-full border-2 border-emerald-500" style={{ background: '#0a0f0a' }} />
             </div>
           </div>
 
-          {/* Check */}
           <div
             className="anim-check absolute -bottom-3 -right-3 w-10 h-10 rounded-full flex items-center justify-center"
             style={{ background: '#10b981', boxShadow: '0 0 20px rgba(16,185,129,0.5)' }}
@@ -281,11 +233,8 @@ function SuccessScreen({ name }: { name: string }) {
           </div>
         </div>
 
-        {/* Text */}
         <div className="anim-text space-y-2">
-          <h2 className="text-2xl sm:text-3xl font-black text-white">
-            ¡Pedido confirmado!
-          </h2>
+          <h2 className="text-2xl sm:text-3xl font-black text-white">¡Pedido confirmado!</h2>
           <p className="text-emerald-400 font-semibold">
             ¡Gracias por tu compra{name ? `, ${name.split(' ')[0]}` : ''}!
           </p>
@@ -294,7 +243,6 @@ function SuccessScreen({ name }: { name: string }) {
             Recibirás un email de confirmación en breve.
           </p>
 
-          {/* Progress steps */}
           <div className="flex items-center justify-center gap-2 pt-4">
             {['Confirmado', 'Preparando', 'En camino'].map((step, i) => (
               <div key={step} className="flex items-center gap-2">
@@ -380,6 +328,24 @@ const inputCls = [
   'focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30',
   'autofill:bg-transparent',
 ].join(' ');
+
+const stripeInputCls = [
+  'w-full rounded-xl px-4 py-[13px]',
+  'bg-white/[0.05] border border-emerald-500/20',
+  'transition-all',
+].join(' ');
+
+const stripeStyle = {
+  style: {
+    base: {
+      color: '#ffffff',
+      fontSize: '14px',
+      fontFamily: 'system-ui, -apple-system, sans-serif',
+      '::placeholder': { color: '#4b5563' },
+    },
+    invalid: { color: '#f87171' },
+  },
+};
 
 // ─── Order Summary ────────────────────────────────────────────────────────────
 
@@ -477,12 +443,14 @@ function CheckoutFormInner() {
 
   const [step, setStep] = useState<1 | 2>(1);
 
-  // Card visual state (live)
+  // Card visual state
   const [cardFlipped, setCardFlipped] = useState(false);
   const [cardBrand,   setCardBrand]   = useState('unknown');
-  const [cardNumber,  setCardNumber]  = useState('');
-  const [expiry,      setExpiry]      = useState('');
-  const [cvv,         setCvv]         = useState('');
+
+  // Individual Stripe element ready states
+  const [cardNumberReady, setCardNumberReady] = useState(false);
+  const [cardExpiryReady, setCardExpiryReady] = useState(false);
+  const [cardCvcReady,    setCardCvcReady]    = useState(false);
 
   // Personal
   const [name,  setName]  = useState('');
@@ -497,7 +465,7 @@ function CheckoutFormInner() {
   const [country, setCountry] = useState('PT');
 
   const [quoteLoading, setQuoteLoading] = useState(false);
-  const [quoteError, setQuoteError] = useState('');
+  const [quoteError,   setQuoteError]   = useState('');
   const [quote, setQuote] = useState<{ subtotal: number; shipping: number; total: number } | null>(null);
 
   const checkoutItems = items.map((item) => ({
@@ -519,21 +487,15 @@ function CheckoutFormInner() {
         const res = await fetch('/api/checkout/quote', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            items: checkoutItems,
-            country,
-            postalCode: postal,
-          }),
+          body: JSON.stringify({ items: checkoutItems, country, postalCode: postal }),
           signal: ctrl.signal,
         });
-
         const data = await res.json();
         if (!res.ok) {
           setQuote(null);
-          setQuoteError(data?.error ?? 'Não foi possível calcular o checkout.');
+          setQuoteError(data?.error ?? 'No se pudo calcular el checkout.');
           return;
         }
-
         setQuoteError('');
         setQuote({
           subtotal: Number(data.subtotal ?? 0),
@@ -543,61 +505,41 @@ function CheckoutFormInner() {
       } catch (error: any) {
         if (error?.name === 'AbortError') return;
         setQuote(null);
-        setQuoteError('Não foi possível calcular o checkout.');
+        setQuoteError('No se pudo calcular el checkout.');
       } finally {
         setQuoteLoading(false);
       }
     }, 150);
 
-    return () => {
-      ctrl.abort();
-      clearTimeout(timer);
-    };
+    return () => { ctrl.abort(); clearTimeout(timer); };
   }, [country, postal, items]);
 
   const shipping = quote?.shipping ?? 0;
-  const total = quote?.total ?? totalPrice;
+  const total    = quote?.total    ?? totalPrice;
   const subtotal = quote?.subtotal ?? totalPrice;
 
   const [errors,   setErrors]   = useState<Record<string, string>>({});
   const [loading,  setLoading]  = useState(false);
   const [success,  setSuccess]  = useState(false);
   const [apiError, setApiError] = useState('');
-  const [cardReady, setCardReady] = useState(false);
-
-  // ── Input handlers ──────────────────────────────────────────
-  function handleCardNumber(e: React.ChangeEvent<HTMLInputElement>) {
-    const formatted = formatNumber(e.target.value);
-    setCardNumber(formatted);
-    setCardBrand(detectBrand(formatted));
-  }
-
-  function handleExpiry(e: React.ChangeEvent<HTMLInputElement>) {
-    const prev = expiry;
-    const raw = e.target.value.replace(/\D/g, '');
-    // Allow backspace over slash
-    if (prev.length === 3 && e.target.value.length === 2) {
-      setExpiry(raw.slice(0, 1));
-    } else {
-      setExpiry(formatExpiry(e.target.value));
-    }
-  }
 
   // ── Validation ──────────────────────────────────────────────
   function validateStep1() {
     const e: Record<string, string> = {};
-    if (!name.trim())   e.name   = 'Nome obrigatório';
-    if (!email.trim())  e.email  = 'Email obrigatório';
-    if (!street.trim()) e.street = 'Morada obrigatória';
-    if (!postal.trim()) e.postal = 'Código postal obrigatório';
-    if (!city.trim())   e.city   = 'Cidade obrigatória';
+    if (!name.trim())   e.name   = 'Nombre obligatorio';
+    if (!email.trim())  e.email  = 'Email obligatorio';
+    if (!street.trim()) e.street = 'Dirección obligatoria';
+    if (!postal.trim()) e.postal = 'Código postal obligatorio';
+    if (!city.trim())   e.city   = 'Ciudad obligatoria';
     setErrors(e);
     return Object.keys(e).length === 0;
   }
 
   function validateStep2() {
     const e: Record<string, string> = {};
-    if (!cardReady) e.card = 'Complete os dados do cartão.';
+    if (!cardNumberReady || !cardExpiryReady || !cardCvcReady) {
+      e.card = 'Completa los datos de la tarjeta.';
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -614,7 +556,7 @@ function CheckoutFormInner() {
     e.preventDefault();
     if (!validateStep2()) return;
     if (!quote || quote.total <= 0) {
-      setApiError('Não foi possível calcular o total do pedido. Tente novamente.');
+      setApiError('No se pudo calcular el total del pedido. Inténtalo de nuevo.');
       return;
     }
 
@@ -622,13 +564,13 @@ function CheckoutFormInner() {
     setApiError('');
 
     try {
-      if (!stripe || !elements) throw new Error('Stripe ainda está carregando. Tente novamente.');
-      const card = elements.getElement(CardElement);
-      if (!card) throw new Error('Campo de cartão indisponível.');
+      if (!stripe || !elements) throw new Error('Stripe aún está cargando. Inténtalo de nuevo.');
+      const cardNumberElement = elements.getElement(CardNumberElement);
+      if (!cardNumberElement) throw new Error('Campo de tarjeta no disponible.');
 
       const pmResult = await stripe.createPaymentMethod({
         type: 'card',
-        card,
+        card: cardNumberElement,
         billing_details: {
           name: name.trim() || undefined,
           email: email.trim() || undefined,
@@ -643,7 +585,7 @@ function CheckoutFormInner() {
       });
 
       if (pmResult.error || !pmResult.paymentMethod?.id) {
-        throw new Error(pmResult.error?.message ?? 'Não foi possível validar os dados do cartão.');
+        throw new Error(pmResult.error?.message ?? 'No se pudieron validar los datos de la tarjeta.');
       }
 
       const res = await fetch('/api/checkout', {
@@ -695,13 +637,11 @@ function CheckoutFormInner() {
     );
   }
 
-  // ── Success ────────────────────────────────────────────────
   if (success) return <SuccessScreen name={name} />;
 
   // ── Step 1 ──────────────────────────────────────────────────
   const step1 = (
     <div className="space-y-4">
-      {/* Personal */}
       <div className="rounded-2xl p-5 sm:p-6 space-y-4"
         style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(16,185,129,0.12)' }}>
         <div className="flex items-center gap-2">
@@ -728,7 +668,6 @@ function CheckoutFormInner() {
         </div>
       </div>
 
-      {/* Address */}
       <div className="rounded-2xl p-5 sm:p-6 space-y-4"
         style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(16,185,129,0.12)' }}>
         <div className="flex items-center gap-2">
@@ -788,6 +727,7 @@ function CheckoutFormInner() {
   // ── Step 2 ──────────────────────────────────────────────────
   const step2 = (
     <form onSubmit={handleSubmit} className="space-y-4">
+
       {/* Card Visual */}
       <div className="rounded-2xl p-5 sm:p-6 space-y-4"
         style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(16,185,129,0.12)' }}>
@@ -800,18 +740,16 @@ function CheckoutFormInner() {
         </div>
         <CreditCardVisual
           name={name}
-          number={cardNumber}
-          expiry={expiry}
-          cvv={cvv}
           flipped={cardFlipped}
           brand={cardBrand}
         />
       </div>
 
-      {/* Card Inputs */}
-      <div className="rounded-2xl p-5 sm:p-6 space-y-4"
+      {/* Card Inputs — 2-column grid */}
+      <div className="rounded-2xl p-5 sm:p-6 space-y-3"
         style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(16,185,129,0.12)' }}>
-        <div className="flex items-center justify-between">
+
+        <div className="flex items-center justify-between mb-1">
           <p className="text-[10px] font-semibold tracking-widest text-emerald-400 uppercase">Datos de la Tarjeta</p>
           <div className="flex gap-1.5">
             <VisaLogo />
@@ -819,32 +757,70 @@ function CheckoutFormInner() {
           </div>
         </div>
 
-        <Field label="Número de Tarjeta" error={errors.cardNumber}>
-          <div className={`${inputCls} py-3`} style={errors.card ? { borderColor: '#f87171' } : {}}>
-            <CardElement
-              options={{
-                style: {
-                  base: {
-                    color: '#ffffff',
-                    fontSize: '14px',
-                    '::placeholder': { color: '#6b7280' },
-                  },
-                  invalid: { color: '#f87171' },
-                },
-              }}
-              onChange={(ev) => {
-                setCardReady(ev.complete);
-                if (ev.brand) setCardBrand(ev.brand);
-                if (ev.error?.message) setApiError(ev.error.message);
-                else if (apiError) setApiError('');
-              }}
+        {/* Row 1: Nombre + Número */}
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Nombre en la tarjeta">
+            <input
+              className={inputCls}
+              placeholder="NOMBRE APELLIDO"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              autoComplete="cc-name"
             />
-          </div>
-        </Field>
+          </Field>
+
+          <Field label="Número de tarjeta" error={errors.card}>
+            <div
+              className={stripeInputCls}
+              style={errors.card ? { borderColor: '#f87171' } : {}}
+            >
+              <CardNumberElement
+                options={stripeStyle}
+                onChange={ev => {
+                  setCardNumberReady(ev.complete);
+                  if (ev.brand) setCardBrand(ev.brand);
+                  if (ev.error?.message) setApiError(ev.error.message);
+                  else if (apiError) setApiError('');
+                }}
+              />
+            </div>
+          </Field>
+        </div>
+
+        {/* Row 2: Caducidad + CVV */}
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Caducidad">
+            <div className={stripeInputCls}>
+              <CardExpiryElement
+                options={stripeStyle}
+                onChange={ev => {
+                  setCardExpiryReady(ev.complete);
+                  if (ev.error?.message) setApiError(ev.error.message);
+                  else if (apiError) setApiError('');
+                }}
+              />
+            </div>
+          </Field>
+
+          <Field label="CVV">
+            <div className={stripeInputCls}>
+              <CardCvcElement
+                options={stripeStyle}
+                onChange={ev => {
+                  setCardCvcReady(ev.complete);
+                  if (ev.error?.message) setApiError(ev.error.message);
+                  else if (apiError) setApiError('');
+                }}
+                onFocus={() => setCardFlipped(true)}
+                onBlur={() => setCardFlipped(false)}
+              />
+            </div>
+          </Field>
+        </div>
 
         {errors.card && <p className="text-red-400 text-xs">{errors.card}</p>}
 
-        <p className="text-gray-600 text-xs flex items-center gap-1.5">
+        <p className="text-gray-600 text-xs flex items-center gap-1.5 pt-1">
           <Lock size={11} /> Pago procesado de forma segura · SSL 256-bit
         </p>
       </div>
@@ -885,7 +861,6 @@ function CheckoutFormInner() {
     <div className="min-h-screen py-8 sm:py-12 px-4" style={{ background: '#0a0f0a' }}>
       <div className="max-w-5xl mx-auto">
 
-        {/* Header */}
         <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <Link href="/" className="flex items-center gap-2 text-emerald-400 font-bold text-lg">
             <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white font-black text-sm">V</div>
@@ -899,7 +874,6 @@ function CheckoutFormInner() {
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 lg:gap-10">
 
-          {/* LEFT */}
           <div>
             <p className="text-[10px] font-semibold tracking-widest text-emerald-400 uppercase mb-1">Pago Seguro</p>
             <h1 className="text-2xl sm:text-3xl font-bold text-white mb-6">Finalizar Compra</h1>
@@ -907,7 +881,6 @@ function CheckoutFormInner() {
             {step === 1 ? step1 : step2}
           </div>
 
-          {/* RIGHT */}
           <div className="lg:sticky lg:top-8 lg:self-start">
             <OrderSummary items={items} totalPrice={subtotal} shipping={shipping} total={total} />
             {quoteLoading && (
@@ -927,7 +900,7 @@ export default function CheckoutForm() {
       <div className="min-h-screen flex items-center justify-center px-4" style={{ background: '#0a0f0a' }}>
         <div className="rounded-xl px-4 py-3 text-sm text-red-400"
           style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
-          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY não configurada.
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY no configurada.
         </div>
       </div>
     );
