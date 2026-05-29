@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
-import { type Product, type CartItem, fitnessProducts } from './products'
+import { type Product, type CartItem } from './products'
 
 interface CartContextType {
   items: CartItem[]
@@ -15,7 +15,6 @@ interface CartContextType {
   setIsCartOpen: (open: boolean) => void
   showUpsell: boolean
   setShowUpsell: (show: boolean) => void
-  upsellProducts: Product[]
   lastAddedProduct: Product | null
 }
 
@@ -73,12 +72,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0)
   const totalPrice = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0)
 
-  // Get random fitness products for upsell (excluding already in cart)
-  const cartProductIds = items.map(item => item.product.id)
-  const upsellProducts = fitnessProducts
-    .filter(p => !cartProductIds.includes(p.id))
-    .slice(0, 3)
-
   return (
     <CartContext.Provider
       value={{
@@ -93,7 +86,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setIsCartOpen,
         showUpsell,
         setShowUpsell,
-        upsellProducts,
         lastAddedProduct
       }}
     >

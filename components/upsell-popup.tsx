@@ -1,294 +1,244 @@
 "use client"
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { X, ShoppingCart, Check, Sparkles } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { X, Check, ShoppingCart, Sparkles } from 'lucide-react'
 import { useCart } from '@/lib/cart-context'
 
-type KitApiItem = {
+type KitItem = {
   productId: number
   quantity: number
   name: string
   price: number
-  image?: string
-  description?: string
-  category?: string
-  stock?: number
-}
-
-type KitApi = {
-  id: number
-  baseProductId: number
-  baseProductName: string
-  baseProductPrice: number
-  finalPrice: number
-  items: KitApiItem[]
+  image: string
+  description: string
+  category: string
+  stock: number
 }
 
 export function UpsellPopup() {
-  const { showUpsell, setShowUpsell, upsellProducts, addItem, removeItem, lastAddedProduct, setIsCartOpen } = useCart()
-  const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({})
-  const [kit, setKit] = useState<KitApi | null>(null)
-  const [kitLoading, setKitLoading] = useState(false)
-  const [selectedKitItems, setSelectedKitItems] = useState<Record<number, boolean>>({})
+  const { showUpsell, setShowUpsell, addItem, lastAddedProduct, setIsCartOpen } = useCart()
 
-  const handleClose = () => {
-    setShowUpsell(false)
-    setIsCartOpen(true)
-  }
+  const [kitItems, setKitItems]     = useState<KitItem[]>([])
+  const [loading, setLoading]       = useState(false)
+  const [dismissed, setDismissed]   = useState<Set<number>>(new Set())
+  const [added, setAdded]           = useState<Set<number>>(new Set())
+  const [imgErrors, setImgErrors]   = useState<Set<number>>(new Set())
 
-  const handleAddUpsell = (product: typeof upsellProducts[0]) => {
-    addItem(product)
-  }
-
-  const handleImageError = (productId: number) => {
-    setImageErrors(prev => ({ ...prev, [productId]: true }))
-  }
-
+  // Fetch kit items whenever the popup opens for a product
   useEffect(() => {
     if (!showUpsell || !lastAddedProduct?.id) return
+    setDismissed(new Set())
+    setAdded(new Set())
+    setKitItems([])
 
     const ctrl = new AbortController()
-    const loadKit = async () => {
-      try {
-        setKitLoading(true)
-        const res = await fetch(`/api/product-kits?baseProductId=${lastAddedProduct.id}`, {
-          cache: 'no-store',
-          signal: ctrl.signal,
-        })
-        const data = await res.json()
-        if (!res.ok) {
-          setKit(null)
-          return
-        }
-        setKit(data?.kit ?? null)
-      } catch {
-        setKit(null)
-      } finally {
-        setKitLoading(false)
-      }
-    }
+    setLoading(true)
+    fetch(`/api/product-kits?baseProductId=${lastAddedProduct.id}`, {
+      cache: 'no-store',
+      signal: ctrl.signal,
+    })
+      .then(r => r.json())
+      .then(data => {
+        const items: KitItem[] = data?.kit?.items ?? []
+        setKitItems(items)
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
 
-    loadKit()
     return () => ctrl.abort()
   }, [lastAddedProduct?.id, showUpsell])
 
-  useEffect(() => {
-    if (!kit?.items?.length) {
-      setSelectedKitItems({})
-      return
-    }
-    const initial = Object.fromEntries(kit.items.map(item => [item.productId, true]))
-    setSelectedKitItems(initial)
-  }, [kit])
-
-  const displayProducts = useMemo(() => {
-    if (kit?.items?.length) {
-      return kit.items.map(item => ({
-        id: item.productId,
-        name: item.name,
-        shortDescription: item.quantity > 1 ? `${item.quantity} unidades` : '1 unidade',
-        price: item.price,
-        image: item.image || '/images/placeholder-product.svg',
-        category: item.category || 'Suplementos',
-        description: item.description || '',
-        stock: item.stock ?? 999,
-      }))
-    }
-    return upsellProducts
-  }, [kit, upsellProducts])
-
-  const hasKit = Boolean(kit?.items?.length)
-
-  const selectedKitRows = useMemo(() => {
-    if (!kit?.items?.length) return [] as KitApiItem[]
-    return kit.items.filter(item => selectedKitItems[item.productId])
-  }, [kit, selectedKitItems])
-
-  const dynamicKitPrice = useMemo(() => {
-    if (!kit) return 0
-    const selectedTotal = selectedKitRows.reduce(
-      (sum, item) => sum + Number(item.price || 0) * Math.max(1, Number(item.quantity || 1)),
-      0,
-    )
-    return Number((Number(kit.baseProductPrice || 0) + selectedTotal).toFixed(2))
-  }, [kit, selectedKitRows])
-
-  const toggleKitItem = (productId: number) => {
-    setSelectedKitItems(prev => ({ ...prev, [productId]: !prev[productId] }))
+  function dismiss(id: number) {
+    setDismissed(prev => new Set([...prev, id]))
   }
 
-  const handleAddFullKit = () => {
-    if (!kit || !lastAddedProduct) return
+  function handleAdd(item: KitItem) {
+    addItem({
+      id: item.productId,
+      name: item.name,
+      price: item.price,
+      image: item.image,
+      mainImage: item.image,
+      category: item.category === 'fitness' ? 'fitness' : 'salud',
+      rating: 4.8,
+      reviews: 0,
+      stock: item.stock,
+      benefits: [],
+      description: item.description,
+      shortDescription: item.description.replace(/<[^>]+>/g, '').slice(0, 80),
+      ingredients: '',
+      usage: '',
+      emoji: '✨',
+      gradient: 'from-emerald-400 to-green-600',
+      slug: item.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+    } as any)
+    setAdded(prev => new Set([...prev, item.productId]))
+  }
 
-    const signature = selectedKitRows
-      .map(item => `${item.productId}:${item.quantity}`)
-      .sort()
-      .join('|')
-
-    const hash = signature
-      .split('')
-      .reduce((acc, char) => ((acc * 31) + char.charCodeAt(0)) | 0, 7)
-
-    const kitProduct = {
-      ...lastAddedProduct,
-      id: Math.abs((lastAddedProduct.id * 100000) + hash),
-      name: `Kit ${lastAddedProduct.name}`,
-      shortDescription: selectedKitRows.length
-        ? selectedKitRows.map(item => `${item.quantity}x ${item.name}`).join(' + ')
-        : 'Produto sem adicionais',
-      price: dynamicKitPrice,
-      category: 'fitness',
-    }
-
-    // Remove o item base que abriu o popup e adiciona apenas o total consolidado do kit.
-    removeItem(lastAddedProduct.id)
-    addItem(kitProduct as any)
+  function handleClose() {
     setShowUpsell(false)
     setIsCartOpen(true)
   }
 
-  if (!lastAddedProduct) return null
+  if (!showUpsell || !lastAddedProduct) return null
+
+  const visible = kitItems.filter(i => !dismissed.has(i.productId))
 
   return (
-    <Dialog open={showUpsell} onOpenChange={setShowUpsell}>
-      <DialogContent className="max-w-lg bg-card">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-foreground">
-            <Check className="h-5 w-5 text-primary" />
-            ¡Añadido al carrito!
-          </DialogTitle>
-        </DialogHeader>
+    /* Overlay */
+    <div className="fixed inset-0 z-[300] flex items-end justify-center sm:items-center">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={() => setShowUpsell(false)}
+      />
 
-        {/* Added Product */}
-        <div className="flex items-center gap-4 rounded-lg bg-primary/5 p-4">
-          <div className="relative h-16 w-16 overflow-hidden rounded-lg bg-muted">
-            {!imageErrors[lastAddedProduct.id] ? (
-              <Image
-                src={lastAddedProduct.image}
-                alt={lastAddedProduct.name}
-                fill
-                className="object-cover"
-                onError={() => handleImageError(lastAddedProduct.id)}
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
-                <span className="text-lg font-bold text-primary">
-                  {lastAddedProduct.name.charAt(0)}
-                </span>
-              </div>
-            )}
-          </div>
-          <div>
-            <p className="font-semibold text-foreground">{lastAddedProduct.name}</p>
-            <p className="text-sm text-muted-foreground">{lastAddedProduct.price.toFixed(2)}€</p>
-          </div>
-        </div>
+      {/* Panel */}
+      <div className="relative z-10 w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-[#0f1117] border border-white/10 shadow-2xl animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300 flex flex-col max-h-[88dvh] sm:max-h-[85vh]">
 
-        {/* Upsell Section */}
-        <div className="mt-4">
-          <div className="mb-4 flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
-            <h3 className="font-semibold text-foreground">
-              {hasKit ? 'Leve o kit completo' : '¡Completa tu entrenamiento!'}
-            </h3>
-          </div>
-          <p className="mb-4 text-sm text-muted-foreground">
-            {hasKit
-              ? `Preço final do kit (com produto principal): ${dynamicKitPrice.toFixed(2)}€`
-              : 'Clientes que compraron este produto também añadieron:'}
-          </p>
-          {hasKit && (
-            <div className="mb-3 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-muted-foreground">
-              Remova itens com o botão X e o total do kit será recalculado automaticamente.
-              <div className="mt-1 font-medium text-foreground">
-                Itens selecionados: {selectedKitRows.length} de {kit?.items.length ?? 0}
-              </div>
+        {/* Close */}
+        <button
+          onClick={() => setShowUpsell(false)}
+          className="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/50 hover:bg-white/20 hover:text-white transition-all cursor-pointer"
+          aria-label="Cerrar"
+        >
+          <X size={14} />
+        </button>
+
+        {/* Scrollable content */}
+        <div className="flex-1 min-h-0 overflow-y-auto px-5 pt-5 pb-3 sm:px-6 sm:pt-6"
+          style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+
+          {/* Added confirmation */}
+          <div className="flex items-center gap-3 mb-5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500">
+              <Check size={16} className="text-white" />
             </div>
-          )}
-
-          <div className="space-y-3">
-            {kitLoading && (
-              <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-                Carregando sugestões do kit...
-              </div>
-            )}
-            {displayProducts.map((product) => (
-              <div
-                key={product.id}
-                className={`flex items-center gap-4 rounded-lg border p-3 transition-colors ${hasKit && !selectedKitItems[product.id] ? 'border-dashed border-border/60 bg-muted/20 opacity-60' : 'border-border hover:bg-muted/50'}`}
-              >
-                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-muted">
-                  {!imageErrors[product.id] ? (
-                    <Image
-                      src={product.image}
-                      alt={product.name}
-                      fill
-                      className="object-cover"
-                      onError={() => handleImageError(product.id)}
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
-                      <span className="text-sm font-bold text-primary">
-                        {product.name.charAt(0)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium text-foreground">{product.name}</p>
-                  <p className="text-sm text-muted-foreground">{product.shortDescription}</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-bold text-foreground">{product.price.toFixed(2)}€</p>
-                  {hasKit ? (
-                    <Button
-                      size="sm"
-                      variant={selectedKitItems[product.id] ? 'destructive' : 'outline'}
-                      onClick={() => toggleKitItem(product.id)}
-                      className="mt-1"
-                    >
-                      {selectedKitItems[product.id] ? 'X remover' : 'Incluir'}
-                    </Button>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleAddUpsell(product as any)}
-                      className="mt-1"
-                    >
-                      Añadir
-                    </Button>
-                  )}
-                </div>
-              </div>
-            ))}
+            <span className="font-semibold text-white text-sm">¡Añadido al carrito!</span>
           </div>
 
-          {hasKit && (
-            <Button onClick={handleAddFullKit} className="mt-4 w-full">
-              Añadir kit completo - {dynamicKitPrice.toFixed(2)}€
-            </Button>
+          {/* Product added */}
+          <div className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/4 p-3 mb-5">
+            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-[#090b10]">
+              {lastAddedProduct.image && !imgErrors.has(-1) ? (
+                <Image
+                  src={lastAddedProduct.image}
+                  alt={lastAddedProduct.name}
+                  fill
+                  className="object-contain p-1"
+                  onError={() => setImgErrors(s => new Set([...s, -1]))}
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-xl">
+                  {lastAddedProduct.emoji ?? '✨'}
+                </div>
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-white leading-tight line-clamp-2">{lastAddedProduct.name}</p>
+              <p className="text-sm font-bold text-emerald-400 mt-0.5">{lastAddedProduct.price.toFixed(2)}€</p>
+            </div>
+          </div>
+
+          {/* Kit suggestions */}
+          {(loading || visible.length > 0) && (
+            <>
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles size={14} className="text-emerald-400 shrink-0" />
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-400">
+                  Completa tu pedido
+                </p>
+              </div>
+              <p className="text-xs text-white/40 mb-3">
+                Clientes que compraron esto también añadieron:
+              </p>
+
+              {loading && (
+                <div className="flex items-center gap-2 rounded-xl border border-white/8 bg-white/4 px-4 py-3 text-xs text-white/40">
+                  <span className="h-3 w-3 rounded-full border border-white/30 border-t-white/70 animate-spin" />
+                  Buscando sugerencias…
+                </div>
+              )}
+
+              <div className="space-y-2">
+                {visible.map(item => (
+                  <div
+                    key={item.productId}
+                    className="relative flex items-center gap-3 rounded-2xl border border-white/8 bg-white/4 p-3 transition-colors hover:bg-white/6"
+                  >
+                    {/* X dismiss */}
+                    <button
+                      onClick={() => dismiss(item.productId)}
+                      className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-white/40 hover:bg-white/20 hover:text-white transition-all cursor-pointer"
+                      aria-label="Dispensar sugerencia"
+                    >
+                      <X size={11} />
+                    </button>
+
+                    {/* Image */}
+                    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-[#090b10]">
+                      {item.image && !imgErrors.has(item.productId) ? (
+                        <Image
+                          src={item.image}
+                          alt={item.name}
+                          fill
+                          className="object-contain p-1"
+                          onError={() => setImgErrors(s => new Set([...s, item.productId]))}
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-lg">✨</div>
+                      )}
+                    </div>
+
+                    {/* Info */}
+                    <div className="min-w-0 flex-1 pr-5">
+                      <p className="text-sm font-semibold text-white leading-tight line-clamp-1">{item.name}</p>
+                      <p className="text-xs text-white/45 mt-0.5 line-clamp-1">
+                        {item.description.replace(/<[^>]+>/g, '').slice(0, 60) || 'Suplemento premium'}
+                      </p>
+                    </div>
+
+                    {/* Price + button */}
+                    <div className="shrink-0 flex flex-col items-end gap-1.5">
+                      <span className="text-sm font-bold text-white">{item.price.toFixed(2)}€</span>
+                      <button
+                        onClick={() => handleAdd(item)}
+                        disabled={added.has(item.productId)}
+                        className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
+                          added.has(item.productId)
+                            ? 'bg-emerald-500/20 text-emerald-400'
+                            : 'bg-emerald-600 text-white hover:bg-emerald-500'
+                        }`}
+                      >
+                        {added.has(item.productId)
+                          ? <><Check size={11} /> Añadido</>
+                          : <><ShoppingCart size={11} /> Añadir</>}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
 
-        {/* Actions */}
-        <div className="mt-6 flex gap-3">
-          <Button variant="outline" onClick={handleClose} className="flex-1">
+        {/* Footer buttons */}
+        <div className="shrink-0 border-t border-white/10 px-5 py-4 sm:px-6 flex gap-3">
+          <button
+            onClick={handleClose}
+            className="flex-1 rounded-2xl border border-white/15 bg-white/5 py-3 text-sm font-semibold text-white/80 hover:bg-white/10 transition-colors cursor-pointer"
+          >
             Ver carrito
-          </Button>
-          <Button onClick={() => setShowUpsell(false)} className="flex-1">
+          </button>
+          <button
+            onClick={() => setShowUpsell(false)}
+            className="flex-1 rounded-2xl bg-gradient-to-r from-emerald-600 to-green-500 py-3 text-sm font-bold text-white hover:from-emerald-500 hover:to-green-400 transition-all cursor-pointer"
+          >
             Seguir comprando
-          </Button>
+          </button>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   )
 }
