@@ -613,7 +613,7 @@ function CheckoutFormInner() {
           <Field label="Número de tarjeta" error={errors.card}>
             <StripeBox focused={numFocus} error={!!errors.card}>
               <CardNumberElement
-                options={stripeStyle}
+                options={{ ...stripeStyle, disableLink: true } as any}
                 onChange={ev => {
                   setNumReady(ev.complete);
                   if (ev.brand) setCardBrand(ev.brand);
