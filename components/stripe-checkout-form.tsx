@@ -302,6 +302,41 @@ function OrderSummary({ items, totalPrice, shipping, total }: {
   );
 }
 
+// ─── Stripe error → Spanish ───────────────────────────────────────────────────
+
+const STRIPE_ES: Record<string, string> = {
+  card_declined:                    'Tu tarjeta fue rechazada.',
+  insufficient_funds:               'Fondos insuficientes en la tarjeta.',
+  lost_card:                        'Esta tarjeta ha sido reportada como perdida.',
+  stolen_card:                      'Esta tarjeta ha sido reportada como robada.',
+  expired_card:                     'La tarjeta ha caducado.',
+  incorrect_cvc:                    'El código de seguridad (CVV) es incorrecto.',
+  incorrect_number:                 'El número de tarjeta es incorrecto.',
+  invalid_number:                   'El número de tarjeta no es válido.',
+  invalid_expiry_month:             'El mes de vencimiento no es válido.',
+  invalid_expiry_year:              'El año de vencimiento no es válido.',
+  invalid_cvc:                      'El código de seguridad (CVV) no es válido.',
+  authentication_required:          'Tu banco requiere autenticación adicional. Inténtalo de nuevo.',
+  do_not_honor:                     'Tu banco rechazó el pago. Contacta con tu banco.',
+  generic_decline:                  'Pago rechazado. Contacta con tu banco.',
+  call_issuer:                      'Contacta con tu banco para autorizar este pago.',
+  restricted_card:                  'Tarjeta restringida para pagos internacionales.',
+  blocked:                          'Pago bloqueado por tu banco.',
+  withdrawal_count_limit_exceeded:  'Has superado el límite de transacciones de tu tarjeta.',
+  try_again_later:                  'Error temporal. Inténtalo de nuevo en unos minutos.',
+  processing_error:                 'Error al procesar el pago. Inténtalo de nuevo.',
+  payment_intent_authentication_failure: 'Autenticación fallida. Inténtalo de nuevo.',
+};
+
+function stripeErrorES(err: { code?: string; decline_code?: string; message?: string }): string {
+  return (
+    (err.decline_code && STRIPE_ES[err.decline_code]) ||
+    (err.code         && STRIPE_ES[err.code])         ||
+    err.message                                        ||
+    'Error al procesar el pago. Inténtalo de nuevo.'
+  );
+}
+
 // ─── Payment Step (inside nested Elements with clientSecret) ──────────────────
 
 interface PaymentStepProps {
@@ -334,7 +369,7 @@ function PaymentStepInner({
     try {
       const { error: submitError } = await elements.submit();
       if (submitError) {
-        setApiError(submitError.message ?? 'Error de validación.');
+        setApiError(stripeErrorES(submitError));
         return;
       }
 
@@ -360,7 +395,7 @@ function PaymentStepInner({
       });
 
       if (result.error) {
-        setApiError(result.error.message ?? 'Error al procesar el pago.');
+        setApiError(stripeErrorES(result.error));
         return;
       }
 
@@ -378,7 +413,7 @@ function PaymentStepInner({
       setApiError(`Estado de pago inesperado: ${result.paymentIntent?.status ?? 'desconocido'}`);
     } catch (err: any) {
       console.error('[checkout] confirmPayment error:', err);
-      setApiError(err?.message ?? 'Error al procesar el pago. Inténtalo de nuevo.');
+      setApiError(stripeErrorES(err));
     } finally {
       setLoading(false);
     }
@@ -662,7 +697,7 @@ function CheckoutFormInner() {
   const step2 = clientSecret ? (
     <Elements
       stripe={stripePromise}
-      options={{ clientSecret, appearance: stripeAppearance }}
+      options={{ clientSecret, appearance: stripeAppearance, locale: 'es' }}
     >
       <PaymentStepInner
         total={total}
@@ -725,7 +760,7 @@ export default function CheckoutForm() {
     );
   }
   return (
-    <Elements stripe={stripePromise}>
+    <Elements stripe={stripePromise} options={{ locale: 'es' }}>
       <CheckoutFormInner />
     </Elements>
   );
