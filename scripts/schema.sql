@@ -26,6 +26,8 @@ ALTER TABLE products ADD COLUMN IF NOT EXISTS additional_images JSONB NOT NULL D
 ALTER TABLE products ADD COLUMN IF NOT EXISTS video       TEXT;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS position    INTEGER;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS stock       INTEGER DEFAULT 0;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS sku         TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS supplier_id INTEGER;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS created_at  TIMESTAMP DEFAULT NOW();
 
 -- Preenche posição para produtos antigos
@@ -98,7 +100,9 @@ CREATE TABLE IF NOT EXISTS store_settings (
   updated_at  TIMESTAMP DEFAULT NOW()
 );
 
-ALTER TABLE store_settings ADD COLUMN IF NOT EXISTS whatsapp TEXT;
+ALTER TABLE store_settings ADD COLUMN IF NOT EXISTS whatsapp                  TEXT;
+ALTER TABLE store_settings ADD COLUMN IF NOT EXISTS whatsapp_order_template    TEXT;
+ALTER TABLE store_settings ADD COLUMN IF NOT EXISTS whatsapp_tracking_template TEXT;
 
 INSERT INTO store_settings (id, store_name, theme_color)
 VALUES (1, 'VitaFit Store', '#10b981')

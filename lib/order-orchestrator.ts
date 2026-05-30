@@ -47,10 +47,9 @@ export async function processOrder(orderId: number): Promise<OrchestratorResult>
       o.country,
       p.name   AS product_name,
       p.sku    AS product_sku,
-      oi.quantity
+      1        AS quantity
     FROM orders o
-    LEFT JOIN order_items oi ON oi.order_id = o.id
-    LEFT JOIN products p ON p.id = oi.product_id
+    LEFT JOIN products p ON p.id = o.product_id
     WHERE o.id = ${orderId}
     LIMIT 1
   `
