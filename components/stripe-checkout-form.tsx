@@ -8,26 +8,66 @@ import {
 import { useCart } from '@/lib/cart-context';
 import Link from 'next/link';
 import Image from 'next/image';
-import {
-  CardNumberElement, CardExpiryElement, CardCvcElement,
-  Elements, useElements, useStripe,
-} from '@stripe/react-stripe-js';
+import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '');
 
-// ─── Stripe element shared style ─────────────────────────────────────────────
+// ─── Stripe appearance (dark theme) ──────────────────────────────────────────
 
-const stripeStyle = {
-  style: {
-    base: {
+const stripeAppearance = {
+  theme: 'night' as const,
+  variables: {
+    colorPrimary:     '#10b981',
+    colorBackground:  '#111827',
+    colorText:        '#ffffff',
+    colorTextSecondary: '#9ca3af',
+    colorDanger:      '#f87171',
+    borderRadius:     '12px',
+    fontFamily:       'system-ui, -apple-system, sans-serif',
+    fontSizeBase:     '14px',
+    spacingUnit:      '4px',
+  },
+  rules: {
+    '.Input': {
+      backgroundColor: 'rgba(255,255,255,0.05)',
+      border: '1px solid rgba(16,185,129,0.2)',
       color: '#ffffff',
-      fontSize: '14px',
-      fontFamily: 'system-ui, -apple-system, sans-serif',
-      fontSmoothing: 'antialiased',
-      '::placeholder': { color: '#4b5563' },
+      padding: '12px 16px',
     },
-    invalid: { color: '#f87171' },
+    '.Input:focus': {
+      border: '1px solid #10b981',
+      boxShadow: '0 0 0 1px rgba(16,185,129,0.3)',
+    },
+    '.Input--invalid': {
+      border: '1px solid #f87171',
+    },
+    '.Label': {
+      color: '#10b981',
+      fontSize: '10px',
+      fontWeight: '600',
+      textTransform: 'uppercase',
+      letterSpacing: '0.1em',
+    },
+    '.Tab': {
+      backgroundColor: 'rgba(255,255,255,0.04)',
+      border: '1px solid rgba(16,185,129,0.15)',
+      color: '#9ca3af',
+    },
+    '.Tab:hover': {
+      color: '#ffffff',
+    },
+    '.Tab--selected': {
+      backgroundColor: 'rgba(16,185,129,0.12)',
+      border: '1px solid #10b981',
+      color: '#10b981',
+    },
+    '.TabIcon--selected': { fill: '#10b981' },
+    '.TabLabel--selected': { color: '#10b981' },
+    '.Block': {
+      backgroundColor: 'rgba(255,255,255,0.03)',
+      border: '1px solid rgba(16,185,129,0.12)',
+    },
   },
 };
 
@@ -57,102 +97,6 @@ function MastercardLogo({ w = 40, h = 25 }: { w?: number; h?: number }) {
   );
 }
 
-function BrandOnCard({ brand }: { brand: string }) {
-  if (brand === 'visa')       return <VisaLogo w={44} h={28} />;
-  if (brand === 'mastercard') return <MastercardLogo w={44} h={28} />;
-  if (brand === 'amex')       return <div className="px-2 py-0.5 rounded text-xs font-black text-white" style={{ background: '#0077CC' }}>AMEX</div>;
-  if (brand === 'discover')   return <div className="px-2 py-0.5 rounded text-xs font-black text-white" style={{ background: '#FF6000' }}>DISC</div>;
-  return (
-    <svg width="36" height="24" viewBox="0 0 36 24" fill="none" opacity="0.3">
-      <rect x="1" y="1" width="34" height="22" rx="3" stroke="white" strokeWidth="1.5"/>
-      <rect x="1" y="8" width="34" height="5" fill="white" opacity="0.4"/>
-    </svg>
-  );
-}
-
-// ─── Credit Card Visual ───────────────────────────────────────────────────────
-
-function CreditCardVisual({ name, flipped, brand }: { name: string; flipped: boolean; brand: string }) {
-  const displayName = name.trim().toUpperCase() || 'TU NOMBRE AQUÍ';
-
-  return (
-    <div className="mx-auto select-none w-full" style={{ maxWidth: 300, height: 182, perspective: '1200px' }}>
-      <div
-        className="relative w-full h-full transition-all duration-700"
-        style={{
-          transformStyle: 'preserve-3d',
-          WebkitTransformStyle: 'preserve-3d',
-          transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
-        }}
-      >
-        {/* FRONT */}
-        <div
-          className="absolute inset-0 rounded-2xl p-4 flex flex-col justify-between shadow-2xl overflow-hidden"
-          style={{
-            backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden',
-            background: 'linear-gradient(135deg, #059669 0%, #047857 40%, #0f2027 100%)',
-          }}
-        >
-          <div className="absolute inset-0 opacity-20"
-            style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 55%)' }} />
-
-          <div className="relative flex justify-between items-start z-10">
-            {/* Chip */}
-            <div className="w-9 h-6 rounded-md" style={{ background: 'linear-gradient(135deg, #fbbf24, #d97706)' }}>
-              <div className="w-full h-full flex"><div className="flex-1 border-r border-yellow-700/30" /></div>
-            </div>
-            <BrandOnCard brand={brand} />
-          </div>
-
-          {/* Number — always masked (Stripe PCI requirement) */}
-          <div className="relative z-10 text-white font-mono text-sm sm:text-base tracking-[0.22em] text-center drop-shadow">
-            •••• •••• •••• ••••
-          </div>
-
-          <div className="relative z-10 flex justify-between items-end">
-            <div>
-              <p className="text-white/50 text-[9px] uppercase tracking-widest mb-0.5">Titular</p>
-              <p className="text-white font-semibold text-xs tracking-wide truncate max-w-[170px]">{displayName}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-white/50 text-[9px] uppercase tracking-widest mb-0.5">Válido hasta</p>
-              <p className="text-white font-semibold text-xs">MM/AA</p>
-            </div>
-          </div>
-        </div>
-
-        {/* BACK */}
-        <div
-          className="absolute inset-0 rounded-2xl overflow-hidden shadow-2xl"
-          style={{
-            backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden',
-            transform: 'rotateY(180deg)',
-            background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-          }}
-        >
-          <div className="w-full h-9 mt-6" style={{ background: '#0a0a0a' }} />
-          <div className="px-4 mt-3">
-            <p className="text-white/40 text-[9px] uppercase tracking-widest mb-1">CVV / CVC</p>
-            <div className="rounded-lg h-8 flex items-center justify-end px-3"
-              style={{ background: 'rgba(255,255,255,0.08)' }}>
-              <span className="text-white/70 tracking-widest text-sm font-mono">•••</span>
-            </div>
-          </div>
-          <div className="absolute bottom-3 left-0 right-0 flex justify-between px-4 items-center">
-            <p className="text-white/20 text-[9px]">VitaFit Store</p>
-            <div className="flex gap-0.5">
-              <div className="w-5 h-5 rounded-full bg-red-500/70" />
-              <div className="w-5 h-5 rounded-full bg-amber-400/70 -ml-2" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ─── Success Screen ───────────────────────────────────────────────────────────
 
 function SuccessScreen({ name }: { name: string }) {
@@ -170,26 +114,34 @@ function SuccessScreen({ name }: { name: string }) {
         .anim-text    { animation: fadeInUp       0.6s ease                        2s   both; }
         .anim-dots    { animation: trailDots      3s  ease-out                     1.2s both; }
       `}</style>
-      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center px-6 text-center" style={{ background: '#0a0f0a' }}>
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center px-6 text-center"
+        style={{ background: '#0a0f0a' }}>
         <div className="relative flex flex-col items-center mb-8">
           <div className="anim-dots absolute right-[-40px] top-[60px] flex gap-1.5">
-            {[0,1,2].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-emerald-500" style={{ animationDelay:`${1.3+i*0.1}s` }} />)}
+            {[0,1,2].map(i => (
+              <div key={i} className="w-1.5 h-1.5 rounded-full bg-emerald-500"
+                style={{ animationDelay:`${1.3+i*0.1}s` }} />
+            ))}
           </div>
           <div className="anim-box flex flex-col items-center">
             <div className="anim-product text-3xl mb-0.5">📦</div>
-            <div className="relative w-24 h-20 rounded-xl flex items-end justify-center pb-2" style={{ background:'linear-gradient(135deg,#059669,#047857)' }}>
-              <div className="absolute -top-3 left-0 right-0 h-5 rounded-t-xl flex items-center justify-center" style={{ background:'linear-gradient(135deg,#10b981,#059669)' }}>
+            <div className="relative w-24 h-20 rounded-xl flex items-end justify-center pb-2"
+              style={{ background:'linear-gradient(135deg,#059669,#047857)' }}>
+              <div className="absolute -top-3 left-0 right-0 h-5 rounded-t-xl flex items-center justify-center"
+                style={{ background:'linear-gradient(135deg,#10b981,#059669)' }}>
                 <div className="w-8 h-0.5 rounded-full bg-white/30" />
               </div>
               <span className="text-xs font-bold text-white/80 tracking-wider">VITAFIT</span>
-              <div className="absolute top-0.5 left-1/2 -translate-x-1/2 w-10 h-1.5 rounded-full opacity-50" style={{ background:'#fbbf24' }} />
+              <div className="absolute top-0.5 left-1/2 -translate-x-1/2 w-10 h-1.5 rounded-full opacity-50"
+                style={{ background:'#fbbf24' }} />
             </div>
             <div className="flex gap-12 -mt-1">
               <div className="w-4 h-4 rounded-full border-2 border-emerald-500" style={{ background:'#0a0f0a' }} />
               <div className="w-4 h-4 rounded-full border-2 border-emerald-500" style={{ background:'#0a0f0a' }} />
             </div>
           </div>
-          <div className="anim-check absolute -bottom-3 -right-3 w-10 h-10 rounded-full flex items-center justify-center" style={{ background:'#10b981', boxShadow:'0 0 20px rgba(16,185,129,0.5)' }}>
+          <div className="anim-check absolute -bottom-3 -right-3 w-10 h-10 rounded-full flex items-center justify-center"
+            style={{ background:'#10b981', boxShadow:'0 0 20px rgba(16,185,129,0.5)' }}>
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <path d="M3 9l4 4 8-8" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
@@ -197,9 +149,12 @@ function SuccessScreen({ name }: { name: string }) {
         </div>
         <div className="anim-text space-y-2">
           <h2 className="text-2xl sm:text-3xl font-black text-white">¡Pedido confirmado!</h2>
-          <p className="text-emerald-400 font-semibold">¡Gracias por tu compra{name ? `, ${name.split(' ')[0]}` : ''}!</p>
+          <p className="text-emerald-400 font-semibold">
+            ¡Gracias por tu compra{name ? `, ${name.split(' ')[0]}` : ''}!
+          </p>
           <p className="text-gray-500 text-sm max-w-xs mx-auto leading-relaxed">
-            Tu pedido está siendo preparado y saldrá en camino muy pronto. Recibirás un email de confirmación en breve.
+            Tu pedido está siendo preparado y saldrá en camino muy pronto.
+            Recibirás un email de confirmación en breve.
           </p>
           <div className="flex items-center justify-center gap-2 pt-4">
             {['Confirmado','Preparando','En camino'].map((s,i) => (
@@ -268,19 +223,19 @@ const inputCls = [
   'focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30',
 ].join(' ');
 
-// Wrapper that makes Stripe iframes look identical to our native inputs
-const stripeWrapBase = 'w-full rounded-xl px-4 py-[13px] bg-white/[0.05] border border-emerald-500/20 transition-all';
-const stripeWrapFocus = 'outline-none';
-
 // ─── Order Summary ────────────────────────────────────────────────────────────
 
-function OrderSummary({ items, totalPrice, shipping, total }: { items:any[]; totalPrice:number; shipping:number; total:number }) {
+function OrderSummary({ items, totalPrice, shipping, total }: {
+  items:any[]; totalPrice:number; shipping:number; total:number;
+}) {
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl p-5 space-y-4" style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(16,185,129,0.12)' }}>
+      <div className="rounded-2xl p-5 space-y-4"
+        style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(16,185,129,0.12)' }}>
         <div className="flex items-center justify-between">
           <p className="text-[10px] font-semibold tracking-widest text-emerald-400 uppercase">Resumen del Pedido</p>
-          <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold text-emerald-400" style={{ background:'rgba(16,185,129,0.12)' }}>
+          <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold text-emerald-400"
+            style={{ background:'rgba(16,185,129,0.12)' }}>
             {items.reduce((s:number,i:any)=>s+i.quantity,0)} item(s)
           </span>
         </div>
@@ -295,15 +250,22 @@ function OrderSummary({ items, totalPrice, shipping, total }: { items:any[]; tot
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-white text-xs font-medium truncate">{item.product.name}</p>
-                {item.product.shortDescription && <p className="text-[10px] text-gray-500 line-clamp-2">{item.product.shortDescription}</p>}
+                {item.product.shortDescription && (
+                  <p className="text-[10px] text-gray-500 line-clamp-2">{item.product.shortDescription}</p>
+                )}
                 <p className="text-gray-500 text-xs">× {item.quantity}</p>
               </div>
-              <p className="text-emerald-400 font-semibold text-xs shrink-0">€{(item.product.price*item.quantity).toFixed(2)}</p>
+              <p className="text-emerald-400 font-semibold text-xs shrink-0">
+                €{(item.product.price*item.quantity).toFixed(2)}
+              </p>
             </div>
           ))}
         </div>
         <div className="border-t pt-3 space-y-2" style={{ borderColor:'rgba(16,185,129,0.1)' }}>
-          <div className="flex justify-between text-xs"><span className="text-gray-500">Subtotal</span><span className="text-white">€{totalPrice.toFixed(2)}</span></div>
+          <div className="flex justify-between text-xs">
+            <span className="text-gray-500">Subtotal</span>
+            <span className="text-white">€{totalPrice.toFixed(2)}</span>
+          </div>
           <div className="flex justify-between text-xs">
             <span className="text-gray-500">Envío</span>
             {shipping===0
@@ -318,16 +280,21 @@ function OrderSummary({ items, totalPrice, shipping, total }: { items:any[]; tot
           </div>
         </div>
       </div>
-      <div className="rounded-2xl p-4 grid grid-cols-2 gap-2" style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(16,185,129,0.08)' }}>
+      <div className="rounded-2xl p-4 grid grid-cols-2 gap-2"
+        style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(16,185,129,0.08)' }}>
         {[
           { icon:<Truck size={14} className="text-emerald-500"/>, label:'Envío', sub:'Calculado al finalizar' },
           { icon:<RotateCcw size={14} className="text-emerald-500"/>, label:'Devolución', sub:'30 días' },
           { icon:<Lock size={14} className="text-emerald-500"/>, label:'SSL 256-bit', sub:'Seguro' },
           { icon:<Package size={14} className="text-emerald-500"/>, label:'Entrega', sub:'2–3 días' },
         ].map(b => (
-          <div key={b.label} className="flex items-center gap-2 p-2 rounded-xl" style={{ background:'rgba(16,185,129,0.04)' }}>
+          <div key={b.label} className="flex items-center gap-2 p-2 rounded-xl"
+            style={{ background:'rgba(16,185,129,0.04)' }}>
             {b.icon}
-            <div><p className="text-white text-[10px] font-semibold">{b.label}</p><p className="text-gray-600 text-[9px]">{b.sub}</p></div>
+            <div>
+              <p className="text-white text-[10px] font-semibold">{b.label}</p>
+              <p className="text-gray-600 text-[9px]">{b.sub}</p>
+            </div>
           </div>
         ))}
       </div>
@@ -335,332 +302,111 @@ function OrderSummary({ items, totalPrice, shipping, total }: { items:any[]; tot
   );
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ─── Payment Step (inside nested Elements with clientSecret) ──────────────────
 
-function CheckoutFormInner() {
-  const { items, totalPrice, clearCart } = useCart();
+interface PaymentStepProps {
+  total: number;
+  name: string; email: string; phone: string;
+  street: string; streetN: string; postal: string; city: string; country: string;
+  checkoutItems: Array<{ productId: number; quantity: number }>;
+  clearCart: () => void;
+  setSuccess: (v: boolean) => void;
+  onBack: () => void;
+  quoteError: string;
+}
+
+function PaymentStepInner({
+  total, name, email, phone, street, streetN, postal, city, country,
+  checkoutItems, clearCart, setSuccess, onBack, quoteError,
+}: PaymentStepProps) {
   const stripe   = useStripe();
   const elements = useElements();
 
-  const [step, setStep] = useState<1|2>(1);
-
-  // Card visual state
-  const [cardFlipped, setCardFlipped] = useState(false);
-  const [cardBrand,   setCardBrand]   = useState('unknown');
-
-  // Stripe element completion flags
-  const [numReady, setNumReady] = useState(false);
-  const [expReady, setExpReady] = useState(false);
-  const [cvcReady, setCvcReady] = useState(false);
-
-  // Focus states for border highlight
-  const [numFocus, setNumFocus] = useState(false);
-  const [expFocus, setExpFocus] = useState(false);
-  const [cvcFocus, setCvcFocus] = useState(false);
-
-  // Personal
-  const [name,  setName]  = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-
-  // Address
-  const [street,  setStreet]  = useState('');
-  const [streetN, setStreetN] = useState('');
-  const [postal,  setPostal]  = useState('');
-  const [city,    setCity]    = useState('');
-  const [country, setCountry] = useState('PT');
-
-  const [quoteLoading, setQuoteLoading] = useState(false);
-  const [quoteError,   setQuoteError]   = useState('');
-  const [quote, setQuote] = useState<{ subtotal:number; shipping:number; total:number }|null>(null);
-
-  const checkoutItems = items.map(item => ({ productId:item.product.id, quantity:item.quantity }));
-
-  useEffect(() => {
-    if (checkoutItems.length === 0) { setQuote(null); setQuoteError(''); return; }
-    const ctrl  = new AbortController();
-    const timer = setTimeout(async () => {
-      setQuoteLoading(true);
-      try {
-        const res  = await fetch('/api/checkout/quote', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items: checkoutItems, country, postalCode: postal }),
-          signal: ctrl.signal,
-        });
-        const data = await res.json();
-        if (!res.ok) { setQuote(null); setQuoteError(data?.error ?? 'No se pudo calcular el checkout.'); return; }
-        setQuoteError('');
-        setQuote({ subtotal:Number(data.subtotal??0), shipping:Number(data.shipping??0), total:Number(data.total??0) });
-      } catch (err:any) {
-        if (err?.name === 'AbortError') return;
-        setQuote(null); setQuoteError('No se pudo calcular el checkout.');
-      } finally { setQuoteLoading(false); }
-    }, 150);
-    return () => { ctrl.abort(); clearTimeout(timer); };
-  }, [country, postal, items]);
-
-  const shipping = quote?.shipping ?? 0;
-  const total    = quote?.total    ?? totalPrice;
-  const subtotal = quote?.subtotal ?? totalPrice;
-
-  const [errors,   setErrors]   = useState<Record<string,string>>({});
   const [loading,  setLoading]  = useState(false);
-  const [success,  setSuccess]  = useState(false);
   const [apiError, setApiError] = useState('');
 
-  function validateStep1() {
-    const e: Record<string,string> = {};
-    if (!name.trim())   e.name   = 'Nombre obligatorio';
-    if (!email.trim())  e.email  = 'Email obligatorio';
-    if (!street.trim()) e.street = 'Dirección obligatoria';
-    if (!postal.trim()) e.postal = 'Código postal obligatorio';
-    if (!city.trim())   e.city   = 'Ciudad obligatoria';
-    setErrors(e); return Object.keys(e).length === 0;
-  }
-
-  function validateStep2() {
-    const e: Record<string,string> = {};
-    if (!numReady || !expReady || !cvcReady) e.card = 'Completa los datos de la tarjeta.';
-    setErrors(e); return Object.keys(e).length === 0;
-  }
-
-  function goToStep2() {
-    if (validateStep1()) { setStep(2); window.scrollTo({ top:0, behavior:'smooth' }); }
-  }
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!validateStep2()) return;
-    if (!quote || quote.total <= 0) { setApiError('No se pudo calcular el total. Inténtalo de nuevo.'); return; }
+    if (!stripe || !elements) return;
+    setLoading(true);
+    setApiError('');
 
-    setLoading(true); setApiError('');
-    try {
-      if (!stripe || !elements) throw new Error('Stripe aún está cargando. Inténtalo de nuevo.');
-      const cardEl = elements.getElement(CardNumberElement);
-      if (!cardEl) throw new Error('Campo de tarjeta no disponible.');
+    // Validate the Payment Element before submitting
+    const { error: submitError } = await elements.submit();
+    if (submitError) {
+      setApiError(submitError.message ?? 'Error de validación.');
+      setLoading(false);
+      return;
+    }
 
-      const pmResult = await stripe.createPaymentMethod({
-        type: 'card',
-        card: cardEl,
-        billing_details: {
-          name:  name.trim()  || undefined,
-          email: email.trim() || undefined,
-          phone: phone.trim() || undefined,
-          address: {
-            line1:       street.trim() ? `${street.trim()} ${streetN.trim()}`.trim() : undefined,
-            postal_code: postal.trim() || undefined,
-            city:        city.trim()   || undefined,
-            country:     country       || undefined,
+    // Confirm payment client-side
+    const { error, paymentIntent } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: `${window.location.origin}/checkout?confirmed=1`,
+        payment_method_data: {
+          billing_details: {
+            name:  name.trim()  || undefined,
+            email: email.trim() || undefined,
+            phone: phone.trim() || undefined,
+            address: {
+              line1:       `${street.trim()} ${streetN.trim()}`.trim() || undefined,
+              postal_code: postal.trim() || undefined,
+              city:        city.trim()   || undefined,
+              country:     country       || undefined,
+            },
           },
         },
-      });
+      },
+      redirect: 'if_required',
+    });
 
-      if (pmResult.error || !pmResult.paymentMethod?.id) {
-        throw new Error(pmResult.error?.message ?? 'No se pudieron validar los datos de la tarjeta.');
-      }
+    if (error) {
+      setApiError(error.message ?? 'Error al procesar el pago.');
+      setLoading(false);
+      return;
+    }
 
-      const res  = await fetch('/api/checkout', {
+    if (paymentIntent?.status === 'succeeded') {
+      // Save order to DB (fire and don't block UX)
+      fetch('/api/checkout/save-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items: checkoutItems,
-          customerName:    name.trim(),
-          customerEmail:   email.trim(),
-          customerPhone:   phone.trim(),
-          addressLine:     `${street.trim()} ${streetN.trim()}`.trim(),
-          postalCode:      postal.trim(),
-          city:            city.trim(),
-          country,
-          paymentMethodId: pmResult.paymentMethod.id,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok)      throw new Error(data?.error ?? 'Error al procesar el pago');
-      if (!data.success) throw new Error(data?.error ?? 'Pago no completado');
+        body: JSON.stringify({ paymentIntentId: paymentIntent.id }),
+      }).catch(() => {});
+      clearCart();
+      setSuccess(true);
+    } else {
+      setApiError(`Estado de pago inesperado: ${paymentIntent?.status ?? 'desconocido'}`);
+    }
 
-      clearCart(); setSuccess(true);
-    } catch (err:any) {
-      setApiError(err?.message ?? 'Error desconocido');
-    } finally { setLoading(false); }
+    setLoading(false);
   }
 
-  if (items.length === 0 && !success) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-6 text-center px-4" style={{ background:'#0a0f0a' }}>
-        <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ background:'rgba(16,185,129,0.1)', border:'1px solid rgba(16,185,129,0.2)' }}>
-          <Package size={36} className="text-emerald-500" />
-        </div>
-        <h2 className="text-2xl font-bold text-white">Carrito vacío</h2>
-        <p className="text-gray-500 text-sm max-w-xs">Añade productos antes de finalizar la compra.</p>
-        <Link href="/#productos" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm text-white" style={{ background:'#10b981' }}>
-          Ver Productos <ChevronRight size={16} />
-        </Link>
-      </div>
-    );
-  }
-
-  if (success) return <SuccessScreen name={name} />;
-
-  // ── Step 1 ──────────────────────────────────────────────────
-  const step1 = (
-    <div className="space-y-4">
-      <div className="rounded-2xl p-5 sm:p-6 space-y-4" style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(16,185,129,0.12)' }}>
-        <div className="flex items-center gap-2">
-          <User size={13} className="text-emerald-400" />
-          <p className="text-[10px] font-semibold tracking-widest text-emerald-400 uppercase">Información Personal</p>
-        </div>
-        <Field label="Nombre completo *" error={errors.name}>
-          <input className={inputCls} placeholder="María Silva" value={name} onChange={e => setName(e.target.value)} style={errors.name?{borderColor:'#f87171'}:{}} />
-        </Field>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Field label="Email *" error={errors.email}>
-            <input className={inputCls} type="email" placeholder="maria@ejemplo.es" value={email} onChange={e => setEmail(e.target.value)} style={errors.email?{borderColor:'#f87171'}:{}} />
-          </Field>
-          <Field label="Teléfono">
-            <input className={inputCls} type="tel" inputMode="numeric" placeholder="+34 612 345 678" value={phone} onChange={e => setPhone(e.target.value)} />
-          </Field>
-        </div>
-      </div>
-
-      <div className="rounded-2xl p-5 sm:p-6 space-y-4" style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(16,185,129,0.12)' }}>
-        <div className="flex items-center gap-2">
-          <MapPin size={13} className="text-emerald-400" />
-          <p className="text-[10px] font-semibold tracking-widest text-emerald-400 uppercase">Dirección de Entrega</p>
-        </div>
-        <div className="grid grid-cols-3 gap-3">
-          <div className="col-span-2">
-            <Field label="Calle / Dirección *" error={errors.street}>
-              <input className={inputCls} placeholder="Calle Mayor" value={street} onChange={e => setStreet(e.target.value)} style={errors.street?{borderColor:'#f87171'}:{}} />
-            </Field>
-          </div>
-          <Field label="Número">
-            <input className={inputCls} placeholder="13" value={streetN} inputMode="numeric" onChange={e => setStreetN(e.target.value)} />
-          </Field>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Código Postal *" error={errors.postal}>
-            <input className={inputCls} placeholder="28001" value={postal} inputMode="numeric" onChange={e => setPostal(e.target.value)} style={errors.postal?{borderColor:'#f87171'}:{}} />
-          </Field>
-          <Field label="Ciudad *" error={errors.city}>
-            <input className={inputCls} placeholder="Madrid" value={city} onChange={e => setCity(e.target.value)} style={errors.city?{borderColor:'#f87171'}:{}} />
-          </Field>
-        </div>
-        <Field label="País">
-          <select className={inputCls} value={country} onChange={e => setCountry(e.target.value)} style={{ appearance:'none' }}>
-            <option value="ES">🇪🇸 España</option>
-            <option value="PT">🇵🇹 Portugal</option>
-            <option value="BR">🇧🇷 Brasil</option>
-            <option value="FR">🇫🇷 Francia</option>
-            <option value="DE">🇩🇪 Alemania</option>
-          </select>
-        </Field>
-      </div>
-
-      <button type="button" onClick={goToStep2}
-        className="w-full flex items-center justify-center gap-2 rounded-xl py-4 font-bold text-base text-white cursor-pointer transition-all"
-        style={{ background:'linear-gradient(135deg,#10b981,#059669)', boxShadow:'0 8px 32px rgba(16,185,129,0.25)' }}>
-        Continuar al Pago <ChevronRight size={18} />
-      </button>
-    </div>
-  );
-
-  // ── Step 2 ──────────────────────────────────────────────────
-  // Helper: stripe element container with same look as inputCls
-  function StripeBox({ focused, error, children }: { focused:boolean; error?:boolean; children:React.ReactNode }) {
-    return (
-      <div className={`${stripeWrapBase} ${stripeWrapFocus}`}
-        style={error ? { borderColor:'#f87171' } : focused ? { borderColor:'#10b981', boxShadow:'0 0 0 1px rgba(16,185,129,0.3)' } : {}}>
-        {children}
-      </div>
-    );
-  }
-
-  const step2 = (
+  return (
     <form onSubmit={handleSubmit} className="space-y-4">
-
-      {/* Card Visual */}
-      <div className="rounded-2xl p-5 sm:p-6 space-y-4" style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(16,185,129,0.12)' }}>
-        <div className="flex items-center justify-between">
-          <p className="text-[10px] font-semibold tracking-widest text-emerald-400 uppercase">Tu Tarjeta</p>
-          <button type="button" onClick={() => setCardFlipped(f => !f)}
-            className="text-xs text-gray-500 hover:text-emerald-400 transition-colors cursor-pointer flex items-center gap-1">
-            <RotateCcw size={11} /> {cardFlipped ? 'Ver frente' : 'Ver reverso (CVV)'}
-          </button>
-        </div>
-        <CreditCardVisual name={name} flipped={cardFlipped} brand={cardBrand} />
-      </div>
-
-      {/* Card Inputs */}
-      <div className="rounded-2xl p-5 sm:p-6 space-y-3" style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(16,185,129,0.12)' }}>
-        <div className="flex items-center justify-between mb-1">
-          <p className="text-[10px] font-semibold tracking-widest text-emerald-400 uppercase">Datos de la Tarjeta</p>
+      {/* Payment Element */}
+      <div className="rounded-2xl p-5 sm:p-6 space-y-4"
+        style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(16,185,129,0.12)' }}>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-[10px] font-semibold tracking-widest text-emerald-400 uppercase">Datos de Pago</p>
           <div className="flex gap-1.5"><VisaLogo /><MastercardLogo /></div>
         </div>
 
-        {/* Row 1: Nombre + Número */}
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Nombre en la tarjeta">
-            <input
-              className={inputCls}
-              placeholder="NOMBRE APELLIDO"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              autoComplete="cc-name"
-            />
-          </Field>
-
-          <Field label="Número de tarjeta" error={errors.card}>
-            <StripeBox focused={numFocus} error={!!errors.card}>
-              <CardNumberElement
-                options={{ ...stripeStyle, disableLink: true } as any}
-                onChange={ev => {
-                  setNumReady(ev.complete);
-                  if (ev.brand) setCardBrand(ev.brand);
-                  if (ev.error?.message) setApiError(ev.error.message);
-                  else if (apiError) setApiError('');
-                }}
-                onFocus={() => setNumFocus(true)}
-                onBlur={() => setNumFocus(false)}
-              />
-            </StripeBox>
-          </Field>
-        </div>
-
-        {/* Row 2: Caducidad + CVV */}
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Caducidad">
-            <StripeBox focused={expFocus}>
-              <CardExpiryElement
-                options={stripeStyle}
-                onChange={ev => {
-                  setExpReady(ev.complete);
-                  if (ev.error?.message) setApiError(ev.error.message);
-                  else if (apiError) setApiError('');
-                }}
-                onFocus={() => setExpFocus(true)}
-                onBlur={() => setExpFocus(false)}
-              />
-            </StripeBox>
-          </Field>
-
-          <Field label="CVV">
-            <StripeBox focused={cvcFocus}>
-              <CardCvcElement
-                options={stripeStyle}
-                onChange={ev => {
-                  setCvcReady(ev.complete);
-                  if (ev.error?.message) setApiError(ev.error.message);
-                  else if (apiError) setApiError('');
-                }}
-                onFocus={() => { setCvcFocus(true); setCardFlipped(true); }}
-                onBlur={() => { setCvcFocus(false); setCardFlipped(false); }}
-              />
-            </StripeBox>
-          </Field>
-        </div>
-
-        {errors.card && <p className="text-red-400 text-xs">{errors.card}</p>}
+        <PaymentElement
+          options={{
+            layout: 'tabs',
+            paymentMethodOrder: ['card'],
+            fields: {
+              billingDetails: {
+                name: 'never',
+                email: 'never',
+                phone: 'never',
+                address: 'never',
+              },
+            },
+          }}
+        />
 
         <p className="text-gray-600 text-xs flex items-center gap-1.5 pt-1">
           <Lock size={11} /> Pago procesado de forma segura · SSL 256-bit
@@ -681,12 +427,12 @@ function CheckoutFormInner() {
       )}
 
       <div className="flex gap-3">
-        <button type="button" onClick={() => setStep(1)}
+        <button type="button" onClick={onBack}
           className="flex items-center gap-1.5 px-5 py-4 rounded-xl font-semibold text-sm text-gray-400 hover:text-white transition-colors cursor-pointer"
           style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)' }}>
           <ChevronLeft size={16} /> Volver
         </button>
-        <button type="submit" disabled={loading || quoteLoading || !!quoteError || !quote}
+        <button type="submit" disabled={loading || !stripe || !elements}
           className="flex-1 flex items-center justify-center gap-2 rounded-xl py-4 font-bold text-base text-white disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
           style={{ background:'linear-gradient(135deg,#10b981,#059669)', boxShadow:'0 8px 32px rgba(16,185,129,0.25)' }}>
           {loading
@@ -696,7 +442,245 @@ function CheckoutFormInner() {
       </div>
     </form>
   );
+}
 
+// ─── Main Component ───────────────────────────────────────────────────────────
+
+function CheckoutFormInner() {
+  const { items, totalPrice, clearCart } = useCart();
+
+  const [step, setStep] = useState<1 | 2>(1);
+  const [clientSecret,   setClientSecret]   = useState<string | null>(null);
+  const [intentLoading,  setIntentLoading]  = useState(false);
+  const [intentError,    setIntentError]    = useState('');
+
+  // Personal
+  const [name,  setName]  = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+
+  // Address
+  const [street,  setStreet]  = useState('');
+  const [streetN, setStreetN] = useState('');
+  const [postal,  setPostal]  = useState('');
+  const [city,    setCity]    = useState('');
+  const [country, setCountry] = useState('ES');
+
+  const [quoteLoading, setQuoteLoading] = useState(false);
+  const [quoteError,   setQuoteError]   = useState('');
+  const [quote, setQuote] = useState<{ subtotal:number; shipping:number; total:number }|null>(null);
+
+  const [errors,  setErrors]  = useState<Record<string,string>>({});
+  const [success, setSuccess] = useState(false);
+
+  const checkoutItems = items.map(item => ({ productId:item.product.id, quantity:item.quantity }));
+
+  // Quote (for sidebar display)
+  useEffect(() => {
+    if (checkoutItems.length === 0) { setQuote(null); setQuoteError(''); return; }
+    const ctrl = new AbortController();
+    const timer = setTimeout(async () => {
+      setQuoteLoading(true);
+      try {
+        const res = await fetch('/api/checkout/quote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: checkoutItems, country, postalCode: postal }),
+          signal: ctrl.signal,
+        });
+        const data = await res.json();
+        if (!res.ok) { setQuote(null); setQuoteError(data?.error ?? 'No se pudo calcular el checkout.'); return; }
+        setQuoteError('');
+        setQuote({ subtotal:Number(data.subtotal??0), shipping:Number(data.shipping??0), total:Number(data.total??0) });
+      } catch (err:any) {
+        if (err?.name==='AbortError') return;
+        setQuote(null); setQuoteError('No se pudo calcular el checkout.');
+      } finally { setQuoteLoading(false); }
+    }, 150);
+    return () => { ctrl.abort(); clearTimeout(timer); };
+  }, [country, postal, items]);
+
+  const shipping = quote?.shipping ?? 0;
+  const total    = quote?.total    ?? totalPrice;
+  const subtotal = quote?.subtotal ?? totalPrice;
+
+  function validateStep1() {
+    const e: Record<string,string> = {};
+    if (!name.trim())   e.name   = 'Nombre obligatorio';
+    if (!email.trim())  e.email  = 'Email obligatorio';
+    if (!street.trim()) e.street = 'Dirección obligatoria';
+    if (!postal.trim()) e.postal = 'Código postal obligatorio';
+    if (!city.trim())   e.city   = 'Ciudad obligatoria';
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  }
+
+  async function goToStep2() {
+    if (!validateStep1()) return;
+    setIntentLoading(true);
+    setIntentError('');
+    try {
+      const res = await fetch('/api/checkout/create-intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: checkoutItems,
+          country,
+          postalCode: postal,
+          customerName:  name.trim(),
+          customerEmail: email.trim(),
+          customerPhone: phone.trim(),
+          addressLine:   `${street.trim()} ${streetN.trim()}`.trim(),
+          city:          city.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error ?? 'No se pudo iniciar el pago.');
+      setClientSecret(data.clientSecret);
+      setStep(2);
+      window.scrollTo({ top:0, behavior:'smooth' });
+    } catch (err:any) {
+      setIntentError(err?.message ?? 'No se pudo iniciar el pago.');
+    } finally {
+      setIntentLoading(false);
+    }
+  }
+
+  function handleBack() {
+    setStep(1);
+    setClientSecret(null);
+    setIntentError('');
+  }
+
+  // Empty cart
+  if (items.length === 0 && !success) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-6 text-center px-4"
+        style={{ background:'#0a0f0a' }}>
+        <div className="w-20 h-20 rounded-full flex items-center justify-center"
+          style={{ background:'rgba(16,185,129,0.1)', border:'1px solid rgba(16,185,129,0.2)' }}>
+          <Package size={36} className="text-emerald-500" />
+        </div>
+        <h2 className="text-2xl font-bold text-white">Carrito vacío</h2>
+        <p className="text-gray-500 text-sm max-w-xs">Añade productos antes de finalizar la compra.</p>
+        <Link href="/#productos"
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm text-white"
+          style={{ background:'#10b981' }}>
+          Ver Productos <ChevronRight size={16} />
+        </Link>
+      </div>
+    );
+  }
+
+  if (success) return <SuccessScreen name={name} />;
+
+  // ── Step 1 ──────────────────────────────────────────────────
+  const step1 = (
+    <div className="space-y-4">
+      <div className="rounded-2xl p-5 sm:p-6 space-y-4"
+        style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(16,185,129,0.12)' }}>
+        <div className="flex items-center gap-2">
+          <User size={13} className="text-emerald-400" />
+          <p className="text-[10px] font-semibold tracking-widest text-emerald-400 uppercase">Información Personal</p>
+        </div>
+        <Field label="Nombre completo *" error={errors.name}>
+          <input className={inputCls} placeholder="María Silva" value={name}
+            onChange={e => setName(e.target.value)} style={errors.name?{borderColor:'#f87171'}:{}} />
+        </Field>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Field label="Email *" error={errors.email}>
+            <input className={inputCls} type="email" placeholder="maria@ejemplo.es" value={email}
+              onChange={e => setEmail(e.target.value)} style={errors.email?{borderColor:'#f87171'}:{}} />
+          </Field>
+          <Field label="Teléfono">
+            <input className={inputCls} type="tel" inputMode="numeric" placeholder="+34 612 345 678"
+              value={phone} onChange={e => setPhone(e.target.value)} />
+          </Field>
+        </div>
+      </div>
+
+      <div className="rounded-2xl p-5 sm:p-6 space-y-4"
+        style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(16,185,129,0.12)' }}>
+        <div className="flex items-center gap-2">
+          <MapPin size={13} className="text-emerald-400" />
+          <p className="text-[10px] font-semibold tracking-widest text-emerald-400 uppercase">Dirección de Entrega</p>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="col-span-2">
+            <Field label="Calle / Dirección *" error={errors.street}>
+              <input className={inputCls} placeholder="Calle Mayor" value={street}
+                onChange={e => setStreet(e.target.value)} style={errors.street?{borderColor:'#f87171'}:{}} />
+            </Field>
+          </div>
+          <Field label="Número">
+            <input className={inputCls} placeholder="13" value={streetN}
+              inputMode="numeric" onChange={e => setStreetN(e.target.value)} />
+          </Field>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Código Postal *" error={errors.postal}>
+            <input className={inputCls} placeholder="28001" value={postal}
+              inputMode="numeric" onChange={e => setPostal(e.target.value)}
+              style={errors.postal?{borderColor:'#f87171'}:{}} />
+          </Field>
+          <Field label="Ciudad *" error={errors.city}>
+            <input className={inputCls} placeholder="Madrid" value={city}
+              onChange={e => setCity(e.target.value)} style={errors.city?{borderColor:'#f87171'}:{}} />
+          </Field>
+        </div>
+        <Field label="País">
+          <select className={inputCls} value={country} onChange={e => setCountry(e.target.value)}
+            style={{ appearance:'none' }}>
+            <option value="ES">🇪🇸 España</option>
+            <option value="PT">🇵🇹 Portugal</option>
+            <option value="BR">🇧🇷 Brasil</option>
+            <option value="FR">🇫🇷 Francia</option>
+            <option value="DE">🇩🇪 Alemania</option>
+          </select>
+        </Field>
+      </div>
+
+      {intentError && (
+        <div className="rounded-xl px-4 py-3 text-sm text-red-400 flex items-center gap-2"
+          style={{ background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)' }}>
+          <ShieldCheck size={15} /> {intentError}
+        </div>
+      )}
+
+      <button type="button" onClick={goToStep2} disabled={intentLoading}
+        className="w-full flex items-center justify-center gap-2 rounded-xl py-4 font-bold text-base text-white disabled:opacity-60 cursor-pointer transition-all"
+        style={{ background:'linear-gradient(135deg,#10b981,#059669)', boxShadow:'0 8px 32px rgba(16,185,129,0.25)' }}>
+        {intentLoading
+          ? <><Loader2 size={18} className="animate-spin" /> Preparando pago...</>
+          : <>Continuar al Pago <ChevronRight size={18} /></>}
+      </button>
+    </div>
+  );
+
+  // ── Step 2 — nested Elements with clientSecret ───────────────────────────
+  const step2 = clientSecret ? (
+    <Elements
+      stripe={stripePromise}
+      options={{ clientSecret, appearance: stripeAppearance }}
+    >
+      <PaymentStepInner
+        total={total}
+        name={name} email={email} phone={phone}
+        street={street} streetN={streetN} postal={postal} city={city} country={country}
+        checkoutItems={checkoutItems}
+        clearCart={clearCart}
+        setSuccess={setSuccess}
+        onBack={handleBack}
+        quoteError={quoteError}
+      />
+    </Elements>
+  ) : (
+    <div className="flex items-center justify-center py-12">
+      <Loader2 size={24} className="animate-spin text-emerald-500" />
+    </div>
+  );
+
+  // ── Layout ──────────────────────────────────────────────────
   return (
     <div className="min-h-screen py-8 sm:py-12 px-4" style={{ background:'#0a0f0a' }}>
       <div className="max-w-5xl mx-auto">
@@ -710,6 +694,7 @@ function CheckoutFormInner() {
             <ShieldCheck size={13} /> Transacción 100% protegida con SSL
           </div>
         </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 lg:gap-10">
           <div>
             <p className="text-[10px] font-semibold tracking-widest text-emerald-400 uppercase mb-1">Pago Seguro</p>
@@ -731,7 +716,8 @@ export default function CheckoutForm() {
   if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4" style={{ background:'#0a0f0a' }}>
-        <div className="rounded-xl px-4 py-3 text-sm text-red-400" style={{ background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)' }}>
+        <div className="rounded-xl px-4 py-3 text-sm text-red-400"
+          style={{ background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)' }}>
           NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY no configurada.
         </div>
       </div>
