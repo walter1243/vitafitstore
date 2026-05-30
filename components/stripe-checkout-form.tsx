@@ -331,56 +331,57 @@ function PaymentStepInner({
     setLoading(true);
     setApiError('');
 
-    // Validate the Payment Element before submitting
-    const { error: submitError } = await elements.submit();
-    if (submitError) {
-      setApiError(submitError.message ?? 'Error de validación.');
-      setLoading(false);
-      return;
-    }
+    try {
+      const { error: submitError } = await elements.submit();
+      if (submitError) {
+        setApiError(submitError.message ?? 'Error de validación.');
+        return;
+      }
 
-    // Confirm payment client-side
-    const { error, paymentIntent } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/checkout?confirmed=1`,
-        payment_method_data: {
-          billing_details: {
-            name:  name.trim()  || undefined,
-            email: email.trim() || undefined,
-            phone: phone.trim() || undefined,
-            address: {
-              line1:       `${street.trim()} ${streetN.trim()}`.trim() || undefined,
-              postal_code: postal.trim() || undefined,
-              city:        city.trim()   || undefined,
-              country:     country       || undefined,
+      const result = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: `${window.location.origin}/checkout?confirmed=1`,
+          payment_method_data: {
+            billing_details: {
+              name:  name.trim()  || undefined,
+              email: email.trim() || undefined,
+              phone: phone.trim() || undefined,
+              address: {
+                line1:       `${street.trim()} ${streetN.trim()}`.trim() || undefined,
+                postal_code: postal.trim() || undefined,
+                city:        city.trim()   || undefined,
+                country:     country       || undefined,
+              },
             },
           },
         },
-      },
-      redirect: 'if_required',
-    });
+        redirect: 'if_required',
+      });
 
-    if (error) {
-      setApiError(error.message ?? 'Error al procesar el pago.');
+      if (result.error) {
+        setApiError(result.error.message ?? 'Error al procesar el pago.');
+        return;
+      }
+
+      if (result.paymentIntent?.status === 'succeeded') {
+        fetch('/api/checkout/save-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ paymentIntentId: result.paymentIntent.id }),
+        }).catch(() => {});
+        clearCart();
+        setSuccess(true);
+        return;
+      }
+
+      setApiError(`Estado de pago inesperado: ${result.paymentIntent?.status ?? 'desconocido'}`);
+    } catch (err: any) {
+      console.error('[checkout] confirmPayment error:', err);
+      setApiError(err?.message ?? 'Error al procesar el pago. Inténtalo de nuevo.');
+    } finally {
       setLoading(false);
-      return;
     }
-
-    if (paymentIntent?.status === 'succeeded') {
-      // Save order to DB (fire and don't block UX)
-      fetch('/api/checkout/save-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paymentIntentId: paymentIntent.id }),
-      }).catch(() => {});
-      clearCart();
-      setSuccess(true);
-    } else {
-      setApiError(`Estado de pago inesperado: ${paymentIntent?.status ?? 'desconocido'}`);
-    }
-
-    setLoading(false);
   }
 
   return (
