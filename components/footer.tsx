@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { Leaf, Instagram, Mail, MessageCircle, PhoneCall, X } from 'lucide-react'
+import { ScrollReveal } from '@/components/scroll-reveal'
+import { DEFAULT_FOOTER, type FooterContent } from '@/lib/site-content-defaults'
 
 type FooterSectionKey = 'productos' | 'empresa' | 'ayuda' | 'legal'
 
@@ -93,7 +95,8 @@ function normalizeInstagramHref(input: string) {
   return `https://instagram.com/${value.replace(/^@/, '')}`
 }
 
-export function Footer() {
+export function Footer({ content }: { content?: FooterContent }) {
+  const footerContent = { ...DEFAULT_FOOTER, ...content }
   const [storeName, setStoreName] = useState('VitaFit Store')
   const [instagram, setInstagram] = useState('')
   const [whatsapp, setWhatsapp] = useState('')
@@ -145,12 +148,23 @@ export function Footer() {
           ],
     },
     empresa: {
-      ...footerSections.empresa,
+      title: footerContent.empresa.title,
+      description: footerContent.empresa.description,
       items: footerSections.empresa.items.map((item) =>
         item.title === 'Email corporativo'
           ? { ...item, description: email.trim() || 'sac@vitafitstore.com' }
           : item,
       ),
+    },
+    ayuda: {
+      ...footerSections.ayuda,
+      title: footerContent.ayuda.title,
+      description: footerContent.ayuda.description,
+    },
+    legal: {
+      ...footerSections.legal,
+      title: footerContent.legal.title,
+      description: footerContent.legal.description,
     },
   }
 
@@ -247,7 +261,7 @@ export function Footer() {
           </div>
         )}
 
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-6">
+        <ScrollReveal className="grid gap-8 md:grid-cols-2 lg:grid-cols-6">
           {/* Brand */}
           <div className="lg:col-span-2">
             <Link href="/" className="mb-4 flex items-center gap-2">
@@ -259,8 +273,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="mb-6 max-w-xs text-sm text-muted-foreground">
-              Tu tienda online de salud, bienestar y fitness en España. 
-              Productos de calidad para cuidar de ti.
+              {footerContent.brandDescription}
             </p>
             
             {/* Social Links */}
@@ -293,13 +306,13 @@ export function Footer() {
               <p className="text-sm text-muted-foreground">{dynamicSections[sectionKey].description}</p>
             </div>
           ))}
-        </div>
+        </ScrollReveal>
 
         {/* Bottom */}
         <div className="mt-12 border-t border-border pt-8">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <p className="text-sm text-muted-foreground">
-              © 2026 {storeName}. Todos los derechos reservados.
+              © 2026 {storeName}. {footerContent.copyrightNote}
             </p>
             <div className="flex items-center gap-4">
               <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><PhoneCall className="h-3.5 w-3.5" /> SAC comercial</span>

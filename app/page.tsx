@@ -10,6 +10,7 @@ import { CartSidebar } from '@/components/cart-sidebar'
 import { UpsellPopup } from '@/components/upsell-popup'
 import { WhatsAppFloating } from '@/components/whatsapp-floating'
 import { sql } from '@/lib/db'
+import { getSiteContent } from '@/lib/site-content'
 
 type HomeBlock = {
   key: 'hero' | 'trust' | 'products' | 'pin' | 'newsletter'
@@ -41,18 +42,18 @@ async function getHomeBlocks(): Promise<HomeBlock[]> {
 }
 
 export default async function HomePage() {
-  const blocks = await getHomeBlocks()
+  const [blocks, content] = await Promise.all([getHomeBlocks(), getSiteContent()])
 
   const map: Record<HomeBlock['key'], ReactNode> = {
-    hero: <HeroVideo />,
-    trust: <TrustBadges />,
+    hero: <HeroVideo content={content.hero} />,
+    trust: <TrustBadges data={content.trustBadges} />,
     products: (
       <section id="productos">
         <ProductCarousels />
       </section>
     ),
-    pin: <PinScrollSection />,
-    newsletter: <Newsletter />,
+    pin: <PinScrollSection data={content.destaques} />,
+    newsletter: <Newsletter data={content.newsletter} />,
   }
 
   const visibleBlocks = blocks.filter(b => b.enabled)
@@ -65,7 +66,7 @@ export default async function HomePage() {
             <div key={block.key}>{map[block.key]}</div>
           ))}
         </main>
-        <Footer />
+        <Footer content={content.footer} />
         <WhatsAppFloating />
         <CartSidebar />
         <UpsellPopup />

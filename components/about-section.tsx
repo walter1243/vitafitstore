@@ -21,7 +21,7 @@ const features = [
   {
     icon: Users,
     title: "Comunidad activa",
-    description: "Más de 50.000 clientes satisfechos que confían en VitaFit para su bienestar."
+    description: "Más de 50.000 clientes satisfechos que confían en nosotros para su bienestar."
   }
 ]
 
@@ -34,11 +34,11 @@ export function AboutSection() {
           <div>
             <h2 className="mb-4 text-3xl font-bold text-foreground sm:text-4xl">
               ¿Por qué elegir{' '}
-              <span className="text-primary">VitaFit Store</span>?
+              <span className="text-primary">nuestra tienda</span>?
             </h2>
             <p className="mb-6 text-muted-foreground">
-              En VitaFit creemos que el bienestar debe ser accesible para todos. 
-              Por eso seleccionamos cuidadosamente cada producto, priorizando la 
+              Creemos que el bienestar debe ser accesible para todos.
+              Por eso seleccionamos cuidadosamente cada producto, priorizando la
               calidad, la eficacia y la transparencia.
             </p>
             <p className="mb-8 text-muted-foreground">
@@ -70,7 +70,6 @@ export function AboutSection() {
                 <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-primary">
                   <Leaf className="h-10 w-10 text-primary-foreground" />
                 </div>
-                <h3 className="mb-2 text-2xl font-bold text-foreground">VitaFit Store</h3>
                 <p className="mb-4 text-center text-muted-foreground">
                   Tu bienestar, nuestra prioridad
                 </p>

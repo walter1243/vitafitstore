@@ -2,46 +2,20 @@
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Leaf, Zap, Truck, ShieldCheck } from 'lucide-react';
+import { getIcon } from '@/lib/icon-map';
+import { DEFAULT_DESTAQUES, type DestaquesContent } from '@/lib/site-content-defaults';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const features = [
-  {
-    icon: Leaf,
-    title: 'Ingredientes 100% Naturales',
-    desc: 'Formulaciones limpias sin aditivos artificiales. Solo lo que tu cuerpo necesita para rendir al máximo.',
-    grad: 'from-emerald-500/20 to-green-500/5',
-    iconCls: 'text-emerald-400',
-    borderCls: 'border-emerald-500/30',
-  },
-  {
-    icon: Zap,
-    title: 'Resultados Comprobados',
-    desc: '+50.000 clientes satisfechos avalan nuestra efectividad. Respaldados por deportistas de élite.',
-    grad: 'from-amber-500/20 to-yellow-500/5',
-    iconCls: 'text-amber-400',
-    borderCls: 'border-amber-500/30',
-  },
-  {
-    icon: Truck,
-    title: 'Envío Exprés 2-3 Días',
-    desc: 'Pedidos procesados el mismo día. Seguimiento en tiempo real y entrega garantizada en toda España.',
-    grad: 'from-blue-500/20 to-cyan-500/5',
-    iconCls: 'text-blue-400',
-    borderCls: 'border-blue-500/30',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Calidad Certificada',
-    desc: 'Fabricados en instalaciones GMP. Análisis de pureza independientes en cada lote de producción.',
-    grad: 'from-violet-500/20 to-purple-500/5',
-    iconCls: 'text-violet-400',
-    borderCls: 'border-violet-500/30',
-  },
+const STYLE_CYCLE = [
+  { grad: 'from-emerald-500/20 to-green-500/5', iconCls: 'text-emerald-400', borderCls: 'border-emerald-500/30' },
+  { grad: 'from-amber-500/20 to-yellow-500/5', iconCls: 'text-amber-400', borderCls: 'border-amber-500/30' },
+  { grad: 'from-blue-500/20 to-cyan-500/5', iconCls: 'text-blue-400', borderCls: 'border-blue-500/30' },
+  { grad: 'from-violet-500/20 to-purple-500/5', iconCls: 'text-violet-400', borderCls: 'border-violet-500/30' },
 ];
 
-export default function PinScrollSection() {
+export default function PinScrollSection({ data }: { data?: DestaquesContent }) {
+  const content = data?.features?.length ? data : DEFAULT_DESTAQUES;
   const sectionRef = useRef<HTMLDivElement>(null);
   const itemsRef = useRef<Array<HTMLDivElement | null>>([]);
 
@@ -56,7 +30,7 @@ export default function PinScrollSection() {
       once: true,
     });
     return () => ScrollTrigger.getAll().forEach((t) => t.kill());
-  }, []);
+  }, [content]);
 
   return (
     <section
@@ -82,29 +56,31 @@ export default function PinScrollSection() {
 
       <div className="relative z-10 text-center mb-14 px-4">
         <p className="text-emerald-400 text-sm font-semibold tracking-[0.3em] uppercase mb-3">
-          Por qué VitaFit
+          {content.eyebrow}
         </p>
         <h2 className="text-white text-4xl md:text-5xl font-black tracking-tight">
-          Destacados <span className="text-emerald-400">VitaFit</span>
+          {content.title} <span className="text-emerald-400">{content.highlight}</span>
         </h2>
         <p className="text-gray-500 text-base mt-3 max-w-lg mx-auto">
-          Lo que nos hace diferentes: calidad, transparencia y resultados reales.
+          {content.subtitle}
         </p>
       </div>
 
       <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-5 w-full max-w-4xl px-4">
-        {features.map((f, idx) => {
-          const Icon = f.icon;
+        {content.features.map((f, idx) => {
+          const Icon = getIcon(f.icon);
+          const style = STYLE_CYCLE[idx % STYLE_CYCLE.length];
           return (
             <div
               key={idx}
               ref={(el) => { itemsRef.current[idx] = el; }}
-              className={`bg-gradient-to-br ${f.grad} border ${f.borderCls} rounded-2xl p-6 flex items-start gap-4 backdrop-blur-sm hover:brightness-110 transition-all duration-300`}
+              className={`bg-gradient-to-br ${style.grad} border ${style.borderCls} rounded-2xl p-6 flex items-start gap-4 backdrop-blur-sm hover:brightness-110 transition-all duration-300`}
             >
               <div
-                className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 border ${f.borderCls} bg-gray-900/50`}
+                className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 border ${style.borderCls} bg-gray-900/50 animate-zero-gravity-slow`}
+                style={{ animationDelay: `${idx * 0.4}s` }}
               >
-                <Icon className={`h-6 w-6 ${f.iconCls}`} />
+                <Icon className={`h-6 w-6 ${style.iconCls}`} />
               </div>
               <div>
                 <h3 className="text-white font-bold text-lg mb-1 leading-tight">{f.title}</h3>

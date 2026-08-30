@@ -79,7 +79,7 @@ export function BannerBloco({ data, onChange }: Props) {
               className={`cursor-pointer rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
                 data.bannerType === type
                   ? 'bg-green-600 text-white border-green-600'
-                  : 'border-white/20 bg-[#111a2f] text-white/70 hover:bg-[#17223d]'
+                  : 'border-white/20 bg-[#161b28] text-white/70 hover:bg-[#161b28]'
               }`}
             >
               {type === 'image' ? 'Imagem' : type === 'video' ? 'Vídeo' : 'Carrossel'}
@@ -94,7 +94,7 @@ export function BannerBloco({ data, onChange }: Props) {
           <div
             tabIndex={0}
             onPaste={(e) => pasteSingleMedia(e, 'imageUrl')}
-            className="rounded-lg border border-dashed border-white/20 bg-[#111a2f] p-3 text-xs text-white/60 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/30"
+            className="rounded-lg border border-dashed border-white/20 bg-[#161b28] p-3 text-xs text-white/60 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/30"
           >
             Cole a mídia com Ctrl+V.
           </div>
@@ -123,7 +123,7 @@ export function BannerBloco({ data, onChange }: Props) {
           <div
             tabIndex={0}
             onPaste={(e) => pasteSingleMedia(e, 'videoUrl')}
-            className="rounded-lg border border-dashed border-white/20 bg-[#111a2f] p-3 text-xs text-white/60 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/30"
+            className="rounded-lg border border-dashed border-white/20 bg-[#161b28] p-3 text-xs text-white/60 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/30"
           >
             Cole o vídeo com Ctrl+V.
           </div>
@@ -156,7 +156,7 @@ export function BannerBloco({ data, onChange }: Props) {
           </div>
           <div className="space-y-2">
             {data.carouselItems.map((item, idx) => (
-              <div key={item.id} className="space-y-2 rounded-lg border border-white/10 bg-[#111a2f] p-3">
+              <div key={item.id} className="space-y-2 rounded-lg border border-white/10 bg-[#161b28] p-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-white/40">Item {idx + 1}</span>
                   <button
@@ -170,7 +170,7 @@ export function BannerBloco({ data, onChange }: Props) {
                 <div
                   tabIndex={0}
                   onPaste={(e) => pasteCarouselMedia(e, item.id)}
-                  className="rounded-lg border border-dashed border-white/20 bg-[#0f1526] p-2 text-[11px] text-white/60 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/30"
+                  className="rounded-lg border border-dashed border-white/20 bg-[#1c2236] p-2 text-[11px] text-white/60 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/30"
                 >
                   {item.url
                     ? (item.url.startsWith('data:video/')
@@ -183,7 +183,7 @@ export function BannerBloco({ data, onChange }: Props) {
                   value={item.alt}
                   onChange={e => updateItem(item.id, 'alt', e.target.value)}
                   placeholder="Texto alternativo"
-                  className="w-full rounded-lg border border-white/15 bg-[#0f1526] px-2 py-1.5 text-xs text-white placeholder:text-white/35 focus:border-green-500/40 focus:outline-none focus:ring-2 focus:ring-green-500/30"
+                  className="w-full rounded-lg border border-white/15 bg-[#1c2236] px-2 py-1.5 text-xs text-white placeholder:text-white/35 focus:border-green-500/40 focus:outline-none focus:ring-2 focus:ring-green-500/30"
                 />
               </div>
             ))}

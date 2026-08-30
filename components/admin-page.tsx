@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { BlocosEditor, type BlocosEditorHandle } from '@/components/configuracoes/BlocosEditor';
+import { ContentEditor } from '@/components/configuracoes/ContentEditor';
 import { AdminKitsSection } from '@/components/admin-kits-section';
 import { AdminUsersManager } from '@/components/admin-users-manager';
 import {
@@ -355,7 +356,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
 
   return (
     <div className="space-y-5 text-white">
-      <div className="rounded-2xl border border-white/10 bg-[#1a1d27] shadow-none">
+      <div className="rounded-2xl border border-white/10 bg-[#161b28] shadow-none">
         <div className="flex flex-col gap-3 border-b border-white/10 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="flex items-center gap-2 text-sm sm:text-base font-semibold text-white">
@@ -439,7 +440,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                         onChange={e => onFormChange(field.k, e.target.value)}
                         placeholder={field.ph}
                         step={field.type === 'number' ? '0.01' : undefined}
-                        className="w-full rounded-xl border border-white/10 bg-[#22263a] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                        className="w-full rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
                       />
                     </div>
                   ))}
@@ -449,7 +450,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                     <select
                       value={form.category}
                       onChange={e => onFormChange('category', e.target.value)}
-                      className="w-full rounded-xl border border-white/10 bg-[#22263a] px-3 py-2.5 text-sm text-white outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                      className="w-full rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
                     >
                       <option value="">Selecione uma categoria</option>
                       {categories.filter(c => c.enabled).map(c => (
@@ -465,7 +466,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                     </div>
                   </div>
 
-                  <div className="sm:col-span-2 rounded-2xl border border-white/10 bg-[#111523] p-4">
+                  <div className="sm:col-span-2 rounded-2xl border border-white/10 bg-[#161b28] p-4">
                     <div className="mb-3 flex items-center justify-between gap-3">
                       <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/55">Precificação inteligente</h4>
                       {pricingLoading && <span className="text-[11px] text-white/45">Calculando...</span>}
@@ -480,7 +481,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                           value={pricingForm.costPrice}
                           onChange={e => setPricingForm(prev => ({ ...prev, costPrice: e.target.value }))}
                           placeholder="15.00"
-                          className="w-full rounded-xl border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                          className="w-full rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
                         />
                       </div>
                       <div>
@@ -491,7 +492,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                           value={pricingForm.freightShare}
                           onChange={e => setPricingForm(prev => ({ ...prev, freightShare: e.target.value }))}
                           placeholder="3.00"
-                          className="w-full rounded-xl border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                          className="w-full rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
                         />
                       </div>
                       <div>
@@ -502,7 +503,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                           value={pricingForm.gatewayFee}
                           onChange={e => setPricingForm(prev => ({ ...prev, gatewayFee: e.target.value }))}
                           placeholder="0.029"
-                          className="w-full rounded-xl border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                          className="w-full rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
                         />
                       </div>
                       <div>
@@ -513,7 +514,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                           value={pricingForm.ivaTax}
                           onChange={e => setPricingForm(prev => ({ ...prev, ivaTax: e.target.value }))}
                           placeholder="0.10"
-                          className="w-full rounded-xl border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                          className="w-full rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
                         />
                       </div>
                       <div>
@@ -524,7 +525,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                           value={pricingForm.targetMargin}
                           onChange={e => setPricingForm(prev => ({ ...prev, targetMargin: e.target.value }))}
                           placeholder="0.20"
-                          className="w-full rounded-xl border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                          className="w-full rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
                         />
                       </div>
                     </div>
@@ -593,7 +594,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                   onDragLeave={() => setDrag(false)}
                   onDrop={handleDrop}
                   className={`relative flex min-h-[300px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed p-5 text-center transition-colors focus:outline-none focus:ring-2 focus:ring-green-500/40 ${
-                    drag ? 'border-green-500 bg-white/5' : 'border-white/10 bg-[#22263a] hover:bg-white/5'
+                    drag ? 'border-green-500 bg-white/5' : 'border-white/10 bg-[#1c2236] hover:bg-white/5'
                   }`}
                 >
                   <input
@@ -663,7 +664,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                 suppressContentEditableWarning
                 onPaste={handleDescPaste}
                 onInput={() => onDescChange(descRef.current?.innerHTML ?? '')}
-                className="min-h-[220px] rounded-2xl border border-white/10 bg-[#22263a] px-4 py-3 text-sm text-white outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                className="min-h-[220px] rounded-2xl border border-white/10 bg-[#1c2236] px-4 py-3 text-sm text-white outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
                 style={{ lineHeight: '1.7' }}
                 data-placeholder="Descreva benefícios, composição, instruções e provas sociais. Cole imagens diretamente aqui com Ctrl+V."
               />
@@ -690,7 +691,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                       value={form.videoUrl}
                       onChange={e => onFormChange('videoUrl', e.target.value)}
                       placeholder="URL do vídeo do produto (YouTube ou MP4)"
-                      className="w-full rounded-xl border border-white/10 bg-[#22263a] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40 sm:col-span-2"
+                      className="w-full rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40 sm:col-span-2"
                     />
                     <input
                       ref={galleryFileRef}
@@ -713,7 +714,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                         value={galleryUrl}
                         onChange={e => setGalleryUrl(e.target.value)}
                         placeholder="Cole uma URL de foto"
-                        className="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#22263a] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                        className="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
                       />
                       <button
                         type="button"
@@ -731,7 +732,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
 
                   <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
                     {visibleAdditionalImages.map((src, index) => (
-                      <div key={`${src}-${index}`} className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#22263a]">
+                      <div key={`${src}-${index}`} className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#1c2236]">
                         <img src={src} alt={`Foto adicional ${index + 1}`} className="h-28 w-full object-cover" />
                         <div className="absolute right-2 top-2 flex gap-1 opacity-100 transition-opacity">
                           <button
@@ -762,7 +763,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                   <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/45">Preview da galeria</h4>
                   <div className="mt-3 grid grid-cols-2 gap-2">
                     {visibleAdditionalImages.slice(0, 4).map((src, index) => (
-                      <div key={index} className="aspect-square overflow-hidden rounded-xl border border-white/10 bg-[#22263a]">
+                      <div key={index} className="aspect-square overflow-hidden rounded-xl border border-white/10 bg-[#1c2236]">
                         <img src={src} alt={`Preview ${index + 1}`} className="h-full w-full object-cover" />
                       </div>
                     ))}
@@ -798,7 +799,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                 value={newCategoryName}
                 onChange={e => onNewCategoryNameChange(e.target.value)}
                 placeholder="Ex: Suplementos"
-                className="flex-1 rounded-xl border border-white/10 bg-[#22263a] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                className="flex-1 rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
               />
               <button
                 type="button"
@@ -846,7 +847,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
             value={productsSearch}
             onChange={e => setProductsSearch(e.target.value)}
             placeholder="Buscar produto por nome ou categoria"
-            className="w-full rounded-xl border border-white/10 bg-[#22263a] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40 sm:max-w-sm"
+            className="w-full rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40 sm:max-w-sm"
           />
         </div>
 
@@ -856,7 +857,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
             const stockClass = stock > 10 ? 'text-emerald-400' : stock > 0 ? 'text-amber-400' : 'text-red-400';
             const preview = p.mainImage ?? p.image;
             return (
-              <div key={p.id} className="rounded-xl border border-white/10 bg-[#111827] p-3">
+              <div key={p.id} className="rounded-xl border border-white/10 bg-[#161b28] p-3">
                 <div className="flex items-start gap-3">
                   {preview ? (
                     <img src={preview} alt={p.name} className="h-14 w-14 shrink-0 rounded-xl border border-white/10 object-cover" />
@@ -1013,7 +1014,7 @@ function OrdersSection({ orders, onUpdateTracking, onRefresh }: {
   return (
     <div className="space-y-4">
       {orders.map(o => (
-        <div key={o.id} className="rounded-2xl border border-white/10 bg-[#1a1d27] p-4 shadow-none sm:p-5">
+        <div key={o.id} className="rounded-2xl border border-white/10 bg-[#161b28] p-4 shadow-none sm:p-5">
           <div className="flex items-start justify-between gap-3 mb-4 flex-wrap">
             <div>
               <div className="flex items-center gap-3 mb-1 flex-wrap">
@@ -1038,7 +1039,7 @@ function OrdersSection({ orders, onUpdateTracking, onRefresh }: {
               value={inputs[o.id] ?? ''}
               onChange={e => setInputs(t => ({ ...t, [o.id]: e.target.value }))}
               placeholder="Código de rastreio (ex: ES123456789ES)"
-              className="min-w-[160px] flex-1 rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+              className="min-w-[160px] flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
             />
             <button onClick={() => save(o.id)}
               className="flex cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-lg bg-green-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700">
@@ -1077,7 +1078,7 @@ function OrdersSection({ orders, onUpdateTracking, onRefresh }: {
         </div>
       ))}
       {orders.length === 0 && (
-        <div className="rounded-2xl border border-white/10 bg-[#1a1d27] p-10 text-center text-sm text-white/45 shadow-none">
+        <div className="rounded-2xl border border-white/10 bg-[#161b28] p-10 text-center text-sm text-white/45 shadow-none">
           Nenhum pedido encontrado
         </div>
       )}
@@ -1418,21 +1419,49 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
     }
   }
 
-  const navItems: { key: Section; label: string; icon: React.ReactNode; badge?: number }[] = [
-    { key: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
-    { key: 'products', label: 'Produtos', icon: <Package size={18} /> },
-    { key: 'import-supplier', label: 'Importar Produtos', icon: <PackageSearch size={18} /> },
-    { key: 'orders', label: 'Pedidos', icon: <ShoppingCart size={18} />, badge: pendingCount || undefined },
-    { key: 'tracking', label: 'Rastreio', icon: <Truck size={18} /> },
-    { key: 'automation', label: 'Automação', icon: <Zap size={18} /> },
-    { key: 'settings', label: 'Editar loja', icon: <Settings size={18} /> },
+  const navGroups: { label: string; items: { key: Section; label: string; icon: React.ReactNode; badge?: number }[] }[] = [
+    {
+      label: 'Visão geral',
+      items: [{ key: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> }],
+    },
+    {
+      label: 'Vendas',
+      items: [
+        { key: 'orders', label: 'Pedidos', icon: <ShoppingCart size={18} />, badge: pendingCount || undefined },
+        { key: 'tracking', label: 'Rastreio', icon: <Truck size={18} /> },
+      ],
+    },
+    {
+      label: 'Catálogo',
+      items: [
+        { key: 'products', label: 'Produtos', icon: <Package size={18} /> },
+        { key: 'import-supplier', label: 'Importar Produtos', icon: <PackageSearch size={18} /> },
+      ],
+    },
+    {
+      label: 'Configuração',
+      items: [
+        { key: 'automation', label: 'Automação', icon: <Zap size={18} /> },
+        { key: 'settings', label: 'Editar loja', icon: <Settings size={18} /> },
+      ],
+    },
   ];
+
+  const SECTION_DESCRIPTIONS: Record<Section, string> = {
+    dashboard: 'Visão geral de vendas, pedidos e produtos.',
+    products: 'Cadastre, edite e organize os produtos da vitrine.',
+    'import-supplier': 'Importe produtos de fornecedores direto para o catálogo.',
+    orders: 'Acompanhe e gerencie os pedidos recebidos.',
+    tracking: 'Atualize o status e o código de rastreio dos envios.',
+    automation: 'Configure mensagens automáticas e integrações.',
+    settings: 'Edite o conteúdo e as configurações da página de vendas.',
+  };
 
   return (
     <div className="flex min-h-screen bg-[#0f1117] text-white">
       {pendingCategoryDelete && (
         <div className="fixed inset-0 z-[260] flex items-center justify-center bg-black/70 px-4">
-          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#1a1d27] p-5 shadow-2xl">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#161b28] p-5 shadow-2xl">
             <h3 className="text-base font-semibold text-white">Excluir categoria</h3>
             <p className="mt-2 text-sm text-white/70">
               Tem certeza que deseja excluir a categoria <strong className="text-white">{pendingCategoryDelete.name}</strong>?
@@ -1484,7 +1513,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
 
       {sidebarOpen && <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-      <aside className={`fixed top-0 left-0 z-50 flex h-full w-64 flex-col bg-gray-900 text-white transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:sticky lg:top-0 lg:h-screen lg:shrink-0 lg:translate-x-0`}>
+      <aside className={`fixed top-0 left-0 z-50 flex h-full w-64 flex-col bg-[#0d0f16] text-white transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:sticky lg:top-0 lg:h-screen lg:shrink-0 lg:translate-x-0`}>
         <div className="flex shrink-0 items-center gap-3 border-b border-white/10 px-5 py-4">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-green-600 text-lg font-bold">V</div>
           <div className="min-w-0">
@@ -1496,26 +1525,52 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto py-4">
-          <div className="mb-2 px-5 text-[10px] font-semibold uppercase tracking-widest text-white/30">Menu</div>
-          {navItems.map(item => (
-            <button key={item.key} onClick={() => navigate(item.key)} className={`flex w-full items-center gap-3 border-l-2 px-5 py-3 text-sm transition-colors ${section === item.key ? 'border-green-500 bg-white/10 text-white' : 'border-transparent text-white/60 hover:bg-white/5 hover:text-white'}`}>
-              {item.icon}
-              <span className="flex-1 text-left">{item.label}</span>
-              {item.badge ? <span className="min-w-[18px] rounded-full bg-green-600 px-1.5 py-0.5 text-center text-[10px] font-bold text-white">{item.badge}</span> : null}
-            </button>
+        <a
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mx-3 mt-3 flex shrink-0 items-center justify-center gap-2 rounded-xl border border-green-500/25 bg-green-500/10 px-3 py-2.5 text-xs font-semibold text-green-300 transition-colors hover:bg-green-500/15"
+        >
+          <ExternalLink size={13} /> Ver página de vendas
+        </a>
+
+        <nav className="flex-1 overflow-y-auto px-3 py-4">
+          {navGroups.map(group => (
+            <div key={group.label} className="mb-4 last:mb-0">
+              <div className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-widest text-white/30">{group.label}</div>
+              <div className="space-y-0.5">
+                {group.items.map(item => (
+                  <button
+                    key={item.key}
+                    onClick={() => navigate(item.key)}
+                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+                      section === item.key
+                        ? 'bg-green-500/15 text-white'
+                        : 'text-white/55 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    <span className={section === item.key ? 'text-green-400' : 'text-white/40'}>{item.icon}</span>
+                    <span className="flex-1 text-left">{item.label}</span>
+                    {item.badge ? <span className="min-w-[18px] rounded-full bg-green-600 px-1.5 py-0.5 text-center text-[10px] font-bold text-white">{item.badge}</span> : null}
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
 
-        <div className="shrink-0 border-t border-white/10 px-5 py-4 text-center text-[11px] text-white/30">VitaFit © 2025</div>
+        <div className="shrink-0 border-t border-white/10 px-5 py-4 text-center text-[11px] text-white/30">VitaFit © 2026</div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-3 shrink-0 border-b border-white/10 bg-[#1a1d27] px-4 shadow-none sm:h-16 sm:px-6">
+        <header className="sticky top-0 z-30 flex min-h-14 shrink-0 items-center gap-3 border-b border-white/10 bg-[#161b28] px-4 py-2.5 shadow-none sm:min-h-16 sm:px-6">
           <button onClick={() => setSidebarOpen(!sidebarOpen)} className="rounded-lg p-2 transition-colors hover:bg-white/5 lg:hidden">
             <Menu size={20} className="text-white/70" />
           </button>
-          <h1 className="flex-1 text-sm font-semibold text-white sm:text-base">{SECTION_LABELS[section]}</h1>
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-sm font-semibold text-white sm:text-base">{SECTION_LABELS[section]}</h1>
+            <p className="hidden truncate text-xs text-white/45 sm:block">{SECTION_DESCRIPTIONS[section]}</p>
+          </div>
           <div className="relative flex items-center">
             <button
               type="button"
@@ -1534,7 +1589,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
               </div>
             </button>
 
-            <div className={`absolute right-0 top-12 z-40 w-[300px] origin-top-right rounded-2xl border border-white/10 bg-[#151927] p-3 shadow-2xl transition-all duration-200 ${profileMenuOpen ? 'pointer-events-auto scale-100 opacity-100' : 'pointer-events-none scale-95 opacity-0'}`}>
+            <div className={`absolute right-0 top-12 z-40 w-[300px] origin-top-right rounded-2xl border border-white/10 bg-[#161b28] p-3 shadow-2xl transition-all duration-200 ${profileMenuOpen ? 'pointer-events-auto scale-100 opacity-100' : 'pointer-events-none scale-95 opacity-0'}`}>
               <div className="mb-2 border-b border-white/10 pb-2">
                 <div className="text-sm font-semibold text-white">Conta: {adminUser.displayName || adminUser.username}</div>
                 <div className="text-[11px] uppercase tracking-wide text-white/45">{adminUser.role}</div>
@@ -1545,7 +1600,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
                 type="password"
                 value={pwdCurrent}
                 onChange={e => setPwdCurrent(e.target.value)}
-                className="mb-2 w-full rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-xs text-white outline-none"
+                className="mb-2 w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-xs text-white outline-none"
                 placeholder="Digite a senha atual"
               />
 
@@ -1554,7 +1609,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
                 type="password"
                 value={pwdNext}
                 onChange={e => setPwdNext(e.target.value)}
-                className="mb-3 w-full rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-xs text-white outline-none"
+                className="mb-3 w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-xs text-white outline-none"
                 placeholder="Mínimo 8 caracteres"
               />
 
@@ -1591,7 +1646,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
 
         {accountPanelOpen && (
           <div className="fixed inset-0 z-[260] flex items-center justify-center bg-black/70 p-4" onClick={() => setAccountPanelOpen(false)}>
-            <div className="max-h-[88vh] w-full max-w-4xl overflow-y-auto rounded-2xl border border-white/10 bg-[#101522] p-4 sm:p-5" onClick={(e) => e.stopPropagation()}>
+            <div className="max-h-[88vh] w-full max-w-4xl overflow-y-auto rounded-2xl border border-white/10 bg-[#161b28] p-4 sm:p-5" onClick={(e) => e.stopPropagation()}>
               <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-3">
                 <div>
                   <h3 className="text-base font-semibold text-white">Painel de Login e Usuários</h3>
@@ -1677,7 +1732,7 @@ function DashboardSection({ products, orders, revenue, onNavigate }: { products:
     <div className="space-y-5 text-white">
       <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         {stats.map(s => (
-          <div key={s.label} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-[#1a1d27] p-4 shadow-none sm:gap-4 sm:p-5">
+          <div key={s.label} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-[#161b28] p-4 shadow-none sm:gap-4 sm:p-5">
             <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${s.bg}`}>{s.icon}</div>
             <div className="min-w-0">
               <div className="truncate text-lg font-bold sm:text-xl">{s.value}</div>
@@ -1742,7 +1797,7 @@ function TrackingSection() {
   const [code, setCode] = useState('');
 
   return (
-    <div className="max-w-lg rounded-2xl border border-white/10 bg-[#1a1d27] p-5 text-white shadow-none sm:p-6">
+    <div className="max-w-lg rounded-2xl border border-white/10 bg-[#161b28] p-5 text-white shadow-none sm:p-6">
       <h2 className="mb-1 flex items-center gap-2 font-semibold text-white">
         <Truck size={16} className="text-green-500" />Rastrear Envio
       </h2>
@@ -1754,7 +1809,7 @@ function TrackingSection() {
           onChange={e => setCode(e.target.value.trim())}
           placeholder="Ex: ES123456789ES"
           onKeyDown={e => { if (e.key==='Enter' && code) window.open(`https://www.correos.es/es/es/herramientas/localizador/envios?numero=${code}`,'_blank'); }}
-          className="flex-1 rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+          className="flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
         />
         <a
           href={code ? `https://www.correos.es/es/es/herramientas/localizador/envios?numero=${code}` : undefined}
@@ -1951,7 +2006,7 @@ function AutomationSection() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="rounded-2xl border border-white/10 bg-[#1a1d27] p-5 shadow-none">
+      <div className="rounded-2xl border border-white/10 bg-[#161b28] p-5 shadow-none">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h2 className="flex items-center gap-2 font-semibold text-white">
@@ -2009,7 +2064,7 @@ function AutomationSection() {
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors
-              ${tab === t.key ? 'bg-green-600 text-white' : 'bg-[#1a1d27] text-white/60 border border-white/10 hover:bg-white/5'}`}
+              ${tab === t.key ? 'bg-green-600 text-white' : 'bg-[#161b28] text-white/60 border border-white/10 hover:bg-white/5'}`}
           >
             {t.label}
           </button>
@@ -2028,23 +2083,23 @@ function AutomationSection() {
       {tab === 'suppliers' && (
         <div className="space-y-4">
           {/* Add supplier form */}
-          <div className="rounded-2xl border border-white/10 bg-[#1a1d27] p-5 shadow-none">
+          <div className="rounded-2xl border border-white/10 bg-[#161b28] p-5 shadow-none">
             <h3 className="mb-4 flex items-center gap-2 font-medium text-white">
               <Plus size={15} className="text-green-500" /> Adicionar Fornecedor
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <input
-                className="rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                className="rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
                 placeholder="Nome do fornecedor"
                 value={newName} onChange={e => setNewName(e.target.value)}
               />
               <input
-                className="rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                className="rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
                 placeholder="Base URL da API"
                 value={newUrl} onChange={e => setNewUrl(e.target.value)}
               />
               <input
-                className="rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                className="rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
                 placeholder="API Key (opcional)"
                 value={newKey} onChange={e => setNewKey(e.target.value)}
               />
@@ -2060,13 +2115,13 @@ function AutomationSection() {
 
           {/* Supplier list */}
           {suppliers.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-white/10 bg-[#1a1d27] p-8 text-center text-sm text-white/45">
+            <div className="rounded-2xl border border-dashed border-white/10 bg-[#161b28] p-8 text-center text-sm text-white/45">
               Nenhum fornecedor cadastrado. Adicione um acima.
             </div>
           ) : (
             <div className="space-y-3">
               {suppliers.map(s => (
-                <div key={s.id} className="flex flex-wrap items-center gap-4 rounded-2xl border border-white/10 bg-[#1a1d27] p-4 shadow-none">
+                <div key={s.id} className="flex flex-wrap items-center gap-4 rounded-2xl border border-white/10 bg-[#161b28] p-4 shadow-none">
                   <div className={`w-2 h-2 rounded-full ${s.active ? 'bg-green-500' : 'bg-slate-300'}`} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-white">{s.name}</p>
@@ -2136,7 +2191,7 @@ function AutomationSection() {
       {tab === 'espiar' && <EspiarLojaTab />}
 
       {tab === 'config' && (
-        <div className="space-y-5 rounded-2xl border border-white/10 bg-[#1a1d27] p-5 shadow-none">
+        <div className="space-y-5 rounded-2xl border border-white/10 bg-[#161b28] p-5 shadow-none">
           {/* WhatsApp */}
           <div>
             <h3 className="mb-3 flex items-center gap-2 font-medium text-white">
@@ -2147,7 +2202,7 @@ function AutomationSection() {
                 <span className="text-sm text-white/60">API do WhatsApp</span>
                 <input
                   type="password"
-                  className="rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                  className="rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
                   placeholder="Cole sua API key/token"
                   value={settings.whatsapp_token ?? ''}
                   onChange={e => setSettings(p => ({ ...p, whatsapp_token: e.target.value }))}
@@ -2168,7 +2223,7 @@ function AutomationSection() {
                 <span className="text-sm text-white/60">API do E-mail (SendGrid)</span>
                 <input
                   type="password"
-                  className="rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                  className="rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
                   placeholder="SG.xxxxxxxxxxxx"
                   value={settings.sendgrid_key ?? ''}
                   onChange={e => setSettings(p => ({ ...p, sendgrid_key: e.target.value }))}
@@ -2249,12 +2304,12 @@ function ScraperTab({
       </div>
 
       {suppliers.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-white/10 bg-[#1a1d27] p-8 text-center text-sm text-white/45">
+        <div className="rounded-2xl border border-dashed border-white/10 bg-[#161b28] p-8 text-center text-sm text-white/45">
           Cadastre fornecedores na aba "Fornecedores (API)" primeiro.
         </div>
       ) : (
         suppliers.map(s => (
-          <div key={s.id} className="overflow-hidden rounded-2xl border border-white/10 bg-[#1a1d27] shadow-none">
+          <div key={s.id} className="overflow-hidden rounded-2xl border border-white/10 bg-[#161b28] shadow-none">
             <button
               onClick={() => { setExpanded(expanded === s.id ? null : s.id); openSupplier(s); }}
               className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-white/5"
@@ -2274,7 +2329,7 @@ function ScraperTab({
                 <label className="flex flex-col gap-1">
                   <span className="text-xs font-medium text-white/60">URL do Produto (com {'{sku}'})</span>
                   <input
-                    className="rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 font-mono text-sm text-white outline-none focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/40"
+                    className="rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 font-mono text-sm text-white outline-none focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/40"
                     placeholder="https://fornecedor.com/produto/{sku}"
                     value={urlTpl}
                     onChange={e => setUrlTpl(e.target.value)}
@@ -2283,7 +2338,7 @@ function ScraperTab({
                 <label className="flex flex-col gap-1">
                   <span className="text-xs font-medium text-white/60">Seletor CSS do Estoque</span>
                   <input
-                    className="rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 font-mono text-sm text-white outline-none focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/40"
+                    className="rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 font-mono text-sm text-white outline-none focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/40"
                     placeholder=".quantidade-estoque ou #stock ou [data-stock]"
                     value={selector}
                     onChange={e => setSelector(e.target.value)}
@@ -2295,7 +2350,7 @@ function ScraperTab({
                   <p className="text-xs font-medium text-white/60">Testar com URL real</p>
                   <div className="flex gap-2">
                     <input
-                      className="flex-1 rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white outline-none focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/40"
+                      className="flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white outline-none focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/40"
                       placeholder="Cole a URL de um produto para testar"
                       value={testUrl}
                       onChange={e => setTestUrl(e.target.value)}
@@ -2467,7 +2522,7 @@ function ImportSupplierSection({ onImportToStore }: { onImportToStore: (data: Im
   return (
     <div className="space-y-5">
       {/* Header card */}
-      <div className="rounded-2xl border border-white/10 bg-[#1a1d27] p-5 space-y-4">
+      <div className="rounded-2xl border border-white/10 bg-[#161b28] p-5 space-y-4">
         <div>
           <h2 className="flex items-center gap-2 font-semibold text-white">
             <PackageSearch size={18} className="text-green-400" /> Importar Produtos de Distribuidoras
@@ -2479,7 +2534,7 @@ function ImportSupplierSection({ onImportToStore }: { onImportToStore: (data: Im
 
         <div className="flex gap-2">
           <input
-            className="flex-1 rounded-lg border border-white/10 bg-[#22263a] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+            className="flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
             placeholder="https://distribuidora.com/products"
             value={url}
             onChange={e => setUrl(e.target.value)}
@@ -2501,7 +2556,7 @@ function ImportSupplierSection({ onImportToStore }: { onImportToStore: (data: Im
             <input
               type="number" min={0} max={500} value={margin}
               onChange={e => setMargin(Number(e.target.value))}
-              className="w-16 rounded-lg border border-white/10 bg-[#22263a] px-2 py-1 text-center text-sm text-white outline-none focus:border-green-500/40"
+              className="w-16 rounded-lg border border-white/10 bg-[#1c2236] px-2 py-1 text-center text-sm text-white outline-none focus:border-green-500/40"
             />
             %
           </label>
@@ -2528,8 +2583,8 @@ function ImportSupplierSection({ onImportToStore }: { onImportToStore: (data: Im
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
             {products.map((p, i) => (
-              <div key={i} className="overflow-hidden rounded-xl border border-white/10 bg-[#1a1d27] hover:border-white/20 transition-all">
-                <div className="aspect-square bg-[#11131a]">
+              <div key={i} className="overflow-hidden rounded-xl border border-white/10 bg-[#161b28] hover:border-white/20 transition-all">
+                <div className="aspect-square bg-[#0d0f16]">
                   {p.image
                     ? <img src={p.image} alt={p.name} className="w-full h-full object-cover" onError={e => { e.currentTarget.style.display = 'none'; }} />
                     : <div className="w-full h-full flex items-center justify-center text-3xl">📦</div>
@@ -2557,11 +2612,11 @@ function ImportSupplierSection({ onImportToStore }: { onImportToStore: (data: Im
         <div className="fixed inset-0 z-[250] flex justify-end" onClick={() => setDrawer(null)}>
           <div className="absolute inset-0 bg-black/60" />
           <div
-            className="relative z-10 flex h-full w-full max-w-md flex-col bg-[#12151f] shadow-2xl overflow-y-auto"
+            className="relative z-10 flex h-full w-full max-w-md flex-col bg-[#161b28] shadow-2xl overflow-y-auto"
             onClick={e => e.stopPropagation()}
           >
             {/* Drawer header */}
-            <div className="flex items-center justify-between border-b border-white/10 px-5 py-4 sticky top-0 bg-[#12151f] z-10">
+            <div className="flex items-center justify-between border-b border-white/10 px-5 py-4 sticky top-0 bg-[#161b28] z-10">
               <h3 className="font-semibold text-white text-sm">Detalhes do Produto</h3>
               <button onClick={() => setDrawer(null)} className="text-white/40 hover:text-white transition-colors">
                 <X size={18} />
@@ -2600,7 +2655,7 @@ function ImportSupplierSection({ onImportToStore }: { onImportToStore: (data: Im
               <h2 className="text-base font-semibold text-white leading-snug">{drawer.name}</h2>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-xl border border-white/10 bg-[#1a1d27] p-3">
+                <div className="rounded-xl border border-white/10 bg-[#161b28] p-3">
                   <p className="text-xs text-white/45 mb-0.5">Custo (distribuidora)</p>
                   <p className="text-lg font-bold text-white">€{drawer.price.toFixed(2)}</p>
                 </div>
@@ -2638,7 +2693,7 @@ function ImportSupplierSection({ onImportToStore }: { onImportToStore: (data: Im
             </div>
 
             {/* Import button */}
-            <div className="sticky bottom-0 border-t border-white/10 bg-[#12151f] px-5 py-4">
+            <div className="sticky bottom-0 border-t border-white/10 bg-[#161b28] px-5 py-4">
               <button
                 onClick={() => importProduct(drawer)}
                 className="w-full flex items-center justify-center gap-2 rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-green-700 active:scale-[0.98]"
@@ -2763,7 +2818,7 @@ function EspiarLojaTab() {
   return (
     <div className="space-y-4">
       {/* Search bar */}
-      <div className="rounded-2xl border border-white/10 bg-[#1a1d27] p-5 space-y-4">
+      <div className="rounded-2xl border border-white/10 bg-[#161b28] p-5 space-y-4">
         <h3 className="flex items-center gap-2 font-medium text-white">
           <span className="text-lg">🔍</span> Espiar &amp; Importar Produtos de Qualquer Loja
         </h3>
@@ -2773,7 +2828,7 @@ function EspiarLojaTab() {
 
         <div className="flex gap-2">
           <input
-            className="flex-1 rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+            className="flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
             placeholder="https://loja-concorrente.com/produtos"
             value={url}
             onChange={e => setUrl(e.target.value)}
@@ -2795,7 +2850,7 @@ function EspiarLojaTab() {
             <input
               type="number" min={0} max={500} value={margin}
               onChange={e => setMargin(Number(e.target.value))}
-              className="w-16 rounded-lg border border-white/10 bg-[#22263a] px-2 py-1 text-center text-sm text-white outline-none focus:border-green-500/40"
+              className="w-16 rounded-lg border border-white/10 bg-[#1c2236] px-2 py-1 text-center text-sm text-white outline-none focus:border-green-500/40"
             />
             <span>%</span>
           </label>
@@ -2825,7 +2880,7 @@ function EspiarLojaTab() {
       {products.length > 0 && (
         <div className="space-y-3">
           {/* Toolbar */}
-          <div className="flex items-center justify-between flex-wrap gap-3 rounded-xl border border-white/10 bg-[#1a1d27] px-4 py-3">
+          <div className="flex items-center justify-between flex-wrap gap-3 rounded-xl border border-white/10 bg-[#161b28] px-4 py-3">
             <div className="flex items-center gap-3">
               <span className="text-sm text-white/60">
                 <span className="font-medium text-white">{products.length}</span> produtos via{' '}
@@ -2859,14 +2914,14 @@ function EspiarLojaTab() {
                   key={i}
                   onClick={() => toggleOne(i)}
                   className={`relative cursor-pointer overflow-hidden rounded-xl border-2 transition-all
-                    ${isSel ? 'border-green-500 bg-white/5' : 'border-white/10 bg-[#1a1d27] hover:border-white/20'}`}
+                    ${isSel ? 'border-green-500 bg-white/5' : 'border-white/10 bg-[#161b28] hover:border-white/20'}`}
                 >
                   <div className={`absolute top-2 left-2 w-5 h-5 rounded flex items-center justify-center text-xs font-bold z-10
                     ${isSel ? 'bg-green-500 text-white' : 'bg-white/10 border border-white/10 text-white/40'}`}>
                     {isSel ? '✓' : ''}
                   </div>
 
-                  <div className="aspect-square bg-[#11131a]">
+                  <div className="aspect-square bg-[#0d0f16]">
                     {p.image
                       ? <img src={p.image} alt={p.name} className="w-full h-full object-cover"
                           onError={e => { e.currentTarget.style.display = 'none'; }} />
@@ -2889,7 +2944,7 @@ function EspiarLojaTab() {
                             setPrices(prev => ({ ...prev, [i]: parseFloat(e.target.value) || 0 }));
                           }}
                           onClick={e => e.stopPropagation()}
-                          className="w-full rounded border border-white/10 bg-[#22263a] px-1 py-0.5 text-xs font-mono text-white outline-none focus:border-green-500/40"
+                          className="w-full rounded border border-white/10 bg-[#1c2236] px-1 py-0.5 text-xs font-mono text-white outline-none focus:border-green-500/40"
                         />
                       </div>
                       <p className={`text-xs font-medium ${profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
@@ -2995,7 +3050,7 @@ function ImportTab({ onImportDone }: { onImportDone: () => void }) {
   if (step === 'upload') {
     return (
       <div className="space-y-4">
-        <div className="max-w-lg rounded-2xl border border-white/10 bg-[#1a1d27] p-6 shadow-none">
+        <div className="max-w-lg rounded-2xl border border-white/10 bg-[#161b28] p-6 shadow-none">
           <h3 className="mb-1 flex items-center gap-2 font-medium text-white">
             <Upload size={16} className="text-green-500" /> Importar Catálogo do Fornecedor
           </h3>
@@ -3036,7 +3091,7 @@ function ImportTab({ onImportDone }: { onImportDone: () => void }) {
 
   if (step === 'done') {
     return (
-      <div className="max-w-md rounded-2xl border border-white/10 bg-[#1a1d27] p-10 text-center shadow-none">
+      <div className="max-w-md rounded-2xl border border-white/10 bg-[#161b28] p-10 text-center shadow-none">
         <CheckCircle2 size={48} className="mx-auto mb-3 text-green-500" />
         <h3 className="mb-1 text-lg font-semibold text-white">Importação concluída!</h3>
         <p className="text-sm text-white/55">{importedCount} produtos adicionados à sua loja.</p>
@@ -3054,9 +3109,9 @@ function ImportTab({ onImportDone }: { onImportDone: () => void }) {
   return (
     <div className="space-y-4">
       {/* Filters bar */}
-      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-[#1a1d27] p-4 shadow-none">
+      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-[#161b28] p-4 shadow-none">
         <input
-          className="min-w-[160px] flex-1 rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+          className="min-w-[160px] flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
           placeholder="🔍 Buscar produto..."
           value={search}
           onChange={e => setSearch(e.target.value)}
@@ -3064,7 +3119,7 @@ function ImportTab({ onImportDone }: { onImportDone: () => void }) {
         <select
           value={filterCat}
           onChange={e => setFilterCat(e.target.value)}
-          className="rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white outline-none"
+          className="rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white outline-none"
         >
           <option value="todas">Todas categorias</option>
           {categories.map(c => <option key={c} value={c}>{c}</option>)}
@@ -3074,7 +3129,7 @@ function ImportTab({ onImportDone }: { onImportDone: () => void }) {
           <input
             type="number" min={0} max={500} value={margin}
             onChange={e => recalcMargin(Number(e.target.value))}
-            className="w-16 rounded-lg border border-white/10 bg-[#22263a] px-2 py-1 text-center text-sm text-white outline-none"
+            className="w-16 rounded-lg border border-white/10 bg-[#1c2236] px-2 py-1 text-center text-sm text-white outline-none"
           />
           <span>%</span>
         </div>
@@ -3095,7 +3150,7 @@ function ImportTab({ onImportDone }: { onImportDone: () => void }) {
               key={key}
               onClick={() => toggleProduct(p)}
               className={`relative cursor-pointer overflow-hidden rounded-xl border-2 transition-all
-                ${isSel ? 'border-green-500 bg-white/5 shadow-none' : 'border-white/10 bg-[#1a1d27] hover:border-white/20'}`}
+                ${isSel ? 'border-green-500 bg-white/5 shadow-none' : 'border-white/10 bg-[#161b28] hover:border-white/20'}`}
             >
               {/* Checkbox badge */}
               <div className={`absolute top-2 left-2 w-5 h-5 rounded flex items-center justify-center text-white text-xs font-bold z-10
@@ -3104,7 +3159,7 @@ function ImportTab({ onImportDone }: { onImportDone: () => void }) {
               </div>
 
               {/* Image */}
-              <div className="aspect-square bg-[#11131a]">
+              <div className="aspect-square bg-[#0d0f16]">
                 {p.image
                   ? <img src={p.image} alt={p.name} className="w-full h-full object-cover" onError={e => (e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" fill="%23f1f5f9"/><text x="40" y="44" text-anchor="middle" fill="%2394a3b8" font-size="24">📦</text></svg>')} />
                   : <div className="w-full h-full flex items-center justify-center text-3xl">📦</div>
@@ -3125,7 +3180,7 @@ function ImportTab({ onImportDone }: { onImportDone: () => void }) {
                       value={isSel ? selP.salePrice : p.salePrice}
                       onChange={e => { if (!isSel) toggleProduct(p); editPrice(key, e.target.value); }}
                       onClick={e => e.stopPropagation()}
-                      className="w-full rounded border border-white/10 bg-[#22263a] px-1 py-0.5 text-xs font-mono text-white outline-none focus:border-green-500/40 focus:ring-1 focus:ring-green-500/40"
+                      className="w-full rounded border border-white/10 bg-[#1c2236] px-1 py-0.5 text-xs font-mono text-white outline-none focus:border-green-500/40 focus:ring-1 focus:ring-green-500/40"
                     />
                   </div>
                   <p className={`text-xs font-medium ${profit >= 0 ? 'text-green-600' : 'text-red-500'}`}>
@@ -3140,7 +3195,7 @@ function ImportTab({ onImportDone }: { onImportDone: () => void }) {
       </div>
 
       {/* Sticky footer */}
-      <div className="sticky bottom-0 flex items-center justify-between gap-4 rounded-xl border-t border-white/10 bg-[#11131a]/95 p-4 shadow-none backdrop-blur">
+      <div className="sticky bottom-0 flex items-center justify-between gap-4 rounded-xl border-t border-white/10 bg-[#0d0f16]/95 p-4 shadow-none backdrop-blur">
         <span className="text-sm text-white/60">
           {selCount > 0
             ? <span className="font-medium text-green-300">✅ {selCount} produto(s) selecionado(s)</span>
@@ -3311,25 +3366,27 @@ function SettingsSection({
 
   return (
     <form onSubmit={handleSave} className="mx-auto w-full max-w-2xl space-y-5">
-      <div className="rounded-2xl border border-white/10 bg-[#1a1d27] p-5 shadow-none">
+      <ContentEditor />
+
+      <div className="rounded-2xl border border-white/10 bg-[#161b28] p-5 shadow-none">
         <h2 className="mb-4 font-semibold text-white">Informações da Loja</h2>
 
         <label className="mb-1.5 block text-xs font-medium text-white/50">Nome da loja</label>
         <input type="text" value={storeName} onChange={e => setStore(e.target.value)}
-          className="mb-4 w-full rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40" />
+          className="mb-4 w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40" />
 
         <label className="mb-1.5 block text-xs font-medium text-white/50">Cor principal da loja</label>
         <div className="mb-4 grid gap-2 sm:grid-cols-[44px_1fr]">
           <input type="color" value={themeColor} onChange={e => setThemeColor(e.target.value)} className="h-10 w-11 rounded cursor-pointer" />
           <input type="text" value={themeColor} onChange={e => setThemeColor(e.target.value)}
-            className="w-full rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40" />
+            className="w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40" />
         </div>
 
         <label className="mb-1.5 block text-xs font-medium text-white/50">Logo da loja</label>
         <div
           tabIndex={0}
           onPaste={handleStoreLogoPaste}
-          className="mb-3 rounded-xl border border-dashed border-white/15 bg-[#121728] p-3 text-xs text-white/65 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/30"
+          className="mb-3 rounded-xl border border-dashed border-white/15 bg-[#161b28] p-3 text-xs text-white/65 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/30"
         >
           Cole a nova logo aqui com Ctrl+V.
         </div>
@@ -3345,12 +3402,12 @@ function SettingsSection({
         {logoUrl && <img src={logoUrl} alt="Logo" className="h-14 w-auto rounded border border-white/10 object-contain p-1" />}
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-[#1a1d27] p-5 shadow-none">
+      <div className="rounded-2xl border border-white/10 bg-[#161b28] p-5 shadow-none">
         <h2 className="mb-4 font-semibold text-white">Blocos da Home (Fase 2)</h2>
         <BlocosEditor ref={blocosEditorRef} />
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-[#1a1d27] p-5 shadow-none">
+      <div className="rounded-2xl border border-white/10 bg-[#161b28] p-5 shadow-none">
         <h2 className="mb-1 font-semibold text-white">Categorias da Loja</h2>
         <p className="mb-4 text-xs text-white/50">Crie categorias pelo nome. A vitrine usa carrossel dinâmico automaticamente.</p>
 
@@ -3360,7 +3417,7 @@ function SettingsSection({
             value={newCategoryName}
             onChange={e => onNewCategoryNameChange(e.target.value)}
             placeholder="Digite o nome da categoria"
-            className="flex-1 rounded-xl border border-white/10 bg-[#22263a] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+            className="flex-1 rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
           />
           <button
             type="button"
@@ -3389,7 +3446,7 @@ function SettingsSection({
         </div>
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-[#1a1d27] p-5 shadow-none">
+      <div className="rounded-2xl border border-white/10 bg-[#161b28] p-5 shadow-none">
         <h2 className="mb-4 font-semibold text-white">WhatsApp e Redes Sociais</h2>
         <div className="space-y-4">
           {[
@@ -3400,13 +3457,13 @@ function SettingsSection({
             <div key={f.label}>
               <label className="mb-1.5 block text-xs font-medium text-white/50">{f.label}</label>
               <input type="text" value={f.value} onChange={e => f.setter(e.target.value)} placeholder={f.ph}
-                className="w-full rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40" />
+                className="w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40" />
             </div>
           ))}
 
           <p className="text-xs text-white/45">WhatsApp e e-mail aparecem nos ícones de contato da vitrine. Atualize aqui sempre que precisar.</p>
 
-          <label className="flex items-center gap-2 rounded-lg border border-white/10 bg-[#111827] px-3 py-2 text-sm text-white/80">
+          <label className="flex items-center gap-2 rounded-lg border border-white/10 bg-[#161b28] px-3 py-2 text-sm text-white/80">
             <input
               type="checkbox"
               checked={waFloatingEnabled}
@@ -3423,7 +3480,7 @@ function SettingsSection({
               onChange={e => setWaGreeting(e.target.value)}
               rows={3}
               placeholder="Hola! Bienvenido a VitaFit Store. En que puedo ayudarte hoy?"
-              className="w-full rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+              className="w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
             />
           </div>
 
@@ -3433,7 +3490,7 @@ function SettingsSection({
               value={waOrderTemplate}
               onChange={e => setWaOrderTemplate(e.target.value)}
               rows={4}
-              className="w-full rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+              className="w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
             />
             <p className="mt-1 text-[11px] text-white/40">Variaveis: {'{name}'} {'{orderId}'} {'{productName}'} {'{eta}'}</p>
           </div>
@@ -3444,7 +3501,7 @@ function SettingsSection({
               value={waTrackingTemplate}
               onChange={e => setWaTrackingTemplate(e.target.value)}
               rows={4}
-              className="w-full rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+              className="w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
             />
             <p className="mt-1 text-[11px] text-white/40">Variaveis: {'{name}'} {'{orderId}'} {'{carrier}'} {'{trackingCode}'} {'{trackingUrl}'}</p>
           </div>
@@ -3455,7 +3512,7 @@ function SettingsSection({
               value={waFutureTemplate}
               onChange={e => setWaFutureTemplate(e.target.value)}
               rows={4}
-              className="w-full rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+              className="w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
             />
             <p className="mt-1 text-[11px] text-white/40">Use este campo para preparar novos textos sem perder no futuro.</p>
           </div>
@@ -3497,7 +3554,7 @@ function TableCard({ title, icon, action, children }: {
   children: React.ReactNode;
 }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#1a1d27] shadow-none">
+    <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#161b28] shadow-none">
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-4 sm:px-5">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-white">{icon}{title}</h2>
         {action && (

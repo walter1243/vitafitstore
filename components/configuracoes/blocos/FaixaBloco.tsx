@@ -30,11 +30,11 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
           type="text"
           value={value}
           onChange={e => onChange(e.target.value)}
-          className="w-full rounded-lg border border-white/15 bg-[#111a2f] px-2 py-1.5 font-mono text-sm text-white focus:border-green-500/40 focus:outline-none focus:ring-2 focus:ring-green-500/30"
+          className="w-full rounded-lg border border-white/15 bg-[#161b28] px-2 py-1.5 font-mono text-sm text-white focus:border-green-500/40 focus:outline-none focus:ring-2 focus:ring-green-500/30"
         />
       </div>
       {open && (
-        <div className="absolute left-0 top-full z-50 mt-1 rounded-xl border border-white/10 bg-[#0f1526] p-3 shadow-xl">
+        <div className="absolute left-0 top-full z-50 mt-1 rounded-xl border border-white/10 bg-[#1c2236] p-3 shadow-xl">
           <HexColorPicker color={value} onChange={onChange} />
           <button
             type="button"
@@ -67,7 +67,7 @@ export function FaixaBloco({ data, onChange }: Props) {
           value={data.text}
           onChange={e => onChange({ ...data, text: e.target.value })}
           placeholder="Ex: Frete grátis em pedidos acima de €50"
-          className="w-full rounded-lg border border-white/15 bg-[#111a2f] px-3 py-2 text-sm text-white placeholder:text-white/35 focus:border-green-500/40 focus:outline-none focus:ring-2 focus:ring-green-500/30"
+          className="w-full rounded-lg border border-white/15 bg-[#161b28] px-3 py-2 text-sm text-white placeholder:text-white/35 focus:border-green-500/40 focus:outline-none focus:ring-2 focus:ring-green-500/30"
         />
       </div>
 

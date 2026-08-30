@@ -173,13 +173,13 @@ export function AdminKitsSection({ products }: { products: ProductLite[] }) {
                 value={baseSearch}
                 onChange={(e) => setBaseSearch(e.target.value)}
                 placeholder="Nome ou categoria"
-                className="w-full rounded-xl border border-white/10 bg-[#22263a] py-2.5 pl-9 pr-3 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                className="w-full rounded-xl border border-white/10 bg-[#1c2236] py-2.5 pl-9 pr-3 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
               />
             </div>
             <select
               value={baseProductId || ''}
               onChange={(e) => setBaseProductId(Number(e.target.value || 0))}
-              className="mt-2 w-full rounded-xl border border-white/10 bg-[#22263a] px-3 py-2.5 text-sm text-white outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+              className="mt-2 w-full rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
             >
               <option value="">Selecione o produto principal</option>
               {filteredBaseProducts.map((p) => (
@@ -196,14 +196,14 @@ export function AdminKitsSection({ products }: { products: ProductLite[] }) {
                 value={itemSearch}
                 onChange={(e) => setItemSearch(e.target.value)}
                 placeholder="Nome ou categoria"
-                className="w-full rounded-xl border border-white/10 bg-[#22263a] py-2.5 pl-9 pr-3 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                className="w-full rounded-xl border border-white/10 bg-[#1c2236] py-2.5 pl-9 pr-3 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
               />
             </div>
             <div className="mt-2 flex gap-2">
               <select
                 value={selectedProductId || ''}
                 onChange={(e) => setSelectedProductId(Number(e.target.value || 0))}
-                className="w-full rounded-xl border border-white/10 bg-[#22263a] px-3 py-2.5 text-sm text-white outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                className="w-full rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
               >
                 <option value="">Selecione para adicionar</option>
                 {filteredItemOptions.map((p) => (
@@ -242,7 +242,7 @@ export function AdminKitsSection({ products }: { products: ProductLite[] }) {
                   min={1}
                   value={item.quantity}
                   onChange={(e) => updateQuantity(item.productId, Number(e.target.value || 1))}
-                  className="w-20 rounded-lg border border-white/10 bg-[#22263a] px-2 py-1.5 text-sm text-white outline-none"
+                  className="w-20 rounded-lg border border-white/10 bg-[#1c2236] px-2 py-1.5 text-sm text-white outline-none"
                 />
                 <button
                   type="button"

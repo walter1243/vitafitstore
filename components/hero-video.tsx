@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowDown, ArrowRight, Shield, Zap, Leaf, Volume2, VolumeX } from 'lucide-react';
 import gsap from 'gsap';
 import Lenis from '@studio-freight/lenis';
+import { DEFAULT_HERO, type HeroContent } from '@/lib/site-content-defaults';
 
 function fadeVolume(video: HTMLVideoElement, target: number, duration: number, onDone?: () => void) {
   const steps = 20;
@@ -21,7 +22,8 @@ function fadeVolume(video: HTMLVideoElement, target: number, duration: number, o
   }, stepTime);
 }
 
-export default function HeroVideo() {
+export default function HeroVideo({ content }: { content?: Partial<HeroContent> }) {
+  const hero = { ...DEFAULT_HERO, ...content };
   const sectionRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
@@ -109,12 +111,12 @@ export default function HeroVideo() {
       <video
         ref={videoRef}
         className="absolute inset-0 w-full h-full object-cover object-[center_30%] sm:object-center z-0"
-        src="/video-hero.mp4"
+        src={hero.videoUrl}
         autoPlay
         loop
         muted
         playsInline
-        poster="/images/collagen.jpg"
+        poster={hero.posterUrl}
       />
 
       {/* Gradient overlay */}
@@ -131,17 +133,39 @@ export default function HeroVideo() {
         <div className="animate-blob animation-delay-0 absolute -top-24 -left-24 h-96 w-96 rounded-full bg-emerald-600/15 blur-[120px]" />
         <div className="animate-blob animation-delay-2000 absolute top-1/2 right-0 h-80 w-80 rounded-full bg-teal-500/10 blur-[100px]" />
         <div className="animate-blob animation-delay-4000 absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-green-400/10 blur-[90px]" />
+        {/* Winter frost accent blob */}
+        <div className="animate-blob animation-delay-2000 absolute top-10 right-1/4 h-64 w-64 rounded-full bg-sky-400/10 blur-[100px]" />
+      </div>
+
+      {/* Zero-gravity floating chips — antigravity signature, tuned for mobile */}
+      <div className="absolute inset-0 z-[3] pointer-events-none overflow-hidden">
+        <div className="animate-zero-gravity absolute left-[6%] top-[16%] sm:left-[10%] sm:top-[20%]">
+          <div className="glass-frost flex h-10 w-10 sm:h-14 sm:w-14 items-center justify-center rounded-2xl shadow-lg shadow-sky-500/10">
+            <Leaf className="h-4 w-4 sm:h-6 sm:w-6 text-emerald-300" />
+          </div>
+        </div>
+        <div className="animate-zero-gravity-slow absolute right-[8%] top-[28%] sm:right-[12%] sm:top-[15%]">
+          <div className="glass-frost flex h-9 w-9 sm:h-12 sm:w-12 items-center justify-center rounded-full shadow-lg shadow-sky-500/10">
+            <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-sky-300" />
+          </div>
+        </div>
+        <div className="animate-zero-gravity absolute right-[10%] bottom-[22%] hidden sm:flex" style={{ animationDelay: '2.4s' }}>
+          <div className="glass-frost flex h-12 w-12 items-center justify-center rounded-2xl shadow-lg shadow-sky-500/10">
+            <Shield className="h-5 w-5 text-emerald-300" />
+          </div>
+        </div>
       </div>
 
       {/* Main content */}
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
       <div
         ref={textRef}
-        className="relative z-10 text-white text-center flex flex-col items-center px-4 sm:px-6 max-w-5xl mx-auto"
+        className="text-white text-center flex flex-col items-center max-w-5xl mx-auto"
       >
         {/* Badge */}
         <div className="mb-4 sm:mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 backdrop-blur-sm px-3 py-1.5 sm:px-5 sm:py-2 text-xs sm:text-sm font-semibold text-emerald-300">
           <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-          Envío gratis en pedidos +50€ · España
+          {hero.badgeText}
         </div>
 
         {/* Title */}
@@ -149,23 +173,23 @@ export default function HeroVideo() {
           className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold mb-4 sm:mb-6 drop-shadow-2xl leading-[1.05] tracking-tight"
           style={{ fontFamily: 'var(--font-heading)' }}
         >
-          <span className="block text-white">Suplementos Deportivos</span>
+          <span className="block text-white">{hero.titleLine1}</span>
           <span className="block bg-gradient-to-r from-emerald-300 via-green-400 to-teal-300 bg-clip-text text-transparent">
-            Europeos en España
+            {hero.titleLine2}
           </span>
         </h1>
 
         {/* Subtitle */}
         <p className="text-sm sm:text-lg md:text-2xl text-white/75 mb-7 sm:mb-10 font-light tracking-[0.2em] sm:tracking-widest drop-shadow">
-          Salud · Performance · Bienestar
+          {hero.subtitle}
         </p>
 
         {/* Single CTA */}
         <a
-          href="#productos"
+          href={hero.ctaHref}
           className="group flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white px-6 py-3 sm:px-10 sm:py-4 rounded-xl text-sm sm:text-base font-semibold transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-[0_0_30px_rgba(34,197,94,0.6)]"
         >
-          Descubrir Productos
+          {hero.ctaText}
           <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
         </a>
 
@@ -175,9 +199,11 @@ export default function HeroVideo() {
             { icon: Shield, label: 'Pago Seguro' },
             { icon: Zap, label: 'Resultados Reales' },
             { icon: Leaf, label: '100% Natural' },
-          ].map(({ icon: Icon, label }) => (
+          ].map(({ icon: Icon, label }, i) => (
             <div key={label} className="flex items-center gap-2 text-white/60 text-xs sm:text-sm">
-              <Icon className="h-4 w-4 text-emerald-400" />
+              <span className="animate-zero-gravity-slow inline-flex" style={{ animationDelay: `${i * 0.5}s` }}>
+                <Icon className="h-4 w-4 text-emerald-400" />
+              </span>
               <span>{label}</span>
             </div>
           ))}
@@ -197,6 +223,7 @@ export default function HeroVideo() {
             </div>
           ))}
         </div>
+      </div>
       </div>
 
       {/* Volume control */}

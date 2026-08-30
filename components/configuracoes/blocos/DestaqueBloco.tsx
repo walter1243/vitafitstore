@@ -31,7 +31,7 @@ export function DestaqueBloco({ data, onChange }: Props) {
           value={data.title}
           onChange={e => onChange({ ...data, title: e.target.value })}
           placeholder="Ex: Produtos em Destaque"
-          className="w-full rounded-lg border border-white/15 bg-[#111a2f] px-3 py-2 text-sm text-white placeholder:text-white/35 focus:border-green-500/40 focus:outline-none focus:ring-2 focus:ring-green-500/30"
+          className="w-full rounded-lg border border-white/15 bg-[#161b28] px-3 py-2 text-sm text-white placeholder:text-white/35 focus:border-green-500/40 focus:outline-none focus:ring-2 focus:ring-green-500/30"
         />
       </div>
 

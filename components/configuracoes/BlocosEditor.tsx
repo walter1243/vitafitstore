@@ -79,7 +79,7 @@ export const BlocosEditor = forwardRef<BlocosEditorHandle>(function BlocosEditor
     <>
       <div className="grid gap-3 sm:grid-cols-2">
         {blocos.map((bloco) => (
-          <div key={bloco.id} className="rounded-2xl border border-white/10 bg-[#111827] p-4">
+          <div key={bloco.id} className="rounded-2xl border border-white/10 bg-[#161b28] p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="text-sm font-semibold text-white">{bloco.label}</h3>
@@ -121,7 +121,7 @@ export const BlocosEditor = forwardRef<BlocosEditorHandle>(function BlocosEditor
 
       {editingBlock && (
         <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/70 p-4" onClick={() => setEditingId(null)}>
-          <div className="w-full max-w-3xl rounded-2xl border border-white/10 bg-[#1a1d27] p-5" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-3xl rounded-2xl border border-white/10 bg-[#161b28] p-5" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h3 className="text-base font-semibold text-white">Editar: {editingBlock.label}</h3>

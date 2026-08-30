@@ -35,9 +35,9 @@ export function BlocoArrastavel({
     <div
       ref={setNodeRef}
       style={style}
-      className="overflow-hidden rounded-xl border border-white/10 bg-[#101522] shadow-none"
+      className="overflow-hidden rounded-xl border border-white/10 bg-[#161b28] shadow-none"
     >
-      <div className="flex items-center gap-2 bg-[#161c2b] px-4 py-3 select-none">
+      <div className="flex items-center gap-2 bg-[#161b28] px-4 py-3 select-none">
         <button
           type="button"
           className="text-white/35 hover:text-white/70 cursor-grab active:cursor-grabbing flex-shrink-0 touch-none"

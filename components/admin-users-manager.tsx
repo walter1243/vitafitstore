@@ -142,7 +142,7 @@ export function AdminUsersManager() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-[#1f2436] to-[#161a29] p-5 shadow-none">
+      <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-[#161b28] to-[#161b28] p-5 shadow-none">
         <h2 className="mb-1 font-semibold text-white">Painel de Login e Usuários</h2>
         <p className="mb-4 text-xs text-white/55">Cadastre acessos e fotos direto aqui por colar, abrir arquivo ou galeria no mobile.</p>
 
@@ -158,7 +158,7 @@ export function AdminUsersManager() {
                 break;
               }
             }}
-            className="group flex min-h-[90px] cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-white/15 bg-[#0f1320] p-3 text-center text-xs text-white/55 transition-colors hover:border-green-500/40"
+            className="group flex min-h-[90px] cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-white/15 bg-[#161b28] p-3 text-center text-xs text-white/55 transition-colors hover:border-green-500/40"
             onClick={() => createPhotoInputRef.current?.click()}
           >
             {newUser.photoUrl ? (
@@ -180,20 +180,20 @@ export function AdminUsersManager() {
             value={newUser.username}
             onChange={(e) => setNewUser((p) => ({ ...p, username: e.target.value }))}
             placeholder="Usuário"
-            className="rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white outline-none"
+            className="rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white outline-none"
           />
           <input
             value={newUser.displayName}
             onChange={(e) => setNewUser((p) => ({ ...p, displayName: e.target.value }))}
             placeholder="Nome de exibição"
-            className="rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white outline-none"
+            className="rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white outline-none"
           />
           <input
             value={newUser.password}
             onChange={(e) => setNewUser((p) => ({ ...p, password: e.target.value }))}
             type="password"
             placeholder="Senha"
-            className="rounded-lg border border-white/10 bg-[#22263a] px-3 py-2 text-sm text-white outline-none"
+            className="rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white outline-none"
           />
         </div>
 
@@ -222,7 +222,7 @@ export function AdminUsersManager() {
         )}
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-[#1a1d27] p-5 shadow-none">
+      <div className="rounded-2xl border border-white/10 bg-[#161b28] p-5 shadow-none">
         <h3 className="mb-3 text-sm font-semibold text-white">Usuários cadastrados</h3>
         {loading ? (
           <div className="text-xs text-white/50">Carregando usuários...</div>
@@ -267,16 +267,16 @@ export function AdminUsersManager() {
                   <input
                     value={user.displayName}
                     onChange={(e) => setUsers((prev) => prev.map((it) => it.id === user.id ? { ...it, displayName: e.target.value } : it))}
-                    className="min-w-[150px] flex-1 rounded-lg border border-white/10 bg-[#22263a] px-2 py-1.5 text-xs text-white outline-none"
+                    className="min-w-[150px] flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-2 py-1.5 text-xs text-white outline-none"
                   />
 
                   <input
                     value={user.username}
                     onChange={(e) => setUsers((prev) => prev.map((it) => it.id === user.id ? { ...it, username: e.target.value } : it))}
-                    className="min-w-[130px] rounded-lg border border-white/10 bg-[#22263a] px-2 py-1.5 text-xs text-white outline-none"
+                    className="min-w-[130px] rounded-lg border border-white/10 bg-[#1c2236] px-2 py-1.5 text-xs text-white outline-none"
                   />
 
-                  <div className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-[#111827] px-2 py-1 text-[11px] text-white/55">
+                  <div className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-[#161b28] px-2 py-1 text-[11px] text-white/55">
                     <Upload size={11} /> Foto por arquivo/colar
                   </div>
 

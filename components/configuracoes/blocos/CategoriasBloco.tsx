@@ -74,18 +74,18 @@ export function CategoriasBloco({ data, onChange }: Props) {
           value={data.title}
           onChange={e => onChange({ ...data, title: e.target.value })}
           placeholder="Ex: Nossas Categorias"
-          className="w-full rounded-lg border border-white/15 bg-[#0f1526] px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-green-500/40 focus:outline-none focus:ring-2 focus:ring-green-500/30"
+          className="w-full rounded-lg border border-white/15 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-green-500/40 focus:outline-none focus:ring-2 focus:ring-green-500/30"
         />
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
           <label className="mb-1 block text-xs font-medium text-white/60">Layout</label>
-          <div className="rounded-lg border border-white/10 bg-[#0f1526] px-3 py-2 text-sm font-medium text-white/85">Carrossel (fixo)</div>
+          <div className="rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm font-medium text-white/85">Carrossel (fixo)</div>
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-white/60">Estilo</label>
-          <div className="rounded-lg border border-white/10 bg-[#0f1526] px-3 py-2 text-sm font-medium text-white/85">Cards da vitrine (fixo)</div>
+          <div className="rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm font-medium text-white/85">Cards da vitrine (fixo)</div>
         </div>
       </div>
 
@@ -104,7 +104,7 @@ export function CategoriasBloco({ data, onChange }: Props) {
         </div>
         <div className="space-y-2">
           {data.categories.map((cat, idx) => (
-            <div key={cat.id} className="space-y-2 rounded-lg border border-white/10 bg-[#0f1526] p-3">
+            <div key={cat.id} className="space-y-2 rounded-lg border border-white/10 bg-[#1c2236] p-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-white/40">#{idx + 1}</span>
                 <div className="flex items-center gap-2">
@@ -131,14 +131,14 @@ export function CategoriasBloco({ data, onChange }: Props) {
                   value={cat.name}
                   onChange={e => updateCategory(cat.id, 'name', e.target.value)}
                   placeholder="Nome"
-                  className="rounded-lg border border-white/15 bg-[#111a2f] px-2 py-1.5 text-xs text-white placeholder:text-white/35 focus:border-green-500/40 focus:outline-none focus:ring-2 focus:ring-green-500/30"
+                  className="rounded-lg border border-white/15 bg-[#161b28] px-2 py-1.5 text-xs text-white placeholder:text-white/35 focus:border-green-500/40 focus:outline-none focus:ring-2 focus:ring-green-500/30"
                 />
                 <input
                   type="text"
                   value={cat.link}
                   onChange={e => updateCategory(cat.id, 'link', e.target.value)}
                   placeholder="Link (ex: /saude)"
-                  className="rounded-lg border border-white/15 bg-[#111a2f] px-2 py-1.5 text-xs text-white placeholder:text-white/35 focus:border-green-500/40 focus:outline-none focus:ring-2 focus:ring-green-500/30"
+                  className="rounded-lg border border-white/15 bg-[#161b28] px-2 py-1.5 text-xs text-white placeholder:text-white/35 focus:border-green-500/40 focus:outline-none focus:ring-2 focus:ring-green-500/30"
                 />
               </div>
 
@@ -146,7 +146,7 @@ export function CategoriasBloco({ data, onChange }: Props) {
                 <div
                   tabIndex={0}
                   onPaste={(e) => pasteMedia(e, cat.id, 'imageUrl')}
-                  className="rounded-lg border border-dashed border-white/15 bg-[#111a2f] p-2 text-[11px] text-white/60 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/30"
+                  className="rounded-lg border border-dashed border-white/15 bg-[#161b28] p-2 text-[11px] text-white/60 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/30"
                 >
                   <p className="mb-1 uppercase tracking-wide text-white/40">Imagem do card</p>
                   {cat.imageUrl
@@ -156,7 +156,7 @@ export function CategoriasBloco({ data, onChange }: Props) {
                 <div
                   tabIndex={0}
                   onPaste={(e) => pasteMedia(e, cat.id, 'logoUrl')}
-                  className="rounded-lg border border-dashed border-white/15 bg-[#111a2f] p-2 text-[11px] text-white/60 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/30"
+                  className="rounded-lg border border-dashed border-white/15 bg-[#161b28] p-2 text-[11px] text-white/60 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/30"
                 >
                   <p className="mb-1 uppercase tracking-wide text-white/40">Logo</p>
                   {cat.logoUrl

@@ -4,8 +4,11 @@ import { useState } from 'react'
 import { Send, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { ScrollReveal } from '@/components/scroll-reveal'
+import { DEFAULT_NEWSLETTER, type NewsletterContent } from '@/lib/site-content-defaults'
 
-export function Newsletter() {
+export function Newsletter({ data }: { data?: NewsletterContent }) {
+  const content = { ...DEFAULT_NEWSLETTER, ...data }
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
 
@@ -28,13 +31,12 @@ export function Newsletter() {
   return (
     <section className="bg-primary py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
+        <ScrollReveal className="text-center">
           <h2 className="mb-3 text-2xl font-bold text-primary-foreground sm:text-3xl">
-            Únete a la comunidad VitaFit
+            {content.title}
           </h2>
           <p className="mx-auto mb-8 max-w-xl text-primary-foreground/80">
-            Recibe ofertas exclusivas, consejos de salud y novedades antes que nadie. 
-            ¡10% de descuento en tu primera compra!
+            {content.text}
           </p>
 
           <form onSubmit={handleSubmit} className="mx-auto flex max-w-md flex-col gap-3 sm:flex-row">
@@ -71,9 +73,9 @@ export function Newsletter() {
           </form>
 
           <p className="mt-4 text-xs text-primary-foreground/60">
-            Al suscribirte aceptas nuestra política de privacidad. Sin spam, lo prometemos.
+            {content.privacyText}
           </p>
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   )
