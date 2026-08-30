@@ -1,5 +1,5 @@
 import type { HeroContent } from '@/lib/site-content-defaults';
-import { Field, inputCls, textareaCls } from './shared';
+import { Field, inputCls, MediaUploadField } from './shared';
 
 export function HeroForm({ data, onChange }: { data: HeroContent; onChange: (d: HeroContent) => void }) {
   function set<K extends keyof HeroContent>(key: K, value: HeroContent[K]) {
@@ -16,7 +16,7 @@ export function HeroForm({ data, onChange }: { data: HeroContent; onChange: (d: 
         <Field label="Título — linha 1">
           <input className={inputCls} value={data.titleLine1} onChange={(e) => set('titleLine1', e.target.value)} />
         </Field>
-        <Field label="Título — linha 2 (com destaque em verde)">
+        <Field label="Título — linha 2 (com destaque colorido)">
           <input className={inputCls} value={data.titleLine2} onChange={(e) => set('titleLine2', e.target.value)} />
         </Field>
       </div>
@@ -34,13 +34,21 @@ export function HeroForm({ data, onChange }: { data: HeroContent; onChange: (d: 
         </Field>
       </div>
 
-      <Field label="URL do vídeo de fundo" hint="Arquivo .mp4 hospedado (ex: /video-hero.mp4 ou uma URL completa).">
-        <input className={inputCls} value={data.videoUrl} onChange={(e) => set('videoUrl', e.target.value)} />
-      </Field>
+      <MediaUploadField
+        label="Vídeo de fundo"
+        hint="Vídeos grandes deixam a página mais lenta — prefira arquivos curtos e leves (poucos segundos, sem áudio)."
+        kind="video"
+        value={data.videoUrl}
+        onChange={(url) => set('videoUrl', url)}
+      />
 
-      <Field label="Imagem de capa (poster)" hint="Aparece enquanto o vídeo carrega.">
-        <input className={inputCls} value={data.posterUrl} onChange={(e) => set('posterUrl', e.target.value)} />
-      </Field>
+      <MediaUploadField
+        label="Imagem de capa (poster)"
+        hint="Aparece enquanto o vídeo carrega."
+        kind="image"
+        value={data.posterUrl}
+        onChange={(url) => set('posterUrl', url)}
+      />
     </div>
   );
 }

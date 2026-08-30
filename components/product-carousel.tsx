@@ -196,10 +196,10 @@ export function ProductCarousel({ products, title, subtitle, categoryLabel, cate
                   className="flex-none pl-3 sm:pl-4 lg:pl-5 w-[228px] sm:w-[268px] lg:w-[276px] cursor-pointer block"
                 >
                   <div
-                    className="group relative rounded-2xl border border-white/8 overflow-hidden
+                    className="card-shine group relative rounded-2xl border border-white/8 overflow-hidden
                       transition-all duration-[350ms]
-                      hover:-translate-y-3 hover:border-sky-500/30
-                      hover:shadow-[0_16px_40px_rgba(14,165,233,0.15)]"
+                      hover:-translate-y-3 hover:scale-[1.015] hover:border-sky-500/30
+                      hover:shadow-[0_20px_48px_rgba(14,165,233,0.22)]"
                     style={{
                       background: 'rgba(255,255,255,0.03)',
                       backdropFilter: 'blur(4px)',
