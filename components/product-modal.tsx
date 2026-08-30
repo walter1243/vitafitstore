@@ -6,7 +6,7 @@ import {
   Minus, Plus, X, ChevronLeft, ChevronRight, Play, ChevronDown,
 } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
-import { type Product, productReviews } from '@/lib/products';
+import { type Product, type Review } from '@/lib/products';
 
 interface ProductModalProps {
   product: Product | null;
@@ -80,7 +80,13 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
 
   if (!product) return null;
 
-  const reviews = productReviews[product.id] || [];
+  // No genuine per-product review data exists yet. Previously this looked up
+  // `productReviews[product.id]` from a static demo catalog — since real
+  // database products get their own ids, that lookup collided with unrelated
+  // demo products and showed reviews for the wrong item. Left empty until a
+  // real review system is in place (EU Omnibus directive requires reviews to
+  // be genuine, not fabricated or mismatched).
+  const reviews: Review[] = [];
   const mainImage = product.mainImage ?? product.image;
   const galleryImages = [mainImage, ...(product.additionalImages ?? [])].filter(Boolean) as string[];
   const displayImage = activeImage ?? mainImage;
@@ -249,7 +255,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
 
               {/* Category */}
               <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.15em] text-emerald-400">
-                {product.category === 'salud' ? 'Salud y Bienestar' : 'Fitness & Performance'}
+                {product.categoryLabel || (product.category === 'salud' ? 'Salud y Bienestar' : 'Fitness & Performance')}
               </p>
 
               {/* Product name */}
@@ -258,14 +264,16 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
                 {product.name}
               </h2>
 
-              {/* Stars + review count */}
-              <div className="mt-2.5 flex items-center gap-2.5">
-                <StarRating rating={product.rating} />
-                <span className="text-sm font-semibold text-amber-400">{product.rating}</span>
-                <span className="text-sm text-white/40 cursor-pointer hover:text-white/60 transition-colors">
-                  ({product.reviews} reseñas)
-                </span>
-              </div>
+              {/* Stars + review count — only shown once real review data exists */}
+              {product.reviews > 0 && (
+                <div className="mt-2.5 flex items-center gap-2.5">
+                  <StarRating rating={product.rating} />
+                  <span className="text-sm font-semibold text-amber-400">{product.rating}</span>
+                  <span className="text-sm text-white/40 cursor-pointer hover:text-white/60 transition-colors">
+                    ({product.reviews} reseñas)
+                  </span>
+                </div>
+              )}
 
               {/* Price block */}
               <div className="mt-4 flex items-baseline gap-3">

@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import Image from 'next/image';
+import Link from 'next/link';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ChevronLeft, ChevronRight, Star, ShoppingCart, Check, Eye } from 'lucide-react';
@@ -20,7 +21,6 @@ interface ProductCarouselProps {
     bannerUrl?: string;
     logoUrl?: string;
   };
-  onViewDetails: (product: Product) => void;
 }
 
 const badgeConfig: Record<string, { text: string; cls: string }> = {
@@ -29,7 +29,7 @@ const badgeConfig: Record<string, { text: string; cls: string }> = {
   nuevo: { text: 'Nuevo', cls: 'bg-gradient-to-r from-violet-500 to-purple-500' },
 };
 
-export function ProductCarousel({ products, title, subtitle, categoryLabel, categoryMedia, onViewDetails }: ProductCarouselProps) {
+export function ProductCarousel({ products, title, subtitle, categoryLabel, categoryMedia }: ProductCarouselProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, align: 'start', dragFree: false });
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [addedId, setAddedId] = useState<number | null>(null);
@@ -189,11 +189,11 @@ export function ProductCarousel({ products, title, subtitle, categoryLabel, cate
               const isAdded = addedId === product.id;
 
               return (
-                <div
+                <Link
                   key={product.id}
-                  ref={(el) => { cardsRef.current[index] = el; }}
-                  className="flex-none pl-3 sm:pl-4 lg:pl-5 w-[228px] sm:w-[268px] lg:w-[276px] cursor-pointer"
-                  onClick={() => onViewDetails(product)}
+                  href={`/producto/${product.id}-${product.slug}`}
+                  ref={(el) => { cardsRef.current[index] = el as unknown as HTMLDivElement; }}
+                  className="flex-none pl-3 sm:pl-4 lg:pl-5 w-[228px] sm:w-[268px] lg:w-[276px] cursor-pointer block"
                 >
                   <div
                     className="group relative rounded-2xl border border-white/8 overflow-hidden
@@ -242,20 +242,22 @@ export function ProductCarousel({ products, title, subtitle, categoryLabel, cate
                         {product.shortDescription}
                       </p>
 
-                      {/* Stars */}
-                      <div className="flex items-center gap-1 mb-3">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`h-3 w-3 ${
-                              i < Math.floor(product.rating)
-                                ? 'fill-amber-400 text-amber-400'
-                                : 'fill-white/15 text-white/15'
-                            }`}
-                          />
-                        ))}
-                        <span className="text-xs text-white/40 ml-1">({product.reviews})</span>
-                      </div>
+                      {/* Stars — only shown once real review data exists */}
+                      {product.reviews > 0 && (
+                        <div className="flex items-center gap-1 mb-3">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`h-3 w-3 ${
+                                i < Math.floor(product.rating)
+                                  ? 'fill-amber-400 text-amber-400'
+                                  : 'fill-white/15 text-white/15'
+                              }`}
+                            />
+                          ))}
+                          <span className="text-xs text-white/40 ml-1">({product.reviews})</span>
+                        </div>
+                      )}
 
                       <div className="flex items-center justify-between gap-2">
                         <div>
@@ -287,7 +289,7 @@ export function ProductCarousel({ products, title, subtitle, categoryLabel, cate
                       </div>
                     </div>
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>

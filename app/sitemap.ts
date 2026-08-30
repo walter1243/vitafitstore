@@ -1,7 +1,18 @@
 import { MetadataRoute } from 'next';
+import { getAllProductIds } from '@/lib/get-product';
+import { slugifyCategory } from '@/lib/store-product';
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const products = await getAllProductIds();
+  const productEntries: MetadataRoute.Sitemap = products.map((p) => ({
+    url: `https://www.vitafitstore.es/producto/${p.id}-${slugifyCategory(p.name)}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly',
+    priority: 0.7,
+  }));
+
   return [
+    ...productEntries,
     {
       url: 'https://www.vitafitstore.es',
       lastModified: new Date(),

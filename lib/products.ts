@@ -17,6 +17,7 @@ export interface Product {
   additionalImages?: string[]
   videoUrl?: string
   category: 'salud' | 'fitness'
+  categoryLabel?: string
   badge?: 'mas-vendido' | 'oferta' | 'nuevo'
   rating: number
   reviews: number

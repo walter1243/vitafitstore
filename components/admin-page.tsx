@@ -3255,6 +3255,7 @@ function SettingsSection({
   const [waOrderTemplate, setWaOrderTemplate] = useState('Hola {name}! Gracias por tu compra en VitaFit. Tu pedido #{orderId} esta confirmado y ya estamos preparando {productName}. {eta}');
   const [waTrackingTemplate, setWaTrackingTemplate] = useState('Hola {name}! Buenas noticias: tu pedido #{orderId} ya fue enviado. Transportista: {carrier}. Codigo: {trackingCode}. Rastreo: {trackingUrl}');
   const [waFutureTemplate, setWaFutureTemplate] = useState('Hola {name}! Este es un mensaje futuro editable para nuevas automatizaciones.');
+  const [trustpilotBusinessId, setTrustpilotBusinessId] = useState('');
   const [storeName, setStore] = useState('VitaFit Store');
   const [themeColor, setThemeColor] = useState('#10b981');
   const [logoUrl, setLogoUrl] = useState('');
@@ -3280,6 +3281,7 @@ function SettingsSection({
         setWaOrderTemplate(data?.whatsappOrderTemplate ?? 'Hola {name}! Gracias por tu compra en VitaFit. Tu pedido #{orderId} esta confirmado y ya estamos preparando {productName}. {eta}');
         setWaTrackingTemplate(data?.whatsappTrackingTemplate ?? 'Hola {name}! Buenas noticias: tu pedido #{orderId} ya fue enviado. Transportista: {carrier}. Codigo: {trackingCode}. Rastreo: {trackingUrl}');
         setWaFutureTemplate(data?.whatsappFutureTemplate ?? 'Hola {name}! Este es un mensaje futuro editable para nuevas automatizaciones.');
+        setTrustpilotBusinessId(data?.trustpilotBusinessId ?? '');
       } catch {
         // ignore load errors
       }
@@ -3320,6 +3322,7 @@ function SettingsSection({
               whatsappOrderTemplate: waOrderTemplate.trim(),
               whatsappTrackingTemplate: waTrackingTemplate.trim(),
               whatsappFutureTemplate: waFutureTemplate.trim(),
+              trustpilotBusinessId: trustpilotBusinessId.trim(),
             }),
           }),
           fetch('/api/home-blocks', {
@@ -3518,6 +3521,25 @@ function SettingsSection({
           </div>
         </div>
       </div>
+
+      <div className="rounded-2xl border border-white/10 bg-[#161b28] p-5 shadow-none">
+        <h2 className="mb-1 font-semibold text-white">Confiança e Avaliações (Trustpilot)</h2>
+        <p className="mb-4 text-xs text-white/50">
+          Não inventamos avaliações falsas na loja — se você já tem (ou criar) uma conta no Trustpilot, cole o ID do seu negócio aqui para exibir o selo verificado real na página do produto.
+        </p>
+        <label className="mb-1.5 block text-xs font-medium text-white/50">Trustpilot Business Unit ID</label>
+        <input
+          type="text"
+          value={trustpilotBusinessId}
+          onChange={e => setTrustpilotBusinessId(e.target.value)}
+          placeholder="ex: 5f9b3b... (encontrado no seu painel Trustpilot)"
+          className="w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+        />
+        <p className="mt-1.5 text-[11px] text-white/40">
+          Deixe em branco para não mostrar nenhum selo — melhor não ter nada do que mostrar algo fabricado. Crie sua conta em business.trustpilot.com.
+        </p>
+      </div>
+
       {saveError && (
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
           {saveError}

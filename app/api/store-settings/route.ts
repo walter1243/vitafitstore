@@ -20,6 +20,7 @@ const DEFAULT_SETTINGS = {
     "Hola {name}! Buenas noticias: tu pedido #{orderId} ya fue enviado. Transportista: {carrier}. Codigo: {trackingCode}. Rastreo: {trackingUrl}",
   whatsappFutureTemplate:
     "Hola {name}! Este es un mensaje futuro editable para nuevas automatizaciones.",
+  trustpilotBusinessId: "",
 };
 
 async function ensureStoreSettingsColumns() {
@@ -50,7 +51,8 @@ async function ensureStoreSettingsColumns() {
     ADD COLUMN IF NOT EXISTS whatsapp_greeting TEXT,
     ADD COLUMN IF NOT EXISTS whatsapp_order_template TEXT,
     ADD COLUMN IF NOT EXISTS whatsapp_tracking_template TEXT,
-    ADD COLUMN IF NOT EXISTS whatsapp_future_template TEXT
+    ADD COLUMN IF NOT EXISTS whatsapp_future_template TEXT,
+    ADD COLUMN IF NOT EXISTS trustpilot_business_id TEXT
   `;
 
   await sql`
@@ -72,7 +74,8 @@ export async function GET() {
              COALESCE(whatsapp_greeting, ${DEFAULT_SETTINGS.whatsappGreeting}) AS "whatsappGreeting",
              COALESCE(whatsapp_order_template, ${DEFAULT_SETTINGS.whatsappOrderTemplate}) AS "whatsappOrderTemplate",
              COALESCE(whatsapp_tracking_template, ${DEFAULT_SETTINGS.whatsappTrackingTemplate}) AS "whatsappTrackingTemplate",
-             COALESCE(whatsapp_future_template, ${DEFAULT_SETTINGS.whatsappFutureTemplate}) AS "whatsappFutureTemplate"
+             COALESCE(whatsapp_future_template, ${DEFAULT_SETTINGS.whatsappFutureTemplate}) AS "whatsappFutureTemplate",
+             COALESCE(trustpilot_business_id, '') AS "trustpilotBusinessId"
       FROM store_settings
       ORDER BY id ASC
       LIMIT 1
@@ -107,6 +110,7 @@ export async function POST(req: NextRequest) {
     const whatsappOrderTemplate = String(body.whatsappOrderTemplate ?? DEFAULT_SETTINGS.whatsappOrderTemplate).trim() || DEFAULT_SETTINGS.whatsappOrderTemplate;
     const whatsappTrackingTemplate = String(body.whatsappTrackingTemplate ?? DEFAULT_SETTINGS.whatsappTrackingTemplate).trim() || DEFAULT_SETTINGS.whatsappTrackingTemplate;
     const whatsappFutureTemplate = String(body.whatsappFutureTemplate ?? DEFAULT_SETTINGS.whatsappFutureTemplate).trim() || DEFAULT_SETTINGS.whatsappFutureTemplate;
+    const trustpilotBusinessId = String(body.trustpilotBusinessId ?? "").trim();
 
     await sql`
       INSERT INTO store_settings (
@@ -121,7 +125,8 @@ export async function POST(req: NextRequest) {
         whatsapp_greeting,
         whatsapp_order_template,
         whatsapp_tracking_template,
-        whatsapp_future_template
+        whatsapp_future_template,
+        trustpilot_business_id
       )
       VALUES (
         1,
@@ -135,7 +140,8 @@ export async function POST(req: NextRequest) {
         ${whatsappGreeting},
         ${whatsappOrderTemplate},
         ${whatsappTrackingTemplate},
-        ${whatsappFutureTemplate}
+        ${whatsappFutureTemplate},
+        ${trustpilotBusinessId || null}
       )
       ON CONFLICT (id)
       DO UPDATE SET
@@ -149,7 +155,8 @@ export async function POST(req: NextRequest) {
         whatsapp_greeting = EXCLUDED.whatsapp_greeting,
         whatsapp_order_template = EXCLUDED.whatsapp_order_template,
         whatsapp_tracking_template = EXCLUDED.whatsapp_tracking_template,
-        whatsapp_future_template = EXCLUDED.whatsapp_future_template
+        whatsapp_future_template = EXCLUDED.whatsapp_future_template,
+        trustpilot_business_id = EXCLUDED.trustpilot_business_id
     `;
 
     return NextResponse.json({ success: true }, {

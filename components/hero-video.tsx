@@ -2,8 +2,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowDown, ArrowRight, Shield, Zap, Leaf, Volume2, VolumeX } from 'lucide-react';
 import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis from '@studio-freight/lenis';
 import { DEFAULT_HERO, type HeroContent } from '@/lib/site-content-defaults';
+
+gsap.registerPlugin(ScrollTrigger);
 
 function fadeVolume(video: HTMLVideoElement, target: number, duration: number, onDone?: () => void) {
   const steps = 20;
@@ -52,16 +55,27 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Lenis smooth scroll
+  // Lenis smooth scroll — driven by gsap.ticker (not its own rAF loop) and
+  // wired into ScrollTrigger.update, otherwise every ScrollTrigger on the
+  // page (Destacados, product carousels, etc.) gets stale trigger positions
+  // and their reveal animations silently never fire.
   useEffect(() => {
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t: number) => 1 - Math.pow(1 - t, 3),
       smoothTouch: true,
     });
-    const raf = (time: number) => { lenis.raf(time); requestAnimationFrame(raf); };
-    requestAnimationFrame(raf);
-    return () => lenis.destroy();
+
+    lenis.on('scroll', ScrollTrigger.update);
+
+    const tick = (time: number) => lenis.raf(time * 1000);
+    gsap.ticker.add(tick);
+    gsap.ticker.lagSmoothing(0);
+
+    return () => {
+      gsap.ticker.remove(tick);
+      lenis.destroy();
+    };
   }, []);
 
   // IntersectionObserver: pause/resume with volume fade

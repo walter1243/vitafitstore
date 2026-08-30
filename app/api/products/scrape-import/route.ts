@@ -3,6 +3,24 @@ import { requireAdmin } from '@/lib/admin-auth';
 
 export const dynamic = 'force-dynamic';
 
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ',
+  hellip: '…', mdash: '—', ndash: '–', rsquo: '’', lsquo: '‘',
+  rdquo: '”', ldquo: '“', copy: '©', reg: '®', trade: '™',
+};
+
+// Supplier pages (and Shopify/WooCommerce HTML fields) commonly encode
+// "&" as "&#x26;" / "&amp;" etc. Regex-scraped text and tag-stripped HTML
+// keep these entities as literal characters unless explicitly decoded —
+// left undecoded, they render as raw "&#x26;" on the storefront.
+function decodeHtmlEntities(input: string): string {
+  if (!input) return input;
+  return input
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, dec) => String.fromCodePoint(parseInt(dec, 10)))
+    .replace(/&([a-zA-Z]+);/g, (match, name) => NAMED_ENTITIES[name.toLowerCase()] ?? match);
+}
+
 type ScrapedProduct = {
   name: string;
   description: string;
@@ -25,8 +43,8 @@ async function tryShopify(origin: string): Promise<ScrapedProduct[] | null> {
     if (!Array.isArray(data.products) || data.products.length === 0) return null;
 
     return data.products.map((p: any) => ({
-      name: p.title ?? '',
-      description: (p.body_html ?? '').replace(/<[^>]*>/g, '').trim(),
+      name: decodeHtmlEntities(p.title ?? ''),
+      description: decodeHtmlEntities((p.body_html ?? '').replace(/<[^>]*>/g, '').trim()),
       price: parseFloat(p.variants?.[0]?.price ?? '0'),
       image: p.images?.[0]?.src ?? '',
       images: (p.images ?? []).slice(1).map((i: any) => i.src),
@@ -50,8 +68,8 @@ async function tryWooCommerce(origin: string): Promise<ScrapedProduct[] | null> 
     if (!Array.isArray(data) || data.length === 0) return null;
 
     return data.map((p: any) => ({
-      name: p.name ?? '',
-      description: (p.short_description ?? '').replace(/<[^>]*>/g, '').trim(),
+      name: decodeHtmlEntities(p.name ?? ''),
+      description: decodeHtmlEntities((p.short_description ?? '').replace(/<[^>]*>/g, '').trim()),
       price: parseFloat(p.prices?.price ?? '0') / 100,
       image: p.images?.[0]?.src ?? '',
       images: (p.images ?? []).slice(1).map((i: any) => i.src),
@@ -90,8 +108,8 @@ async function tryHtmlScrape(url: string): Promise<ScrapedProduct[]> {
             ? [item.image]
             : [];
           products.push({
-            name: item.name ?? '',
-            description: (item.description ?? '').replace(/<[^>]*>/g, '').trim(),
+            name: decodeHtmlEntities(item.name ?? ''),
+            description: decodeHtmlEntities((item.description ?? '').replace(/<[^>]*>/g, '').trim()),
             price: parseFloat(offer?.price ?? '0'),
             image: imageArr[0] ?? '',
             images: imageArr.slice(1),
@@ -116,8 +134,8 @@ async function tryHtmlScrape(url: string): Promise<ScrapedProduct[]> {
 
     if (ogTitle) {
       products.push({
-        name: ogTitle,
-        description: ogDesc ?? '',
+        name: decodeHtmlEntities(ogTitle),
+        description: decodeHtmlEntities(ogDesc ?? ''),
         price: parseFloat((priceMatch ?? '0').replace(',', '.')),
         image: ogImage ?? '',
         images: [],

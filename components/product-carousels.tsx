@@ -1,20 +1,8 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import { ProductCarousel } from './product-carousel';
-import { ProductModal } from './product-modal';
 import { type Product } from '@/lib/products';
-
-type DbProduct = {
-  id: number;
-  name: string;
-  description?: string;
-  price: number;
-  category?: string;
-  image?: string;
-  additionalImages?: string[];
-  video?: string;
-  stock?: number;
-};
+import { type DbProduct, normalizeCategory, slugifyCategory, toStoreProduct } from '@/lib/store-product';
 
 type CategoryMeta = {
   id: number;
@@ -27,49 +15,7 @@ type CategoryMeta = {
   logoUrl?: string;
 };
 
-function normalizeCategory(raw?: string) {
-  if (!raw) return 'geral';
-  return raw.trim().toLowerCase();
-}
-
-function slugifyCategory(raw?: string) {
-  if (!raw) return 'geral';
-  return raw
-    .trim()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
-}
-
-function toStoreProduct(p: DbProduct): Product {
-  const category = normalizeCategory(p.category);
-  return {
-    id: Number(p.id),
-    name: p.name,
-    slug: p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-    description: p.description || 'Producto premium VitaFit.',
-    shortDescription: (p.description || 'Producto premium VitaFit.').replace(/<[^>]+>/g, ' ').slice(0, 80),
-    price: Number(p.price || 0),
-    image: p.image || '/images/collagen.jpg',
-    mainImage: p.image || '/images/collagen.jpg',
-    additionalImages: Array.isArray(p.additionalImages) ? p.additionalImages : [],
-    videoUrl: p.video || '',
-    category: category === 'fitness' ? 'fitness' : 'salud',
-    rating: 4.8,
-    reviews: 120,
-    stock: Number(p.stock || 0),
-    benefits: ['Calidad premium', 'Entrega rápida', 'Producto verificado', 'Soporte especializado'],
-    ingredients: p.description || 'Detalles no informados.',
-    usage: 'Sigue las instrucciones del envase.',
-    emoji: '✨',
-    gradient: category === 'fitness' ? 'from-blue-400 to-indigo-600' : 'from-emerald-400 to-green-600',
-  };
-}
-
 export default function ProductCarousels() {
-  const [selected, setSelected] = useState<Product | null>(null);
   const [dbProducts, setDbProducts] = useState<DbProduct[]>([]);
   const [categoryMetaByKey, setCategoryMetaByKey] = useState<Record<string, CategoryMeta>>({});
   const [orderedCategories, setOrderedCategories] = useState<CategoryMeta[]>([]);
@@ -206,11 +152,9 @@ export default function ProductCarousels() {
             subtitle="Nutrición premium para tu rendimiento"
             categoryLabel={title}
             categoryMedia={meta}
-            onViewDetails={setSelected}
           />
         </section>
       ))}
-      <ProductModal product={selected} onClose={() => setSelected(null)} />
     </>
   );
 }
