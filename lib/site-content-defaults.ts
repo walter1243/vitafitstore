@@ -157,10 +157,59 @@ export const DEFAULT_FOOTER: FooterContent = {
   },
 };
 
+export type AboutFeature = {
+  icon: IconKey;
+  title: string;
+  desc: string;
+};
+
+export type AboutStat = {
+  value: string;
+  label: string;
+};
+
+export type AboutContent = {
+  title: string;
+  highlight: string;
+  paragraph1: string;
+  paragraph2: string;
+  features: AboutFeature[];
+  tagline: string;
+  stats: AboutStat[];
+  ratingValue: string;
+  ratingLabel: string;
+  originBadgeTitle: string;
+  originBadgeSubtitle: string;
+};
+
+export const DEFAULT_ABOUT: AboutContent = {
+  title: '¿Por qué elegir',
+  highlight: 'nuestra tienda',
+  paragraph1: 'Creemos que el bienestar debe ser accesible para todos. Por eso seleccionamos cuidadosamente cada producto, priorizando la calidad, la eficacia y la transparencia.',
+  paragraph2: 'Nuestro equipo de nutricionistas y expertos en fitness trabaja constantemente para ofrecerte las mejores soluciones para tu salud. Desde suplementos premium hasta accesorios de entrenamiento, todo lo que necesitas para sentirte mejor está aquí.',
+  features: [
+    { icon: 'leaf', title: '100% Natural', desc: 'Ingredientes de origen natural, sin aditivos artificiales ni conservantes dañinos.' },
+    { icon: 'award', title: 'Calidad certificada', desc: 'Todos nuestros productos cumplen con los más estrictos estándares de calidad europeos.' },
+    { icon: 'heart', title: 'Bienestar real', desc: 'Fórmulas desarrolladas por expertos para resultados que puedes sentir.' },
+    { icon: 'sparkles', title: 'Comunidad activa', desc: 'Más de 50.000 clientes satisfechos que confían en nosotros para su bienestar.' },
+  ],
+  tagline: 'Tu bienestar, nuestra prioridad',
+  stats: [
+    { value: '5+', label: 'Años' },
+    { value: '50K+', label: 'Clientes' },
+    { value: '100+', label: 'Productos' },
+  ],
+  ratingValue: '4.9/5',
+  ratingLabel: 'Satisfacción',
+  originBadgeTitle: '🇪🇸 Made in Spain',
+  originBadgeSubtitle: 'Fabricado en España',
+};
+
 export type SiteContent = {
   hero: HeroContent;
   destaques: DestaquesContent;
   trustBadges: TrustBadgesContent;
+  about: AboutContent;
   newsletter: NewsletterContent;
   footer: FooterContent;
 };
@@ -169,6 +218,7 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
   hero: DEFAULT_HERO,
   destaques: DEFAULT_DESTAQUES,
   trustBadges: DEFAULT_TRUST_BADGES,
+  about: DEFAULT_ABOUT,
   newsletter: DEFAULT_NEWSLETTER,
   footer: DEFAULT_FOOTER,
 };

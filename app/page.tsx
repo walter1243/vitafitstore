@@ -4,6 +4,7 @@ import HeroVideo from '../components/hero-video'
 import { TrustBadges } from '@/components/trust-badges'
 import ProductCarousels from '../components/product-carousels'
 import PinScrollSection from '../components/pin-scroll-section'
+import { AboutSection } from '@/components/about-section'
 import { Newsletter } from '@/components/newsletter'
 import { Footer } from '@/components/footer'
 import { CartSidebar } from '@/components/cart-sidebar'
@@ -65,6 +66,7 @@ export default async function HomePage() {
           {visibleBlocks.map(block => (
             <div key={block.key}>{map[block.key]}</div>
           ))}
+          <AboutSection data={content.about} />
         </main>
         <Footer content={content.footer} />
         <WhatsAppFloating />

@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Pencil, X, Check, Loader2, Snowflake, Video, Sparkles, Mail, PanelBottom } from 'lucide-react';
+import { Pencil, X, Check, Loader2, Snowflake, Video, Sparkles, Mail, PanelBottom, Users } from 'lucide-react';
 import {
   DEFAULT_SITE_CONTENT,
   type SiteContent,
@@ -8,6 +8,7 @@ import {
 import { HeroForm } from './content/HeroForm';
 import { DestaquesForm } from './content/DestaquesForm';
 import { TrustBadgesForm } from './content/TrustBadgesForm';
+import { AboutForm } from './content/AboutForm';
 import { NewsletterForm } from './content/NewsletterForm';
 import { FooterForm } from './content/FooterForm';
 
@@ -17,11 +18,12 @@ const SECTION_META: Record<SectionKey, { label: string; desc: string; icon: type
   hero: { label: 'Hero principal', desc: 'Vídeo, título, subtítulo e botão de ação da vitrine.', icon: Video },
   destaques: { label: 'Destacados', desc: 'Os 4 cards de diferenciais logo abaixo dos produtos.', icon: Sparkles },
   trustBadges: { label: 'Selos de confiança', desc: 'Faixa de selos (envio, garantia, pagamento...).', icon: PanelBottom },
+  about: { label: 'Sobre a loja', desc: 'Seção "Nosotros": textos, diferenciais e cartão visual.', icon: Users },
   newsletter: { label: 'Newsletter', desc: 'Título, texto e aviso da seção de inscrição por e-mail.', icon: Mail },
   footer: { label: 'Rodapé', desc: 'Descrição da marca, colunas e nota de direitos autorais.', icon: PanelBottom },
 };
 
-const SECTION_ORDER: SectionKey[] = ['hero', 'destaques', 'trustBadges', 'newsletter', 'footer'];
+const SECTION_ORDER: SectionKey[] = ['hero', 'destaques', 'trustBadges', 'about', 'newsletter', 'footer'];
 
 export function ContentEditor() {
   const [content, setContent] = useState<SiteContent>(DEFAULT_SITE_CONTENT);
@@ -156,6 +158,9 @@ export function ContentEditor() {
             )}
             {editingSection === 'trustBadges' && (
               <TrustBadgesForm data={draft as SiteContent['trustBadges']} onChange={(d) => setDraft(d)} />
+            )}
+            {editingSection === 'about' && (
+              <AboutForm data={draft as SiteContent['about']} onChange={(d) => setDraft(d)} />
             )}
             {editingSection === 'newsletter' && (
               <NewsletterForm data={draft as SiteContent['newsletter']} onChange={(d) => setDraft(d)} />
