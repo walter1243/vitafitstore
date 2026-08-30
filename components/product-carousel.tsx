@@ -1,10 +1,14 @@
 'use client';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import Image from 'next/image';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ChevronLeft, ChevronRight, Star, ShoppingCart, Check, Eye } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 import { type Product } from '@/lib/products';
+
+gsap.registerPlugin(ScrollTrigger);
 
 interface ProductCarouselProps {
   products: Product[];
@@ -30,6 +34,48 @@ export function ProductCarousel({ products, title, subtitle, categoryLabel, cate
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [addedId, setAddedId] = useState<number | null>(null);
   const { addItem } = useCart();
+  const sectionRef = useRef<HTMLElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const cardsRef = useRef<Array<HTMLDivElement | null>>([]);
+
+  // Entrance animation: header + cards float in with a stagger the first
+  // time this category section reaches the viewport.
+  useEffect(() => {
+    if (!sectionRef.current) return;
+    const cards = cardsRef.current.filter(Boolean) as HTMLDivElement[];
+    const ctx = gsap.context(() => {
+      if (headerRef.current) {
+        gsap.set(headerRef.current, { opacity: 0, y: 30 });
+        ScrollTrigger.create({
+          trigger: sectionRef.current,
+          start: 'top 80%',
+          once: true,
+          onEnter: () => gsap.to(headerRef.current, { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' }),
+        });
+      }
+      if (cards.length) {
+        gsap.set(cards, { opacity: 0, y: 50, scale: 0.94 });
+        ScrollTrigger.create({
+          trigger: sectionRef.current,
+          start: 'top 78%',
+          once: true,
+          onEnter: () =>
+            gsap.to(cards, {
+              opacity: 1,
+              y: 0,
+              scale: 1,
+              duration: 0.7,
+              stagger: 0.09,
+              ease: 'back.out(1.4)',
+            }),
+        });
+      }
+    }, sectionRef);
+    return () => ctx.revert();
+    // Runs once per mount only — `products` is refetched on a background poll
+    // every 15s and would otherwise re-hide already-visible cards each time.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const updateState = useCallback(() => {
     if (!emblaApi) return;
@@ -63,7 +109,7 @@ export function ProductCarousel({ products, title, subtitle, categoryLabel, cate
   };
 
   return (
-    <section className="relative py-16 overflow-hidden" style={{ background: '#060f1e' }}>
+    <section ref={sectionRef} className="relative py-16 overflow-hidden" style={{ background: '#060f1e' }}>
       {/* Grid bg */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -98,7 +144,7 @@ export function ProductCarousel({ products, title, subtitle, categoryLabel, cate
         )}
 
         {/* Section header */}
-        <div className="flex items-end justify-between mb-8">
+        <div ref={headerRef} className="flex items-end justify-between mb-8">
           <div className="flex items-end gap-3">
             {categoryMedia?.logoUrl && (
               // eslint-disable-next-line @next/next/no-img-element
@@ -138,13 +184,14 @@ export function ProductCarousel({ products, title, subtitle, categoryLabel, cate
         {/* Embla viewport */}
         <div ref={emblaRef} className="overflow-hidden px-2 sm:px-2 lg:px-0">
           <div className="-ml-3 flex sm:-ml-4 lg:-ml-5">
-            {products.map((product) => {
+            {products.map((product, index) => {
               const badge = product.badge ? badgeConfig[product.badge] : null;
               const isAdded = addedId === product.id;
 
               return (
                 <div
                   key={product.id}
+                  ref={(el) => { cardsRef.current[index] = el; }}
                   className="flex-none pl-3 sm:pl-4 lg:pl-5 w-[228px] sm:w-[268px] lg:w-[276px] cursor-pointer"
                   onClick={() => onViewDetails(product)}
                 >
