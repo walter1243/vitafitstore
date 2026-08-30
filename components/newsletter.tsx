@@ -29,13 +29,30 @@ export function Newsletter({ data }: { data?: NewsletterContent }) {
   }
 
   return (
-    <section className="bg-primary py-16">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section
+      className="relative overflow-hidden py-16"
+      style={{ background: 'linear-gradient(180deg, #081510 0%, #060f1e 100%)' }}
+    >
+      {/* Subtle grid, consistent with the other dark sections */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage:
+            'linear-gradient(rgba(16,185,129,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.05) 1px, transparent 1px)',
+          backgroundSize: '60px 60px',
+        }}
+      />
+      <div
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[400px] w-[400px] rounded-full pointer-events-none"
+        style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.10) 0%, transparent 70%)' }}
+      />
+
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <ScrollReveal className="text-center">
-          <h2 className="mb-3 text-2xl font-bold text-primary-foreground sm:text-3xl">
+          <h2 className="mb-3 text-2xl font-bold text-white sm:text-3xl">
             {content.title}
           </h2>
-          <p className="mx-auto mb-8 max-w-xl text-primary-foreground/80">
+          <p className="mx-auto mb-8 max-w-xl text-white/60">
             {content.text}
           </p>
 
@@ -45,15 +62,14 @@ export function Newsletter({ data }: { data?: NewsletterContent }) {
               placeholder="Tu email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="h-12 border-primary-foreground/20 bg-primary-foreground/10 text-primary-foreground placeholder:text-primary-foreground/60 focus-visible:ring-primary-foreground"
+              className="h-12 border-white/15 bg-white/5 text-white placeholder:text-white/40 focus-visible:ring-emerald-400/50"
               required
               disabled={status === 'loading' || status === 'success'}
             />
             <Button
               type="submit"
-              variant="secondary"
               size="lg"
-              className="h-12 gap-2"
+              className="h-12 gap-2 bg-emerald-500 text-white hover:bg-emerald-400"
               disabled={status === 'loading' || status === 'success'}
             >
               {status === 'loading' ? (
@@ -72,7 +88,7 @@ export function Newsletter({ data }: { data?: NewsletterContent }) {
             </Button>
           </form>
 
-          <p className="mt-4 text-xs text-primary-foreground/60">
+          <p className="mt-4 text-xs text-white/45">
             {content.privacyText}
           </p>
         </ScrollReveal>

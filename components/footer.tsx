@@ -184,43 +184,43 @@ export function Footer({ content }: { content?: FooterContent }) {
   ].filter(Boolean) as { icon: typeof Instagram; href: string; label: string }[]
 
   return (
-    <footer className="border-t border-border bg-muted/30">
+    <footer className="border-t border-white/10 bg-[#060f1e]">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         {activePopup && (
           <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-4" onClick={() => setActivePopup(null)}>
             <div
-              className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 text-slate-800 shadow-2xl"
+              className="w-full max-w-md rounded-2xl border border-white/10 bg-[#161b28] p-5 text-white shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-base font-semibold text-slate-900">{dynamicSections[activePopup].title}</h3>
+                <h3 className="text-base font-semibold text-white">{dynamicSections[activePopup].title}</h3>
                 <button
                   type="button"
                   onClick={() => setActivePopup(null)}
-                  className="rounded-lg border border-slate-200 p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800"
+                  className="rounded-lg border border-white/10 p-2 text-white/60 transition-colors hover:bg-white/5 hover:text-white"
                   aria-label="Fechar popup"
                 >
                   <X className="h-4 w-4" />
                 </button>
               </div>
 
-              <p className="mb-3 text-sm leading-relaxed text-slate-600">{dynamicSections[activePopup].description}</p>
+              <p className="mb-3 text-sm leading-relaxed text-white/60">{dynamicSections[activePopup].description}</p>
 
               <div className="space-y-2">
                 {dynamicSections[activePopup].items.map((item) => (
-                  <div key={item.title} className="rounded-lg border border-slate-200 p-3">
+                  <div key={item.title} className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
                     {item.href ? (
                       <Link
                         href={item.href}
                         onClick={() => setActivePopup(null)}
-                        className="text-sm font-semibold text-slate-800 transition-colors hover:text-emerald-700"
+                        className="text-sm font-semibold text-white transition-colors hover:text-emerald-400"
                       >
                         {item.title}
                       </Link>
                     ) : (
-                      <p className="text-sm font-semibold text-slate-800">{item.title}</p>
+                      <p className="text-sm font-semibold text-white">{item.title}</p>
                     )}
-                    <p className="mt-1 text-xs leading-relaxed text-slate-500">{item.description}</p>
+                    <p className="mt-1 text-xs leading-relaxed text-white/45">{item.description}</p>
                   </div>
                 ))}
               </div>
@@ -232,7 +232,7 @@ export function Footer({ content }: { content?: FooterContent }) {
                       href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-400"
                     >
                       <MessageCircle size={14} /> WhatsApp SAC
                     </a>
@@ -242,7 +242,7 @@ export function Footer({ content }: { content?: FooterContent }) {
                       href={instagramHref}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-white/80 hover:bg-white/5"
                     >
                       <Instagram size={14} /> Instagram
                     </a>
@@ -250,7 +250,7 @@ export function Footer({ content }: { content?: FooterContent }) {
                   {(emailHref || true) && (
                     <a
                       href={emailHref || 'mailto:sac@vitafitstore.com'}
-                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-white/80 hover:bg-white/5"
                     >
                       <Mail size={14} /> Email SAC
                     </a>
@@ -265,17 +265,17 @@ export function Footer({ content }: { content?: FooterContent }) {
           {/* Brand */}
           <div className="lg:col-span-2">
             <Link href="/" className="mb-4 flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-                <Leaf className="h-5 w-5 text-primary-foreground" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500">
+                <Leaf className="h-5 w-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-foreground">
+              <span className="text-xl font-bold text-white">
                 {storeName}
               </span>
             </Link>
-            <p className="mb-6 max-w-xs text-sm text-muted-foreground">
+            <p className="mb-6 max-w-xs text-sm text-white/55">
               {footerContent.brandDescription}
             </p>
-            
+
             {/* Social Links */}
             <div className="flex items-center gap-4">
               {socialLinks.map((social) => (
@@ -284,7 +284,7 @@ export function Footer({ content }: { content?: FooterContent }) {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-white/60 transition-colors hover:bg-emerald-500 hover:text-white"
                   aria-label={social.label}
                 >
                   <social.icon className="h-5 w-5" />
@@ -299,29 +299,29 @@ export function Footer({ content }: { content?: FooterContent }) {
               <button
                 type="button"
                 onClick={() => setActivePopup(sectionKey)}
-                className="mb-2 text-left font-semibold text-foreground transition-colors hover:text-primary"
+                className="mb-2 text-left font-semibold text-white transition-colors hover:text-emerald-400"
               >
                 {dynamicSections[sectionKey].title}
               </button>
-              <p className="text-sm text-muted-foreground">{dynamicSections[sectionKey].description}</p>
+              <p className="text-sm text-white/50">{dynamicSections[sectionKey].description}</p>
             </div>
           ))}
         </ScrollReveal>
 
         {/* Bottom */}
-        <div className="mt-12 border-t border-border pt-8">
+        <div className="mt-12 border-t border-white/10 pt-8">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-white/45">
               © 2026 {storeName}. {footerContent.copyrightNote}
             </p>
             <div className="flex items-center gap-4">
-              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><PhoneCall className="h-3.5 w-3.5" /> SAC comercial</span>
-              <span className="text-xs text-muted-foreground">Métodos de pago:</span>
+              <span className="inline-flex items-center gap-1 text-xs text-white/45"><PhoneCall className="h-3.5 w-3.5" /> SAC comercial</span>
+              <span className="text-xs text-white/45">Métodos de pago:</span>
               <div className="flex items-center gap-2">
-                <div className="rounded bg-card px-2 py-1 text-xs font-medium text-muted-foreground">Visa</div>
-                <div className="rounded bg-card px-2 py-1 text-xs font-medium text-muted-foreground">Mastercard</div>
-                <div className="rounded bg-card px-2 py-1 text-xs font-medium text-muted-foreground">PayPal</div>
-                <div className="rounded bg-card px-2 py-1 text-xs font-medium text-muted-foreground">Bizum</div>
+                <div className="rounded bg-white/5 px-2 py-1 text-xs font-medium text-white/60">Visa</div>
+                <div className="rounded bg-white/5 px-2 py-1 text-xs font-medium text-white/60">Mastercard</div>
+                <div className="rounded bg-white/5 px-2 py-1 text-xs font-medium text-white/60">PayPal</div>
+                <div className="rounded bg-white/5 px-2 py-1 text-xs font-medium text-white/60">Bizum</div>
               </div>
             </div>
           </div>
