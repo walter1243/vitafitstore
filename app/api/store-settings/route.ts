@@ -6,16 +6,16 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 const DEFAULT_SETTINGS = {
-  storeName: "VitaFit Store",
+  storeName: "Nuestra Tienda",
   logoUrl: "",
-  themeColor: "#10b981",
+  themeColor: "#0ea5e9",
   instagram: "",
   whatsapp: "+34 601 678 657",
   email: "",
   whatsappFloatingEnabled: true,
-  whatsappGreeting: "Hola! Bienvenido a VitaFit Store. En que puedo ayudarte hoy?",
+  whatsappGreeting: "Hola! Bienvenido. En que puedo ayudarte hoy?",
   whatsappOrderTemplate:
-    "Hola {name}! Gracias por tu compra en VitaFit. Tu pedido #{orderId} esta confirmado y ya estamos preparando {productName}. {eta}",
+    "Hola {name}! Gracias por tu compra. Tu pedido #{orderId} esta confirmado y ya estamos preparando {productName}. {eta}",
   whatsappTrackingTemplate:
     "Hola {name}! Buenas noticias: tu pedido #{orderId} ya fue enviado. Transportista: {carrier}. Codigo: {trackingCode}. Rastreo: {trackingUrl}",
   whatsappFutureTemplate:
@@ -27,9 +27,9 @@ async function ensureStoreSettingsColumns() {
   await sql`
     CREATE TABLE IF NOT EXISTS store_settings (
       id SERIAL PRIMARY KEY,
-      store_name TEXT NOT NULL DEFAULT 'VitaFit Store',
+      store_name TEXT NOT NULL DEFAULT 'Nuestra Tienda',
       logo_url TEXT,
-      theme_color TEXT NOT NULL DEFAULT '#10b981',
+      theme_color TEXT NOT NULL DEFAULT '#0ea5e9',
       instagram TEXT,
       whatsapp TEXT,
       email TEXT,

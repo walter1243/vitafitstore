@@ -23,7 +23,7 @@ async function sendEmail(sendgridKey: string, to: string, subject: string, body:
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${sendgridKey}` },
       body: JSON.stringify({
         personalizations: [{ to: [{ email: to }] }],
-        from: { email: 'noreply@vitafitstore.es', name: 'VitaFit Store' },
+        from: { email: 'noreply@vitafitstore.es', name: 'Nuestra Tienda' },
         subject,
         content: [{ type: 'text/plain', value: body }],
       }),
@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
                   country: order.country,
                   phone: order.customer_phone,
                 },
-                note: `Pedido VitaFit #${orderId}. Fonte: ${order.source_product_url ?? order.source_store_url ?? 'n/a'}`,
+                note: `Pedido #${orderId}. Fonte: ${order.source_product_url ?? order.source_store_url ?? 'n/a'}`,
               },
             }),
             signal: AbortSignal.timeout(15000),
@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
 
     const addressStr = [order.address_line, order.postal_code, order.city, order.country].filter(Boolean).join(', ');
     const messageBody =
-      `🛒 Novo pedido automático VitaFit #${orderId}\n` +
+      `🛒 Novo pedido automático #${orderId}\n` +
       `Produto: ${order.product_name}\n` +
       `Cliente: ${order.customer_name}\n` +
       `Endereço: ${addressStr}\n` +
@@ -142,7 +142,7 @@ export async function POST(req: NextRequest) {
       await sendEmail(
         automationSettings?.sendgrid_key ?? '',
         emailTarget,
-        `[VitaFit] Novo pedido #${orderId} — ${order.product_name}`,
+        `Novo pedido #${orderId} — ${order.product_name}`,
         messageBody
       );
       results.push(`E-mail enviado para ${emailTarget}`);

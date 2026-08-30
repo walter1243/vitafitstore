@@ -11,34 +11,34 @@
   --card-foreground: oklch(0.2 0.02 150);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.2 0.02 150);
-  --primary: oklch(0.55 0.17 160);
+  --primary: oklch(0.55 0.17 230);
   --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.95 0.02 150);
   --secondary-foreground: oklch(0.3 0.05 150);
   --muted: oklch(0.96 0.01 150);
   --muted-foreground: oklch(0.5 0.02 150);
-  --accent: oklch(0.65 0.15 160);
+  --accent: oklch(0.65 0.15 230);
   --accent-foreground: oklch(1 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(1 0 0);
   --border: oklch(0.9 0.02 150);
   --input: oklch(0.92 0.01 150);
-  --ring: oklch(0.55 0.17 160);
-  --chart-1: oklch(0.55 0.17 160);
-  --chart-2: oklch(0.65 0.15 160);
-  --chart-3: oklch(0.45 0.12 160);
-  --chart-4: oklch(0.75 0.1 160);
-  --chart-5: oklch(0.35 0.1 160);
+  --ring: oklch(0.55 0.17 230);
+  --chart-1: oklch(0.55 0.17 230);
+  --chart-2: oklch(0.65 0.15 230);
+  --chart-3: oklch(0.45 0.12 230);
+  --chart-4: oklch(0.75 0.1 230);
+  --chart-5: oklch(0.35 0.1 230);
   --radius: 0.75rem;
   --sidebar: oklch(0.98 0.01 150);
   --sidebar-foreground: oklch(0.2 0.02 150);
-  --sidebar-primary: oklch(0.55 0.17 160);
+  --sidebar-primary: oklch(0.55 0.17 230);
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.95 0.02 150);
   --sidebar-accent-foreground: oklch(0.3 0.05 150);
   --sidebar-border: oklch(0.9 0.02 150);
-  --sidebar-ring: oklch(0.55 0.17 160);
-  --success: oklch(0.55 0.17 160);
+  --sidebar-ring: oklch(0.55 0.17 230);
+  --success: oklch(0.55 0.17 230);
   --success-foreground: oklch(1 0 0);
   --warning: oklch(0.75 0.15 85);
   --warning-foreground: oklch(0.25 0.05 85);
@@ -53,33 +53,33 @@
   --card-foreground: oklch(0.95 0.01 150);
   --popover: oklch(0.18 0.02 150);
   --popover-foreground: oklch(0.95 0.01 150);
-  --primary: oklch(0.6 0.17 160);
+  --primary: oklch(0.6 0.17 230);
   --primary-foreground: oklch(0.15 0.02 150);
   --secondary: oklch(0.25 0.03 150);
   --secondary-foreground: oklch(0.95 0.01 150);
   --muted: oklch(0.25 0.02 150);
   --muted-foreground: oklch(0.7 0.02 150);
-  --accent: oklch(0.55 0.15 160);
+  --accent: oklch(0.55 0.15 230);
   --accent-foreground: oklch(0.95 0.01 150);
   --destructive: oklch(0.5 0.2 25);
   --destructive-foreground: oklch(0.95 0.01 150);
   --border: oklch(0.3 0.02 150);
   --input: oklch(0.25 0.02 150);
-  --ring: oklch(0.6 0.17 160);
-  --chart-1: oklch(0.6 0.17 160);
-  --chart-2: oklch(0.7 0.15 160);
-  --chart-3: oklch(0.5 0.12 160);
-  --chart-4: oklch(0.8 0.1 160);
-  --chart-5: oklch(0.4 0.1 160);
+  --ring: oklch(0.6 0.17 230);
+  --chart-1: oklch(0.6 0.17 230);
+  --chart-2: oklch(0.7 0.15 230);
+  --chart-3: oklch(0.5 0.12 230);
+  --chart-4: oklch(0.8 0.1 230);
+  --chart-5: oklch(0.4 0.1 230);
   --sidebar: oklch(0.18 0.02 150);
   --sidebar-foreground: oklch(0.95 0.01 150);
-  --sidebar-primary: oklch(0.6 0.17 160);
+  --sidebar-primary: oklch(0.6 0.17 230);
   --sidebar-primary-foreground: oklch(0.15 0.02 150);
   --sidebar-accent: oklch(0.25 0.03 150);
   --sidebar-accent-foreground: oklch(0.95 0.01 150);
   --sidebar-border: oklch(0.3 0.02 150);
-  --sidebar-ring: oklch(0.6 0.17 160);
-  --success: oklch(0.6 0.17 160);
+  --sidebar-ring: oklch(0.6 0.17 230);
+  --success: oklch(0.6 0.17 230);
   --success-foreground: oklch(0.15 0.02 150);
   --warning: oklch(0.75 0.15 85);
   --warning-foreground: oklch(0.15 0.05 85);
@@ -243,8 +243,8 @@ button, [role="button"], a, [onClick] {
 
 /* ─── Glow Pulse ─────────────────────────────────── */
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(16,185,129,0.3); }
-  50%       { box-shadow: 0 0 40px rgba(16,185,129,0.6); }
+  0%, 100% { box-shadow: 0 0 20px rgba(14,165,233,0.3); }
+  50%       { box-shadow: 0 0 40px rgba(14,165,233,0.6); }
 }
 .animate-glow {
   animation: glow-pulse 3s ease-in-out infinite;
@@ -282,8 +282,17 @@ button, [role="button"], a, [onClick] {
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* ─── Frost Glass (premium admin panel accent) ───── */
+/* ─── Frost Glass (storefront winter accent) ─────── */
 .glass-frost {
+  background: linear-gradient(160deg, rgba(56, 189, 248, 0.10), rgba(255, 255, 255, 0.04));
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(56, 189, 248, 0.16);
+}
+
+/* ─── Admin panel glass accent (kept green — admin tool identity,
+   independent of the storefront's seasonal theme) ───────────── */
+.glass-panel-admin {
   background: linear-gradient(160deg, rgba(16, 185, 129, 0.08), rgba(255, 255, 255, 0.025));
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);

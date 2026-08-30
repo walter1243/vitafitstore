@@ -127,7 +127,7 @@ export async function sendConfirmationWhatsApp(params: ConfirmationMessageParams
 
   const { phone, name, orderId, productName, estimatedDays } = params
   const fallbackTemplates = [
-    'Hola {name}! Gracias por tu compra en VitaFit. Tu pedido #{orderId} esta confirmado y ya estamos preparando {productName}. {eta}',
+    'Hola {name}! Gracias por tu compra. Tu pedido #{orderId} esta confirmado y ya estamos preparando {productName}. {eta}',
     'Hola {name}, que alegria tenerte con nosotros! Confirmamos tu pedido #{orderId} ({productName}). {eta} Te avisamos por aqui con el seguimiento.',
   ]
   const eta = estimatedDays ? `Entrega estimada: ${estimatedDays} dias habiles.` : ''

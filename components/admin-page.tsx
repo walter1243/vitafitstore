@@ -1517,7 +1517,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
         <div className="flex shrink-0 items-center gap-3 border-b border-white/10 px-5 py-4">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-green-600 text-lg font-bold">V</div>
           <div className="min-w-0">
-            <div className="truncate text-sm font-bold">VitaFit Admin</div>
+            <div className="truncate text-sm font-bold">Painel Admin</div>
             <div className="text-[11px] text-white/40">Painel de Controle</div>
           </div>
           <button onClick={() => setSidebarOpen(false)} className="ml-auto rounded p-1 text-white/50 hover:text-white lg:hidden">
@@ -1559,7 +1559,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
           ))}
         </nav>
 
-        <div className="shrink-0 border-t border-white/10 px-5 py-4 text-center text-[11px] text-white/30">VitaFit © 2026</div>
+        <div className="shrink-0 border-t border-white/10 px-5 py-4 text-center text-[11px] text-white/30">© 2026</div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
@@ -3251,12 +3251,12 @@ function SettingsSection({
   const [wa, setWa] = useState('');
   const [email, setEmail] = useState('');
   const [waFloatingEnabled, setWaFloatingEnabled] = useState(true);
-  const [waGreeting, setWaGreeting] = useState('Hola! Bienvenido a VitaFit Store. En que puedo ayudarte hoy?');
-  const [waOrderTemplate, setWaOrderTemplate] = useState('Hola {name}! Gracias por tu compra en VitaFit. Tu pedido #{orderId} esta confirmado y ya estamos preparando {productName}. {eta}');
+  const [waGreeting, setWaGreeting] = useState('Hola! Bienvenido. En que puedo ayudarte hoy?');
+  const [waOrderTemplate, setWaOrderTemplate] = useState('Hola {name}! Gracias por tu compra. Tu pedido #{orderId} esta confirmado y ya estamos preparando {productName}. {eta}');
   const [waTrackingTemplate, setWaTrackingTemplate] = useState('Hola {name}! Buenas noticias: tu pedido #{orderId} ya fue enviado. Transportista: {carrier}. Codigo: {trackingCode}. Rastreo: {trackingUrl}');
   const [waFutureTemplate, setWaFutureTemplate] = useState('Hola {name}! Este es un mensaje futuro editable para nuevas automatizaciones.');
   const [trustpilotBusinessId, setTrustpilotBusinessId] = useState('');
-  const [storeName, setStore] = useState('VitaFit Store');
+  const [storeName, setStore] = useState('Nuestra Tienda');
   const [themeColor, setThemeColor] = useState('#10b981');
   const [logoUrl, setLogoUrl] = useState('');
   const [saved, setSaved] = useState(false);
@@ -3270,15 +3270,15 @@ function SettingsSection({
         const res = await fetch('/api/store-settings', { cache: 'no-store' });
         if (!res.ok) return;
         const data = await res.json();
-        setStore(data?.storeName ?? 'VitaFit Store');
+        setStore(data?.storeName ?? 'Nuestra Tienda');
         setThemeColor(data?.themeColor ?? '#10b981');
         setLogoUrl(data?.logoUrl ?? '');
         setIg(data?.instagram ?? '');
         setWa(data?.whatsapp ?? '+34 601 678 657');
         setEmail(data?.email ?? '');
         setWaFloatingEnabled(Boolean(data?.whatsappFloatingEnabled ?? true));
-        setWaGreeting(data?.whatsappGreeting ?? 'Hola! Bienvenido a VitaFit Store. En que puedo ayudarte hoy?');
-        setWaOrderTemplate(data?.whatsappOrderTemplate ?? 'Hola {name}! Gracias por tu compra en VitaFit. Tu pedido #{orderId} esta confirmado y ya estamos preparando {productName}. {eta}');
+        setWaGreeting(data?.whatsappGreeting ?? 'Hola! Bienvenido. En que puedo ayudarte hoy?');
+        setWaOrderTemplate(data?.whatsappOrderTemplate ?? 'Hola {name}! Gracias por tu compra. Tu pedido #{orderId} esta confirmado y ya estamos preparando {productName}. {eta}');
         setWaTrackingTemplate(data?.whatsappTrackingTemplate ?? 'Hola {name}! Buenas noticias: tu pedido #{orderId} ya fue enviado. Transportista: {carrier}. Codigo: {trackingCode}. Rastreo: {trackingUrl}');
         setWaFutureTemplate(data?.whatsappFutureTemplate ?? 'Hola {name}! Este es un mensaje futuro editable para nuevas automatizaciones.');
         setTrustpilotBusinessId(data?.trustpilotBusinessId ?? '');
@@ -3482,7 +3482,7 @@ function SettingsSection({
               value={waGreeting}
               onChange={e => setWaGreeting(e.target.value)}
               rows={3}
-              placeholder="Hola! Bienvenido a VitaFit Store. En que puedo ayudarte hoy?"
+              placeholder="Hola! Bienvenido. En que puedo ayudarte hoy?"
               className="w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
             />
           </div>

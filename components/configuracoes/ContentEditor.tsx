@@ -137,7 +137,7 @@ export function ContentEditor() {
   }, [previewOpen, content]);
 
   return (
-    <div className="rounded-2xl border border-green-500/15 glass-frost p-5">
+    <div className="rounded-2xl border border-green-500/15 glass-panel-admin p-5">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-center gap-2">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-green-500/25 bg-green-500/10">
@@ -234,7 +234,7 @@ export function ContentEditor() {
       {editingSection && draft && (
         <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/70 p-4" onClick={closeEditor}>
           <div
-            className="glass-frost max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-green-500/30 bg-[#161b28] p-5"
+            className="glass-panel-admin max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-green-500/30 bg-[#161b28] p-5"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between">

@@ -33,7 +33,7 @@ export function WhatsAppFloating() {
 
   const link = useMemo(() => {
     const phone = settings?.whatsapp ?? '';
-    const greeting = settings?.whatsappGreeting ?? 'Hola! Me gustaria saber mas sobre los productos de VitaFit.';
+    const greeting = settings?.whatsappGreeting ?? 'Hola! Me gustaria saber mas sobre nuestros productos.';
     return buildWhatsAppUrl(phone, greeting);
   }, [settings?.whatsapp, settings?.whatsappGreeting]);
 

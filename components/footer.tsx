@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { Leaf, Instagram, Mail, MessageCircle, PhoneCall, X } from 'lucide-react'
+import { Flame, Instagram, Mail, MessageCircle, PhoneCall, X } from 'lucide-react'
 import { ScrollReveal } from '@/components/scroll-reveal'
 import { DEFAULT_FOOTER, type FooterContent } from '@/lib/site-content-defaults'
 
@@ -33,7 +33,7 @@ const footerSections: Record<FooterSectionKey, FooterSectionConfig> = {
   },
   empresa: {
     title: 'Empresa',
-    description: 'Informacion institucional y canales oficiales de VitaFit.',
+    description: 'Informacion institucional y canales oficiales de la tienda.',
     items: [
       { title: 'Sobre nosotros', description: 'Conoce nuestra mision y compromiso con la calidad.', href: '#nosotros' },
       { title: 'Atencion comercial', description: 'Lunes a viernes, 9:00 a 18:00 (Madrid).' },
@@ -97,7 +97,7 @@ function normalizeInstagramHref(input: string) {
 
 export function Footer({ content }: { content?: FooterContent }) {
   const footerContent = { ...DEFAULT_FOOTER, ...content }
-  const [storeName, setStoreName] = useState('VitaFit Store')
+  const [storeName, setStoreName] = useState('Nuestra Tienda')
   const [instagram, setInstagram] = useState('')
   const [whatsapp, setWhatsapp] = useState('')
   const [email, setEmail] = useState('')
@@ -114,7 +114,7 @@ export function Footer({ content }: { content?: FooterContent }) {
 
         if (settingsRes.ok) {
           const data = await settingsRes.json()
-          setStoreName(data?.storeName ?? 'VitaFit Store')
+          setStoreName(data?.storeName ?? 'Nuestra Tienda')
           setInstagram(data?.instagram ?? '')
           setWhatsapp(data?.whatsapp ?? '')
           setEmail(data?.email ?? '')
@@ -213,7 +213,7 @@ export function Footer({ content }: { content?: FooterContent }) {
                       <Link
                         href={item.href}
                         onClick={() => setActivePopup(null)}
-                        className="text-sm font-semibold text-white transition-colors hover:text-emerald-400"
+                        className="text-sm font-semibold text-white transition-colors hover:text-sky-400"
                       >
                         {item.title}
                       </Link>
@@ -232,7 +232,7 @@ export function Footer({ content }: { content?: FooterContent }) {
                       href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-400"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-sky-500 px-3 py-2 text-xs font-semibold text-white hover:bg-sky-400"
                     >
                       <MessageCircle size={14} /> WhatsApp SAC
                     </a>
@@ -265,8 +265,8 @@ export function Footer({ content }: { content?: FooterContent }) {
           {/* Brand */}
           <div className="lg:col-span-2">
             <Link href="/" className="mb-4 flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500">
-                <Leaf className="h-5 w-5 text-white" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-500">
+                <Flame className="h-5 w-5 text-white" />
               </div>
               <span className="text-xl font-bold text-white">
                 {storeName}
@@ -284,7 +284,7 @@ export function Footer({ content }: { content?: FooterContent }) {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-white/60 transition-colors hover:bg-emerald-500 hover:text-white"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-white/60 transition-colors hover:bg-sky-500 hover:text-white"
                   aria-label={social.label}
                 >
                   <social.icon className="h-5 w-5" />
@@ -299,7 +299,7 @@ export function Footer({ content }: { content?: FooterContent }) {
               <button
                 type="button"
                 onClick={() => setActivePopup(sectionKey)}
-                className="mb-2 text-left font-semibold text-white transition-colors hover:text-emerald-400"
+                className="mb-2 text-left font-semibold text-white transition-colors hover:text-sky-400"
               >
                 {dynamicSections[sectionKey].title}
               </button>

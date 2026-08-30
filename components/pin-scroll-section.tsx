@@ -8,7 +8,7 @@ import { DEFAULT_DESTAQUES, type DestaquesContent } from '@/lib/site-content-def
 gsap.registerPlugin(ScrollTrigger);
 
 const STYLE_CYCLE = [
-  { grad: 'from-emerald-500/20 to-green-500/5', iconCls: 'text-emerald-400', borderCls: 'border-emerald-500/30' },
+  { grad: 'from-sky-500/20 to-sky-500/5', iconCls: 'text-sky-400', borderCls: 'border-sky-500/30' },
   { grad: 'from-amber-500/20 to-yellow-500/5', iconCls: 'text-amber-400', borderCls: 'border-amber-500/30' },
   { grad: 'from-blue-500/20 to-cyan-500/5', iconCls: 'text-blue-400', borderCls: 'border-blue-500/30' },
   { grad: 'from-violet-500/20 to-purple-500/5', iconCls: 'text-violet-400', borderCls: 'border-violet-500/30' },
@@ -36,14 +36,14 @@ export default function PinScrollSection({ data }: { data?: DestaquesContent }) 
     <section
       ref={sectionRef}
       className="relative w-full py-24 flex flex-col items-center justify-center overflow-hidden"
-      style={{ background: 'linear-gradient(180deg, #060f1e 0%, #081510 100%)' }}
+      style={{ background: 'linear-gradient(180deg, #060f1e 0%, #0a1628 100%)' }}
     >
       {/* Subtle grid */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           backgroundImage:
-            'linear-gradient(rgba(16,185,129,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.05) 1px, transparent 1px)',
+            'linear-gradient(rgba(14,165,233,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(14,165,233,0.05) 1px, transparent 1px)',
           backgroundSize: '60px 60px',
         }}
       />
@@ -51,15 +51,15 @@ export default function PinScrollSection({ data }: { data?: DestaquesContent }) 
       {/* Glow */}
       <div
         className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, rgba(14,165,233,0.08) 0%, transparent 70%)' }}
       />
 
       <div className="relative z-10 text-center mb-14 px-4">
-        <p className="text-emerald-400 text-sm font-semibold tracking-[0.3em] uppercase mb-3">
+        <p className="text-sky-400 text-sm font-semibold tracking-[0.3em] uppercase mb-3">
           {content.eyebrow}
         </p>
         <h2 className="text-white text-4xl md:text-5xl font-black tracking-tight">
-          {content.title} <span className="text-emerald-400">{content.highlight}</span>
+          {content.title} <span className="text-sky-400">{content.highlight}</span>
         </h2>
         <p className="text-gray-500 text-base mt-3 max-w-lg mx-auto">
           {content.subtitle}

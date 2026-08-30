@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { ArrowDown, ArrowRight, Shield, Zap, Leaf, Volume2, VolumeX } from 'lucide-react';
+import { ArrowDown, ArrowRight, Shield, Zap, Flame, Volume2, VolumeX } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis from '@studio-freight/lenis';
@@ -144,30 +144,11 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
 
       {/* Ambient blobs */}
       <div className="absolute inset-0 z-[2] pointer-events-none overflow-hidden">
-        <div className="animate-blob animation-delay-0 absolute -top-24 -left-24 h-96 w-96 rounded-full bg-emerald-600/15 blur-[120px]" />
-        <div className="animate-blob animation-delay-2000 absolute top-1/2 right-0 h-80 w-80 rounded-full bg-teal-500/10 blur-[100px]" />
-        <div className="animate-blob animation-delay-4000 absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-green-400/10 blur-[90px]" />
+        <div className="animate-blob animation-delay-0 absolute -top-24 -left-24 h-96 w-96 rounded-full bg-sky-600/15 blur-[120px]" />
+        <div className="animate-blob animation-delay-2000 absolute top-1/2 right-0 h-80 w-80 rounded-full bg-cyan-500/10 blur-[100px]" />
+        <div className="animate-blob animation-delay-4000 absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-sky-400/10 blur-[90px]" />
         {/* Winter frost accent blob */}
         <div className="animate-blob animation-delay-2000 absolute top-10 right-1/4 h-64 w-64 rounded-full bg-sky-400/10 blur-[100px]" />
-      </div>
-
-      {/* Zero-gravity floating chips — antigravity signature, tuned for mobile */}
-      <div className="absolute inset-0 z-[3] pointer-events-none overflow-hidden">
-        <div className="animate-zero-gravity absolute left-[6%] top-[16%] sm:left-[10%] sm:top-[20%]">
-          <div className="glass-frost flex h-10 w-10 sm:h-14 sm:w-14 items-center justify-center rounded-2xl shadow-lg shadow-sky-500/10">
-            <Leaf className="h-4 w-4 sm:h-6 sm:w-6 text-emerald-300" />
-          </div>
-        </div>
-        <div className="animate-zero-gravity-slow absolute right-[8%] top-[28%] sm:right-[12%] sm:top-[15%]">
-          <div className="glass-frost flex h-9 w-9 sm:h-12 sm:w-12 items-center justify-center rounded-full shadow-lg shadow-sky-500/10">
-            <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-sky-300" />
-          </div>
-        </div>
-        <div className="animate-zero-gravity absolute right-[10%] bottom-[22%] hidden sm:flex" style={{ animationDelay: '2.4s' }}>
-          <div className="glass-frost flex h-12 w-12 items-center justify-center rounded-2xl shadow-lg shadow-sky-500/10">
-            <Shield className="h-5 w-5 text-emerald-300" />
-          </div>
-        </div>
       </div>
 
       {/* Main content */}
@@ -177,8 +158,8 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
         className="text-white text-center flex flex-col items-center max-w-5xl mx-auto"
       >
         {/* Badge */}
-        <div className="mb-4 sm:mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 backdrop-blur-sm px-3 py-1.5 sm:px-5 sm:py-2 text-xs sm:text-sm font-semibold text-emerald-300">
-          <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+        <div className="mb-4 sm:mb-6 inline-flex items-center gap-2 rounded-full border border-sky-400/30 bg-sky-500/10 backdrop-blur-sm px-3 py-1.5 sm:px-5 sm:py-2 text-xs sm:text-sm font-semibold text-sky-300">
+          <div className="h-2 w-2 rounded-full bg-sky-400 animate-pulse" />
           {hero.badgeText}
         </div>
 
@@ -188,7 +169,7 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
           style={{ fontFamily: 'var(--font-heading)' }}
         >
           <span className="block text-white">{hero.titleLine1}</span>
-          <span className="block bg-gradient-to-r from-emerald-300 via-green-400 to-teal-300 bg-clip-text text-transparent">
+          <span className="block bg-gradient-to-r from-sky-300 via-sky-400 to-cyan-300 bg-clip-text text-transparent">
             {hero.titleLine2}
           </span>
         </h1>
@@ -201,39 +182,22 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
         {/* Single CTA */}
         <a
           href={hero.ctaHref}
-          className="group flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white px-6 py-3 sm:px-10 sm:py-4 rounded-xl text-sm sm:text-base font-semibold transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-[0_0_30px_rgba(34,197,94,0.6)]"
+          className="group flex items-center gap-2 bg-sky-500 hover:bg-sky-400 text-white px-6 py-3 sm:px-10 sm:py-4 rounded-xl text-sm sm:text-base font-semibold transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-[0_0_30px_rgba(14,165,233,0.6)]"
         >
           {hero.ctaText}
           <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
         </a>
 
         {/* Trust row */}
-        <div className="mt-8 sm:mt-10 flex items-center gap-3 sm:gap-6 flex-wrap justify-center">
+        <div className="mt-8 sm:mt-10 flex items-center gap-4 sm:gap-8 flex-wrap justify-center">
           {[
             { icon: Shield, label: 'Pago Seguro' },
-            { icon: Zap, label: 'Resultados Reales' },
-            { icon: Leaf, label: '100% Natural' },
-          ].map(({ icon: Icon, label }, i) => (
-            <div key={label} className="flex items-center gap-2 text-white/60 text-xs sm:text-sm">
-              <span className="animate-zero-gravity-slow inline-flex" style={{ animationDelay: `${i * 0.5}s` }}>
-                <Icon className="h-4 w-4 text-emerald-400" />
-              </span>
+            { icon: Zap, label: 'Calor Instantáneo' },
+            { icon: Flame, label: 'Máxima Calidez' },
+          ].map(({ icon: Icon, label }) => (
+            <div key={label} className="flex items-center gap-2 text-white/70 text-xs sm:text-sm">
+              <Icon className="h-4 w-4 text-sky-400" />
               <span>{label}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Stats */}
-        <div className="mt-8 sm:mt-12 grid grid-cols-2 sm:flex items-stretch rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm overflow-hidden w-full max-w-[560px]">
-          {[
-            { value: '50K+', label: 'Clientes felices' },
-            { value: '4.9★', label: 'Valoración media' },
-            { value: '100%', label: 'Natural' },
-            { value: '2-3d', label: 'Entrega rápida' },
-          ].map((stat) => (
-            <div key={stat.label} className="px-4 py-3 sm:px-6 sm:py-4 text-center border-white/10 odd:border-r even:border-r-0 [&:nth-child(-n+2)]:border-b sm:border-b-0 sm:border-r last:border-r-0">
-              <p className="text-lg sm:text-xl font-bold text-emerald-400">{stat.value}</p>
-              <p className="text-xs text-white/50 mt-0.5">{stat.label}</p>
             </div>
           ))}
         </div>
@@ -256,7 +220,7 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
       >
         <span className="text-white/40 text-xs tracking-widest uppercase">Scroll</span>
         <div className="animate-bounce">
-          <ArrowDown className="h-5 w-5 text-emerald-400" />
+          <ArrowDown className="h-5 w-5 text-sky-400" />
         </div>
       </div>
     </section>

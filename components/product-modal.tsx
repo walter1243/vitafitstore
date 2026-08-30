@@ -14,7 +14,7 @@ interface ProductModalProps {
 }
 
 const badgeStyles: Record<string, string> = {
-  'mas-vendido': 'bg-emerald-500',
+  'mas-vendido': 'bg-sky-500',
   oferta: 'bg-rose-500',
   nuevo: 'bg-violet-500',
 };
@@ -230,7 +230,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
                   <button
                     key={`${src}-${i}`}
                     onClick={() => { setActiveImage(src); setImageError(false); }}
-                    className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border-2 transition-all cursor-pointer ${displayImage === src ? 'border-emerald-500' : 'border-white/10 hover:border-white/30'}`}
+                    className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border-2 transition-all cursor-pointer ${displayImage === src ? 'border-sky-500' : 'border-white/10 hover:border-white/30'}`}
                   >
                     <Image src={src} alt={`${product.name} ${i + 1}`} fill className="object-cover" />
                   </button>
@@ -254,7 +254,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
             <div className="flex flex-col gap-0 px-5 pt-5 pb-4 sm:px-7 sm:pt-6">
 
               {/* Category */}
-              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.15em] text-emerald-400">
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.15em] text-sky-400">
                 {product.categoryLabel || (product.category === 'salud' ? 'Salud y Bienestar' : 'Fitness & Performance')}
               </p>
 
@@ -292,8 +292,8 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
               <div className="mt-4 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
                 {product.benefits.slice(0, 4).map((b, i) => (
                   <div key={i} className="flex items-center gap-2 text-sm text-white/75">
-                    <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-500/20">
-                      <Check className="h-2.5 w-2.5 text-emerald-400" />
+                    <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-sky-500/20">
+                      <Check className="h-2.5 w-2.5 text-sky-400" />
                     </div>
                     {b}
                   </div>
@@ -323,7 +323,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
                     <Plus className="h-4 w-4" />
                   </button>
                 </div>
-                <span className="text-xs font-medium text-emerald-400">
+                <span className="text-xs font-medium text-sky-400">
                   {product.stock} disponibles
                 </span>
               </div>
@@ -331,9 +331,9 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
               {/* Trust strip */}
               <div className="mt-4 flex items-center justify-between rounded-2xl border border-white/8 bg-white/4 px-4 py-3">
                 {[
-                  { icon: <Lock className="h-3.5 w-3.5 text-emerald-400" />, label: 'Pago seguro' },
-                  { icon: <Truck className="h-3.5 w-3.5 text-emerald-400" />, label: 'Envío gratis' },
-                  { icon: <RotateCcw className="h-3.5 w-3.5 text-emerald-400" />, label: '30 días' },
+                  { icon: <Lock className="h-3.5 w-3.5 text-sky-400" />, label: 'Pago seguro' },
+                  { icon: <Truck className="h-3.5 w-3.5 text-sky-400" />, label: 'Envío gratis' },
+                  { icon: <RotateCcw className="h-3.5 w-3.5 text-sky-400" />, label: '30 días' },
                 ].map((item, i) => (
                   <div key={i} className="flex flex-col items-center gap-1">
                     {item.icon}
@@ -351,7 +351,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
                 aria-label="Ver descripción completa"
               >
                 <div className="relative overflow-hidden rounded-2xl border border-white/8 bg-white/4 px-4 pt-3.5 pb-0">
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-400 mb-1.5">Descripción</p>
+                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-sky-400 mb-1.5">Descripción</p>
                   {/* Truncated HTML preview — 3 lines */}
                   <div
                     className="text-sm leading-relaxed text-white/60 line-clamp-3 prose prose-invert prose-sm max-w-none prose-p:text-white/60 prose-p:my-0"
@@ -360,7 +360,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
                   {/* Fade gradient at bottom */}
                   <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-[#1a1d27] to-transparent pointer-events-none" />
                   {/* Expand row */}
-                  <div className="relative flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold text-emerald-400 group-hover:text-emerald-300 transition-colors">
+                  <div className="relative flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold text-sky-400 group-hover:text-sky-300 transition-colors">
                     Ver más
                     <ChevronDown size={14} className="group-hover:translate-y-0.5 transition-transform" />
                   </div>
@@ -395,10 +395,10 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
                 disabled={adding || added}
                 className={`flex w-full items-center justify-center gap-2.5 rounded-2xl py-4 text-base font-bold text-white transition-all duration-300 cursor-pointer
                   ${added
-                    ? 'bg-emerald-500'
+                    ? 'bg-sky-500'
                     : adding
                     ? 'bg-slate-700'
-                    : 'bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 hover:shadow-[0_0_28px_rgba(34,197,94,0.4)] active:scale-[0.98]'
+                    : 'bg-gradient-to-r from-sky-600 to-sky-500 hover:from-sky-500 hover:to-sky-400 hover:shadow-[0_0_28px_rgba(14,165,233,0.4)] active:scale-[0.98]'
                   }`}
               >
                 {added ? (
@@ -436,7 +436,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
 
               {/* Full description */}
               <section>
-                <h4 className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-400 mb-3">Descripción</h4>
+                <h4 className="text-xs font-bold uppercase tracking-[0.12em] text-sky-400 mb-3">Descripción</h4>
                 <div
                   className="prose prose-invert prose-sm max-w-none text-white/70 prose-p:text-white/70 prose-li:text-white/70 prose-headings:text-white"
                   dangerouslySetInnerHTML={{ __html: product.description }}
@@ -446,7 +446,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
               {/* Additional images grid */}
               {(product.additionalImages ?? []).length > 0 && (
                 <section>
-                  <h4 className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-400 mb-3">Fotos del producto</h4>
+                  <h4 className="text-xs font-bold uppercase tracking-[0.12em] text-sky-400 mb-3">Fotos del producto</h4>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {[product.mainImage ?? product.image, ...(product.additionalImages ?? [])].filter(Boolean).map((src, i) => (
                       <div key={i} className="relative aspect-square overflow-hidden rounded-xl border border-white/10 bg-[#090b10]">
@@ -465,7 +465,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
               {/* Video */}
               {videoUrl && (
                 <section>
-                  <h4 className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-400 mb-3">Vídeo</h4>
+                  <h4 className="text-xs font-bold uppercase tracking-[0.12em] text-sky-400 mb-3">Vídeo</h4>
                   <div className="overflow-hidden rounded-2xl bg-black border border-white/10">
                     {isYouTubeUrl(videoUrl) ? (
                       <iframe
@@ -485,7 +485,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
               {/* Ingredients */}
               {product.ingredients && (
                 <section>
-                  <h4 className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-400 mb-3">Ingredientes</h4>
+                  <h4 className="text-xs font-bold uppercase tracking-[0.12em] text-sky-400 mb-3">Ingredientes</h4>
                   <p className="text-sm text-white/65 leading-relaxed">{product.ingredients}</p>
                 </section>
               )}
@@ -493,7 +493,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
               {/* Reviews */}
               {reviews.length > 0 && (
                 <section>
-                  <h4 className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-400 mb-3">
+                  <h4 className="text-xs font-bold uppercase tracking-[0.12em] text-sky-400 mb-3">
                     Reseñas ({reviews.length})
                   </h4>
                   <div className="space-y-3">
@@ -519,7 +519,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
               <button
                 onClick={() => { setDetailOpen(false); handleAddToCart(); }}
                 disabled={adding || added}
-                className="flex w-full items-center justify-center gap-2.5 rounded-2xl py-4 text-base font-bold text-white bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 transition-all cursor-pointer disabled:opacity-70"
+                className="flex w-full items-center justify-center gap-2.5 rounded-2xl py-4 text-base font-bold text-white bg-gradient-to-r from-sky-600 to-sky-500 hover:from-sky-500 hover:to-sky-400 transition-all cursor-pointer disabled:opacity-70"
               >
                 <ShoppingCart className="h-5 w-5" />
                 Añadir al carrito &nbsp;·&nbsp; {(product.price * quantity).toFixed(2)}€

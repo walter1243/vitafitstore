@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useState, useEffect, useMemo } from 'react';
-import { ShoppingCart, Menu, X, Leaf } from 'lucide-react';
+import { ShoppingCart, Menu, X, Flame } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 
 type CategoryMeta = {
@@ -47,9 +47,9 @@ export function Header() {
   const { totalItems, setIsCartOpen } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [storeName, setStoreName] = useState('VitaFit Store');
+  const [storeName, setStoreName] = useState('Nuestra Tienda');
   const [logoUrl, setLogoUrl] = useState('');
-  const [themeColor, setThemeColor] = useState('#10b981');
+  const [themeColor, setThemeColor] = useState('#0ea5e9');
   const [categories, setCategories] = useState<CategoryMeta[]>([]);
   const [products, setProducts] = useState<DbProduct[]>([]);
 
@@ -65,9 +65,9 @@ export function Header() {
         const res = await fetch('/api/store-settings', { cache: 'no-store' });
         if (!res.ok) return;
         const data = await res.json();
-        setStoreName(data?.storeName ?? 'VitaFit Store');
+        setStoreName(data?.storeName ?? 'Nuestra Tienda');
         setLogoUrl(data?.logoUrl ?? '');
-        setThemeColor(data?.themeColor ?? '#10b981');
+        setThemeColor(data?.themeColor ?? '#0ea5e9');
       } catch {
         // ignore settings load errors
       }
@@ -165,7 +165,7 @@ export function Header() {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={logoUrl} alt="Logo" className="h-full w-full object-cover" />
                 ) : (
-                  <Leaf className="h-4 w-4 text-white" />
+                  <Flame className="h-4 w-4 text-white" />
                 )}
               </div>
               <span className="text-lg font-bold">
@@ -182,7 +182,7 @@ export function Header() {
                   className="relative text-sm font-medium text-white/70 hover:text-white transition-colors duration-200 group cursor-pointer"
                 >
                   {link.label}
-                  <span className="absolute -bottom-0.5 left-0 h-px w-full bg-emerald-400 scale-x-0 origin-left transition-transform duration-300 group-hover:scale-x-100" />
+                  <span className="absolute -bottom-0.5 left-0 h-px w-full bg-sky-400 scale-x-0 origin-left transition-transform duration-300 group-hover:scale-x-100" />
                 </Link>
               ))}
             </nav>
@@ -196,7 +196,7 @@ export function Header() {
               >
                 <ShoppingCart className="h-5 w-5 text-white" />
                 {totalItems > 0 && (
-                  <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white animate-pulse">
+                  <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-sky-500 text-xs font-bold text-white animate-pulse">
                     {totalItems}
                   </span>
                 )}

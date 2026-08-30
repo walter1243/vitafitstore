@@ -24,7 +24,7 @@ interface ProductCarouselProps {
 }
 
 const badgeConfig: Record<string, { text: string; cls: string }> = {
-  'mas-vendido': { text: 'Más vendido', cls: 'bg-gradient-to-r from-emerald-500 to-green-400' },
+  'mas-vendido': { text: 'Más vendido', cls: 'bg-gradient-to-r from-sky-500 to-sky-400' },
   oferta: { text: 'Oferta', cls: 'bg-gradient-to-r from-rose-500 to-pink-500' },
   nuevo: { text: 'Nuevo', cls: 'bg-gradient-to-r from-violet-500 to-purple-500' },
 };
@@ -115,14 +115,14 @@ export function ProductCarousel({ products, title, subtitle, categoryLabel, cate
         className="absolute inset-0 pointer-events-none"
         style={{
           backgroundImage:
-            'linear-gradient(rgba(16,185,129,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.05) 1px, transparent 1px)',
+            'linear-gradient(rgba(14,165,233,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(14,165,233,0.05) 1px, transparent 1px)',
           backgroundSize: '60px 60px',
         }}
       />
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {categoryMedia?.bannerUrl && (
-          <div className="mb-6 overflow-hidden rounded-2xl border border-emerald-500/20 bg-black/20">
+          <div className="mb-6 overflow-hidden rounded-2xl border border-sky-500/20 bg-black/20">
             {categoryMedia.bannerType === 'video' ? (
               <video
                 src={categoryMedia.bannerUrl}
@@ -151,11 +151,11 @@ export function ProductCarousel({ products, title, subtitle, categoryLabel, cate
               <img
                 src={categoryMedia.logoUrl}
                 alt={`${title} logo`}
-                className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-xl border border-emerald-500/30"
+                className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-xl border border-sky-500/30"
               />
             )}
             <div>
-            <p className="text-emerald-400 text-sm font-semibold tracking-[0.3em] uppercase mb-2">
+            <p className="text-sky-400 text-sm font-semibold tracking-[0.3em] uppercase mb-2">
               {subtitle}
             </p>
             <h2 className="text-white text-3xl sm:text-4xl font-black tracking-tight">
@@ -166,14 +166,14 @@ export function ProductCarousel({ products, title, subtitle, categoryLabel, cate
           <div className="hidden sm:flex gap-2">
             <button
               onClick={scrollPrev}
-              className="w-10 h-10 rounded-full border border-emerald-500/30 bg-black/40 text-emerald-400 flex items-center justify-center hover:bg-emerald-500/20 transition-all cursor-pointer"
+              className="w-10 h-10 rounded-full border border-sky-500/30 bg-black/40 text-sky-400 flex items-center justify-center hover:bg-sky-500/20 transition-all cursor-pointer"
               aria-label="Anterior"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
             <button
               onClick={scrollNext}
-              className="w-10 h-10 rounded-full border border-emerald-500/30 bg-black/40 text-emerald-400 flex items-center justify-center hover:bg-emerald-500/20 transition-all cursor-pointer"
+              className="w-10 h-10 rounded-full border border-sky-500/30 bg-black/40 text-sky-400 flex items-center justify-center hover:bg-sky-500/20 transition-all cursor-pointer"
               aria-label="Siguiente"
             >
               <ChevronRight className="h-5 w-5" />
@@ -198,8 +198,8 @@ export function ProductCarousel({ products, title, subtitle, categoryLabel, cate
                   <div
                     className="group relative rounded-2xl border border-white/8 overflow-hidden
                       transition-all duration-[350ms]
-                      hover:-translate-y-3 hover:border-emerald-500/30
-                      hover:shadow-[0_16px_40px_rgba(16,185,129,0.15)]"
+                      hover:-translate-y-3 hover:border-sky-500/30
+                      hover:shadow-[0_16px_40px_rgba(14,165,233,0.15)]"
                     style={{
                       background: 'rgba(255,255,255,0.03)',
                       backdropFilter: 'blur(4px)',
@@ -232,7 +232,7 @@ export function ProductCarousel({ products, title, subtitle, categoryLabel, cate
 
                     {/* Info */}
                     <div className="p-4">
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-400 mb-1">
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-sky-400 mb-1">
                         {categoryLabel ?? (product.category === 'salud' ? 'Salud y Bienestar' : 'Fitness')}
                       </p>
                       <h3 className="font-bold text-white text-sm leading-tight line-clamp-1 mb-1">
@@ -275,8 +275,8 @@ export function ProductCarousel({ products, title, subtitle, categoryLabel, cate
                           className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300 cursor-pointer
                             ${
                               isAdded
-                                ? 'bg-emerald-500 text-white'
-                                : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500 hover:text-white'
+                                ? 'bg-sky-500 text-white'
+                                : 'bg-sky-500/15 text-sky-400 border border-sky-500/25 hover:bg-sky-500 hover:text-white'
                             }`}
                         >
                           {isAdded ? (
@@ -305,7 +305,7 @@ export function ProductCarousel({ products, title, subtitle, categoryLabel, cate
               style={{
                 width: i === selectedIndex ? '20px' : '6px',
                 height: '6px',
-                background: i === selectedIndex ? '#10b981' : 'rgba(255,255,255,0.2)',
+                background: i === selectedIndex ? '#0ea5e9' : 'rgba(255,255,255,0.2)',
               }}
               aria-label={`Slide ${i + 1}`}
             />

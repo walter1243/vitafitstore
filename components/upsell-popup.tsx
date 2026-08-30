@@ -70,7 +70,7 @@ export function UpsellPopup() {
       ingredients: '',
       usage: '',
       emoji: '✨',
-      gradient: 'from-emerald-400 to-green-600',
+      gradient: 'from-sky-400 to-sky-600',
       slug: item.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
     } as any)
     setAdded(prev => new Set([...prev, item.productId]))
@@ -112,7 +112,7 @@ export function UpsellPopup() {
 
           {/* Added confirmation */}
           <div className="flex items-center gap-3 mb-5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-500">
               <Check size={16} className="text-white" />
             </div>
             <span className="font-semibold text-white text-sm">¡Añadido al carrito!</span>
@@ -137,7 +137,7 @@ export function UpsellPopup() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-white leading-tight line-clamp-2">{lastAddedProduct.name}</p>
-              <p className="text-sm font-bold text-emerald-400 mt-0.5">{lastAddedProduct.price.toFixed(2)}€</p>
+              <p className="text-sm font-bold text-sky-400 mt-0.5">{lastAddedProduct.price.toFixed(2)}€</p>
             </div>
           </div>
 
@@ -145,8 +145,8 @@ export function UpsellPopup() {
           {(loading || visible.length > 0) && (
             <>
               <div className="flex items-center gap-2 mb-3">
-                <Sparkles size={14} className="text-emerald-400 shrink-0" />
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-400">
+                <Sparkles size={14} className="text-sky-400 shrink-0" />
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-sky-400">
                   Completa tu pedido
                 </p>
               </div>
@@ -207,8 +207,8 @@ export function UpsellPopup() {
                         disabled={added.has(item.productId)}
                         className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
                           added.has(item.productId)
-                            ? 'bg-emerald-500/20 text-emerald-400'
-                            : 'bg-emerald-600 text-white hover:bg-emerald-500'
+                            ? 'bg-sky-500/20 text-sky-400'
+                            : 'bg-sky-600 text-white hover:bg-sky-500'
                         }`}
                       >
                         {added.has(item.productId)
@@ -233,7 +233,7 @@ export function UpsellPopup() {
           </button>
           <button
             onClick={() => setShowUpsell(false)}
-            className="flex-1 rounded-2xl bg-gradient-to-r from-emerald-600 to-green-500 py-3 text-sm font-bold text-white hover:from-emerald-500 hover:to-green-400 transition-all cursor-pointer"
+            className="flex-1 rounded-2xl bg-gradient-to-r from-sky-600 to-sky-500 py-3 text-sm font-bold text-white hover:from-sky-500 hover:to-sky-400 transition-all cursor-pointer"
           >
             Seguir comprando
           </button>

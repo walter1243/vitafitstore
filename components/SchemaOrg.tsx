@@ -5,7 +5,7 @@ export default function SchemaOrg() {
       {
         '@type': 'Organization',
         '@id': 'https://www.vitafitstore.es/#organization',
-        name: 'VitaFit Store',
+        name: 'Nuestra Tienda',
         url: 'https://www.vitafitstore.es',
         logo: 'https://www.vitafitstore.es/logo.png',
         sameAs: ['https://instagram.com/vitafitstore_es'],
@@ -20,8 +20,8 @@ export default function SchemaOrg() {
         '@type': 'WebSite',
         '@id': 'https://www.vitafitstore.es/#website',
         url: 'https://www.vitafitstore.es',
-        name: 'VitaFit Store',
-        description: 'Tienda online de suplementos deportivos europeos en España',
+        name: 'Nuestra Tienda',
+        description: 'Tienda online de calefacción y confort térmico en España',
         publisher: {
           '@id': 'https://www.vitafitstore.es/#organization',
         },
@@ -33,7 +33,7 @@ export default function SchemaOrg() {
       },
       {
         '@type': 'Store',
-        name: 'VitaFit Store',
+        name: 'Nuestra Tienda',
         image: 'https://www.vitafitstore.es/og-image.jpg',
         priceRange: '€€',
         address: {

@@ -11,6 +11,9 @@ import {
   Lock,
   Sparkles,
   Award,
+  Flame,
+  Snowflake,
+  Thermometer,
   type LucideIcon,
 } from 'lucide-react';
 import type { IconKey } from '@/lib/site-content-defaults';
@@ -28,6 +31,9 @@ export const ICON_MAP: Record<IconKey, LucideIcon> = {
   lock: Lock,
   sparkles: Sparkles,
   award: Award,
+  flame: Flame,
+  snowflake: Snowflake,
+  thermometer: Thermometer,
 };
 
 export function getIcon(key: IconKey): LucideIcon {

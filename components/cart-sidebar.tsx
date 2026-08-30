@@ -30,27 +30,27 @@ export function CartSidebar() {
         className="flex w-full flex-col p-0"
         style={{
           background: '#0a0f0a',
-          borderLeft: '1px solid rgba(16,185,129,0.15)',
+          borderLeft: '1px solid rgba(14,165,233,0.15)',
           maxWidth: 420,
         }}
       >
         {/* ── Header ─────────────────────────────────── */}
         <SheetHeader
           className="px-5 pt-5 pb-4 shrink-0"
-          style={{ borderBottom: '1px solid rgba(16,185,129,0.1)' }}
+          style={{ borderBottom: '1px solid rgba(14,165,233,0.1)' }}
         >
           <SheetTitle className="flex items-center justify-between m-0">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-sky-500 flex items-center justify-center shrink-0">
                 <ShoppingBag className="h-4 w-4 text-white" />
               </div>
               <span className="text-white font-bold text-base">Tu Carrito</span>
               {items.length > 0 && (
                 <span
-                  className="px-2 py-0.5 rounded-full text-xs font-bold text-emerald-400"
+                  className="px-2 py-0.5 rounded-full text-xs font-bold text-sky-400"
                   style={{
-                    background: 'rgba(16,185,129,0.12)',
-                    border: '1px solid rgba(16,185,129,0.2)',
+                    background: 'rgba(14,165,233,0.12)',
+                    border: '1px solid rgba(14,165,233,0.2)',
                   }}
                 >
                   {items.reduce((s, i) => s + i.quantity, 0)}
@@ -73,11 +73,11 @@ export function CartSidebar() {
             <div
               className="w-20 h-20 rounded-full flex items-center justify-center"
               style={{
-                background: 'rgba(16,185,129,0.08)',
-                border: '1px solid rgba(16,185,129,0.15)',
+                background: 'rgba(14,165,233,0.08)',
+                border: '1px solid rgba(14,165,233,0.15)',
               }}
             >
-              <ShoppingBag className="h-9 w-9 text-emerald-700" />
+              <ShoppingBag className="h-9 w-9 text-sky-700" />
             </div>
             <div>
               <p className="font-bold text-white text-lg">Carrito vacío</p>
@@ -86,7 +86,7 @@ export function CartSidebar() {
             <button
               onClick={() => setIsCartOpen(false)}
               className="px-6 py-3 rounded-xl font-semibold text-sm text-white cursor-pointer transition-all"
-              style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}
+              style={{ background: 'linear-gradient(135deg, #0ea5e9, #0284c7)' }}
             >
               Explorar productos
             </button>
@@ -96,18 +96,18 @@ export function CartSidebar() {
             {/* ── Shipping progress ──────────────────────── */}
             <div
               className="px-5 py-3 shrink-0"
-              style={{ borderBottom: '1px solid rgba(16,185,129,0.08)' }}
+              style={{ borderBottom: '1px solid rgba(14,165,233,0.08)' }}
             >
               {hasFreeShipping ? (
                 <div
                   className="flex items-center gap-2 px-3 py-2.5 rounded-xl"
                   style={{
-                    background: 'rgba(16,185,129,0.1)',
-                    border: '1px solid rgba(16,185,129,0.2)',
+                    background: 'rgba(14,165,233,0.1)',
+                    border: '1px solid rgba(14,165,233,0.2)',
                   }}
                 >
-                  <Truck className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span className="text-sm font-semibold text-emerald-400">¡Envío gratis en tu pedido!</span>
+                  <Truck className="h-4 w-4 text-sky-400 shrink-0" />
+                  <span className="text-sm font-semibold text-sky-400">¡Envío gratis en tu pedido!</span>
                 </div>
               ) : (
                 <div className="space-y-1.5">
@@ -118,7 +118,7 @@ export function CartSidebar() {
                         Añade {remaining.toFixed(2)}€ para envío gratis
                       </span>
                     </div>
-                    <span className="text-xs text-emerald-500 font-semibold">{Math.round(progress)}%</span>
+                    <span className="text-xs text-sky-500 font-semibold">{Math.round(progress)}%</span>
                   </div>
                   <div
                     className="h-1.5 rounded-full overflow-hidden"
@@ -128,7 +128,7 @@ export function CartSidebar() {
                       className="h-full rounded-full transition-all duration-500"
                       style={{
                         width: `${progress}%`,
-                        background: 'linear-gradient(90deg, #10b981, #34d399)',
+                        background: 'linear-gradient(90deg, #0ea5e9, #38bdf8)',
                       }}
                     />
                   </div>
@@ -147,7 +147,7 @@ export function CartSidebar() {
                   className="flex gap-3 p-3 rounded-2xl"
                   style={{
                     background: 'rgba(255,255,255,0.03)',
-                    border: '1px solid rgba(16,185,129,0.08)',
+                    border: '1px solid rgba(14,165,233,0.08)',
                   }}
                 >
                   {/* Thumbnail */}
@@ -165,7 +165,7 @@ export function CartSidebar() {
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center">
-                        <span className="text-2xl font-bold text-emerald-700">
+                        <span className="text-2xl font-bold text-sky-700">
                           {item.product.name.charAt(0)}
                         </span>
                       </div>
@@ -185,11 +185,11 @@ export function CartSidebar() {
                           </p>
                         )}
                         {isKitProduct && (
-                          <p className="mt-1 inline-flex rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
+                          <p className="mt-1 inline-flex rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-[10px] font-semibold text-sky-400">
                             Preço consolidado do kit
                           </p>
                         )}
-                        <p className="text-emerald-400 text-sm font-bold mt-0.5">
+                        <p className="text-sky-400 text-sm font-bold mt-0.5">
                           {item.product.price.toFixed(2)}€
                         </p>
                       </div>
@@ -223,7 +223,7 @@ export function CartSidebar() {
                         </span>
                         <button
                           onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                          className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-emerald-400 transition-colors cursor-pointer"
+                          className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-sky-400 transition-colors cursor-pointer"
                         >
                           <Plus className="h-3 w-3" />
                         </button>
@@ -242,7 +242,7 @@ export function CartSidebar() {
             {/* ── Footer: totais + botão checkout ──────────── */}
             <div
               className="px-5 pb-5 pt-4 space-y-3 shrink-0"
-              style={{ borderTop: '1px solid rgba(16,185,129,0.1)' }}
+              style={{ borderTop: '1px solid rgba(14,165,233,0.1)' }}
             >
               {/* Totals */}
               <div className="space-y-1.5">
@@ -252,7 +252,7 @@ export function CartSidebar() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Envío</span>
-                  <span className={hasFreeShipping ? 'text-emerald-400 font-semibold' : 'text-white'}>
+                  <span className={hasFreeShipping ? 'text-sky-400 font-semibold' : 'text-white'}>
                     {hasFreeShipping ? 'Gratis' : `${shipping.toFixed(2)}€`}
                   </span>
                 </div>
@@ -261,7 +261,7 @@ export function CartSidebar() {
                   style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
                 >
                   <span className="font-bold text-white">Total</span>
-                  <span className="text-xl font-black text-emerald-400">{total.toFixed(2)}€</span>
+                  <span className="text-xl font-black text-sky-400">{total.toFixed(2)}€</span>
                 </div>
               </div>
 
@@ -271,8 +271,8 @@ export function CartSidebar() {
                 onClick={() => setIsCartOpen(false)}
                 className="flex items-center justify-center gap-2 w-full py-4 rounded-xl font-bold text-white text-sm cursor-pointer"
                 style={{
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                  boxShadow: '0 8px 24px rgba(16,185,129,0.28)',
+                  background: 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+                  boxShadow: '0 8px 24px rgba(14,165,233,0.28)',
                 }}
               >
                 <Lock className="h-4 w-4" />

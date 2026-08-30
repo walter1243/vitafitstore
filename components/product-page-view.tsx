@@ -49,7 +49,7 @@ export function ProductPageView({ product }: { product: Product }) {
                   key={i}
                   onClick={() => setActiveImage(img)}
                   className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-colors ${
-                    activeImage === img ? 'border-emerald-400' : 'border-white/10 hover:border-white/25'
+                    activeImage === img ? 'border-sky-400' : 'border-white/10 hover:border-white/25'
                   }`}
                 >
                   <Image src={img} alt="" fill className="object-cover" />
@@ -67,7 +67,7 @@ export function ProductPageView({ product }: { product: Product }) {
         {/* Info */}
         <div>
           {product.categoryLabel && (
-            <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.15em] text-emerald-400">{product.categoryLabel}</p>
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.15em] text-sky-400">{product.categoryLabel}</p>
           )}
           <h1 className="text-2xl font-bold leading-tight text-white sm:text-3xl" style={{ fontFamily: 'var(--font-heading)' }}>
             {product.name}
@@ -100,13 +100,13 @@ export function ProductPageView({ product }: { product: Product }) {
                 <Plus className="h-4 w-4" />
               </button>
             </div>
-            <span className="text-xs font-medium text-emerald-400">{product.stock} disponibles</span>
+            <span className="text-xs font-medium text-sky-400">{product.stock} disponibles</span>
           </div>
 
           <button
             onClick={handleAdd}
             className={`mt-5 flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold transition-all sm:w-auto sm:px-10 ${
-              added ? 'bg-emerald-500 text-white' : 'bg-emerald-500 text-white hover:bg-emerald-400'
+              added ? 'bg-sky-500 text-white' : 'bg-sky-500 text-white hover:bg-sky-400'
             }`}
           >
             {added ? <Check className="h-4 w-4" /> : <ShoppingCart className="h-4 w-4" />}
@@ -116,9 +116,9 @@ export function ProductPageView({ product }: { product: Product }) {
           {/* Trust strip */}
           <div className="mt-6 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
             {[
-              { icon: <Lock className="h-4 w-4 text-emerald-400" />, label: 'Pago seguro' },
-              { icon: <Truck className="h-4 w-4 text-emerald-400" />, label: 'Envío gratis +50€' },
-              { icon: <RotateCcw className="h-4 w-4 text-emerald-400" />, label: '30 días' },
+              { icon: <Lock className="h-4 w-4 text-sky-400" />, label: 'Pago seguro' },
+              { icon: <Truck className="h-4 w-4 text-sky-400" />, label: 'Envío gratis +50€' },
+              { icon: <RotateCcw className="h-4 w-4 text-sky-400" />, label: '30 días' },
             ].map((item, i) => (
               <div key={i} className="flex flex-col items-center gap-1.5">
                 {item.icon}
@@ -143,8 +143,8 @@ export function ProductPageView({ product }: { product: Product }) {
           <div className="space-y-2">
             {product.benefits.map((b, i) => (
               <div key={i} className="flex items-center gap-2 text-sm text-white/75">
-                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/20">
-                  <Check className="h-3 w-3 text-emerald-400" />
+                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sky-500/20">
+                  <Check className="h-3 w-3 text-sky-400" />
                 </div>
                 {b}
               </div>

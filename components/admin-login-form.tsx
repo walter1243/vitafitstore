@@ -49,7 +49,7 @@ export function AdminLoginForm() {
         <div className="grid w-full max-w-5xl gap-6 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] shadow-[0_40px_100px_rgba(0,0,0,0.45)] backdrop-blur-xl lg:grid-cols-[1.2fr_0.8fr]">
           <div className="hidden border-r border-white/10 bg-gradient-to-br from-emerald-600/25 via-emerald-500/10 to-transparent p-10 text-white lg:block">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.16em]">
-              <Leaf size={14} /> VitaFit Security
+              <Leaf size={14} /> Acceso Seguro
             </div>
             <h1 className="mt-6 text-4xl font-black leading-tight">Painel Admin Seguro</h1>
             <p className="mt-4 max-w-md text-sm text-white/80">

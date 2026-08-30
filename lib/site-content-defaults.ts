@@ -14,21 +14,27 @@ export type IconKey =
   | 'gift'
   | 'lock'
   | 'sparkles'
-  | 'award';
+  | 'award'
+  | 'flame'
+  | 'snowflake'
+  | 'thermometer';
 
 export const ICON_OPTIONS: { key: IconKey; label: string }[] = [
-  { key: 'leaf', label: 'Folha (natural)' },
-  { key: 'zap', label: 'Raio (resultados)' },
-  { key: 'truck', label: 'Caminhão (entrega)' },
+  { key: 'flame', label: 'Chama (calor)' },
+  { key: 'thermometer', label: 'Termômetro (temperatura)' },
+  { key: 'snowflake', label: 'Floco de neve (inverno)' },
   { key: 'shield', label: 'Escudo (segurança)' },
+  { key: 'zap', label: 'Raio (eficiência energética)' },
+  { key: 'truck', label: 'Caminhão (entrega)' },
   { key: 'clock', label: 'Relógio (rapidez)' },
   { key: 'rotate', label: 'Setas (devolução)' },
-  { key: 'heart', label: 'Coração (cuidado)' },
+  { key: 'heart', label: 'Coração (conforto)' },
   { key: 'star', label: 'Estrela (qualidade)' },
   { key: 'gift', label: 'Presente (oferta)' },
   { key: 'lock', label: 'Cadeado (pagamento)' },
   { key: 'sparkles', label: 'Brilho (premium)' },
   { key: 'award', label: 'Selo (certificado)' },
+  { key: 'leaf', label: 'Folha (natural)' },
 ];
 
 export type HeroContent = {
@@ -44,9 +50,9 @@ export type HeroContent = {
 
 export const DEFAULT_HERO: HeroContent = {
   badgeText: 'Envío gratis en pedidos +50€ · España',
-  titleLine1: 'Suplementos Deportivos',
-  titleLine2: 'Europeos en España',
-  subtitle: 'Salud · Performance · Bienestar',
+  titleLine1: 'Calor y Confort',
+  titleLine2: 'Para tu Invierno',
+  subtitle: 'Calefacción · Confort Térmico · Bienestar',
   ctaText: 'Descubrir Productos',
   ctaHref: '#productos',
   videoUrl: '/video-hero.mp4',
@@ -68,20 +74,20 @@ export type DestaquesContent = {
 };
 
 export const DEFAULT_DESTAQUES: DestaquesContent = {
-  eyebrow: 'Por qué VitaFit',
+  eyebrow: 'Por qué elegirnos',
   title: 'Destacados',
-  highlight: 'VitaFit',
-  subtitle: 'Lo que nos hace diferentes: calidad, transparencia y resultados reales.',
+  highlight: 'de la temporada',
+  subtitle: 'Lo que nos hace diferentes: calidez, eficiencia y confort real para el frío.',
   features: [
     {
-      icon: 'leaf',
-      title: 'Ingredientes 100% Naturales',
-      desc: 'Formulaciones limpias sin aditivos artificiales. Solo lo que tu cuerpo necesita para rendir al máximo.',
+      icon: 'flame',
+      title: 'Calor Instantáneo',
+      desc: 'Productos diseñados para calentar rápido y mantener la temperatura ideal en tu hogar.',
     },
     {
       icon: 'zap',
-      title: 'Resultados Comprobados',
-      desc: '+50.000 clientes satisfechos avalan nuestra efectividad. Respaldados por deportistas de élite.',
+      title: 'Bajo Consumo Energético',
+      desc: 'Tecnología eficiente que calienta sin disparar tu factura de luz.',
     },
     {
       icon: 'truck',
@@ -91,7 +97,7 @@ export const DEFAULT_DESTAQUES: DestaquesContent = {
     {
       icon: 'shield',
       title: 'Calidad Certificada',
-      desc: 'Fabricados en instalaciones GMP. Análisis de pureza independientes en cada lote de producción.',
+      desc: 'Productos certificados y probados para un uso seguro dentro de casa.',
     },
   ],
 };
@@ -122,8 +128,8 @@ export type NewsletterContent = {
 };
 
 export const DEFAULT_NEWSLETTER: NewsletterContent = {
-  title: 'Únete a la comunidad VitaFit',
-  text: 'Recibe ofertas exclusivas, consejos de salud y novedades antes que nadie. ¡10% de descuento en tu primera compra!',
+  title: 'Prepárate para el frío',
+  text: 'Recibe ofertas exclusivas de temporada, consejos de confort térmico y novedades antes que nadie. ¡10% de descuento en tu primera compra!',
   privacyText: 'Al suscribirte aceptas nuestra política de privacidad. Sin spam, lo prometemos.',
 };
 
@@ -141,11 +147,11 @@ export type FooterContent = {
 };
 
 export const DEFAULT_FOOTER: FooterContent = {
-  brandDescription: 'Tu tienda online de salud, bienestar y fitness en España. Productos de calidad para cuidar de ti.',
+  brandDescription: 'Tu tienda online de calefacción y confort térmico en España. Productos de calidad para pasar el invierno con calidez.',
   copyrightNote: 'Todos los derechos reservados.',
   empresa: {
     title: 'Empresa',
-    description: 'Informacion institucional y canales oficiales de VitaFit.',
+    description: 'Informacion institucional y canales oficiales de la tienda.',
   },
   ayuda: {
     title: 'Ayuda y SAC',
@@ -185,15 +191,15 @@ export type AboutContent = {
 export const DEFAULT_ABOUT: AboutContent = {
   title: '¿Por qué elegir',
   highlight: 'nuestra tienda',
-  paragraph1: 'Creemos que el bienestar debe ser accesible para todos. Por eso seleccionamos cuidadosamente cada producto, priorizando la calidad, la eficacia y la transparencia.',
-  paragraph2: 'Nuestro equipo de nutricionistas y expertos en fitness trabaja constantemente para ofrecerte las mejores soluciones para tu salud. Desde suplementos premium hasta accesorios de entrenamiento, todo lo que necesitas para sentirte mejor está aquí.',
+  paragraph1: 'Creemos que el confort en invierno debe ser accesible para todos. Por eso seleccionamos cuidadosamente cada producto, priorizando la calidez, la eficiencia y la seguridad.',
+  paragraph2: 'Nuestro equipo trabaja constantemente para ofrecerte las mejores soluciones de calefacción y confort térmico para tu hogar. Desde calefactores hasta accesorios de abrigo, todo lo que necesitas para pasar el invierno con calidez está aquí.',
   features: [
-    { icon: 'leaf', title: '100% Natural', desc: 'Ingredientes de origen natural, sin aditivos artificiales ni conservantes dañinos.' },
-    { icon: 'award', title: 'Calidad certificada', desc: 'Todos nuestros productos cumplen con los más estrictos estándares de calidad europeos.' },
-    { icon: 'heart', title: 'Bienestar real', desc: 'Fórmulas desarrolladas por expertos para resultados que puedes sentir.' },
-    { icon: 'sparkles', title: 'Comunidad activa', desc: 'Más de 50.000 clientes satisfechos que confían en nosotros para su bienestar.' },
+    { icon: 'flame', title: 'Calor real', desc: 'Productos que calientan de verdad, probados para el frío europeo.' },
+    { icon: 'award', title: 'Calidad certificada', desc: 'Todos nuestros productos cumplen con los más estrictos estándares de seguridad europeos.' },
+    { icon: 'heart', title: 'Confort real', desc: 'Diseñados para el uso diario, pensados en tu bienestar durante todo el invierno.' },
+    { icon: 'sparkles', title: 'Comunidad activa', desc: 'Miles de clientes satisfechos que confían en nosotros para pasar el invierno con calidez.' },
   ],
-  tagline: 'Tu bienestar, nuestra prioridad',
+  tagline: 'Tu confort, nuestra prioridad',
   stats: [
     { value: '5+', label: 'Años' },
     { value: '50K+', label: 'Clientes' },
@@ -201,8 +207,8 @@ export const DEFAULT_ABOUT: AboutContent = {
   ],
   ratingValue: '4.9/5',
   ratingLabel: 'Satisfacción',
-  originBadgeTitle: '🇪🇸 Made in Spain',
-  originBadgeSubtitle: 'Fabricado en España',
+  originBadgeTitle: '🇪🇸 Distribuido en España',
+  originBadgeSubtitle: 'Entrega en toda la Península',
 };
 
 export type SiteContent = {

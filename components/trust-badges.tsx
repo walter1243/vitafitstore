@@ -19,8 +19,8 @@ export function TrustBadges({ data }: { data?: TrustBadgesContent }) {
             return (
               <ScrollReveal key={i} delay={i * 80}>
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 border border-emerald-500/20">
-                    <Icon className="h-5 w-5 text-emerald-400" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-500/15 border border-sky-500/20">
+                    <Icon className="h-5 w-5 text-sky-400" />
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-white">{badge.title}</p>
