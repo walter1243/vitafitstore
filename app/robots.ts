@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/api/', '/_next/'],
+      disallow: ['/api/', '/_next/', '/preview', '/admin/'],
     },
     sitemap: 'https://www.vitafitstore.es/sitemap.xml',
     host: 'https://www.vitafitstore.es',
