@@ -63,12 +63,10 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t: number) => 1 - Math.pow(1 - t, 3),
-      // "smoothTouch" was the option name in an older Lenis version and no
-      // longer exists here — it silently did nothing, so touch/swipe
-      // scrolling on mobile was always plain native scroll, un-eased and
-      // not driving the scroll-triggered animations the same way desktop
-      // wheel scroll does. "syncTouch" is the current option for this.
-      syncTouch: true,
+      // Touch scrolling is left as plain native scroll on purpose — no
+      // syncTouch/smoothTouch. Virtualizing touch scroll made swiping feel
+      // heavy and disconnected from the finger, so only wheel/keyboard
+      // scroll (desktop) get the eased Lenis treatment.
     });
 
     lenis.on('scroll', ScrollTrigger.update);
@@ -81,27 +79,6 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
       gsap.ticker.remove(tick);
       lenis.destroy();
     };
-  }, []);
-
-  // Parallax tied directly to scroll position (scrub) — this is what makes
-  // the section react live while dragging a finger down, instead of only
-  // playing a one-time reveal animation.
-  useEffect(() => {
-    if (!sectionRef.current) return;
-    const ctx = gsap.context(() => {
-      gsap.to(videoRef.current, {
-        yPercent: 6,
-        ease: 'none',
-        scrollTrigger: { trigger: sectionRef.current, start: 'top top', end: 'bottom top', scrub: 0.8 },
-      });
-      gsap.to(textRef.current, {
-        yPercent: -8,
-        opacity: 0.35,
-        ease: 'none',
-        scrollTrigger: { trigger: sectionRef.current, start: 'top top', end: 'bottom top', scrub: 0.8 },
-      });
-    }, sectionRef);
-    return () => ctx.revert();
   }, []);
 
   // IntersectionObserver: pause/resume with volume fade
