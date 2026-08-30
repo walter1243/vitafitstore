@@ -69,7 +69,6 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
       // not driving the scroll-triggered animations the same way desktop
       // wheel scroll does. "syncTouch" is the current option for this.
       syncTouch: true,
-      touchInertiaMultiplier: 35,
     });
 
     lenis.on('scroll', ScrollTrigger.update);
@@ -91,15 +90,15 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
     if (!sectionRef.current) return;
     const ctx = gsap.context(() => {
       gsap.to(videoRef.current, {
-        yPercent: 18,
+        yPercent: 6,
         ease: 'none',
-        scrollTrigger: { trigger: sectionRef.current, start: 'top top', end: 'bottom top', scrub: 0.4 },
+        scrollTrigger: { trigger: sectionRef.current, start: 'top top', end: 'bottom top', scrub: 0.8 },
       });
       gsap.to(textRef.current, {
-        yPercent: -22,
-        opacity: 0.15,
+        yPercent: -8,
+        opacity: 0.35,
         ease: 'none',
-        scrollTrigger: { trigger: sectionRef.current, start: 'top top', end: 'bottom top', scrub: 0.4 },
+        scrollTrigger: { trigger: sectionRef.current, start: 'top top', end: 'bottom top', scrub: 0.8 },
       });
     }, sectionRef);
     return () => ctx.revert();
