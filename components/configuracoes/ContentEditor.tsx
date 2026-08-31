@@ -27,6 +27,32 @@ const SECTION_META: Record<SectionKey, { label: string; desc: string; icon: type
 const SECTION_ORDER: SectionKey[] = ['hero', 'destaques', 'trustBadges', 'about', 'newsletter', 'footer'];
 const DRAFT_STORAGE_KEY = 'vitafit-admin-site-content-draft';
 
+// Drafts saved to localStorage before media fields switched from
+// base64-inline to real uploaded URLs can still be carrying a giant
+// "data:" string around. Publishing that blows past the server's request
+// size limit and used to fail with an opaque error — this catches it up
+// front with a message that actually says what to do.
+function findOversizedDataUrl(value: unknown, path = ''): string | null {
+  if (typeof value === 'string') {
+    if (value.startsWith('data:') && value.length > 200_000) return path || '(campo)';
+    return null;
+  }
+  if (Array.isArray(value)) {
+    for (let i = 0; i < value.length; i++) {
+      const hit = findOversizedDataUrl(value[i], `${path}[${i}]`);
+      if (hit) return hit;
+    }
+    return null;
+  }
+  if (value && typeof value === 'object') {
+    for (const [key, v] of Object.entries(value)) {
+      const hit = findOversizedDataUrl(v, path ? `${path}.${key}` : key);
+      if (hit) return hit;
+    }
+  }
+  return null;
+}
+
 export function ContentEditor() {
   const [published, setPublished] = useState<SiteContent>(DEFAULT_SITE_CONTENT);
   const [content, setContent] = useState<SiteContent>(DEFAULT_SITE_CONTENT);
@@ -100,6 +126,14 @@ export function ContentEditor() {
     setPublishError('');
     try {
       for (const section of SITE_CONTENT_SECTIONS) {
+        const badField = findOversizedDataUrl(content[section]);
+        if (badField) {
+          throw new Error(
+            `"${SECTION_META[section].label}" tem um arquivo antigo salvo em formato pesado (${badField}) de antes da correção de upload. ` +
+            `Abra essa seção, reenvie a imagem/vídeo pelo campo de mídia e publique de novo.`
+          );
+        }
+
         const res = await fetch('/api/site-content', {
           method: 'POST',
           cache: 'no-store',
@@ -107,8 +141,14 @@ export function ContentEditor() {
           body: JSON.stringify({ section, data: content[section] }),
         });
         if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err?.error || `Não foi possível publicar "${SECTION_META[section].label}".`);
+          const raw = await res.text().catch(() => '');
+          let message = '';
+          try { message = JSON.parse(raw)?.error ?? ''; } catch { /* not JSON */ }
+          throw new Error(
+            message ||
+            `Não foi possível publicar "${SECTION_META[section].label}" (HTTP ${res.status}${res.statusText ? ` ${res.statusText}` : ''}).` +
+            (raw ? ` ${raw.slice(0, 200)}` : '')
+          );
         }
       }
       setPublished(content);
