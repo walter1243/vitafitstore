@@ -46,6 +46,7 @@ export type HeroContent = {
   ctaHref: string;
   videoUrl: string;
   posterUrl: string;
+  videoPosition: 'top' | 'center' | 'bottom';
 };
 
 export const DEFAULT_HERO: HeroContent = {
@@ -55,6 +56,7 @@ export const DEFAULT_HERO: HeroContent = {
   subtitle: 'Calefacción · Confort Térmico · Bienestar',
   ctaText: 'Descubrir Productos',
   ctaHref: '#productos',
+  videoPosition: 'center',
   videoUrl: '/video-hero.mp4',
   posterUrl: '/images/collagen.jpg',
 };

@@ -1,6 +1,7 @@
 'use client';
 import { useRef, useState, type ReactNode } from 'react';
-import { Upload } from 'lucide-react';
+import { upload } from '@vercel/blob/client';
+import { Upload, Loader2 } from 'lucide-react';
 
 export function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (
@@ -17,12 +18,6 @@ export const inputCls =
 
 export const textareaCls = `${inputCls} resize-none`;
 
-function readFileAsDataURL(file: File, cb: (url: string) => void) {
-  const reader = new FileReader();
-  reader.onload = (e) => cb(e.target?.result as string);
-  reader.readAsDataURL(file);
-}
-
 export function MediaUploadField({
   label,
   hint,
@@ -38,19 +33,43 @@ export function MediaUploadField({
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
   const accept = kind === 'image' ? 'image/*' : 'video/mp4,video/webm';
+  const maxSizeMb = kind === 'image' ? 15 : 150;
 
-  function acceptFile(file: File | null | undefined) {
+  async function acceptFile(file: File | null | undefined) {
     if (!file) return;
-    if (!file.type.startsWith(kind === 'image' ? 'image/' : 'video/')) return;
-    readFileAsDataURL(file, onChange);
+    if (!file.type.startsWith(kind === 'image' ? 'image/' : 'video/')) {
+      setError('Formato de arquivo não suportado.');
+      return;
+    }
+    if (file.size > maxSizeMb * 1024 * 1024) {
+      setError(`Arquivo muito grande (máx. ${maxSizeMb}MB). Comprima o arquivo ou cole uma URL já hospedada.`);
+      return;
+    }
+
+    setError('');
+    setUploading(true);
+    try {
+      const filename = file.name || `${kind}-${Date.now()}`;
+      const blob = await upload(filename, file, {
+        access: 'public',
+        handleUploadUrl: '/api/upload',
+      });
+      onChange(blob.url);
+    } catch (err: any) {
+      setError(err?.message || 'Erro ao enviar arquivo. Tente uma URL já hospedada.');
+    } finally {
+      setUploading(false);
+    }
   }
 
   function handlePaste(e: React.ClipboardEvent) {
     for (const item of e.clipboardData.items) {
       if (item.type.startsWith(kind === 'image' ? 'image/' : 'video/')) {
         e.preventDefault();
-        acceptFile(item.getAsFile());
+        void acceptFile(item.getAsFile());
         return;
       }
     }
@@ -59,7 +78,7 @@ export function MediaUploadField({
   function handleDrop(e: React.DragEvent) {
     e.preventDefault();
     setDragOver(false);
-    acceptFile(e.dataTransfer.files?.[0]);
+    void acceptFile(e.dataTransfer.files?.[0]);
   }
 
   return (
@@ -74,7 +93,9 @@ export function MediaUploadField({
           dragOver ? 'border-green-500/60 bg-green-500/10' : 'border-white/15 bg-[#0f1117] hover:border-white/25'
         }`}
       >
-        {value ? (
+        {uploading ? (
+          <Loader2 size={18} className="animate-spin text-green-400" />
+        ) : value ? (
           kind === 'image' ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={value} alt="" className="h-28 w-auto rounded-lg border border-white/10 object-contain" />
@@ -85,12 +106,17 @@ export function MediaUploadField({
           <Upload size={18} className="text-white/30" />
         )}
         <p className="text-xs text-white/55">
-          Cole com <span className="font-semibold text-white/80">Ctrl+V</span>, arraste o arquivo aqui, ou
+          {uploading ? (
+            'Enviando...'
+          ) : (
+            <>Cole com <span className="font-semibold text-white/80">Ctrl+V</span>, arraste o arquivo aqui, ou</>
+          )}
         </p>
         <button
           type="button"
+          disabled={uploading}
           onClick={() => fileRef.current?.click()}
-          className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-semibold text-white/80 hover:bg-white/5"
+          className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-semibold text-white/80 hover:bg-white/5 disabled:opacity-50"
         >
           Escolher {kind === 'image' ? 'imagem' : 'vídeo'} da mídia
         </button>
@@ -99,9 +125,10 @@ export function MediaUploadField({
           type="file"
           accept={accept}
           className="hidden"
-          onChange={(e) => acceptFile(e.target.files?.[0])}
+          onChange={(e) => void acceptFile(e.target.files?.[0])}
         />
       </div>
+      {error && <p className="mt-1.5 text-[11px] text-red-400">{error}</p>}
       <input
         className={`${inputCls} mt-2`}
         value={value}

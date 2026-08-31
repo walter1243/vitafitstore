@@ -124,10 +124,17 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
       ref={sectionRef}
       className="relative w-full h-[72svh] min-h-[460px] sm:h-[85svh] lg:h-screen flex items-center justify-center overflow-hidden"
     >
-      {/* Video */}
+      {/* Video — object-cover always fills the section on any screen size/
+         orientation without letterboxing; videoPosition controls which part
+         of the frame gets cropped when the video's aspect ratio doesn't
+         match the viewport's. */}
       <video
         ref={videoRef}
-        className="absolute inset-0 w-full h-full object-cover object-[center_30%] sm:object-center z-0"
+        className="absolute inset-0 w-full h-full object-cover z-0"
+        style={{
+          objectPosition:
+            hero.videoPosition === 'top' ? 'center 15%' : hero.videoPosition === 'bottom' ? 'center 85%' : 'center center',
+        }}
         src={hero.videoUrl}
         autoPlay
         loop
