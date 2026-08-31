@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { ArrowDown, ArrowRight, Shield, Zap, Flame, Volume2, VolumeX } from 'lucide-react';
+import { ArrowRight, Shield, Zap, Flame, Volume2, VolumeX } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis from '@studio-freight/lenis';
@@ -30,7 +30,6 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
   const sectionRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
-  const scrollIndicatorRef = useRef<HTMLDivElement>(null);
   const [isMuted, setIsMuted] = useState(true);
 
   // GSAP text reveal
@@ -42,17 +41,6 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
         { opacity: 1, y: 0, duration: 1.2, ease: 'power3.out', stagger: 0.15, delay: 0.3 }
       );
     }
-    const onScroll = () => {
-      if (scrollIndicatorRef.current) {
-        gsap.to(scrollIndicatorRef.current, {
-          opacity: window.scrollY > 60 ? 0 : 1,
-          duration: 0.5,
-          ease: 'power2.out',
-        });
-      }
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   // Lenis smooth scroll — driven by gsap.ticker (not its own rAF loop) and
@@ -222,17 +210,6 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
       >
         {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
       </button>
-
-      {/* Scroll indicator */}
-      <div
-        ref={scrollIndicatorRef}
-        className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2"
-      >
-        <span className="text-white/40 text-xs tracking-widest uppercase">Scroll</span>
-        <div className="animate-bounce">
-          <ArrowDown className="h-5 w-5 text-sky-400" />
-        </div>
-      </div>
     </section>
   );
 }
