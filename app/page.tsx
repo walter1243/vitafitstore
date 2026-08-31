@@ -13,6 +13,14 @@ import { WhatsAppFloating } from '@/components/whatsapp-floating'
 import { sql } from '@/lib/db'
 import { getSiteContent } from '@/lib/site-content'
 
+// Without this, Next.js statically generates the homepage at build time
+// (a raw `sql` query doesn't trip its automatic dynamic-rendering
+// detection the way `fetch()` does) and serves that same snapshot to
+// every visitor afterward — publishing content-editor changes updates the
+// database but never reaches the live page until the next deploy.
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 type HomeBlock = {
   key: 'hero' | 'trust' | 'products' | 'pin' | 'newsletter'
   label: string
