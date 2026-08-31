@@ -38,8 +38,8 @@ export function Newsletter({ data }: { data?: NewsletterContent }) {
         className="absolute inset-0 pointer-events-none"
         style={{
           backgroundImage:
-            'linear-gradient(rgba(14,165,233,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(14,165,233,0.05) 1px, transparent 1px)',
-          backgroundSize: '60px 60px',
+            'radial-gradient(rgba(186, 230, 253, 0.35) 1px, transparent 1.5px)',
+          backgroundSize: '28px 28px',
         }}
       />
       <div

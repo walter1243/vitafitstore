@@ -9,14 +9,13 @@ export function AboutSection({ data }: { data?: AboutContent }) {
   const content = data?.features?.length ? data : DEFAULT_ABOUT
 
   return (
-    <section id="nosotros" className="relative overflow-hidden border-t border-white/10 bg-[#060f1e] py-16">
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-500/40 to-transparent" />
+    <section id="nosotros" className="relative overflow-hidden bg-[#060f1e] py-16">
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           backgroundImage:
-            'linear-gradient(rgba(14,165,233,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(14,165,233,0.05) 1px, transparent 1px)',
-          backgroundSize: '60px 60px',
+            'radial-gradient(rgba(186, 230, 253, 0.35) 1px, transparent 1.5px)',
+          backgroundSize: '28px 28px',
         }}
       />
 
@@ -96,6 +95,17 @@ export function AboutSection({ data }: { data?: AboutContent }) {
           </ScrollReveal>
         </div>
       </div>
+
+      {/* Section transition — wave divider into the next section */}
+      <svg
+        className="absolute bottom-0 left-0 w-full text-[#0a1628]"
+        style={{ height: '60px' }}
+        viewBox="0 0 1440 60"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <path fill="currentColor" d="M0,24 C240,50 480,10 720,32 C960,54 1200,4 1440,28 L1440,60 L0,60 Z" />
+      </svg>
     </section>
   )
 }

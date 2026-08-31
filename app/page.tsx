@@ -10,6 +10,7 @@ import { Footer } from '@/components/footer'
 import { CartSidebar } from '@/components/cart-sidebar'
 import { UpsellPopup } from '@/components/upsell-popup'
 import { WhatsAppFloating } from '@/components/whatsapp-floating'
+import { SnowOverlay } from '@/components/snow-overlay'
 import { sql } from '@/lib/db'
 import { getSiteContent } from '@/lib/site-content'
 
@@ -69,6 +70,7 @@ export default async function HomePage() {
 
   return (
     <div className="flex min-h-screen flex-col">
+        <SnowOverlay />
         <Header />
         <main className="flex-1">
           {visibleBlocks.map(block => (

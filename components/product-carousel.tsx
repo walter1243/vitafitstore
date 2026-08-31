@@ -111,22 +111,32 @@ export function ProductCarousel({ products, title, subtitle, categoryLabel, cate
       className="relative py-16 overflow-hidden"
       style={{ background: 'linear-gradient(180deg, #060f1e 0%, #0a1220 100%)' }}
     >
-      {/* Ember glow — warm accent against the cold-night base, evoking the heat/comfort the products deliver */}
+      {/* Frost glow — soft icy blobs instead of the old hard grid lines */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="animate-blob animation-delay-0 absolute -top-20 right-[8%] h-80 w-80 rounded-full bg-amber-500/10 blur-[110px]" />
-        <div className="animate-blob animation-delay-4000 absolute bottom-[-10%] left-[5%] h-72 w-72 rounded-full bg-orange-500/10 blur-[100px]" />
-        <div className="animate-blob animation-delay-2000 absolute top-1/3 left-1/2 h-64 w-64 rounded-full bg-sky-500/8 blur-[100px]" />
+        <div className="animate-blob animation-delay-0 absolute -top-20 right-[8%] h-80 w-80 rounded-full bg-sky-400/10 blur-[110px]" />
+        <div className="animate-blob animation-delay-4000 absolute bottom-[-10%] left-[5%] h-72 w-72 rounded-full bg-cyan-300/8 blur-[100px]" />
+        <div className="animate-blob animation-delay-2000 absolute top-1/3 left-1/2 h-64 w-64 rounded-full bg-white/5 blur-[100px]" />
       </div>
 
-      {/* Grid bg */}
+      {/* Soft frost speckle — replaces the old harsh grid pattern */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none opacity-40"
         style={{
-          backgroundImage:
-            'linear-gradient(rgba(14,165,233,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(14,165,233,0.05) 1px, transparent 1px)',
-          backgroundSize: '60px 60px',
+          backgroundImage: 'radial-gradient(rgba(186, 230, 253, 0.35) 1px, transparent 1.5px)',
+          backgroundSize: '28px 28px',
         }}
       />
+
+      {/* Section transition — wave divider fading into the next section */}
+      <svg
+        className="absolute bottom-0 left-0 w-full text-[#0a1220]"
+        style={{ height: '60px' }}
+        viewBox="0 0 1440 60"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <path fill="currentColor" d="M0,32 C240,60 480,4 720,20 C960,36 1200,58 1440,26 L1440,60 L0,60 Z" />
+      </svg>
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {categoryMedia?.bannerUrl && (

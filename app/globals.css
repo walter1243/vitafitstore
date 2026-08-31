@@ -262,6 +262,24 @@ button, [role="button"], a, [onClick] {
 .animation-delay-2000 { animation-delay: 2s; }
 .animation-delay-4000 { animation-delay: 4s; }
 
+/* ─── Falling Snow (winter ambient layer) ────────── */
+@keyframes snowfall {
+  0%   { transform: translate3d(0, -10vh, 0); }
+  100% { transform: translate3d(var(--drift, 0px), 110vh, 0); }
+}
+.snowflake {
+  top: -10px;
+  animation-name: snowfall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  filter: blur(0.5px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .snowflake {
+    display: none;
+  }
+}
+
 /* ─── Step Progress ──────────────────────────────── */
 @keyframes step-fill {
   from { width: 0%; }

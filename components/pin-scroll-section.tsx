@@ -43,8 +43,8 @@ export default function PinScrollSection({ data }: { data?: DestaquesContent }) 
         className="absolute inset-0 pointer-events-none"
         style={{
           backgroundImage:
-            'linear-gradient(rgba(14,165,233,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(14,165,233,0.05) 1px, transparent 1px)',
-          backgroundSize: '60px 60px',
+            'radial-gradient(rgba(186, 230, 253, 0.35) 1px, transparent 1.5px)',
+          backgroundSize: '28px 28px',
         }}
       />
 
@@ -90,6 +90,17 @@ export default function PinScrollSection({ data }: { data?: DestaquesContent }) 
           );
         })}
       </div>
+
+      {/* Section transition — wave divider into the next section */}
+      <svg
+        className="absolute bottom-0 left-0 w-full text-[#060f1e]"
+        style={{ height: '60px' }}
+        viewBox="0 0 1440 60"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <path fill="currentColor" d="M0,28 C240,4 480,54 720,32 C960,10 1200,50 1440,24 L1440,60 L0,60 Z" />
+      </svg>
     </section>
   );
 }
