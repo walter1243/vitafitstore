@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { ChevronLeft, ChevronRight, Star, ShoppingCart, Check, Eye } from 'lucide-react';
+import { Star, ShoppingCart, Check, Eye } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 import { type Product } from '@/lib/products';
 
@@ -97,9 +97,6 @@ export function ProductCarousel({ products, title, subtitle, categoryLabel, cate
     return () => clearInterval(id);
   }, [emblaApi]);
 
-  const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
-  const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
-
   const handleAdd = (e: React.MouseEvent, product: Product) => {
     e.stopPropagation();
     e.preventDefault();
@@ -109,7 +106,18 @@ export function ProductCarousel({ products, title, subtitle, categoryLabel, cate
   };
 
   return (
-    <section ref={sectionRef} className="relative py-16 overflow-hidden" style={{ background: '#060f1e' }}>
+    <section
+      ref={sectionRef}
+      className="relative py-16 overflow-hidden"
+      style={{ background: 'linear-gradient(180deg, #060f1e 0%, #0a1220 100%)' }}
+    >
+      {/* Ember glow — warm accent against the cold-night base, evoking the heat/comfort the products deliver */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="animate-blob animation-delay-0 absolute -top-20 right-[8%] h-80 w-80 rounded-full bg-amber-500/10 blur-[110px]" />
+        <div className="animate-blob animation-delay-4000 absolute bottom-[-10%] left-[5%] h-72 w-72 rounded-full bg-orange-500/10 blur-[100px]" />
+        <div className="animate-blob animation-delay-2000 absolute top-1/3 left-1/2 h-64 w-64 rounded-full bg-sky-500/8 blur-[100px]" />
+      </div>
+
       {/* Grid bg */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -162,22 +170,6 @@ export function ProductCarousel({ products, title, subtitle, categoryLabel, cate
               {title}
             </h2>
             </div>
-          </div>
-          <div className="hidden sm:flex gap-2">
-            <button
-              onClick={scrollPrev}
-              className="w-10 h-10 rounded-full border border-sky-500/30 bg-black/40 text-sky-400 flex items-center justify-center hover:bg-sky-500/20 transition-all cursor-pointer"
-              aria-label="Anterior"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-            <button
-              onClick={scrollNext}
-              className="w-10 h-10 rounded-full border border-sky-500/30 bg-black/40 text-sky-400 flex items-center justify-center hover:bg-sky-500/20 transition-all cursor-pointer"
-              aria-label="Siguiente"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
           </div>
         </div>
 
