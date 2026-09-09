@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { Flame, Instagram, Mail, MessageCircle, PhoneCall, X } from 'lucide-react'
+import { ChevronDown, Flame, Instagram, Mail, MessageCircle, PhoneCall } from 'lucide-react'
 import { ScrollReveal } from '@/components/scroll-reveal'
 import { PAYMENT_LOGOS } from '@/components/payment-logos'
 import { DEFAULT_FOOTER, type FooterContent } from '@/lib/site-content-defaults'
@@ -87,8 +87,17 @@ export function Footer({ content }: { content?: FooterContent }) {
   const [instagram, setInstagram] = useState('')
   const [whatsapp, setWhatsapp] = useState('')
   const [email, setEmail] = useState('')
-  const [activePopup, setActivePopup] = useState<FooterSectionKey | null>(null)
+  const [openSections, setOpenSections] = useState<Set<FooterSectionKey>>(new Set())
   const [categories, setCategories] = useState<CategoryMeta[]>([])
+
+  function toggleSection(key: FooterSectionKey) {
+    setOpenSections((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
 
   useEffect(() => {
     ;(async () => {
@@ -163,81 +172,6 @@ export function Footer({ content }: { content?: FooterContent }) {
   return (
     <footer className="border-t border-slate-200 bg-white">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        {activePopup && (
-          <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/50 p-4" onClick={() => setActivePopup(null)}>
-            <div
-              className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 text-slate-800 shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-base font-semibold text-slate-900">{dynamicSections[activePopup].title}</h3>
-                <button
-                  type="button"
-                  onClick={() => setActivePopup(null)}
-                  className="rounded-lg border border-slate-200 p-2 text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-800"
-                  aria-label="Fechar popup"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              <p className="mb-3 text-sm leading-relaxed text-slate-500">{dynamicSections[activePopup].description}</p>
-
-              <div className="space-y-2">
-                {dynamicSections[activePopup].items.map((item) => (
-                  <div key={item.title} className="rounded-lg border border-slate-200 bg-slate-50/60 p-3">
-                    {item.href ? (
-                      <Link
-                        href={item.href}
-                        onClick={() => setActivePopup(null)}
-                        className="text-sm font-semibold text-slate-800 transition-colors hover:text-orange-700"
-                      >
-                        {item.title}
-                      </Link>
-                    ) : (
-                      <p className="text-sm font-semibold text-slate-800">{item.title}</p>
-                    )}
-                    <p className="mt-1 text-xs leading-relaxed text-slate-500">{item.description}</p>
-                  </div>
-                ))}
-              </div>
-
-              {activePopup === 'ayuda' && (
-                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                  {whatsapp.trim() && (
-                    <a
-                      href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-orange-700 px-3 py-2 text-xs font-semibold text-white hover:bg-orange-600"
-                    >
-                      <MessageCircle size={14} /> WhatsApp SAC
-                    </a>
-                  )}
-                  {instagramHref && (
-                    <a
-                      href={instagramHref}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                    >
-                      <Instagram size={14} /> Instagram
-                    </a>
-                  )}
-                  {(emailHref || true) && (
-                    <a
-                      href={emailHref || undefined}
-                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                    >
-                      <Mail size={14} /> Email SAC
-                    </a>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
         <ScrollReveal className="grid gap-8 md:grid-cols-2 lg:grid-cols-6">
           {/* Brand */}
           <div className="lg:col-span-2">
@@ -270,19 +204,80 @@ export function Footer({ content }: { content?: FooterContent }) {
             </div>
           </div>
 
-          {/* Links com popup */}
-          {(Object.keys(dynamicSections) as FooterSectionKey[]).map((sectionKey) => (
-            <div key={sectionKey}>
-              <button
-                type="button"
-                onClick={() => setActivePopup(sectionKey)}
-                className="mb-2 text-left font-semibold text-slate-800 transition-colors hover:text-orange-700"
-              >
-                {dynamicSections[sectionKey].title}
-              </button>
-              <p className="text-sm text-slate-500">{dynamicSections[sectionKey].description}</p>
-            </div>
-          ))}
+          {/* Links — click a section to expand it inline (accordion), same behavior at every screen size */}
+          {(Object.keys(dynamicSections) as FooterSectionKey[]).map((sectionKey) => {
+            const isOpen = openSections.has(sectionKey)
+            const section = dynamicSections[sectionKey]
+            return (
+              <div key={sectionKey}>
+                <button
+                  type="button"
+                  onClick={() => toggleSection(sectionKey)}
+                  aria-expanded={isOpen}
+                  className="flex w-full items-center justify-between gap-2 text-left font-semibold text-slate-800 transition-colors hover:text-orange-700 cursor-pointer"
+                >
+                  {section.title}
+                  <ChevronDown
+                    className={`h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
+                <p className="mt-2 text-sm text-slate-500">{section.description}</p>
+
+                <div
+                  className={`overflow-hidden transition-all duration-300 ${isOpen ? 'mt-3' : ''}`}
+                  style={{ maxHeight: isOpen ? '600px' : '0px', opacity: isOpen ? 1 : 0 }}
+                >
+                  <div className="space-y-2">
+                    {section.items.map((item) => (
+                      <div key={item.title} className="rounded-lg border border-slate-200 bg-slate-50/60 p-3">
+                        {item.href ? (
+                          <Link href={item.href} className="text-sm font-semibold text-slate-800 transition-colors hover:text-orange-700">
+                            {item.title}
+                          </Link>
+                        ) : (
+                          <p className="text-sm font-semibold text-slate-800">{item.title}</p>
+                        )}
+                        <p className="mt-1 text-xs leading-relaxed text-slate-500">{item.description}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {sectionKey === 'ayuda' && (
+                    <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                      {whatsapp.trim() && (
+                        <a
+                          href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center gap-2 rounded-lg bg-orange-700 px-3 py-2 text-xs font-semibold text-white hover:bg-orange-600"
+                        >
+                          <MessageCircle size={14} /> WhatsApp SAC
+                        </a>
+                      )}
+                      {instagramHref && (
+                        <a
+                          href={instagramHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                        >
+                          <Instagram size={14} /> Instagram
+                        </a>
+                      )}
+                      {emailHref && (
+                        <a
+                          href={emailHref}
+                          className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                        >
+                          <Mail size={14} /> Email SAC
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
+          })}
 
           {/* Seguridad y logística */}
           <div>

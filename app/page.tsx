@@ -3,7 +3,7 @@ import { Header } from '@/components/header'
 import HeroVideo from '../components/hero-video'
 import { TrustBadges } from '@/components/trust-badges'
 import ProductCarousels from '../components/product-carousels'
-import PinScrollSection from '../components/pin-scroll-section'
+import { CategorySpotlight } from '@/components/category-spotlight'
 import { FeaturedProductsGrid } from '@/components/featured-products-grid'
 import { Newsletter } from '@/components/newsletter'
 import { Footer } from '@/components/footer'
@@ -32,7 +32,7 @@ const DEFAULT_BLOCKS: HomeBlock[] = [
   { key: 'hero', label: 'Hero Vídeo', position: 1, enabled: true },
   { key: 'trust', label: 'Selos de Confiança', position: 2, enabled: true },
   { key: 'products', label: 'Produtos', position: 3, enabled: true },
-  { key: 'pin', label: 'Sessão Pin', position: 4, enabled: true },
+  { key: 'pin', label: 'Categorias em Destaque', position: 4, enabled: true },
   { key: 'newsletter', label: 'Newsletter', position: 5, enabled: true },
 ]
 
@@ -61,7 +61,7 @@ export default async function HomePage() {
         <ProductCarousels />
       </section>
     ),
-    pin: <PinScrollSection data={content.destaques} />,
+    pin: <CategorySpotlight />,
     newsletter: <Newsletter data={content.newsletter} />,
   }
 
