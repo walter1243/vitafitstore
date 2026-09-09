@@ -17,13 +17,13 @@ export function Newsletter({ data }: { data?: NewsletterContent }) {
     if (!email) return
 
     setStatus('loading')
-    
+
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000))
-    
+
     setStatus('success')
     setEmail('')
-    
+
     // Reset after 3 seconds
     setTimeout(() => setStatus('idle'), 3000)
   }
@@ -31,28 +31,14 @@ export function Newsletter({ data }: { data?: NewsletterContent }) {
   return (
     <section
       className="relative overflow-hidden py-16"
-      style={{ background: 'linear-gradient(180deg, #0a1628 0%, #060f1e 100%)' }}
+      style={{ background: 'linear-gradient(135deg, #c2410c 0%, #9a3412 100%)' }}
     >
-      {/* Subtle grid, consistent with the other dark sections */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          backgroundImage:
-            'radial-gradient(rgba(186, 230, 253, 0.35) 1px, transparent 1.5px)',
-          backgroundSize: '28px 28px',
-        }}
-      />
-      <div
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[400px] w-[400px] rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(14,165,233,0.10) 0%, transparent 70%)' }}
-      />
-
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <ScrollReveal className="text-center">
           <h2 className="mb-3 text-2xl font-bold text-white sm:text-3xl">
             {content.title}
           </h2>
-          <p className="mx-auto mb-8 max-w-xl text-white/60">
+          <p className="mx-auto mb-8 max-w-xl text-white/85">
             {content.text}
           </p>
 
@@ -62,14 +48,14 @@ export function Newsletter({ data }: { data?: NewsletterContent }) {
               placeholder="Tu email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="h-12 border-white/15 bg-white/5 text-white placeholder:text-white/40 focus-visible:ring-sky-400/50"
+              className="h-12 border-white/25 bg-white/10 text-white placeholder:text-white/60 focus-visible:ring-white/50"
               required
               disabled={status === 'loading' || status === 'success'}
             />
             <Button
               type="submit"
               size="lg"
-              className="h-12 gap-2 bg-sky-500 text-white hover:bg-sky-400"
+              className="h-12 gap-2 bg-white text-orange-800 hover:bg-orange-50"
               disabled={status === 'loading' || status === 'success'}
             >
               {status === 'loading' ? (
@@ -88,7 +74,7 @@ export function Newsletter({ data }: { data?: NewsletterContent }) {
             </Button>
           </form>
 
-          <p className="mt-4 text-xs text-white/45">
+          <p className="mt-4 text-xs text-white/70">
             {content.privacyText}
           </p>
         </ScrollReveal>

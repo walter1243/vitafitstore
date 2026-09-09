@@ -3256,8 +3256,9 @@ function SettingsSection({
   const [waTrackingTemplate, setWaTrackingTemplate] = useState('Hola {name}! Buenas noticias: tu pedido #{orderId} ya fue enviado. Transportista: {carrier}. Codigo: {trackingCode}. Rastreo: {trackingUrl}');
   const [waFutureTemplate, setWaFutureTemplate] = useState('Hola {name}! Este es un mensaje futuro editable para nuevas automatizaciones.');
   const [trustpilotBusinessId, setTrustpilotBusinessId] = useState('');
+  const [metaPixelId, setMetaPixelId] = useState('');
   const [storeName, setStore] = useState('Nuestra Tienda');
-  const [themeColor, setThemeColor] = useState('#10b981');
+  const [themeColor, setThemeColor] = useState('#c2410c');
   const [logoUrl, setLogoUrl] = useState('');
   const [saved, setSaved] = useState(false);
   const [savingConfig, setSavingConfig] = useState(false);
@@ -3271,7 +3272,7 @@ function SettingsSection({
         if (!res.ok) return;
         const data = await res.json();
         setStore(data?.storeName ?? 'Nuestra Tienda');
-        setThemeColor(data?.themeColor ?? '#10b981');
+        setThemeColor(data?.themeColor ?? '#c2410c');
         setLogoUrl(data?.logoUrl ?? '');
         setIg(data?.instagram ?? '');
         setWa(data?.whatsapp ?? '+34 601 678 657');
@@ -3282,6 +3283,7 @@ function SettingsSection({
         setWaTrackingTemplate(data?.whatsappTrackingTemplate ?? 'Hola {name}! Buenas noticias: tu pedido #{orderId} ya fue enviado. Transportista: {carrier}. Codigo: {trackingCode}. Rastreo: {trackingUrl}');
         setWaFutureTemplate(data?.whatsappFutureTemplate ?? 'Hola {name}! Este es un mensaje futuro editable para nuevas automatizaciones.');
         setTrustpilotBusinessId(data?.trustpilotBusinessId ?? '');
+        setMetaPixelId(data?.metaPixelId ?? '');
       } catch {
         // ignore load errors
       }
@@ -3323,6 +3325,7 @@ function SettingsSection({
               whatsappTrackingTemplate: waTrackingTemplate.trim(),
               whatsappFutureTemplate: waFutureTemplate.trim(),
               trustpilotBusinessId: trustpilotBusinessId.trim(),
+              metaPixelId: metaPixelId.trim(),
             }),
           }),
           fetch('/api/home-blocks', {
@@ -3537,6 +3540,24 @@ function SettingsSection({
         />
         <p className="mt-1.5 text-[11px] text-white/40">
           Deixe em branco para não mostrar nenhum selo — melhor não ter nada do que mostrar algo fabricado. Crie sua conta em business.trustpilot.com.
+        </p>
+      </div>
+
+      <div className="rounded-2xl border border-white/10 bg-[#161b28] p-5 shadow-none">
+        <h2 className="mb-1 font-semibold text-white">Meta Pixel (Facebook/Instagram Ads)</h2>
+        <p className="mb-4 text-xs text-white/50">
+          Só dispara depois que o visitante aceitar cookies no banner — obrigatório pelo GDPR europeu. Sem consentimento, nenhum dado é enviado à Meta.
+        </p>
+        <label className="mb-1.5 block text-xs font-medium text-white/50">Meta Pixel ID</label>
+        <input
+          type="text"
+          value={metaPixelId}
+          onChange={e => setMetaPixelId(e.target.value)}
+          placeholder="ex: 1234567890123456 (encontrado no Gerenciador de Eventos da Meta)"
+          className="w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+        />
+        <p className="mt-1.5 text-[11px] text-white/40">
+          Deixe em branco para não carregar o Pixel. O modo "Limited Data Use" já vem ativado automaticamente para tráfego europeu.
         </p>
       </div>
 

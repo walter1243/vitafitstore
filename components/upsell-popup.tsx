@@ -70,7 +70,7 @@ export function UpsellPopup() {
       ingredients: '',
       usage: '',
       emoji: '✨',
-      gradient: 'from-sky-400 to-sky-600',
+      gradient: 'from-orange-600 to-orange-800',
       slug: item.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
     } as any)
     setAdded(prev => new Set([...prev, item.productId]))
@@ -95,12 +95,12 @@ export function UpsellPopup() {
       />
 
       {/* Panel */}
-      <div className="relative z-10 w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-[#0f1117] border border-white/10 shadow-2xl animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300 flex flex-col max-h-[88dvh] sm:max-h-[85vh]">
+      <div className="relative z-10 w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-white border border-slate-200 shadow-2xl animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300 flex flex-col max-h-[88dvh] sm:max-h-[85vh]">
 
         {/* Close */}
         <button
           onClick={() => setShowUpsell(false)}
-          className="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/50 hover:bg-white/20 hover:text-white transition-all cursor-pointer"
+          className="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-all cursor-pointer"
           aria-label="Cerrar"
         >
           <X size={14} />
@@ -112,15 +112,15 @@ export function UpsellPopup() {
 
           {/* Added confirmation */}
           <div className="flex items-center gap-3 mb-5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-500">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-700">
               <Check size={16} className="text-white" />
             </div>
-            <span className="font-semibold text-white text-sm">¡Añadido al carrito!</span>
+            <span className="font-semibold text-slate-900 text-sm">¡Añadido al carrito!</span>
           </div>
 
           {/* Product added */}
-          <div className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/4 p-3 mb-5">
-            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-[#090b10]">
+          <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 mb-5">
+            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-slate-50">
               {lastAddedProduct.image && !imgErrors.has(-1) ? (
                 <Image
                   src={lastAddedProduct.image}
@@ -136,8 +136,8 @@ export function UpsellPopup() {
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-white leading-tight line-clamp-2">{lastAddedProduct.name}</p>
-              <p className="text-sm font-bold text-sky-400 mt-0.5">{lastAddedProduct.price.toFixed(2)}€</p>
+              <p className="text-sm font-semibold text-slate-900 leading-tight line-clamp-2">{lastAddedProduct.name}</p>
+              <p className="text-sm font-bold text-orange-600 mt-0.5">{lastAddedProduct.price.toFixed(2)}€</p>
             </div>
           </div>
 
@@ -145,18 +145,18 @@ export function UpsellPopup() {
           {(loading || visible.length > 0) && (
             <>
               <div className="flex items-center gap-2 mb-3">
-                <Sparkles size={14} className="text-sky-400 shrink-0" />
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-sky-400">
+                <Sparkles size={14} className="text-orange-600 shrink-0" />
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-orange-600">
                   Completa tu pedido
                 </p>
               </div>
-              <p className="text-xs text-white/40 mb-3">
+              <p className="text-xs text-slate-400 mb-3">
                 Clientes que compraron esto también añadieron:
               </p>
 
               {loading && (
-                <div className="flex items-center gap-2 rounded-xl border border-white/8 bg-white/4 px-4 py-3 text-xs text-white/40">
-                  <span className="h-3 w-3 rounded-full border border-white/30 border-t-white/70 animate-spin" />
+                <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-400">
+                  <span className="h-3 w-3 rounded-full border border-slate-300 border-t-orange-600 animate-spin" />
                   Buscando sugerencias…
                 </div>
               )}
@@ -165,19 +165,19 @@ export function UpsellPopup() {
                 {visible.map(item => (
                   <div
                     key={item.productId}
-                    className="relative flex items-center gap-3 rounded-2xl border border-white/8 bg-white/4 p-3 transition-colors hover:bg-white/6"
+                    className="relative flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 transition-colors hover:bg-slate-100"
                   >
                     {/* X dismiss */}
                     <button
                       onClick={() => dismiss(item.productId)}
-                      className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-white/40 hover:bg-white/20 hover:text-white transition-all cursor-pointer"
+                      className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-900 transition-all cursor-pointer"
                       aria-label="Dispensar sugerencia"
                     >
                       <X size={11} />
                     </button>
 
                     {/* Image */}
-                    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-[#090b10]">
+                    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-slate-50">
                       {item.image && !imgErrors.has(item.productId) ? (
                         <Image
                           src={item.image}
@@ -193,22 +193,22 @@ export function UpsellPopup() {
 
                     {/* Info */}
                     <div className="min-w-0 flex-1 pr-5">
-                      <p className="text-sm font-semibold text-white leading-tight line-clamp-1">{item.name}</p>
-                      <p className="text-xs text-white/45 mt-0.5 line-clamp-1">
+                      <p className="text-sm font-semibold text-slate-900 leading-tight line-clamp-1">{item.name}</p>
+                      <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">
                         {item.description.replace(/<[^>]+>/g, '').slice(0, 60) || 'Suplemento premium'}
                       </p>
                     </div>
 
                     {/* Price + button */}
                     <div className="shrink-0 flex flex-col items-end gap-1.5">
-                      <span className="text-sm font-bold text-white">{item.price.toFixed(2)}€</span>
+                      <span className="text-sm font-bold text-slate-900">{item.price.toFixed(2)}€</span>
                       <button
                         onClick={() => handleAdd(item)}
                         disabled={added.has(item.productId)}
                         className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
                           added.has(item.productId)
-                            ? 'bg-sky-500/20 text-sky-400'
-                            : 'bg-sky-600 text-white hover:bg-sky-500'
+                            ? 'bg-orange-700/20 text-orange-600'
+                            : 'bg-orange-800 text-white hover:bg-orange-700'
                         }`}
                       >
                         {added.has(item.productId)
@@ -224,16 +224,16 @@ export function UpsellPopup() {
         </div>
 
         {/* Footer buttons */}
-        <div className="shrink-0 border-t border-white/10 px-5 py-4 sm:px-6 flex gap-3">
+        <div className="shrink-0 border-t border-slate-200 px-5 py-4 sm:px-6 flex gap-3">
           <button
             onClick={handleClose}
-            className="flex-1 rounded-2xl border border-white/15 bg-white/5 py-3 text-sm font-semibold text-white/80 hover:bg-white/10 transition-colors cursor-pointer"
+            className="flex-1 rounded-2xl border border-slate-200 bg-slate-50 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
           >
             Ver carrito
           </button>
           <button
             onClick={() => setShowUpsell(false)}
-            className="flex-1 rounded-2xl bg-gradient-to-r from-sky-600 to-sky-500 py-3 text-sm font-bold text-white hover:from-sky-500 hover:to-sky-400 transition-all cursor-pointer"
+            className="flex-1 rounded-2xl bg-gradient-to-r from-orange-800 to-orange-700 py-3 text-sm font-bold text-white hover:from-orange-700 hover:to-orange-600 transition-all cursor-pointer"
           >
             Seguir comprando
           </button>

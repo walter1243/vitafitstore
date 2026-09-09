@@ -8,7 +8,7 @@ export const revalidate = 0;
 const DEFAULT_SETTINGS = {
   storeName: "Nuestra Tienda",
   logoUrl: "",
-  themeColor: "#0ea5e9",
+  themeColor: "#c2410c",
   instagram: "",
   whatsapp: "+34 601 678 657",
   email: "",
@@ -21,6 +21,7 @@ const DEFAULT_SETTINGS = {
   whatsappFutureTemplate:
     "Hola {name}! Este es un mensaje futuro editable para nuevas automatizaciones.",
   trustpilotBusinessId: "",
+  metaPixelId: "",
 };
 
 async function ensureStoreSettingsColumns() {
@@ -29,7 +30,7 @@ async function ensureStoreSettingsColumns() {
       id SERIAL PRIMARY KEY,
       store_name TEXT NOT NULL DEFAULT 'Nuestra Tienda',
       logo_url TEXT,
-      theme_color TEXT NOT NULL DEFAULT '#0ea5e9',
+      theme_color TEXT NOT NULL DEFAULT '#c2410c',
       instagram TEXT,
       whatsapp TEXT,
       email TEXT,
@@ -52,7 +53,8 @@ async function ensureStoreSettingsColumns() {
     ADD COLUMN IF NOT EXISTS whatsapp_order_template TEXT,
     ADD COLUMN IF NOT EXISTS whatsapp_tracking_template TEXT,
     ADD COLUMN IF NOT EXISTS whatsapp_future_template TEXT,
-    ADD COLUMN IF NOT EXISTS trustpilot_business_id TEXT
+    ADD COLUMN IF NOT EXISTS trustpilot_business_id TEXT,
+    ADD COLUMN IF NOT EXISTS meta_pixel_id TEXT
   `;
 
   await sql`
@@ -75,7 +77,8 @@ export async function GET() {
              COALESCE(whatsapp_order_template, ${DEFAULT_SETTINGS.whatsappOrderTemplate}) AS "whatsappOrderTemplate",
              COALESCE(whatsapp_tracking_template, ${DEFAULT_SETTINGS.whatsappTrackingTemplate}) AS "whatsappTrackingTemplate",
              COALESCE(whatsapp_future_template, ${DEFAULT_SETTINGS.whatsappFutureTemplate}) AS "whatsappFutureTemplate",
-             COALESCE(trustpilot_business_id, '') AS "trustpilotBusinessId"
+             COALESCE(trustpilot_business_id, '') AS "trustpilotBusinessId",
+             COALESCE(meta_pixel_id, '') AS "metaPixelId"
       FROM store_settings
       ORDER BY id ASC
       LIMIT 1
@@ -111,6 +114,7 @@ export async function POST(req: NextRequest) {
     const whatsappTrackingTemplate = String(body.whatsappTrackingTemplate ?? DEFAULT_SETTINGS.whatsappTrackingTemplate).trim() || DEFAULT_SETTINGS.whatsappTrackingTemplate;
     const whatsappFutureTemplate = String(body.whatsappFutureTemplate ?? DEFAULT_SETTINGS.whatsappFutureTemplate).trim() || DEFAULT_SETTINGS.whatsappFutureTemplate;
     const trustpilotBusinessId = String(body.trustpilotBusinessId ?? "").trim();
+    const metaPixelId = String(body.metaPixelId ?? "").trim();
 
     await sql`
       INSERT INTO store_settings (
@@ -126,7 +130,8 @@ export async function POST(req: NextRequest) {
         whatsapp_order_template,
         whatsapp_tracking_template,
         whatsapp_future_template,
-        trustpilot_business_id
+        trustpilot_business_id,
+        meta_pixel_id
       )
       VALUES (
         1,
@@ -141,7 +146,8 @@ export async function POST(req: NextRequest) {
         ${whatsappOrderTemplate},
         ${whatsappTrackingTemplate},
         ${whatsappFutureTemplate},
-        ${trustpilotBusinessId || null}
+        ${trustpilotBusinessId || null},
+        ${metaPixelId || null}
       )
       ON CONFLICT (id)
       DO UPDATE SET
@@ -156,7 +162,8 @@ export async function POST(req: NextRequest) {
         whatsapp_order_template = EXCLUDED.whatsapp_order_template,
         whatsapp_tracking_template = EXCLUDED.whatsapp_tracking_template,
         whatsapp_future_template = EXCLUDED.whatsapp_future_template,
-        trustpilot_business_id = EXCLUDED.trustpilot_business_id
+        trustpilot_business_id = EXCLUDED.trustpilot_business_id,
+        meta_pixel_id = EXCLUDED.meta_pixel_id
     `;
 
     return NextResponse.json({ success: true }, {

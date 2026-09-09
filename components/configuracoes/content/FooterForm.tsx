@@ -6,7 +6,7 @@ export function FooterForm({ data, onChange }: { data: FooterContent; onChange: 
     onChange({ ...data, [key]: value });
   }
 
-  function setSection(key: 'empresa' | 'ayuda' | 'legal', patch: Partial<FooterContent['empresa']>) {
+  function setSection(key: 'ayuda' | 'legal', patch: Partial<FooterContent['ayuda']>) {
     onChange({ ...data, [key]: { ...data[key], ...patch } });
   }
 
@@ -21,8 +21,7 @@ export function FooterForm({ data, onChange }: { data: FooterContent; onChange: 
       </Field>
 
       {([
-        { key: 'empresa' as const, label: 'Coluna: Empresa' },
-        { key: 'ayuda' as const, label: 'Coluna: Ajuda e SAC' },
+        { key: 'ayuda' as const, label: 'Coluna: Ajuda e Suporte' },
         { key: 'legal' as const, label: 'Coluna: Legal' },
       ]).map(({ key, label }) => (
         <div key={key} className="mt-4 rounded-xl border border-white/10 bg-[#0f1117] p-3">

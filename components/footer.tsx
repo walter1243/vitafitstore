@@ -6,7 +6,7 @@ import { Flame, Instagram, Mail, MessageCircle, PhoneCall, X } from 'lucide-reac
 import { ScrollReveal } from '@/components/scroll-reveal'
 import { DEFAULT_FOOTER, type FooterContent } from '@/lib/site-content-defaults'
 
-type FooterSectionKey = 'productos' | 'empresa' | 'ayuda' | 'legal'
+type FooterSectionKey = 'productos' | 'ayuda' | 'legal'
 
 type FooterItem = {
   title: string
@@ -23,42 +23,27 @@ type FooterSectionConfig = {
 const footerSections: Record<FooterSectionKey, FooterSectionConfig> = {
   productos: {
     title: 'Productos',
-    description: 'Explora categorias de la tienda y encuentra rapidamente lo que buscas.',
-    items: [
-      { title: 'Suplementos', description: 'Nutricion deportiva para energia y recuperacion.', href: '#salud' },
-      { title: 'Vitaminas', description: 'Soporte diario para bienestar y defensas.', href: '#salud' },
-      { title: 'Accesorios Fitness', description: 'Complementos para tu rutina de entrenamiento.', href: '#fitness' },
-      { title: 'Ofertas', description: 'Productos destacados con promociones activas.', href: '#productos' },
-    ],
-  },
-  empresa: {
-    title: 'Empresa',
-    description: 'Informacion institucional y canales oficiales de la tienda.',
-    items: [
-      { title: 'Sobre nosotros', description: 'Conoce nuestra mision y compromiso con la calidad.', href: '#nosotros' },
-      { title: 'Atencion comercial', description: 'Lunes a viernes, 9:00 a 18:00 (Madrid).' },
-      { title: 'Email corporativo', description: 'sac@vitafitstore.com' },
-      { title: 'Colaboraciones', description: 'Escribenos para alianzas y afiliaciones.' },
-    ],
+    description: 'Explora nuestras categorías y encuentra rápidamente lo que buscas.',
+    items: [],
   },
   ayuda: {
-    title: 'Ayuda y SAC',
+    title: 'Ayuda y Soporte',
     description: 'Soporte profesional para pedidos, pagos, cambios y entregas.',
     items: [
-      { title: 'SAC WhatsApp', description: 'Respuesta rapida por chat para estado de pedido.' },
-      { title: 'Envios y entregas', description: 'Plazo medio de 2 a 5 dias habiles en Espana.' },
-      { title: 'Devoluciones', description: 'Solicitud de cambio o devolucion en hasta 14 dias.' },
-      { title: 'Pagos y facturacion', description: 'Tarjeta, PayPal y metodos locales compatibles.' },
+      { title: 'Atención por WhatsApp', description: 'Lunes a viernes, 9:00 a 18:00 (Madrid).' },
+      { title: 'Envíos y entregas', description: 'Plazos, transportistas y seguimiento de pedidos.', href: '/legal/envios' },
+      { title: 'Devoluciones y reembolsos', description: 'Derecho de desistimiento de 14 días.', href: '/legal/devoluciones' },
+      { title: 'Pagos y facturación', description: 'Tarjeta, PayPal y métodos locales compatibles.' },
     ],
   },
   legal: {
     title: 'Legal',
-    description: 'Documentos y politicas para una compra segura y transparente.',
+    description: 'Documentos y políticas para una compra segura y transparente.',
     items: [
-      { title: 'Aviso legal', description: 'Identificacion y terminos de uso de la plataforma.' },
-      { title: 'Politica de privacidad', description: 'Tratamiento de datos personales y consentimiento.' },
-      { title: 'Politica de cookies', description: 'Uso de cookies tecnicas y analiticas.' },
-      { title: 'Terminos y condiciones', description: 'Reglas de compra, entrega y garantia.' },
+      { title: 'Aviso legal', description: 'Identificación y términos de uso de la plataforma.', href: '/legal/aviso-legal' },
+      { title: 'Política de privacidad', description: 'Tratamiento de datos personales y consentimiento.', href: '/legal/privacidad' },
+      { title: 'Política de cookies', description: 'Uso de cookies técnicas y analíticas.', href: '/legal/cookies' },
+      { title: 'Términos y condiciones', description: 'Reglas de compra, entrega y garantía.', href: '/legal/terminos' },
     ],
   },
 }
@@ -76,7 +61,7 @@ function slugifyCategory(raw?: string) {
     .trim()
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+    .replace(new RegExp('[\\u0300-\\u036f]', 'g'), '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
 }
@@ -136,25 +121,16 @@ export function Footer({ content }: { content?: FooterContent }) {
     ...footerSections,
     productos: {
       title: 'Productos',
-      description: 'Explora categorias creadas en el panel admin y navega directo en la vitrina.',
+      description: 'Explora nuestras categorías y encuentra rápidamente lo que buscas.',
       items: categories.length
         ? categories.map((category) => ({
             title: category.name,
-            description: 'Categoria activa en la tienda.',
+            description: 'Categoría activa en la tienda.',
             href: toCategoryAnchor(category.slug || category.name),
           }))
         : [
-            { title: 'Sin categorias activas', description: 'Crea categorias no admin para aparecer aqui.', href: '#productos' },
+            { title: 'Calefactores Portátiles', description: 'Añade categorías reales desde el panel admin.', href: '#productos' },
           ],
-    },
-    empresa: {
-      title: footerContent.empresa.title,
-      description: footerContent.empresa.description,
-      items: footerSections.empresa.items.map((item) =>
-        item.title === 'Email corporativo'
-          ? { ...item, description: email.trim() || 'sac@vitafitstore.com' }
-          : item,
-      ),
     },
     ayuda: {
       ...footerSections.ayuda,
@@ -184,43 +160,43 @@ export function Footer({ content }: { content?: FooterContent }) {
   ].filter(Boolean) as { icon: typeof Instagram; href: string; label: string }[]
 
   return (
-    <footer className="border-t border-white/10 bg-[#060f1e]">
+    <footer className="border-t border-slate-200 bg-white">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         {activePopup && (
-          <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-4" onClick={() => setActivePopup(null)}>
+          <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/50 p-4" onClick={() => setActivePopup(null)}>
             <div
-              className="w-full max-w-md rounded-2xl border border-white/10 bg-[#161b28] p-5 text-white shadow-2xl"
+              className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 text-slate-800 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-base font-semibold text-white">{dynamicSections[activePopup].title}</h3>
+                <h3 className="text-base font-semibold text-slate-900">{dynamicSections[activePopup].title}</h3>
                 <button
                   type="button"
                   onClick={() => setActivePopup(null)}
-                  className="rounded-lg border border-white/10 p-2 text-white/60 transition-colors hover:bg-white/5 hover:text-white"
+                  className="rounded-lg border border-slate-200 p-2 text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-800"
                   aria-label="Fechar popup"
                 >
                   <X className="h-4 w-4" />
                 </button>
               </div>
 
-              <p className="mb-3 text-sm leading-relaxed text-white/60">{dynamicSections[activePopup].description}</p>
+              <p className="mb-3 text-sm leading-relaxed text-slate-500">{dynamicSections[activePopup].description}</p>
 
               <div className="space-y-2">
                 {dynamicSections[activePopup].items.map((item) => (
-                  <div key={item.title} className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
+                  <div key={item.title} className="rounded-lg border border-slate-200 bg-slate-50/60 p-3">
                     {item.href ? (
                       <Link
                         href={item.href}
                         onClick={() => setActivePopup(null)}
-                        className="text-sm font-semibold text-white transition-colors hover:text-sky-400"
+                        className="text-sm font-semibold text-slate-800 transition-colors hover:text-orange-700"
                       >
                         {item.title}
                       </Link>
                     ) : (
-                      <p className="text-sm font-semibold text-white">{item.title}</p>
+                      <p className="text-sm font-semibold text-slate-800">{item.title}</p>
                     )}
-                    <p className="mt-1 text-xs leading-relaxed text-white/45">{item.description}</p>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-500">{item.description}</p>
                   </div>
                 ))}
               </div>
@@ -232,7 +208,7 @@ export function Footer({ content }: { content?: FooterContent }) {
                       href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-sky-500 px-3 py-2 text-xs font-semibold text-white hover:bg-sky-400"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-orange-700 px-3 py-2 text-xs font-semibold text-white hover:bg-orange-600"
                     >
                       <MessageCircle size={14} /> WhatsApp SAC
                     </a>
@@ -242,15 +218,15 @@ export function Footer({ content }: { content?: FooterContent }) {
                       href={instagramHref}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-white/80 hover:bg-white/5"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                     >
                       <Instagram size={14} /> Instagram
                     </a>
                   )}
                   {(emailHref || true) && (
                     <a
-                      href={emailHref || 'mailto:sac@vitafitstore.com'}
-                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-white/80 hover:bg-white/5"
+                      href={emailHref || undefined}
+                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                     >
                       <Mail size={14} /> Email SAC
                     </a>
@@ -265,14 +241,14 @@ export function Footer({ content }: { content?: FooterContent }) {
           {/* Brand */}
           <div className="lg:col-span-2">
             <Link href="/" className="mb-4 flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-500">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-700">
                 <Flame className="h-5 w-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-white">
+              <span className="text-xl font-bold text-slate-900">
                 {storeName}
               </span>
             </Link>
-            <p className="mb-6 max-w-xs text-sm text-white/55">
+            <p className="mb-6 max-w-xs text-sm text-slate-500">
               {footerContent.brandDescription}
             </p>
 
@@ -284,7 +260,7 @@ export function Footer({ content }: { content?: FooterContent }) {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-white/60 transition-colors hover:bg-sky-500 hover:text-white"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-orange-700 hover:text-white"
                   aria-label={social.label}
                 >
                   <social.icon className="h-5 w-5" />
@@ -299,30 +275,50 @@ export function Footer({ content }: { content?: FooterContent }) {
               <button
                 type="button"
                 onClick={() => setActivePopup(sectionKey)}
-                className="mb-2 text-left font-semibold text-white transition-colors hover:text-sky-400"
+                className="mb-2 text-left font-semibold text-slate-800 transition-colors hover:text-orange-700"
               >
                 {dynamicSections[sectionKey].title}
               </button>
-              <p className="text-sm text-white/50">{dynamicSections[sectionKey].description}</p>
+              <p className="text-sm text-slate-500">{dynamicSections[sectionKey].description}</p>
             </div>
           ))}
+
+          {/* Seguridad y logística */}
+          <div>
+            <p className="mb-2 font-semibold text-slate-800">Seguridad y Logística</p>
+            <p className="mb-3 text-sm text-slate-500">Pago encriptado y envío con seguimiento en toda España.</p>
+            <div className="flex flex-wrap gap-1.5">
+              {['Visa', 'Mastercard', 'PayPal', 'Apple Pay', 'Google Pay', 'Bizum'].map((method) => (
+                <span key={method} className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-600">
+                  {method}
+                </span>
+              ))}
+            </div>
+          </div>
         </ScrollReveal>
 
         {/* Bottom */}
-        <div className="mt-12 border-t border-white/10 pt-8">
+        <div className="mt-12 border-t border-slate-200 pt-8">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-            <p className="text-sm text-white/45">
+            <p className="text-sm text-slate-500">
               © 2026 {storeName}. {footerContent.copyrightNote}
             </p>
             <div className="flex items-center gap-4">
-              <span className="inline-flex items-center gap-1 text-xs text-white/45"><PhoneCall className="h-3.5 w-3.5" /> SAC comercial</span>
-              <span className="text-xs text-white/45">Métodos de pago:</span>
-              <div className="flex items-center gap-2">
-                <div className="rounded bg-white/5 px-2 py-1 text-xs font-medium text-white/60">Visa</div>
-                <div className="rounded bg-white/5 px-2 py-1 text-xs font-medium text-white/60">Mastercard</div>
-                <div className="rounded bg-white/5 px-2 py-1 text-xs font-medium text-white/60">PayPal</div>
-                <div className="rounded bg-white/5 px-2 py-1 text-xs font-medium text-white/60">Bizum</div>
-              </div>
+              {whatsapp.trim() && (
+                <a
+                  href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-orange-700"
+                >
+                  <PhoneCall className="h-3.5 w-3.5" /> Soporte por WhatsApp
+                </a>
+              )}
+              {emailHref && (
+                <a href={emailHref} className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-orange-700">
+                  <Mail className="h-3.5 w-3.5" /> {email}
+                </a>
+              )}
             </div>
           </div>
         </div>

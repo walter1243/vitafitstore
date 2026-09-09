@@ -31,7 +31,7 @@ export default function PreviewPage() {
 
   if (!content) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#060f1e] text-sm text-white/50">
+      <div className="flex min-h-screen items-center justify-center bg-[#FAF8F5] text-sm text-slate-400">
         Carregando prévia...
       </div>
     )

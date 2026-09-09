@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from 'next'
-import Script from 'next/script'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { CartProvider } from '@/lib/cart-context'
 import SchemaOrg from '@/components/SchemaOrg'
+import { CookieConsent } from '@/components/cookie-consent'
+import { AnalyticsLoader } from '@/components/analytics-loader'
 import './globals.css'
 
 const geistSans = Geist({
@@ -99,7 +100,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#0ea5e9',
+  themeColor: '#c2410c',
 }
 
 export default function RootLayout({
@@ -111,26 +112,17 @@ export default function RootLayout({
     <html lang="es" className="bg-background">
       <head>
         <SchemaOrg />
-        {/* Google Analytics GA4 */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-7HYXPMV30R"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-7HYXPMV30R', {
-              page_path: window.location.pathname,
-            });
-          `}
-        </Script>
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}>
         <CartProvider>
           {children}
         </CartProvider>
+        {/* GDPR: Google Analytics and the Meta Pixel only fire after explicit
+           cookie consent — see components/cookie-consent.tsx and
+           components/analytics-loader.tsx. Never load them unconditionally
+           here again. */}
+        <CookieConsent />
+        <AnalyticsLoader />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

@@ -142,11 +142,11 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
 
       {/* Ambient blobs */}
       <div className="absolute inset-0 z-[2] pointer-events-none overflow-hidden">
-        <div className="animate-blob animation-delay-0 absolute -top-24 -left-24 h-96 w-96 rounded-full bg-sky-600/15 blur-[120px]" />
-        <div className="animate-blob animation-delay-2000 absolute top-1/2 right-0 h-80 w-80 rounded-full bg-cyan-500/10 blur-[100px]" />
-        <div className="animate-blob animation-delay-4000 absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-sky-400/10 blur-[90px]" />
+        <div className="animate-blob animation-delay-0 absolute -top-24 -left-24 h-96 w-96 rounded-full bg-orange-800/15 blur-[120px]" />
+        <div className="animate-blob animation-delay-2000 absolute top-1/2 right-0 h-80 w-80 rounded-full bg-amber-500/10 blur-[100px]" />
+        <div className="animate-blob animation-delay-4000 absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-orange-600/10 blur-[90px]" />
         {/* Winter frost accent blob */}
-        <div className="animate-blob animation-delay-2000 absolute top-10 right-1/4 h-64 w-64 rounded-full bg-sky-400/10 blur-[100px]" />
+        <div className="animate-blob animation-delay-2000 absolute top-10 right-1/4 h-64 w-64 rounded-full bg-orange-600/10 blur-[100px]" />
       </div>
 
       {/* Main content */}
@@ -156,31 +156,31 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
         className="text-white text-center flex flex-col items-center max-w-5xl mx-auto"
       >
         {/* Badge */}
-        <div className="mb-4 sm:mb-6 inline-flex items-center gap-2 rounded-full border border-sky-400/30 bg-sky-500/10 backdrop-blur-sm px-3 py-1.5 sm:px-5 sm:py-2 text-xs sm:text-sm font-semibold text-sky-300">
-          <div className="h-2 w-2 rounded-full bg-sky-400 animate-pulse" />
+        <div className="mb-4 sm:mb-6 inline-flex items-center gap-2 rounded-full border border-orange-600/30 bg-orange-700/10 backdrop-blur-sm px-3 py-1.5 sm:px-5 sm:py-2 text-xs sm:text-sm font-semibold text-orange-600">
+          <div className="h-2 w-2 rounded-full bg-orange-600 animate-pulse" />
           {hero.badgeText}
         </div>
 
         {/* Title */}
         <h1
-          className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold mb-4 sm:mb-6 drop-shadow-2xl leading-[1.05] tracking-tight"
+          className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 drop-shadow-2xl leading-[1.15] tracking-tight max-w-4xl"
           style={{ fontFamily: 'var(--font-heading)' }}
         >
           <span className="block text-white">{hero.titleLine1}</span>
-          <span className="block bg-gradient-to-r from-sky-300 via-sky-400 to-cyan-300 bg-clip-text text-transparent">
+          <span className="block bg-gradient-to-r from-orange-600 via-orange-600 to-amber-600 bg-clip-text text-transparent">
             {hero.titleLine2}
           </span>
         </h1>
 
         {/* Subtitle */}
-        <p className="text-sm sm:text-lg md:text-2xl text-white/75 mb-7 sm:mb-10 font-light tracking-[0.2em] sm:tracking-widest drop-shadow">
+        <p className="text-sm sm:text-base md:text-lg text-white/80 mb-7 sm:mb-10 max-w-2xl font-light drop-shadow">
           {hero.subtitle}
         </p>
 
         {/* Single CTA */}
         <a
           href={hero.ctaHref}
-          className="group flex items-center gap-2 bg-sky-500 hover:bg-sky-400 text-white px-6 py-3 sm:px-10 sm:py-4 rounded-xl text-sm sm:text-base font-semibold transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-[0_0_30px_rgba(14,165,233,0.6)]"
+          className="group flex items-center gap-2 bg-orange-700 hover:bg-orange-600 text-white px-6 py-3 sm:px-10 sm:py-4 rounded-xl text-sm sm:text-base font-semibold transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-[0_0_30px_rgba(194,65,12,0.6)]"
         >
           {hero.ctaText}
           <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
@@ -194,7 +194,7 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
             { icon: Flame, label: 'Máxima Calidez' },
           ].map(({ icon: Icon, label }) => (
             <div key={label} className="flex items-center gap-2 text-white/70 text-xs sm:text-sm">
-              <Icon className="h-4 w-4 text-sky-400" />
+              <Icon className="h-4 w-4 text-orange-600" />
               <span>{label}</span>
             </div>
           ))}

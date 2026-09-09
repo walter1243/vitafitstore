@@ -26,7 +26,7 @@ function slugifyCategory(raw?: string) {
     .trim()
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+    .replace(new RegExp('[\\u0300-\\u036f]', 'g'), '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '');
 }
@@ -49,7 +49,7 @@ export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [storeName, setStoreName] = useState('Nuestra Tienda');
   const [logoUrl, setLogoUrl] = useState('');
-  const [themeColor, setThemeColor] = useState('#0ea5e9');
+  const [themeColor, setThemeColor] = useState('#c2410c');
   const [categories, setCategories] = useState<CategoryMeta[]>([]);
   const [products, setProducts] = useState<DbProduct[]>([]);
 
@@ -67,7 +67,7 @@ export function Header() {
         const data = await res.json();
         setStoreName(data?.storeName ?? 'Nuestra Tienda');
         setLogoUrl(data?.logoUrl ?? '');
-        setThemeColor(data?.themeColor ?? '#0ea5e9');
+        setThemeColor(data?.themeColor ?? '#c2410c');
       } catch {
         // ignore settings load errors
       }
@@ -147,12 +147,12 @@ export function Header() {
         className="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
         style={{
           background: scrolled
-            ? 'rgba(6, 15, 30, 0.82)'
-            : 'rgba(255, 255, 255, 0.06)',
+            ? 'rgba(251, 248, 245, 0.92)'
+            : 'rgba(251, 248, 245, 0.65)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(255,255,255,0.10)',
-          boxShadow: scrolled ? '0 4px 32px rgba(0,0,0,0.18)' : 'none',
+          borderBottom: '1px solid rgba(30, 41, 59, 0.08)',
+          boxShadow: scrolled ? '0 4px 24px rgba(30,41,59,0.06)' : 'none',
         }}
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -169,7 +169,7 @@ export function Header() {
                 )}
               </div>
               <span className="text-lg font-bold">
-                <span className="text-white/90">{storeName}</span>
+                <span className="text-slate-800">{storeName}</span>
               </span>
             </Link>
 
@@ -179,10 +179,10 @@ export function Header() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="relative text-sm font-medium text-white/70 hover:text-white transition-colors duration-200 group cursor-pointer"
+                  className="relative text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors duration-200 group cursor-pointer"
                 >
                   {link.label}
-                  <span className="absolute -bottom-0.5 left-0 h-px w-full bg-sky-400 scale-x-0 origin-left transition-transform duration-300 group-hover:scale-x-100" />
+                  <span className="absolute -bottom-0.5 left-0 h-px w-full bg-orange-600 scale-x-0 origin-left transition-transform duration-300 group-hover:scale-x-100" />
                 </Link>
               ))}
             </nav>
@@ -191,12 +191,12 @@ export function Header() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setIsCartOpen(true)}
-                className="relative p-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/15 transition-all duration-200 cursor-pointer"
+                className="relative p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-all duration-200 cursor-pointer"
                 aria-label="Abrir carrito"
               >
-                <ShoppingCart className="h-5 w-5 text-white" />
+                <ShoppingCart className="h-5 w-5 text-slate-700" />
                 {totalItems > 0 && (
-                  <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-sky-500 text-xs font-bold text-white animate-pulse">
+                  <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-orange-700 text-xs font-bold text-white animate-pulse">
                     {totalItems}
                   </span>
                 )}
@@ -204,13 +204,13 @@ export function Header() {
 
               <button
                 onClick={() => setMobileOpen(!mobileOpen)}
-                className="md:hidden p-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/15 transition-all duration-200 cursor-pointer"
+                className="md:hidden p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-all duration-200 cursor-pointer"
                 aria-label="Menú"
               >
                 {mobileOpen ? (
-                  <X className="h-5 w-5 text-white" />
+                  <X className="h-5 w-5 text-slate-700" />
                 ) : (
-                  <Menu className="h-5 w-5 text-white" />
+                  <Menu className="h-5 w-5 text-slate-700" />
                 )}
               </button>
             </div>
@@ -222,23 +222,20 @@ export function Header() {
       {mobileOpen && (
         <>
           <div
-            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+            className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm md:hidden"
             onClick={() => setMobileOpen(false)}
           />
           <div
-            className="fixed top-0 right-0 bottom-0 z-50 w-72 md:hidden flex flex-col"
+            className="fixed top-0 right-0 bottom-0 z-50 w-72 md:hidden flex flex-col bg-[#FAF8F5]"
             style={{
-              background: 'rgba(6, 15, 30, 0.96)',
-              backdropFilter: 'blur(24px)',
-              WebkitBackdropFilter: 'blur(24px)',
-              borderLeft: '1px solid rgba(255,255,255,0.08)',
+              borderLeft: '1px solid rgba(30,41,59,0.08)',
             }}
           >
-            <div className="flex justify-between items-center p-6 border-b border-white/8">
-              <span className="text-lg font-bold text-white">Menú</span>
+            <div className="flex justify-between items-center p-6 border-b border-slate-200">
+              <span className="text-lg font-bold text-slate-800">Menú</span>
               <button
                 onClick={() => setMobileOpen(false)}
-                className="p-2 rounded-xl border border-white/15 text-white/70 hover:text-white cursor-pointer"
+                className="p-2 rounded-xl border border-slate-200 text-slate-600 hover:text-slate-900 cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -249,7 +246,7 @@ export function Header() {
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
-                  className="px-4 py-3 rounded-xl text-base font-medium text-white/70 hover:text-white hover:bg-white/8 transition-all duration-200 cursor-pointer"
+                  className="px-4 py-3 rounded-xl text-base font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200 cursor-pointer"
                 >
                   {link.label}
                 </Link>

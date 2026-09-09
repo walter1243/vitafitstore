@@ -51,7 +51,7 @@ export function toStoreProduct(p: DbProduct): Product {
     rating: 0,
     reviews: 0,
     stock: Number(p.stock || 0),
-    benefits: ['Calidad premium', 'Entrega rápida', 'Producto verificado', 'Soporte especializado'],
+    benefits: ['Calidad certificada', 'Envío con seguimiento', 'Pago 100% seguro', 'Devolución 14 días'],
     ingredients: p.description || 'Detalles no informados.',
     usage: 'Sigue las instrucciones del envase.',
     emoji: '✨',

@@ -51,9 +51,9 @@ export type HeroContent = {
 
 export const DEFAULT_HERO: HeroContent = {
   badgeText: 'Envío gratis en pedidos +50€ · España',
-  titleLine1: 'Calor y Confort',
-  titleLine2: 'Para tu Invierno',
-  subtitle: 'Calefacción · Confort Térmico · Bienestar',
+  titleLine1: 'Mantén tu hogar cálido este invierno',
+  titleLine2: 'sin disparar tu factura de luz',
+  subtitle: 'Soluciones de calefacción eficiente y confort térmico para no pasar frío en casa. Diseñadas para el invierno peninsular.',
   ctaText: 'Descubrir Productos',
   ctaHref: '#productos',
   videoPosition: 'center',
@@ -117,7 +117,7 @@ export type TrustBadgesContent = {
 export const DEFAULT_TRUST_BADGES: TrustBadgesContent = {
   badges: [
     { icon: 'truck', title: 'Envío gratis +50€', desc: 'En todos los pedidos' },
-    { icon: 'rotate', title: 'Devolución 30 días', desc: 'Sin preguntas' },
+    { icon: 'rotate', title: 'Devolución 14 días', desc: 'Derecho de desistimiento UE' },
     { icon: 'shield', title: 'Pago seguro SSL', desc: '100% protegido' },
     { icon: 'clock', title: 'Entrega 2-3 días', desc: 'En toda España' },
   ],
@@ -143,7 +143,6 @@ export type FooterSectionContent = {
 export type FooterContent = {
   brandDescription: string;
   copyrightNote: string;
-  empresa: FooterSectionContent;
   ayuda: FooterSectionContent;
   legal: FooterSectionContent;
 };
@@ -151,12 +150,8 @@ export type FooterContent = {
 export const DEFAULT_FOOTER: FooterContent = {
   brandDescription: 'Tu tienda online de calefacción y confort térmico en España. Productos de calidad para pasar el invierno con calidez.',
   copyrightNote: 'Todos los derechos reservados.',
-  empresa: {
-    title: 'Empresa',
-    description: 'Informacion institucional y canales oficiales de la tienda.',
-  },
   ayuda: {
-    title: 'Ayuda y SAC',
+    title: 'Ayuda y Soporte',
     description: 'Soporte profesional para pedidos, pagos, cambios y entregas.',
   },
   legal: {
@@ -198,17 +193,20 @@ export const DEFAULT_ABOUT: AboutContent = {
   features: [
     { icon: 'flame', title: 'Calor real', desc: 'Productos que calientan de verdad, probados para el frío europeo.' },
     { icon: 'award', title: 'Calidad certificada', desc: 'Todos nuestros productos cumplen con los más estrictos estándares de seguridad europeos.' },
-    { icon: 'heart', title: 'Confort real', desc: 'Diseñados para el uso diario, pensados en tu bienestar durante todo el invierno.' },
-    { icon: 'sparkles', title: 'Comunidad activa', desc: 'Miles de clientes satisfechos que confían en nosotros para pasar el invierno con calidez.' },
+    { icon: 'zap', title: 'Bajo consumo', desc: 'Tecnología eficiente pensada para no disparar tu factura de luz.' },
+    { icon: 'lock', title: 'Pago 100% seguro', desc: 'Transacciones encriptadas y verificadas a través de Stripe y PayPal.' },
   ],
   tagline: 'Tu confort, nuestra prioridad',
+  // Honest service commitments — not inflated metrics. A brand-new store
+  // has no verifiable "50K+ clientes" to show, and a visitor who tries to
+  // check a fabricated number and finds nothing will abandon the purchase.
   stats: [
-    { value: '5+', label: 'Años' },
-    { value: '50K+', label: 'Clientes' },
-    { value: '100+', label: 'Productos' },
+    { value: '24-48h', label: 'Respuesta WhatsApp' },
+    { value: '2-3 días', label: 'Envío con seguimiento' },
+    { value: '14 días', label: 'Devolución' },
   ],
-  ratingValue: '4.9/5',
-  ratingLabel: 'Satisfacción',
+  ratingValue: 'WhatsApp',
+  ratingLabel: 'Atención rápida',
   originBadgeTitle: '🇪🇸 Distribuido en España',
   originBadgeSubtitle: 'Entrega en toda la Península',
 };
