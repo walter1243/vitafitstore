@@ -84,22 +84,22 @@ export const DEFAULT_DESTAQUES: DestaquesContent = {
     {
       icon: 'flame',
       title: 'Calor Instantáneo',
-      desc: 'Productos diseñados para calentar rápido y mantener la temperatura ideal en tu hogar.',
+      desc: 'Listo en 3 segundos.',
     },
     {
       icon: 'zap',
-      title: 'Bajo Consumo Energético',
-      desc: 'Tecnología eficiente que calienta sin disparar tu factura de luz.',
+      title: 'Bajo Consumo',
+      desc: 'Ahorro energético certificado.',
     },
     {
       icon: 'truck',
-      title: 'Envío Exprés 2-3 Días',
-      desc: 'Pedidos procesados el mismo día. Seguimiento en tiempo real y entrega garantizada en toda España.',
+      title: 'Envío Rápido 24/48h',
+      desc: 'Desde almacén peninsular.',
     },
     {
       icon: 'shield',
-      title: 'Calidad Certificada',
-      desc: 'Productos certificados y probados para un uso seguro dentro de casa.',
+      title: 'Garantía de 3 Años',
+      desc: 'Cobertura europea total.',
     },
   ],
 };

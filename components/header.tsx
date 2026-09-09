@@ -52,6 +52,14 @@ export function Header() {
   const [themeColor, setThemeColor] = useState('#c2410c');
   const [categories, setCategories] = useState<CategoryMeta[]>([]);
   const [products, setProducts] = useState<DbProduct[]>([]);
+  const [announcement, setAnnouncement] = useState('');
+
+  useEffect(() => {
+    fetch('/api/site-content', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (data?.hero?.badgeText) setAnnouncement(data.hero.badgeText); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20);
@@ -143,8 +151,13 @@ export function Header() {
 
   return (
     <>
+      {announcement && (
+        <div className="fixed top-0 left-0 right-0 z-[60] bg-orange-800 px-4 py-1.5 text-center text-[11px] font-medium tracking-wide text-white sm:text-xs">
+          {announcement}
+        </div>
+      )}
       <header
-        className="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
+        className={`fixed left-0 right-0 z-50 transition-all duration-500 ${announcement ? 'top-7 sm:top-8' : 'top-0'}`}
         style={{
           background: scrolled
             ? 'rgba(251, 248, 245, 0.92)'

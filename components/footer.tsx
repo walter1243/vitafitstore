@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { Flame, Instagram, Mail, MessageCircle, PhoneCall, X } from 'lucide-react'
 import { ScrollReveal } from '@/components/scroll-reveal'
+import { PAYMENT_LOGOS } from '@/components/payment-logos'
 import { DEFAULT_FOOTER, type FooterContent } from '@/lib/site-content-defaults'
 
 type FooterSectionKey = 'productos' | 'ayuda' | 'legal'
@@ -288,9 +289,9 @@ export function Footer({ content }: { content?: FooterContent }) {
             <p className="mb-2 font-semibold text-slate-800">Seguridad y Logística</p>
             <p className="mb-3 text-sm text-slate-500">Pago encriptado y envío con seguimiento en toda España.</p>
             <div className="flex flex-wrap gap-1.5">
-              {['Visa', 'Mastercard', 'PayPal', 'Apple Pay', 'Google Pay', 'Bizum'].map((method) => (
-                <span key={method} className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-600">
-                  {method}
+              {PAYMENT_LOGOS.map(({ key, label, Logo }) => (
+                <span key={key} title={label} className="overflow-hidden rounded-md">
+                  <Logo />
                 </span>
               ))}
             </div>

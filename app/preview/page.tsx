@@ -6,7 +6,7 @@ import HeroVideo from '@/components/hero-video'
 import { TrustBadges } from '@/components/trust-badges'
 import ProductCarousels from '@/components/product-carousels'
 import PinScrollSection from '@/components/pin-scroll-section'
-import { AboutSection } from '@/components/about-section'
+import { FeaturedProductsGrid } from '@/components/featured-products-grid'
 import { Newsletter } from '@/components/newsletter'
 import { Footer } from '@/components/footer'
 import type { SiteContent } from '@/lib/site-content-defaults'
@@ -50,8 +50,8 @@ export default function PreviewPage() {
           <ProductCarousels />
         </section>
         <PinScrollSection data={content.destaques} />
-        <AboutSection data={content.about} />
         <Newsletter data={content.newsletter} />
+        <FeaturedProductsGrid />
       </main>
       <Footer content={content.footer} />
     </div>

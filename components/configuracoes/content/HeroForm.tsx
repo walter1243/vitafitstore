@@ -8,7 +8,7 @@ export function HeroForm({ data, onChange }: { data: HeroContent; onChange: (d: 
 
   return (
     <div>
-      <Field label="Texto do selo (badge acima do título)">
+      <Field label="Texto da barra de anúncio (topo do site, acima do menu)">
         <input className={inputCls} value={data.badgeText} onChange={(e) => set('badgeText', e.target.value)} />
       </Field>
 

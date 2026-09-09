@@ -29,16 +29,13 @@ export function Newsletter({ data }: { data?: NewsletterContent }) {
   }
 
   return (
-    <section
-      className="relative overflow-hidden py-16"
-      style={{ background: 'linear-gradient(135deg, #c2410c 0%, #9a3412 100%)' }}
-    >
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <ScrollReveal className="text-center">
-          <h2 className="mb-3 text-2xl font-bold text-white sm:text-3xl">
+    <section className="bg-[#FAF8F5] px-4 py-14 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-5xl">
+        <ScrollReveal className="rounded-3xl bg-gradient-to-br from-orange-50 to-amber-50 px-6 py-12 text-center sm:px-12">
+          <h2 className="mb-3 text-2xl font-bold text-slate-900 sm:text-3xl">
             {content.title}
           </h2>
-          <p className="mx-auto mb-8 max-w-xl text-white/85">
+          <p className="mx-auto mb-8 max-w-xl text-slate-600">
             {content.text}
           </p>
 
@@ -48,14 +45,14 @@ export function Newsletter({ data }: { data?: NewsletterContent }) {
               placeholder="Tu email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="h-12 border-white/25 bg-white/10 text-white placeholder:text-white/60 focus-visible:ring-white/50"
+              className="h-12 border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-orange-600/40"
               required
               disabled={status === 'loading' || status === 'success'}
             />
             <Button
               type="submit"
               size="lg"
-              className="h-12 gap-2 bg-white text-orange-800 hover:bg-orange-50"
+              className="h-12 gap-2 bg-orange-700 text-white hover:bg-orange-800"
               disabled={status === 'loading' || status === 'success'}
             >
               {status === 'loading' ? (
@@ -74,7 +71,7 @@ export function Newsletter({ data }: { data?: NewsletterContent }) {
             </Button>
           </form>
 
-          <p className="mt-4 text-xs text-white/70">
+          <p className="mt-4 text-xs text-slate-500">
             {content.privacyText}
           </p>
         </ScrollReveal>

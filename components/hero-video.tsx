@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { ArrowRight, Shield, Zap, Flame, Volume2, VolumeX } from 'lucide-react';
+import { ArrowRight, Volume2, VolumeX } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis from '@studio-freight/lenis';
@@ -131,12 +131,14 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
         poster={hero.posterUrl}
       />
 
-      {/* Gradient overlay */}
+      {/* Gradient overlay — flat vertical tint instead of a diagonal wash, so
+         it darkens evenly for text contrast without patchily cutting across
+         the subject's face */}
       <div
         className="absolute inset-0 z-[1]"
         style={{
           background:
-            'linear-gradient(135deg, rgba(0,0,0,0.72) 0%, rgba(0,40,20,0.55) 60%, rgba(0,0,0,0.42) 100%)',
+            'linear-gradient(180deg, rgba(15,23,42,0.48) 0%, rgba(15,23,42,0.38) 45%, rgba(15,23,42,0.58) 100%)',
         }}
       />
 
@@ -155,12 +157,6 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
         ref={textRef}
         className="text-white text-center flex flex-col items-center max-w-5xl mx-auto"
       >
-        {/* Badge */}
-        <div className="mb-4 sm:mb-6 inline-flex items-center gap-2 rounded-full border border-orange-600/30 bg-orange-700/10 backdrop-blur-sm px-3 py-1.5 sm:px-5 sm:py-2 text-xs sm:text-sm font-semibold text-orange-600">
-          <div className="h-2 w-2 rounded-full bg-orange-600 animate-pulse" />
-          {hero.badgeText}
-        </div>
-
         {/* Title */}
         <h1
           className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 drop-shadow-2xl leading-[1.15] tracking-tight max-w-4xl"
@@ -180,25 +176,11 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
         {/* Single CTA */}
         <a
           href={hero.ctaHref}
-          className="group flex items-center gap-2 bg-orange-700 hover:bg-orange-600 text-white px-6 py-3 sm:px-10 sm:py-4 rounded-xl text-sm sm:text-base font-semibold transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-[0_0_30px_rgba(194,65,12,0.6)]"
+          className="group flex items-center gap-2 bg-orange-700 hover:bg-orange-600 text-white px-6 py-3 sm:px-10 sm:py-4 rounded-lg text-sm sm:text-base font-semibold transition-all duration-300 cursor-pointer shadow-lg shadow-orange-500/20 hover:shadow-xl hover:shadow-orange-500/30"
         >
           {hero.ctaText}
           <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
         </a>
-
-        {/* Trust row */}
-        <div className="mt-8 sm:mt-10 flex items-center gap-4 sm:gap-8 flex-wrap justify-center">
-          {[
-            { icon: Shield, label: 'Pago Seguro' },
-            { icon: Zap, label: 'Calor Instantáneo' },
-            { icon: Flame, label: 'Máxima Calidez' },
-          ].map(({ icon: Icon, label }) => (
-            <div key={label} className="flex items-center gap-2 text-white/70 text-xs sm:text-sm">
-              <Icon className="h-4 w-4 text-orange-600" />
-              <span>{label}</span>
-            </div>
-          ))}
-        </div>
       </div>
       </div>
 

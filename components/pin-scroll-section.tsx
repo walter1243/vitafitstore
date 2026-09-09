@@ -7,13 +7,6 @@ import { DEFAULT_DESTAQUES, type DestaquesContent } from '@/lib/site-content-def
 
 gsap.registerPlugin(ScrollTrigger);
 
-const STYLE_CYCLE = [
-  { grad: 'from-orange-50 to-white', iconCls: 'text-orange-700', borderCls: 'border-orange-200' },
-  { grad: 'from-amber-50 to-white', iconCls: 'text-amber-600', borderCls: 'border-amber-200' },
-  { grad: 'from-sky-50 to-white', iconCls: 'text-sky-600', borderCls: 'border-sky-200' },
-  { grad: 'from-violet-50 to-white', iconCls: 'text-violet-600', borderCls: 'border-violet-200' },
-];
-
 export default function PinScrollSection({ data }: { data?: DestaquesContent }) {
   const content = data?.features?.length ? data : DEFAULT_DESTAQUES;
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -67,21 +60,20 @@ export default function PinScrollSection({ data }: { data?: DestaquesContent }) 
       <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-5 w-full max-w-4xl px-4">
         {content.features.map((f, idx) => {
           const Icon = getIcon(f.icon);
-          const style = STYLE_CYCLE[idx % STYLE_CYCLE.length];
           return (
             <div
               key={idx}
               ref={(el) => { itemsRef.current[idx] = el; }}
-              className={`bg-gradient-to-br ${style.grad} border ${style.borderCls} rounded-2xl p-6 flex items-start gap-4 shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_28px_rgba(0,0,0,0.08)] transition-all duration-300`}
+              className="bg-white border border-stone-200/70 rounded-2xl p-6 flex items-start gap-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_28px_rgba(0,0,0,0.08)] transition-all duration-300"
             >
               <div
-                className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 border ${style.borderCls} bg-white animate-zero-gravity-slow`}
+                className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 bg-orange-50 animate-zero-gravity-slow"
                 style={{ animationDelay: `${idx * 0.4}s` }}
               >
-                <Icon className={`h-6 w-6 ${style.iconCls}`} />
+                <Icon className="h-5 w-5 text-orange-600" />
               </div>
               <div>
-                <h3 className="text-slate-900 font-bold text-lg mb-1 leading-tight">{f.title}</h3>
+                <h3 className="text-slate-900 font-bold text-base mb-1 leading-tight">{f.title}</h3>
                 <p className="text-slate-500 text-sm leading-relaxed">{f.desc}</p>
               </div>
             </div>
@@ -89,16 +81,6 @@ export default function PinScrollSection({ data }: { data?: DestaquesContent }) 
         })}
       </div>
 
-      {/* Section transition — wave divider into the next section */}
-      <svg
-        className="absolute bottom-0 left-0 w-full text-white"
-        style={{ height: '60px' }}
-        viewBox="0 0 1440 60"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-      >
-        <path fill="currentColor" d="M0,28 C240,4 480,54 720,32 C960,10 1200,50 1440,24 L1440,60 L0,60 Z" />
-      </svg>
     </section>
   );
 }

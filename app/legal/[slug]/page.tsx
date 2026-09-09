@@ -27,7 +27,7 @@ export default async function LegalPage({ params }: PageProps) {
   return (
     <div className="flex min-h-screen flex-col bg-[#FAF8F5]">
       <Header />
-      <main className="flex-1 pt-28 pb-16">
+      <main className="flex-1 pt-36 pb-16">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
           <nav className="mb-6 flex flex-wrap gap-x-1.5 text-xs text-slate-500">
             <Link href="/" className="hover:text-slate-800">Inicio</Link>
