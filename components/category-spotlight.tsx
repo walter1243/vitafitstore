@@ -62,7 +62,10 @@ export function CategorySpotlight() {
         const key = normalizeCategory(cat.name)
         const items = byCategory.get(key) ?? []
         if (!items.length) continue
-        const withImage = items.find((p) => p.image) ?? items[0]
+        // The admin-chosen cover wins if one was set for this category;
+        // otherwise fall back to the first product that actually has a photo.
+        const cover = items.find((p) => p.isCategoryCover && p.image)
+        const withImage = cover ?? items.find((p) => p.image) ?? items[0]
         result.push({
           key,
           name: cat.name,

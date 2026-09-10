@@ -33,6 +33,7 @@ type Product = {
   sourceStoreUrl?: string;
   sourceProductUrl?: string;
   costPrice?: number;
+  isCategoryCover?: boolean;
 };
 
 type Category = {
@@ -96,7 +97,7 @@ const SECTION_LABELS: Record<Section, string> = {
 };
 
 function ProductsSection({ products, showForm, saving, form, image, additionalImages, desc, upsellIds,
-  onToggleForm, onFormChange, onImageChange, onAdditionalImagesChange, onDescChange, onUpsellChange, onSubmit, onDelete, onMove,
+  onToggleForm, onFormChange, onImageChange, onAdditionalImagesChange, onDescChange, onUpsellChange, onSubmit, onDelete, onMove, onSetCategoryCover,
   categories, newCategoryName, onNewCategoryNameChange, onCreateCategory,
   onMoveCategory, onSaveCategoryMedia, onDeleteCategory, editingProductId, onEditProduct,
   importSourceUrl, importSourceProductUrl, initialCostPrice,
@@ -136,6 +137,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   onSubmit: () => void;
   onDelete: (id: number, name: string) => void;
   onMove: (id: number, direction: 'up' | 'down') => void;
+  onSetCategoryCover: (id: number) => void;
 }) {
   const dropRef = useRef<HTMLDivElement>(null);
   const descRef = useRef<HTMLDivElement>(null);
@@ -1301,11 +1303,18 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
             return (
               <div key={p.id} className="rounded-xl border border-white/10 bg-[#161b28] p-3">
                 <div className="flex items-start gap-3">
-                  {preview ? (
-                    <img src={preview} alt={p.name} className="h-14 w-14 shrink-0 rounded-xl border border-white/10 object-cover" />
-                  ) : (
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5"><Package size={15} className="text-white/40" /></div>
-                  )}
+                  <div className="relative shrink-0">
+                    {preview ? (
+                      <img src={preview} alt={p.name} className="h-14 w-14 rounded-xl border border-white/10 object-cover" />
+                    ) : (
+                      <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-white/10 bg-white/5"><Package size={15} className="text-white/40" /></div>
+                    )}
+                    {p.isCategoryCover && (
+                      <span title="Capa da categoria" className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-white">
+                        <Star size={11} className="fill-white" />
+                      </span>
+                    )}
+                  </div>
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-semibold text-white">{p.name}</div>
                     <div className="mt-1 text-xs text-white/50">{p.category || 'Sem categoria'}</div>
@@ -1313,7 +1322,34 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                     <div className={`mt-1 text-xs font-semibold ${stockClass}`}>{stock} un.</div>
                   </div>
                 </div>
-                <div className="mt-3 flex gap-2">
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onMove(p.id, 'up')}
+                    title="Mover pra cima (aparece antes na loja)"
+                    className="rounded-lg border border-white/10 px-2.5 py-2 text-white/70 transition-colors hover:bg-white/5"
+                  >
+                    <ArrowUp size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onMove(p.id, 'down')}
+                    title="Mover pra baixo"
+                    className="rounded-lg border border-white/10 px-2.5 py-2 text-white/70 transition-colors hover:bg-white/5"
+                  >
+                    <ArrowDown size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onSetCategoryCover(p.id)}
+                    disabled={p.isCategoryCover}
+                    title="Definir como capa da categoria"
+                    className={`rounded-lg border px-2.5 py-2 transition-colors ${
+                      p.isCategoryCover ? 'border-amber-500/40 bg-amber-500/15 text-amber-300' : 'border-white/10 text-white/70 hover:bg-white/5'
+                    }`}
+                  >
+                    <Star size={14} className={p.isCategoryCover ? 'fill-amber-300' : ''} />
+                  </button>
                   <button
                     type="button"
                     onClick={() => onEditProduct(p)}
@@ -1356,11 +1392,18 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                 <tr key={p.id} className="group transition-colors hover:bg-white/5">
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-3">
-                      {preview ? (
-                        <img src={preview} alt={p.name} className="h-12 w-12 shrink-0 rounded-xl object-cover border border-white/10" />
-                      ) : (
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5"><Package size={15} className="text-white/40" /></div>
-                      )}
+                      <div className="relative shrink-0">
+                        {preview ? (
+                          <img src={preview} alt={p.name} className="h-12 w-12 rounded-xl object-cover border border-white/10" />
+                        ) : (
+                          <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-white/5"><Package size={15} className="text-white/40" /></div>
+                        )}
+                        {p.isCategoryCover && (
+                          <span title="Capa da categoria" className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-white">
+                            <Star size={9} className="fill-white" />
+                          </span>
+                        )}
+                      </div>
                       <div className="min-w-0">
                         <div className="truncate font-semibold text-white">{p.name}</div>
                         <div className="mt-1 max-w-[260px] truncate text-xs text-white/45">{stripHtml(p.description ?? '') || 'Sem descrição'}</div>
@@ -1376,6 +1419,33 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => onMove(p.id, 'up')}
+                        title="Mover pra cima (aparece antes na loja, dentro da categoria)"
+                        className="rounded-lg border border-white/10 p-2 text-white/70 transition-colors hover:bg-white/5"
+                      >
+                        <ArrowUp size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onMove(p.id, 'down')}
+                        title="Mover pra baixo"
+                        className="rounded-lg border border-white/10 p-2 text-white/70 transition-colors hover:bg-white/5"
+                      >
+                        <ArrowDown size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onSetCategoryCover(p.id)}
+                        disabled={p.isCategoryCover}
+                        title="Definir como capa da categoria"
+                        className={`rounded-lg border p-2 transition-colors ${
+                          p.isCategoryCover ? 'border-amber-500/40 bg-amber-500/15 text-amber-300' : 'border-white/10 text-white/70 hover:bg-white/5'
+                        }`}
+                      >
+                        <Star size={14} className={p.isCategoryCover ? 'fill-amber-300' : ''} />
+                      </button>
                       <button
                         type="button"
                         onClick={() => onEditProduct(p)}
@@ -2104,6 +2174,22 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
     }
   }
 
+  async function setCategoryCover(id: number) {
+    const res = await fetch('/api/products', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, setCover: true }),
+    });
+
+    if (res.ok) {
+      await fetchData();
+      addToast('success', 'Capa da categoria definida.');
+    } else {
+      const data = await res.json().catch(() => ({}));
+      addToast('error', data?.error ?? 'Falha ao definir capa.');
+    }
+  }
+
   async function updateTracking(id: number, tracking: string, status: Order['status']) {
     setOrders(o => o.map(x => x.id === id ? { ...x, tracking, status } : x));
     const res = await fetch('/api/orders', {
@@ -2441,6 +2527,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
               onSubmit={addProduct}
               onDelete={deleteProduct}
               onMove={moveProduct}
+              onSetCategoryCover={setCategoryCover}
               importSourceUrl={prodSourceStoreUrl || undefined}
               importSourceProductUrl={prodSourceProductUrl || undefined}
               initialCostPrice={prodImportCostPrice || undefined}

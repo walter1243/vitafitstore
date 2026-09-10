@@ -19,6 +19,7 @@ export type DbProduct = {
   productType?: ProductType;
   colorOptions?: ColorOption[];
   sizes?: string[];
+  isCategoryCover?: boolean;
 };
 
 export function normalizeCategory(raw?: string) {

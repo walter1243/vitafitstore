@@ -60,6 +60,7 @@ async function ensureVariantColumns() {
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS product_type TEXT DEFAULT 'estandar'`;
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS color_options TEXT`;
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS sizes TEXT`;
+  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS is_category_cover BOOLEAN DEFAULT FALSE`;
 }
 
 function normalizeProduct(row: any) {
@@ -76,6 +77,7 @@ function normalizeProduct(row: any) {
     productType: row.product_type ?? 'estandar',
     colorOptions: parseColorOptions(row.color_options),
     sizes: parseSizes(row.sizes),
+    isCategoryCover: Boolean(row.is_category_cover),
   };
 }
 
@@ -85,7 +87,7 @@ export async function GET() {
     const rows = await sql`
       SELECT id, name, description, price, category, image, additional_images, video, stock, position,
              source_store_url, source_product_url, cost_price,
-             product_type, color_options, sizes,
+             product_type, color_options, sizes, is_category_cover,
              created_at AS "createdAt"
       FROM products
       ORDER BY COALESCE(position, 999999), created_at DESC
@@ -163,6 +165,21 @@ export async function PATCH(req: NextRequest) {
     await ensureVariantColumns();
     const body = await req.json();
 
+    if (body?.setCover) {
+      const productId = Number(body.id);
+      if (!productId) {
+        return NextResponse.json({ error: 'ID inválido.' }, { status: 400 });
+      }
+      const [product] = await sql`SELECT id, category FROM products WHERE id = ${productId}`;
+      if (!product) {
+        return NextResponse.json({ error: 'Produto não encontrado.' }, { status: 404 });
+      }
+      // Only one cover per category — clear any previous one before setting this.
+      await sql`UPDATE products SET is_category_cover = FALSE WHERE category IS NOT DISTINCT FROM ${product.category}`;
+      await sql`UPDATE products SET is_category_cover = TRUE WHERE id = ${productId}`;
+      return NextResponse.json({ success: true });
+    }
+
     if (body?.direction) {
       const { id, direction } = body;
 
@@ -172,7 +189,7 @@ export async function PATCH(req: NextRequest) {
       }
 
       const [current] = await sql`
-        SELECT id, COALESCE(position, 999999) AS position
+        SELECT id, category, COALESCE(position, 999999) AS position
         FROM products
         WHERE id = ${productId}
       `;
@@ -181,11 +198,19 @@ export async function PATCH(req: NextRequest) {
         return NextResponse.json({ error: 'Produto não encontrado.' }, { status: 404 });
       }
 
+      // Scoped to the same category — otherwise "up/down" swaps with
+      // whatever product happens to be adjacent in the global position
+      // sequence, which usually does nothing visible since the storefront
+      // only ever shows products grouped by category. This is also what
+      // decides each category's cover photo on the homepage (the first
+      // product in that category with an image), so this needs to be a
+      // real per-category order, not a coincidence of insertion order.
       const [target] = direction === 'up'
         ? await sql`
             SELECT id, COALESCE(position, 999999) AS position
             FROM products
             WHERE COALESCE(position, 999999) < ${current.position}
+              AND category IS NOT DISTINCT FROM ${current.category}
             ORDER BY COALESCE(position, 999999) DESC
             LIMIT 1
           `
@@ -193,6 +218,7 @@ export async function PATCH(req: NextRequest) {
             SELECT id, COALESCE(position, 999999) AS position
             FROM products
             WHERE COALESCE(position, 999999) > ${current.position}
+              AND category IS NOT DISTINCT FROM ${current.category}
             ORDER BY COALESCE(position, 999999) ASC
             LIMIT 1
           `;
