@@ -40,16 +40,35 @@ function toAnchor(raw?: string) {
 
 const fallbackNavLinks = [
   { href: '#productos', label: 'Productos' },
-  { href: '#nosotros', label: 'Nosotros' },
+  { href: '#ayuda-soporte', label: 'Nosotros' },
 ];
+
+const BRANDING_CACHE_KEY = 'store_branding_cache';
+
+// Header has no shared layout to live in (checkout/admin render their own
+// chrome), so it remounts fresh on every storefront navigation — without
+// this, each click briefly flashes the hardcoded "Nuestra Tienda" name and
+// flame-icon fallback before the real branding fetch resolves. Reading a
+// same-session cache synchronously on mount skips that flash after the
+// first successful load.
+function readCachedBranding() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.sessionStorage.getItem(BRANDING_CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
 
 export function Header() {
   const { totalItems, setIsCartOpen } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [storeName, setStoreName] = useState('Nuestra Tienda');
-  const [logoUrl, setLogoUrl] = useState('');
-  const [themeColor, setThemeColor] = useState('#c2410c');
+  const cachedBranding = readCachedBranding();
+  const [storeName, setStoreName] = useState(cachedBranding?.storeName ?? 'Nuestra Tienda');
+  const [logoUrl, setLogoUrl] = useState(cachedBranding?.logoUrl ?? '');
+  const [themeColor, setThemeColor] = useState(cachedBranding?.themeColor ?? '#c2410c');
   const [categories, setCategories] = useState<CategoryMeta[]>([]);
   const [products, setProducts] = useState<DbProduct[]>([]);
   const [announcement, setAnnouncement] = useState('');
@@ -73,9 +92,19 @@ export function Header() {
         const res = await fetch('/api/store-settings', { cache: 'no-store' });
         if (!res.ok) return;
         const data = await res.json();
-        setStoreName(data?.storeName ?? 'Nuestra Tienda');
-        setLogoUrl(data?.logoUrl ?? '');
-        setThemeColor(data?.themeColor ?? '#c2410c');
+        const nextStoreName = data?.storeName ?? 'Nuestra Tienda';
+        const nextLogoUrl = data?.logoUrl ?? '';
+        const nextThemeColor = data?.themeColor ?? '#c2410c';
+        setStoreName(nextStoreName);
+        setLogoUrl(nextLogoUrl);
+        setThemeColor(nextThemeColor);
+        try {
+          window.sessionStorage.setItem(BRANDING_CACHE_KEY, JSON.stringify({
+            storeName: nextStoreName, logoUrl: nextLogoUrl, themeColor: nextThemeColor,
+          }));
+        } catch {
+          // sessionStorage unavailable (private mode, etc.) — just skip caching
+        }
       } catch {
         // ignore settings load errors
       }
@@ -145,7 +174,7 @@ export function Header() {
     ? [
         { href: '#productos', label: 'Productos' },
         ...categoriesWithProducts.map((c) => ({ href: toAnchor(c.slug || c.name), label: c.name })),
-        { href: '#nosotros', label: 'Nosotros' },
+        { href: '#ayuda-soporte', label: 'Nosotros' },
       ]
     : fallbackNavLinks;
 

@@ -58,7 +58,7 @@ export const DEFAULT_HERO: HeroContent = {
   ctaHref: '#productos',
   videoPosition: 'center',
   videoUrl: '/video-hero.mp4',
-  posterUrl: '/images/collagen.jpg',
+  posterUrl: '',
 };
 
 export type DestaqueFeature = {

@@ -436,7 +436,11 @@ function PaymentStepInner({
         <PaymentElement
           options={{
             layout: 'tabs',
-            paymentMethodOrder: ['card'],
+            // Stripe only ever shows a method here if it's both listed and
+            // actually enabled on the account's Dashboard — listing more
+            // than "card" is safe even before the rest are turned on there,
+            // it just won't show them until they are.
+            paymentMethodOrder: ['card', 'paypal', 'bizum', 'apple_pay', 'google_pay'],
             fields: {
               billingDetails: {
                 name: 'never',

@@ -90,6 +90,15 @@ export function Footer({ content }: { content?: FooterContent }) {
   const [openSections, setOpenSections] = useState<Set<FooterSectionKey>>(new Set())
   const [categories, setCategories] = useState<CategoryMeta[]>([])
 
+  // "Nosotros" in the header nav points here (#ayuda-soporte) now that the
+  // dedicated About section is gone — auto-expand Ayuda y Soporte so
+  // landing from that link doesn't drop the visitor on a collapsed footer.
+  useEffect(() => {
+    if (window.location.hash === '#ayuda-soporte') {
+      setOpenSections((prev) => new Set(prev).add('ayuda'))
+    }
+  }, [])
+
   function toggleSection(key: FooterSectionKey) {
     setOpenSections((prev) => {
       const next = new Set(prev)
@@ -209,7 +218,7 @@ export function Footer({ content }: { content?: FooterContent }) {
             const isOpen = openSections.has(sectionKey)
             const section = dynamicSections[sectionKey]
             return (
-              <div key={sectionKey}>
+              <div key={sectionKey} id={sectionKey === 'ayuda' ? 'ayuda-soporte' : undefined} className="scroll-mt-24">
                 <button
                   type="button"
                   onClick={() => toggleSection(sectionKey)}

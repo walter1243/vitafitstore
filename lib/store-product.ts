@@ -1,5 +1,11 @@
 import { type Product, type ProductType, type ColorOption } from '@/lib/products';
 
+// Neutral inline placeholder for a product with no image set — the old
+// fallback pointed at a leftover supplement product photo, which is wrong
+// for every real product in this store's catalog.
+export const NO_IMAGE_PLACEHOLDER =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23F1F5F9'/%3E%3Cpath d='M60 130V80l40-25 40 25v50z' fill='none' stroke='%23CBD5E1' stroke-width='6' stroke-linejoin='round'/%3E%3Cpath d='M60 80l40 25 40-25' fill='none' stroke='%23CBD5E1' stroke-width='6' stroke-linejoin='round'/%3E%3Cpath d='M100 105v50' stroke='%23CBD5E1' stroke-width='6'/%3E%3C/svg%3E";
+
 export type DbProduct = {
   id: number;
   name: string;
@@ -43,8 +49,8 @@ export function toStoreProduct(p: DbProduct): Product {
     description: p.description || 'Producto premium.',
     shortDescription: (p.description || 'Producto premium.').replace(/<[^>]+>/g, ' ').slice(0, 80),
     price: Number(p.price || 0),
-    image: p.image || '/images/collagen.jpg',
-    mainImage: p.image || '/images/collagen.jpg',
+    image: p.image || NO_IMAGE_PLACEHOLDER,
+    mainImage: p.image || NO_IMAGE_PLACEHOLDER,
     additionalImages: Array.isArray(p.additionalImages) ? p.additionalImages : [],
     videoUrl: p.video || '',
     category: category === 'fitness' ? 'fitness' : 'salud',

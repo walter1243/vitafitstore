@@ -6,7 +6,7 @@ import Link from 'next/link'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { ArrowRight } from 'lucide-react'
-import { type DbProduct, normalizeCategory, slugifyCategory } from '@/lib/store-product'
+import { type DbProduct, normalizeCategory, slugifyCategory, NO_IMAGE_PLACEHOLDER } from '@/lib/store-product'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -69,7 +69,7 @@ export function CategorySpotlight() {
           name: cat.name,
           anchorId: toAnchor(cat.slug || cat.name),
           count: items.length,
-          image: withImage.image || '/images/collagen.jpg',
+          image: withImage.image || NO_IMAGE_PLACEHOLDER,
         })
       }
 

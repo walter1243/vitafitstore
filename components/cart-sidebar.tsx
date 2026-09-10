@@ -27,6 +27,7 @@ export function CartSidebar() {
   return (
     <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
       <SheetContent
+        showCloseButton={false}
         className="flex w-full flex-col p-0 bg-white"
         style={{
           borderLeft: '1px solid rgba(30,41,59,0.08)',
