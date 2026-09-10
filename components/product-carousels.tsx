@@ -149,7 +149,7 @@ export default function ProductCarousels() {
           <ProductCarousel
             products={items}
             title={title}
-            subtitle="Nutrición premium para tu rendimiento"
+            subtitle="Calidez y eficiencia para tu hogar"
             categoryLabel={title}
             categoryMedia={meta}
           />

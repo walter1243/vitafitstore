@@ -152,12 +152,12 @@ export function Header() {
   return (
     <>
       {announcement && (
-        <div className="fixed top-0 left-0 right-0 z-[60] bg-[#431407] px-4 py-1.5 text-center text-[11px] font-medium tracking-wide text-white sm:text-xs">
+        <div className="fixed top-0 left-0 right-0 z-[60] bg-[#431407] px-4 py-1 text-center text-[10px] font-medium tracking-wide text-white sm:text-[11px]">
           {announcement}
         </div>
       )}
       <header
-        className={`fixed left-0 right-0 z-50 transition-all duration-500 ${announcement ? 'top-7 sm:top-8' : 'top-0'}`}
+        className={`fixed left-0 right-0 z-50 transition-all duration-500 ${announcement ? 'top-5 sm:top-6' : 'top-0'}`}
         style={{
           background: scrolled
             ? 'rgba(251, 248, 245, 0.92)'
@@ -169,7 +169,7 @@ export function Header() {
         }}
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className={`flex items-center justify-between transition-all duration-400 ${scrolled ? 'py-3' : 'py-4'}`}>
+          <div className={`flex items-center justify-between transition-all duration-400 ${scrolled ? 'py-2' : 'py-2.5'}`}>
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 group">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg group-hover:opacity-90 transition-colors duration-200 overflow-hidden"

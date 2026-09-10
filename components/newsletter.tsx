@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from 'react'
-import { Send, Check } from 'lucide-react'
+import { Send, Check, Flame } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollReveal } from '@/components/scroll-reveal'
@@ -31,28 +31,36 @@ export function Newsletter({ data }: { data?: NewsletterContent }) {
   return (
     <section className="bg-[#FAF8F5] px-4 py-14 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl">
-        <ScrollReveal className="rounded-3xl bg-gradient-to-br from-orange-50 to-amber-50 px-6 py-12 text-center sm:px-12">
-          <h2 className="mb-3 text-2xl font-bold text-slate-900 sm:text-3xl">
+        <ScrollReveal className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-orange-700 to-orange-900 px-6 py-12 text-center sm:px-12">
+          {/* Soft glow accents for depth instead of a flat wash */}
+          <div className="pointer-events-none absolute -top-16 -left-16 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-20 -right-16 h-64 w-64 rounded-full bg-amber-400/20 blur-3xl" />
+
+          <div className="relative mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
+            <Flame className="h-6 w-6 text-white" />
+          </div>
+
+          <h2 className="relative mb-3 text-2xl font-bold text-white sm:text-3xl">
             {content.title}
           </h2>
-          <p className="mx-auto mb-8 max-w-xl text-slate-600">
+          <p className="relative mx-auto mb-8 max-w-xl text-orange-50">
             {content.text}
           </p>
 
-          <form onSubmit={handleSubmit} className="mx-auto flex max-w-md flex-col gap-3 sm:flex-row">
+          <form onSubmit={handleSubmit} className="relative mx-auto flex max-w-md flex-col gap-3 sm:flex-row">
             <Input
               type="email"
               placeholder="Tu email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="h-12 border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-orange-600/40"
+              className="h-12 border-white/25 bg-white/10 text-white placeholder:text-white/60 focus-visible:ring-white/50"
               required
               disabled={status === 'loading' || status === 'success'}
             />
             <Button
               type="submit"
               size="lg"
-              className="h-12 gap-2 bg-orange-700 text-white hover:bg-orange-800"
+              className="h-12 gap-2 bg-white text-orange-800 hover:bg-orange-50"
               disabled={status === 'loading' || status === 'success'}
             >
               {status === 'loading' ? (
@@ -71,7 +79,7 @@ export function Newsletter({ data }: { data?: NewsletterContent }) {
             </Button>
           </form>
 
-          <p className="mt-4 text-xs text-slate-500">
+          <p className="relative mt-4 text-xs text-orange-100/80">
             {content.privacyText}
           </p>
         </ScrollReveal>
