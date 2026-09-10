@@ -20,6 +20,8 @@ const DEFAULT_SETTINGS = {
     "Hola {name}! Buenas noticias: tu pedido #{orderId} ya fue enviado. Transportista: {carrier}. Codigo: {trackingCode}. Rastreo: {trackingUrl}",
   whatsappFutureTemplate:
     "Hola {name}! Este es un mensaje futuro editable para nuevas automatizaciones.",
+  whatsappReviewTemplate:
+    "Hola {name}! Esperamos que estes disfrutando de tu {productName}. Nos encantaria conocer tu opinion, puedes dejarnos tu valoracion (con foto si quieres) aqui: {reviewUrl}",
   trustpilotBusinessId: "",
   metaPixelId: "",
 };
@@ -53,6 +55,7 @@ async function ensureStoreSettingsColumns() {
     ADD COLUMN IF NOT EXISTS whatsapp_order_template TEXT,
     ADD COLUMN IF NOT EXISTS whatsapp_tracking_template TEXT,
     ADD COLUMN IF NOT EXISTS whatsapp_future_template TEXT,
+    ADD COLUMN IF NOT EXISTS whatsapp_review_template TEXT,
     ADD COLUMN IF NOT EXISTS trustpilot_business_id TEXT,
     ADD COLUMN IF NOT EXISTS meta_pixel_id TEXT
   `;
@@ -77,6 +80,7 @@ export async function GET() {
              COALESCE(whatsapp_order_template, ${DEFAULT_SETTINGS.whatsappOrderTemplate}) AS "whatsappOrderTemplate",
              COALESCE(whatsapp_tracking_template, ${DEFAULT_SETTINGS.whatsappTrackingTemplate}) AS "whatsappTrackingTemplate",
              COALESCE(whatsapp_future_template, ${DEFAULT_SETTINGS.whatsappFutureTemplate}) AS "whatsappFutureTemplate",
+             COALESCE(whatsapp_review_template, ${DEFAULT_SETTINGS.whatsappReviewTemplate}) AS "whatsappReviewTemplate",
              COALESCE(trustpilot_business_id, '') AS "trustpilotBusinessId",
              COALESCE(meta_pixel_id, '') AS "metaPixelId"
       FROM store_settings
@@ -113,6 +117,7 @@ export async function POST(req: NextRequest) {
     const whatsappOrderTemplate = String(body.whatsappOrderTemplate ?? DEFAULT_SETTINGS.whatsappOrderTemplate).trim() || DEFAULT_SETTINGS.whatsappOrderTemplate;
     const whatsappTrackingTemplate = String(body.whatsappTrackingTemplate ?? DEFAULT_SETTINGS.whatsappTrackingTemplate).trim() || DEFAULT_SETTINGS.whatsappTrackingTemplate;
     const whatsappFutureTemplate = String(body.whatsappFutureTemplate ?? DEFAULT_SETTINGS.whatsappFutureTemplate).trim() || DEFAULT_SETTINGS.whatsappFutureTemplate;
+    const whatsappReviewTemplate = String(body.whatsappReviewTemplate ?? DEFAULT_SETTINGS.whatsappReviewTemplate).trim() || DEFAULT_SETTINGS.whatsappReviewTemplate;
     const trustpilotBusinessId = String(body.trustpilotBusinessId ?? "").trim();
     const metaPixelId = String(body.metaPixelId ?? "").trim();
 
@@ -130,6 +135,7 @@ export async function POST(req: NextRequest) {
         whatsapp_order_template,
         whatsapp_tracking_template,
         whatsapp_future_template,
+        whatsapp_review_template,
         trustpilot_business_id,
         meta_pixel_id
       )
@@ -146,6 +152,7 @@ export async function POST(req: NextRequest) {
         ${whatsappOrderTemplate},
         ${whatsappTrackingTemplate},
         ${whatsappFutureTemplate},
+        ${whatsappReviewTemplate},
         ${trustpilotBusinessId || null},
         ${metaPixelId || null}
       )
@@ -162,6 +169,7 @@ export async function POST(req: NextRequest) {
         whatsapp_order_template = EXCLUDED.whatsapp_order_template,
         whatsapp_tracking_template = EXCLUDED.whatsapp_tracking_template,
         whatsapp_future_template = EXCLUDED.whatsapp_future_template,
+        whatsapp_review_template = EXCLUDED.whatsapp_review_template,
         trustpilot_business_id = EXCLUDED.trustpilot_business_id,
         meta_pixel_id = EXCLUDED.meta_pixel_id
     `;

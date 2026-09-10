@@ -84,6 +84,7 @@ export async function validateCustomerAccessToken(token: string) {
       o.customer_email,
       o.created_at,
       COALESCE(o.total_amount, 0)::FLOAT AS total_amount,
+      o.product_id,
       COALESCE(p.name, 'Produto') AS product_name
     FROM customer_access_tokens cat
     JOIN orders o ON o.id = cat.order_id
@@ -112,6 +113,7 @@ export async function validateCustomerAccessToken(token: string) {
       customerEmail: row.customer_email,
       createdAt: row.created_at,
       totalAmount: Number(row.total_amount ?? 0),
+      productId: row.product_id != null ? Number(row.product_id) : null,
       productName: row.product_name,
     },
   }

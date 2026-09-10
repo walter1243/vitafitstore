@@ -9,6 +9,7 @@ import { useCart } from '@/lib/cart-context'
 import { type Product } from '@/lib/products'
 import { TrustpilotWidget } from '@/components/trustpilot-widget'
 import { SizeGuideModal } from '@/components/size-guide-modal'
+import { ProductReviews } from '@/components/product-reviews'
 
 export function ProductPageView({ product }: { product: Product }) {
   const { addItem } = useCart()
@@ -315,6 +316,8 @@ export function ProductPageView({ product }: { product: Product }) {
           dangerouslySetInnerHTML={{ __html: product.description }}
         />
       </div>
+
+      <ProductReviews productId={product.id} />
     </div>
   )
 }

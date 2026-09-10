@@ -29,6 +29,14 @@ interface AccessTokenMessageParams {
   accessUrl: string
 }
 
+interface ReviewRequestMessageParams {
+  phone: string
+  name: string
+  productName: string
+  reviewUrl: string
+  customTemplate?: string
+}
+
 interface WhatsAppConfig {
   provider: string   // 'zapi' | 'evolution'
   url: string
@@ -212,6 +220,49 @@ Guarde esta mensagem para acessar sua área.`
     return true
   } catch (err) {
     console.error('[WhatsApp] Falha ao enviar token de acesso:', err)
+    return false
+  }
+}
+
+export async function sendReviewRequestWhatsApp(params: ReviewRequestMessageParams): Promise<boolean> {
+  const config = await getConfig()
+  if (!config) return false
+
+  const { phone, name, productName, reviewUrl } = params
+  const fallbackTemplates = [
+    'Hola {name}! Esperamos que estes disfrutando de tu {productName}. Nos encantaria conocer tu opinion, se puedes contarnos como te fue y compartir una foto, nos ayudas muchisimo: {reviewUrl}',
+    'Hola {name}! Como te esta yendo con tu {productName}? Si tienes un minuto, dejanos tu valoracion (con foto si quieres) aqui: {reviewUrl} Gracias por confiar en nosotros!',
+  ]
+  const baseTemplate = params.customTemplate?.trim() || pickOne(fallbackTemplates)
+  const message = replaceVars(baseTemplate, { name, productName, reviewUrl })
+
+  try {
+    if (config.provider === 'zapi') {
+      await fetch(`${config.url}/send-text`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Client-Token': config.token,
+        },
+        body: JSON.stringify({ phone: sanitizePhone(phone), message }),
+      })
+    } else {
+      await fetch(`${config.url}/message/sendText/default`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': config.token,
+        },
+        body: JSON.stringify({
+          number: sanitizePhone(phone),
+          options: { delay: 1200, presence: 'composing' },
+          textMessage: { text: message },
+        }),
+      })
+    }
+    return true
+  } catch (err) {
+    console.error('[WhatsApp] Falha ao enviar pedido de avaliacao:', err)
     return false
   }
 }

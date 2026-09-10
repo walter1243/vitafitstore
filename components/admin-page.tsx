@@ -11,12 +11,12 @@ import {
   ArrowUp, ArrowDown, Monitor, Zap, ToggleLeft, ToggleRight,
   MessageCircle, Mail, Globe, RefreshCw, LogOut,
   Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  List, ListOrdered, Undo2, Redo2,
+  List, ListOrdered, Undo2, Redo2, Star,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Section = 'dashboard' | 'products' | 'orders' | 'tracking' | 'settings' | 'automation' | 'import-supplier';
+type Section = 'dashboard' | 'products' | 'orders' | 'tracking' | 'settings' | 'automation' | 'import-supplier' | 'reviews';
 
 type Product = {
   id: number;
@@ -92,6 +92,7 @@ const SECTION_LABELS: Record<Section, string> = {
   automation: 'Automação',
   settings: 'Editar loja',
   'import-supplier': 'Importar Produtos',
+  reviews: 'Avaliações',
 };
 
 function ProductsSection({ products, showForm, saving, form, image, additionalImages, desc, upsellIds,
@@ -1295,6 +1296,8 @@ function OrdersSection({ orders, onUpdateTracking, onRefresh }: {
   const [forwardResult, setForwardResult] = useState<Record<number, { ok: boolean; msg: string }>>({});
   const [supplierPanelOpen, setSupplierPanelOpen] = useState<Record<number, boolean>>({});
   const [copied, setCopied] = useState<string>('');
+  const [requestingReview, setRequestingReview] = useState<Record<number, boolean>>({});
+  const [reviewResult, setReviewResult] = useState<Record<number, { ok: boolean; msg: string }>>({});
 
   function copyText(key: string, text: string) {
     navigator.clipboard?.writeText(text).then(() => {
@@ -1310,6 +1313,29 @@ function OrdersSection({ orders, onUpdateTracking, onRefresh }: {
   function save(id: number) {
     const tracking = inputs[id] ?? '';
     onUpdateTracking(id, tracking, tracking ? 'shipped' : 'pending');
+  }
+
+  async function requestReview(id: number) {
+    setRequestingReview(s => ({ ...s, [id]: true }));
+    setReviewResult(s => ({ ...s, [id]: { ok: false, msg: '' } }));
+    try {
+      const res = await fetch('/api/orders/request-review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_id: id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        setReviewResult(s => ({ ...s, [id]: { ok: true, msg: data.message ?? 'Solicitação enviada.' } }));
+        onRefresh();
+      } else {
+        setReviewResult(s => ({ ...s, [id]: { ok: false, msg: data.error ?? 'Erro ao solicitar avaliação' } }));
+      }
+    } catch (e: any) {
+      setReviewResult(s => ({ ...s, [id]: { ok: false, msg: e?.message ?? 'Erro de rede' } }));
+    } finally {
+      setRequestingReview(s => ({ ...s, [id]: false }));
+    }
   }
 
   async function forwardToSupplier(id: number) {
@@ -1402,7 +1428,29 @@ function OrdersSection({ orders, onUpdateTracking, onRefresh }: {
               <PackageSearch size={14} />
               {supplierPanelOpen[o.id] ? 'Fechar dados' : 'Fazer pedido no fornecedor'}
             </button>
+            <button
+              onClick={() => requestReview(o.id)}
+              disabled={requestingReview[o.id]}
+              title="Marca como entregue e envia por WhatsApp um link pra avaliação real do cliente"
+              className="flex cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-lg border border-yellow-500/30 bg-yellow-600/15 px-3 py-2 text-sm font-medium text-yellow-300 transition-colors hover:bg-yellow-600/25 disabled:opacity-50"
+            >
+              {requestingReview[o.id]
+                ? <RefreshCw size={14} className="animate-spin" />
+                : <Star size={14} />}
+              {requestingReview[o.id] ? 'Enviando…' : 'Pedir avaliação'}
+            </button>
           </div>
+
+          {reviewResult[o.id]?.msg && (
+            <div className={`mt-3 flex items-center gap-2 rounded-lg px-3 py-2 text-xs ${
+              reviewResult[o.id].ok
+                ? 'bg-green-500/10 text-green-300 border border-green-500/20'
+                : 'bg-red-500/10 text-red-300 border border-red-500/20'
+            }`}>
+              {reviewResult[o.id].ok ? <CheckCircle2 size={13} /> : <AlertCircle size={13} />}
+              {reviewResult[o.id].msg}
+            </div>
+          )}
 
           {forwardResult[o.id]?.msg && (
             <div className={`mt-3 flex items-center gap-2 rounded-lg px-3 py-2 text-xs ${
@@ -1490,6 +1538,139 @@ function OrdersSection({ orders, onUpdateTracking, onRefresh }: {
       {orders.length === 0 && (
         <div className="rounded-2xl border border-white/10 bg-[#161b28] p-10 text-center text-sm text-white/45 shadow-none">
           Nenhum pedido encontrado
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── ReviewsSection ─────────────────────────────────────────────────────────
+
+type AdminReview = {
+  id: number;
+  productId: number;
+  productName: string;
+  customerName: string;
+  rating: number;
+  comment: string | null;
+  photoUrl: string | null;
+  status: 'pending' | 'approved' | 'rejected';
+  date: string;
+};
+
+function ReviewsSection() {
+  const [reviews, setReviews] = useState<AdminReview[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState<number | null>(null);
+
+  async function load() {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/reviews/moderate', { cache: 'no-store' });
+      if (res.ok) setReviews(await res.json());
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => { void load(); }, []);
+
+  async function setStatus(id: number, status: 'approved' | 'rejected') {
+    setBusyId(id);
+    try {
+      const res = await fetch('/api/reviews/moderate', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status }),
+      });
+      if (res.ok) {
+        setReviews(prev => prev.map(r => r.id === id ? { ...r, status } : r));
+      }
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  const pending = reviews.filter(r => r.status === 'pending');
+  const decided = reviews.filter(r => r.status !== 'pending');
+
+  function ReviewCard({ r }: { r: AdminReview }) {
+    return (
+      <div className="rounded-2xl border border-white/10 bg-[#161b28] p-4 shadow-none">
+        <div className="flex items-start gap-3">
+          {r.photoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={r.photoUrl} alt="" className="h-16 w-16 shrink-0 rounded-xl object-cover" />
+          )}
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex">
+                {[1, 2, 3, 4, 5].map(n => (
+                  <Star key={n} size={13} className={r.rating >= n ? 'fill-amber-400 text-amber-400' : 'fill-white/10 text-white/10'} />
+                ))}
+              </div>
+              <span className="text-xs text-white/40">{r.date}</span>
+              {r.status !== 'pending' && (
+                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                  r.status === 'approved' ? 'bg-green-500/15 text-green-300' : 'bg-red-500/15 text-red-300'
+                }`}>
+                  {r.status === 'approved' ? 'Aprovada' : 'Recusada'}
+                </span>
+              )}
+            </div>
+            <p className="mt-1 text-sm font-semibold text-white">{r.customerName} <span className="font-normal text-white/40">· {r.productName}</span></p>
+            {r.comment && <p className="mt-1 text-sm text-white/70">{r.comment}</p>}
+          </div>
+        </div>
+        {r.status === 'pending' && (
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={() => setStatus(r.id, 'approved')}
+              disabled={busyId === r.id}
+              className="flex items-center gap-1.5 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-50"
+            >
+              <Check size={12} /> Aprovar
+            </button>
+            <button
+              onClick={() => setStatus(r.id, 'rejected')}
+              disabled={busyId === r.id}
+              className="flex items-center gap-1.5 rounded-lg border border-red-500/30 px-3 py-1.5 text-xs font-semibold text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+            >
+              <X size={12} /> Recusar
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (loading) {
+    return <div className="p-10 text-center text-sm text-white/45">Carregando avaliações...</div>;
+  }
+
+  return (
+    <div className="space-y-6 p-5">
+      <div>
+        <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-white/50">
+          Pendentes {pending.length > 0 && `(${pending.length})`}
+        </h3>
+        {pending.length === 0 ? (
+          <div className="rounded-2xl border border-white/10 bg-[#161b28] p-6 text-center text-sm text-white/45">
+            Nenhuma avaliação pendente.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {pending.map(r => <ReviewCard key={r.id} r={r} />)}
+          </div>
+        )}
+      </div>
+
+      {decided.length > 0 && (
+        <div>
+          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-white/50">Já revisadas</h3>
+          <div className="space-y-3">
+            {decided.map(r => <ReviewCard key={r.id} r={r} />)}
+          </div>
         </div>
       )}
     </div>
@@ -1859,6 +2040,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
       items: [
         { key: 'orders', label: 'Pedidos', icon: <ShoppingCart size={18} />, badge: pendingCount || undefined },
         { key: 'tracking', label: 'Rastreio', icon: <Truck size={18} /> },
+        { key: 'reviews', label: 'Avaliações', icon: <Star size={18} /> },
       ],
     },
     {
@@ -1885,6 +2067,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
     tracking: 'Atualize o status e o código de rastreio dos envios.',
     automation: 'Configure mensagens automáticas e integrações.',
     settings: 'Edite o conteúdo e as configurações da página de vendas.',
+    reviews: 'Aprove ou recuse as avaliações enviadas por clientes reais.',
   };
 
   return (
@@ -2142,6 +2325,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
           )}
           {section === 'import-supplier' && <ImportSupplierSection onImportToStore={preFillFromSupplier} />}
           {section === 'orders' && <OrdersSection orders={orders} onUpdateTracking={updateTracking} onRefresh={fetchData} />}
+          {section === 'reviews' && <ReviewsSection />}
           {section === 'tracking' && <TrackingSection />}
           {section === 'automation' && <AutomationSection />}
           {section === 'settings' && (
@@ -3794,6 +3978,7 @@ function SettingsSection({
   const [waOrderTemplate, setWaOrderTemplate] = useState('Hola {name}! Gracias por tu compra. Tu pedido #{orderId} esta confirmado y ya estamos preparando {productName}. {eta}');
   const [waTrackingTemplate, setWaTrackingTemplate] = useState('Hola {name}! Buenas noticias: tu pedido #{orderId} ya fue enviado. Transportista: {carrier}. Codigo: {trackingCode}. Rastreo: {trackingUrl}');
   const [waFutureTemplate, setWaFutureTemplate] = useState('Hola {name}! Este es un mensaje futuro editable para nuevas automatizaciones.');
+  const [waReviewTemplate, setWaReviewTemplate] = useState('Hola {name}! Esperamos que estes disfrutando de tu {productName}. Nos encantaria conocer tu opinion, puedes dejarnos tu valoracion (con foto si quieres) aqui: {reviewUrl}');
   const [trustpilotBusinessId, setTrustpilotBusinessId] = useState('');
   const [metaPixelId, setMetaPixelId] = useState('');
   const [storeName, setStore] = useState('Nuestra Tienda');
@@ -3821,6 +4006,7 @@ function SettingsSection({
         setWaOrderTemplate(data?.whatsappOrderTemplate ?? 'Hola {name}! Gracias por tu compra. Tu pedido #{orderId} esta confirmado y ya estamos preparando {productName}. {eta}');
         setWaTrackingTemplate(data?.whatsappTrackingTemplate ?? 'Hola {name}! Buenas noticias: tu pedido #{orderId} ya fue enviado. Transportista: {carrier}. Codigo: {trackingCode}. Rastreo: {trackingUrl}');
         setWaFutureTemplate(data?.whatsappFutureTemplate ?? 'Hola {name}! Este es un mensaje futuro editable para nuevas automatizaciones.');
+        setWaReviewTemplate(data?.whatsappReviewTemplate ?? 'Hola {name}! Esperamos que estes disfrutando de tu {productName}. Nos encantaria conocer tu opinion, puedes dejarnos tu valoracion (con foto si quieres) aqui: {reviewUrl}');
         setTrustpilotBusinessId(data?.trustpilotBusinessId ?? '');
         setMetaPixelId(data?.metaPixelId ?? '');
       } catch {
@@ -3863,6 +4049,7 @@ function SettingsSection({
               whatsappOrderTemplate: waOrderTemplate.trim(),
               whatsappTrackingTemplate: waTrackingTemplate.trim(),
               whatsappFutureTemplate: waFutureTemplate.trim(),
+              whatsappReviewTemplate: waReviewTemplate.trim(),
               trustpilotBusinessId: trustpilotBusinessId.trim(),
               metaPixelId: metaPixelId.trim(),
             }),
@@ -4049,6 +4236,17 @@ function SettingsSection({
               className="w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
             />
             <p className="mt-1 text-[11px] text-white/40">Variaveis: {'{name}'} {'{orderId}'} {'{carrier}'} {'{trackingCode}'} {'{trackingUrl}'}</p>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-white/50">Mensagem de pedido de avaliação</label>
+            <textarea
+              value={waReviewTemplate}
+              onChange={e => setWaReviewTemplate(e.target.value)}
+              rows={4}
+              className="w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+            />
+            <p className="mt-1 text-[11px] text-white/40">Enviada ao clicar em "Pedir avaliação" num pedido. Variáveis: {'{name}'} {'{productName}'} {'{reviewUrl}'}</p>
           </div>
 
           <div>
