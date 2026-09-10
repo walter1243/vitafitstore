@@ -34,12 +34,55 @@ export function HeroForm({ data, onChange }: { data: HeroContent; onChange: (d: 
         </Field>
       </div>
 
+      <Field
+        label="Tipo de mídia — Mobile vs. Desktop"
+        hint="Escolha vídeo ou imagem estática de forma independente para cada tamanho de tela. Ex: imagem no mobile (mais leve) e vídeo no desktop."
+      >
+        <div className="grid grid-cols-2 gap-3">
+          {([
+            { key: 'mobileMediaType' as const, label: 'Mobile' },
+            { key: 'desktopMediaType' as const, label: 'Desktop' },
+          ]).map(({ key, label }) => (
+            <div key={key}>
+              <p className="mb-1.5 text-[11px] font-medium text-white/50">{label}</p>
+              <div className="grid grid-cols-2 gap-2">
+                {([
+                  { key: 'video' as const, label: 'Vídeo' },
+                  { key: 'image' as const, label: 'Imagem' },
+                ]).map((opt) => (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => set(key, opt.key)}
+                    className={`rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                      data[key] === opt.key
+                        ? 'border-green-500/50 bg-green-500/15 text-green-300'
+                        : 'border-white/10 text-white/60 hover:bg-white/5'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </Field>
+
       <MediaUploadField
         label="Vídeo de fundo"
-        hint="Vídeos grandes deixam a página mais lenta — prefira arquivos curtos e leves (poucos segundos, sem áudio)."
+        hint="Vídeos grandes deixam a página mais lenta — prefira arquivos curtos e leves (poucos segundos, sem áudio). Usado quando Mobile e/ou Desktop está definido como Vídeo."
         kind="video"
         value={data.videoUrl}
         onChange={(url) => set('videoUrl', url)}
+      />
+
+      <MediaUploadField
+        label="Imagem de fundo do Hero"
+        hint="Usada quando Mobile e/ou Desktop está definido como Imagem, acima."
+        kind="image"
+        value={data.heroImageUrl}
+        onChange={(url) => set('heroImageUrl', url)}
       />
 
       <Field

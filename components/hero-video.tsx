@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { ArrowRight, Volume2, VolumeX } from 'lucide-react';
+import { Volume2, VolumeX } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis from '@studio-freight/lenis';
@@ -31,6 +31,21 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
   const videoRef = useRef<HTMLVideoElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
   const [isMuted, setIsMuted] = useState(true);
+
+  // Mobile and desktop can each independently show the video or a static
+  // image — below sm (640px) counts as mobile, matching the breakpoint
+  // used elsewhere in the storefront for mobile-only UI.
+  const mobileIsVideo = hero.mobileMediaType !== 'image';
+  const desktopIsVideo = hero.desktopMediaType !== 'image';
+  const needsVideo = mobileIsVideo || desktopIsVideo;
+  const needsImage = !mobileIsVideo || !desktopIsVideo;
+  const videoVisibilityClass = !needsVideo
+    ? 'hidden'
+    : mobileIsVideo && desktopIsVideo ? '' : mobileIsVideo ? 'sm:hidden' : 'hidden sm:block';
+  const imageVisibilityClass = !needsImage
+    ? 'hidden'
+    : !mobileIsVideo && !desktopIsVideo ? '' : !mobileIsVideo ? 'sm:hidden' : 'hidden sm:block';
+  const heroImage = hero.heroImageUrl || hero.posterUrl;
 
   // GSAP text reveal
   useEffect(() => {
@@ -115,21 +130,39 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
       {/* Video — object-cover always fills the section on any screen size/
          orientation without letterboxing; videoPosition controls which part
          of the frame gets cropped when the video's aspect ratio doesn't
-         match the viewport's. */}
-      <video
-        ref={videoRef}
-        className="absolute inset-0 w-full h-full object-cover z-0"
-        style={{
-          objectPosition:
-            hero.videoPosition === 'top' ? 'center 15%' : hero.videoPosition === 'bottom' ? 'center 85%' : 'center center',
-        }}
-        src={hero.videoUrl}
-        autoPlay
-        loop
-        muted
-        playsInline
-        poster={hero.posterUrl}
-      />
+         match the viewport's. Only mounted when at least mobile or desktop
+         is actually set to video. */}
+      {needsVideo && (
+        <video
+          ref={videoRef}
+          className={`absolute inset-0 w-full h-full object-cover z-0 ${videoVisibilityClass}`}
+          style={{
+            objectPosition:
+              hero.videoPosition === 'top' ? 'center 15%' : hero.videoPosition === 'bottom' ? 'center 85%' : 'center center',
+          }}
+          src={hero.videoUrl}
+          autoPlay
+          loop
+          muted
+          playsInline
+          poster={hero.posterUrl}
+        />
+      )}
+
+      {/* Static image — used whenever mobile or desktop is set to "image"
+         instead of video (e.g. a lighter hero on mobile). */}
+      {needsImage && (
+        heroImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={heroImage}
+            alt=""
+            className={`absolute inset-0 w-full h-full object-cover z-0 ${imageVisibilityClass}`}
+          />
+        ) : (
+          <div className={`absolute inset-0 z-0 bg-slate-900 ${imageVisibilityClass}`} />
+        )
+      )}
 
       {/* Gradient overlay — flat vertical tint instead of a diagonal wash, so
          it darkens evenly for text contrast without patchily cutting across
@@ -179,7 +212,6 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
           className="group flex items-center gap-2 bg-orange-700 hover:bg-orange-600 text-white px-6 py-3 sm:px-10 sm:py-4 rounded-lg text-sm sm:text-base font-semibold transition-all duration-300 cursor-pointer shadow-lg shadow-orange-500/20 hover:shadow-xl hover:shadow-orange-500/30"
         >
           {hero.ctaText}
-          <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
         </a>
       </div>
       </div>

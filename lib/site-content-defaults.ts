@@ -37,6 +37,8 @@ export const ICON_OPTIONS: { key: IconKey; label: string }[] = [
   { key: 'leaf', label: 'Folha (natural)' },
 ];
 
+export type HeroMediaType = 'video' | 'image';
+
 export type HeroContent = {
   badgeText: string;
   titleLine1: string;
@@ -47,6 +49,9 @@ export type HeroContent = {
   videoUrl: string;
   posterUrl: string;
   videoPosition: 'top' | 'center' | 'bottom';
+  heroImageUrl: string;
+  mobileMediaType: HeroMediaType;
+  desktopMediaType: HeroMediaType;
 };
 
 export const DEFAULT_HERO: HeroContent = {
@@ -59,6 +64,9 @@ export const DEFAULT_HERO: HeroContent = {
   videoPosition: 'center',
   videoUrl: '/video-hero.mp4',
   posterUrl: '',
+  heroImageUrl: '',
+  mobileMediaType: 'video',
+  desktopMediaType: 'video',
 };
 
 export type DestaqueFeature = {

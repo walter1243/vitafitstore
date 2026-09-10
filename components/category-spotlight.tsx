@@ -5,7 +5,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { ArrowRight } from 'lucide-react'
 import { type DbProduct, normalizeCategory, slugifyCategory, NO_IMAGE_PLACEHOLDER } from '@/lib/store-product'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -142,7 +141,7 @@ export function CategorySpotlight() {
                     dark ? 'bg-white text-slate-900 hover:bg-white/90' : 'bg-slate-900 text-white hover:bg-slate-800'
                   }`}
                 >
-                  Ver productos <ArrowRight className="h-4 w-4" />
+                  Ver productos
                 </Link>
                 <Link
                   href="#productos"
