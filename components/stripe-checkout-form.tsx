@@ -189,7 +189,7 @@ function StepIndicator({ step }: { step: 1 | 2 }) {
         <div key={s.n} className={`flex items-center ${i<arr.length-1?'flex-1':''}`}>
           <div className="flex items-center gap-2 shrink-0">
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-400"
-              style={{ background:step>=s.n?'#c2410c':'#F1F5F9', color:step>=s.n?'white':'#4b5563', boxShadow:step===s.n?'0 0 16px rgba(194,65,12,0.5)':'none' }}>
+              style={{ background:step>=s.n?'#431407':'#F1F5F9', color:step>=s.n?'white':'#4b5563', boxShadow:step===s.n?'0 0 16px rgba(194,65,12,0.5)':'none' }}>
               {step>s.n?'✓':s.n}
             </div>
             <span className={`text-xs font-semibold hidden sm:block ${step>=s.n?'text-orange-600':'text-slate-500'}`}>{s.label}</span>

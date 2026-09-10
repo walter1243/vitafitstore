@@ -10,6 +10,8 @@ import {
   ChevronRight, Upload, Video, AlertCircle, CheckCircle2,
   ArrowUp, ArrowDown, Monitor, Zap, ToggleLeft, ToggleRight,
   MessageCircle, Mail, Globe, RefreshCw, LogOut,
+  Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, AlignJustify,
+  List, ListOrdered, Undo2, Redo2,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -315,19 +317,81 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
     if (f && f.type.startsWith('image/')) handleMainFile(f);
   }
 
+  function insertDescImage(url: string) {
+    document.execCommand('insertHTML', false, `<img src="${url}" style="max-width:100%;border-radius:12px;margin:8px 0;display:block;" />`);
+    onDescChange(descRef.current?.innerHTML ?? '');
+  }
+
   function handleDescPaste(e: React.ClipboardEvent) {
     for (const item of e.clipboardData.items) {
       if (item.type.startsWith('image/')) {
         e.preventDefault();
         const f = item.getAsFile();
         if (!f) continue;
-        readFileAsDataURL(f, url => {
-          document.execCommand('insertHTML', false, `<img src="${url}" style="max-width:100%;border-radius:12px;margin:8px 0;display:block;" />`);
-          onDescChange(descRef.current?.innerHTML ?? '');
-        });
+        readFileAsDataURL(f, insertDescImage);
         return;
       }
     }
+
+    // Plain text with no HTML (e.g. pasted from a plain-text source) loses
+    // all line breaks by default in contentEditable — turn blank-line gaps
+    // into paragraphs and single line breaks into <br> so pasted text keeps
+    // its structure instead of collapsing into one giant run-on line.
+    const hasHtml = e.clipboardData.types.includes('text/html');
+    if (!hasHtml) {
+      const text = e.clipboardData.getData('text/plain');
+      if (text && text.includes('\n')) {
+        e.preventDefault();
+        const html = text
+          .split(/\n{2,}/)
+          .map(block => `<p>${block.split('\n').map(line => line.replace(/</g, '&lt;')).join('<br>')}</p>`)
+          .join('');
+        document.execCommand('insertHTML', false, html);
+        onDescChange(descRef.current?.innerHTML ?? '');
+      }
+    }
+  }
+
+  function handleDescDragOver(e: React.DragEvent) {
+    if (Array.from(e.dataTransfer.items ?? []).some(item => item.type.startsWith('image/'))) {
+      e.preventDefault();
+    }
+  }
+
+  function handleDescDrop(e: React.DragEvent) {
+    const file = Array.from(e.dataTransfer.files).find(f => f.type.startsWith('image/'));
+    if (!file) return;
+    e.preventDefault();
+    readFileAsDataURL(file, insertDescImage);
+  }
+
+  function focusDescEditor() {
+    descRef.current?.focus();
+  }
+
+  function applyDescCommand(command: string, value?: string) {
+    focusDescEditor();
+    document.execCommand(command, false, value);
+    onDescChange(descRef.current?.innerHTML ?? '');
+  }
+
+  // execCommand('fontSize') only supports the legacy 1–7 scale, not real
+  // pixel sizes — the standard workaround is to apply size "7" (producing
+  // <font size="7"> tags) then rewrite those into <span style="font-size">
+  // with the actual pixel value, giving Word-like precise sizing.
+  function applyDescFontSize(px: string) {
+    focusDescEditor();
+    document.execCommand('fontSize', false, '7');
+    const editor = descRef.current;
+    if (editor) {
+      editor.querySelectorAll('font[size="7"]').forEach(el => {
+        const span = document.createElement('span');
+        span.style.fontSize = px;
+        span.innerHTML = el.innerHTML;
+        el.replaceWith(span);
+      });
+    }
+    onDescChange(descRef.current?.innerHTML ?? '');
   }
 
   const fields = [
@@ -658,15 +722,115 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                 <Video size={16} className="text-green-500" />
                 <h3 className="text-sm font-semibold text-white">Descrição do produto</h3>
               </div>
+
+              {/* Formatting toolbar — same building blocks as Word: bold/italic/underline,
+                  alignment, font size, and lists, applied via execCommand on the
+                  contentEditable below. */}
+              <div className="mb-2 flex flex-wrap items-center gap-1 rounded-xl border border-white/10 bg-[#1c2236] p-1.5">
+                <select
+                  onChange={e => { if (e.target.value) applyDescFontSize(e.target.value); e.target.value = ''; }}
+                  defaultValue=""
+                  className="rounded-lg border border-white/10 bg-[#161b28] px-2 py-1.5 text-xs text-white/80 outline-none focus:border-green-500/40 cursor-pointer"
+                  title="Tamanho da fonte"
+                >
+                  <option value="" disabled>Tamanho</option>
+                  <option value="13px">Texto pequeno</option>
+                  <option value="15px">Texto normal</option>
+                  <option value="18px">Subtítulo</option>
+                  <option value="24px">Título</option>
+                  <option value="32px">Título grande</option>
+                </select>
+
+                <span className="mx-1 h-5 w-px bg-white/10" />
+
+                {[
+                  { icon: Bold, cmd: 'bold', title: 'Negrito' },
+                  { icon: Italic, cmd: 'italic', title: 'Itálico' },
+                  { icon: Underline, cmd: 'underline', title: 'Sublinhado' },
+                ].map(({ icon: Icon, cmd, title }) => (
+                  <button
+                    key={cmd}
+                    type="button"
+                    title={title}
+                    onMouseDown={e => e.preventDefault()}
+                    onClick={() => applyDescCommand(cmd)}
+                    className="rounded-lg p-1.5 text-white/70 transition-colors hover:bg-white/10 hover:text-white cursor-pointer"
+                  >
+                    <Icon size={14} />
+                  </button>
+                ))}
+
+                <span className="mx-1 h-5 w-px bg-white/10" />
+
+                {[
+                  { icon: AlignLeft, cmd: 'justifyLeft', title: 'Alinhar à esquerda' },
+                  { icon: AlignCenter, cmd: 'justifyCenter', title: 'Centralizar' },
+                  { icon: AlignRight, cmd: 'justifyRight', title: 'Alinhar à direita' },
+                  { icon: AlignJustify, cmd: 'justifyFull', title: 'Justificado' },
+                ].map(({ icon: Icon, cmd, title }) => (
+                  <button
+                    key={cmd}
+                    type="button"
+                    title={title}
+                    onMouseDown={e => e.preventDefault()}
+                    onClick={() => applyDescCommand(cmd)}
+                    className="rounded-lg p-1.5 text-white/70 transition-colors hover:bg-white/10 hover:text-white cursor-pointer"
+                  >
+                    <Icon size={14} />
+                  </button>
+                ))}
+
+                <span className="mx-1 h-5 w-px bg-white/10" />
+
+                {[
+                  { icon: List, cmd: 'insertUnorderedList', title: 'Lista com marcadores' },
+                  { icon: ListOrdered, cmd: 'insertOrderedList', title: 'Lista numerada' },
+                ].map(({ icon: Icon, cmd, title }) => (
+                  <button
+                    key={cmd}
+                    type="button"
+                    title={title}
+                    onMouseDown={e => e.preventDefault()}
+                    onClick={() => applyDescCommand(cmd)}
+                    className="rounded-lg p-1.5 text-white/70 transition-colors hover:bg-white/10 hover:text-white cursor-pointer"
+                  >
+                    <Icon size={14} />
+                  </button>
+                ))}
+
+                <span className="mx-1 h-5 w-px bg-white/10" />
+
+                <button
+                  type="button"
+                  title="Desfazer"
+                  onMouseDown={e => e.preventDefault()}
+                  onClick={() => applyDescCommand('undo')}
+                  className="rounded-lg p-1.5 text-white/70 transition-colors hover:bg-white/10 hover:text-white cursor-pointer"
+                >
+                  <Undo2 size={14} />
+                </button>
+                <button
+                  type="button"
+                  title="Refazer"
+                  onMouseDown={e => e.preventDefault()}
+                  onClick={() => applyDescCommand('redo')}
+                  className="rounded-lg p-1.5 text-white/70 transition-colors hover:bg-white/10 hover:text-white cursor-pointer"
+                >
+                  <Redo2 size={14} />
+                </button>
+              </div>
+
               <div
                 ref={descRef}
                 contentEditable
                 suppressContentEditableWarning
                 onPaste={handleDescPaste}
+                onDragOver={handleDescDragOver}
+                onDrop={handleDescDrop}
                 onInput={() => onDescChange(descRef.current?.innerHTML ?? '')}
                 className="min-h-[220px] rounded-2xl border border-white/10 bg-[#1c2236] px-4 py-3 text-sm text-white outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
                 style={{ lineHeight: '1.7' }}
-                data-placeholder="Descreva benefícios, composição, instruções e provas sociais. Cole imagens diretamente aqui com Ctrl+V."
+                data-placeholder="Descreva benefícios, composição, instruções e provas sociais. Cole ou arraste imagens diretamente aqui."
               />
               <div className="mt-3 flex items-center justify-between gap-3 text-xs text-white/45">
                 <span>Use negrito, listas e imagens inline para vender melhor.</span>
@@ -2445,6 +2609,7 @@ type SupplierProduct = {
   url: string;
   source: string;
   suggestedPrice: number;
+  cjPid?: string;
 };
 
 type ImportToStoreData = {
@@ -2459,7 +2624,9 @@ type ImportToStoreData = {
 };
 
 function ImportSupplierSection({ onImportToStore }: { onImportToStore: (data: ImportToStoreData) => void }) {
+  const [mode, setMode]                 = useState<'url' | 'cj'>('url');
   const [url, setUrl]                   = useState('');
+  const [keyword, setKeyword]           = useState('');
   const [margin, setMargin]             = useState(40);
   const [loading, setLoading]           = useState(false);
   const [products, setProducts]         = useState<SupplierProduct[]>([]);
@@ -2468,6 +2635,30 @@ function ImportSupplierSection({ onImportToStore }: { onImportToStore: (data: Im
   const [error, setError]               = useState('');
   const [drawer, setDrawer]             = useState<SupplierProduct | null>(null);
   const [drawerImg, setDrawerImg]       = useState(0);
+  const [drawerLoading, setDrawerLoading] = useState(false);
+
+  async function handleCjSearch() {
+    if (!keyword.trim()) return;
+    setLoading(true);
+    setError('');
+    setProducts([]);
+    setDrawer(null);
+    try {
+      const res = await fetch(`/api/cj/search?keyword=${encodeURIComponent(keyword.trim())}&margin=${margin}`);
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setError(data.error ?? 'Nenhum produto encontrado para essa busca.');
+      } else {
+        setSourceLabel(data.source ?? 'CJ Dropshipping');
+        setStoreOrigin('');
+        setProducts(data.products ?? []);
+      }
+    } catch (e: any) {
+      setError(e?.message ?? 'Erro de rede');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleSearch() {
     if (!url.trim()) return;
@@ -2498,9 +2689,28 @@ function ImportSupplierSection({ onImportToStore }: { onImportToStore: (data: Im
     }
   }
 
-  function openDrawer(p: SupplierProduct) {
+  async function openDrawer(p: SupplierProduct) {
     setDrawer(p);
     setDrawerImg(0);
+
+    // CJ search results don't include description/gallery yet (kept out of
+    // the list call to avoid hitting CJ's per-product rate limits for
+    // results the admin never opens) — fetch those lazily on open.
+    if (p.cjPid) {
+      setDrawerLoading(true);
+      try {
+        const res = await fetch(`/api/cj/detail?pid=${encodeURIComponent(p.cjPid)}&margin=${margin}`);
+        const data = await res.json();
+        if (res.ok && data.ok) {
+          const full: SupplierProduct = { ...p, ...data.product, cjPid: p.cjPid };
+          setDrawer(full);
+        }
+      } catch {
+        // keep the partial data already shown; import still works without the gallery/description
+      } finally {
+        setDrawerLoading(false);
+      }
+    }
   }
 
   function importProduct(p: SupplierProduct) {
@@ -2510,7 +2720,7 @@ function ImportSupplierSection({ onImportToStore }: { onImportToStore: (data: Im
       description: p.description,
       image: p.image,
       additionalImages: p.images ?? [],
-      sourceStoreUrl: storeOrigin || url,
+      sourceStoreUrl: storeOrigin || url || p.source,
       sourceProductUrl: p.url,
       costPrice: p.price,
     });
@@ -2528,27 +2738,70 @@ function ImportSupplierSection({ onImportToStore }: { onImportToStore: (data: Im
             <PackageSearch size={18} className="text-green-400" /> Importar Produtos de Distribuidoras
           </h2>
           <p className="mt-1 text-sm text-white/50">
-            Cole a URL da distribuidora ou de um produto específico. Funciona com Shopify, WooCommerce e sites genéricos.
+            {mode === 'url'
+              ? 'Cole a URL da distribuidora ou de um produto específico. Funciona com Shopify, WooCommerce e sites genéricos.'
+              : 'Busque por palavra-chave direto no catálogo da CJ Dropshipping (entregas para a Espanha).'}
           </p>
         </div>
 
-        <div className="flex gap-2">
-          <input
-            className="flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
-            placeholder="https://distribuidora.com/products"
-            value={url}
-            onChange={e => setUrl(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSearch()}
-          />
+        <div className="flex gap-2 border-b border-white/10">
           <button
-            onClick={handleSearch}
-            disabled={loading || !url.trim()}
-            className="flex items-center gap-2 rounded-lg bg-green-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-green-700 disabled:opacity-50"
+            type="button"
+            onClick={() => { setMode('url'); setError(''); setProducts([]); setDrawer(null); }}
+            className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
+              mode === 'url' ? 'border-green-500 text-white' : 'border-transparent text-white/45 hover:text-white/70'
+            }`}
           >
-            {loading ? <RefreshCw size={14} className="animate-spin" /> : <Globe size={14} />}
-            {loading ? 'Buscando…' : 'Buscar'}
+            <Globe size={14} /> Buscar por URL
+          </button>
+          <button
+            type="button"
+            onClick={() => { setMode('cj'); setError(''); setProducts([]); setDrawer(null); }}
+            className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
+              mode === 'cj' ? 'border-green-500 text-white' : 'border-transparent text-white/45 hover:text-white/70'
+            }`}
+          >
+            <PackageSearch size={14} /> CJ Dropshipping
           </button>
         </div>
+
+        {mode === 'url' ? (
+          <div className="flex gap-2">
+            <input
+              className="flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+              placeholder="https://distribuidora.com/products"
+              value={url}
+              onChange={e => setUrl(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSearch()}
+            />
+            <button
+              onClick={handleSearch}
+              disabled={loading || !url.trim()}
+              className="flex items-center gap-2 rounded-lg bg-green-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-green-700 disabled:opacity-50"
+            >
+              {loading ? <RefreshCw size={14} className="animate-spin" /> : <Globe size={14} />}
+              {loading ? 'Buscando…' : 'Buscar'}
+            </button>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <input
+              className="flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+              placeholder="Ex: calefactor eléctrico, manta térmica…"
+              value={keyword}
+              onChange={e => setKeyword(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleCjSearch()}
+            />
+            <button
+              onClick={handleCjSearch}
+              disabled={loading || !keyword.trim()}
+              className="flex items-center gap-2 rounded-lg bg-green-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-green-700 disabled:opacity-50"
+            >
+              {loading ? <RefreshCw size={14} className="animate-spin" /> : <PackageSearch size={14} />}
+              {loading ? 'Buscando…' : 'Buscar na CJ'}
+            </button>
+          </div>
+        )}
 
         <div className="flex flex-wrap items-center gap-4">
           <label className="flex items-center gap-2 text-sm text-white/60">
@@ -2560,11 +2813,15 @@ function ImportSupplierSection({ onImportToStore }: { onImportToStore: (data: Im
             />
             %
           </label>
-          <div className="flex gap-2 text-xs text-white/40">
-            <span className="rounded-full bg-green-500/10 text-green-300 px-2 py-0.5">Shopify ✓</span>
-            <span className="rounded-full bg-blue-500/10 text-blue-300 px-2 py-0.5">WooCommerce ✓</span>
-            <span className="rounded-full bg-white/10 px-2 py-0.5">Site genérico ✓</span>
-          </div>
+          {mode === 'url' ? (
+            <div className="flex gap-2 text-xs text-white/40">
+              <span className="rounded-full bg-green-500/10 text-green-300 px-2 py-0.5">Shopify ✓</span>
+              <span className="rounded-full bg-blue-500/10 text-blue-300 px-2 py-0.5">WooCommerce ✓</span>
+              <span className="rounded-full bg-white/10 px-2 py-0.5">Site genérico ✓</span>
+            </div>
+          ) : (
+            <p className="text-xs text-white/40">Preços convertidos de USD para EUR automaticamente (aproximado) — revise antes de importar.</p>
+          )}
         </div>
       </div>
 
@@ -2622,6 +2879,12 @@ function ImportSupplierSection({ onImportToStore }: { onImportToStore: (data: Im
                 <X size={18} />
               </button>
             </div>
+
+            {drawerLoading && (
+              <div className="flex items-center gap-2 border-b border-white/10 bg-white/5 px-5 py-2.5 text-xs text-white/50">
+                <RefreshCw size={12} className="animate-spin" /> Carregando descrição e galeria da CJ…
+              </div>
+            )}
 
             {/* Main image */}
             {drawerImages.length > 0 && (

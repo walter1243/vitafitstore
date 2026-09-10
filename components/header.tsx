@@ -152,7 +152,7 @@ export function Header() {
   return (
     <>
       {announcement && (
-        <div className="fixed top-0 left-0 right-0 z-[60] bg-orange-800 px-4 py-1.5 text-center text-[11px] font-medium tracking-wide text-white sm:text-xs">
+        <div className="fixed top-0 left-0 right-0 z-[60] bg-[#431407] px-4 py-1.5 text-center text-[11px] font-medium tracking-wide text-white sm:text-xs">
           {announcement}
         </div>
       )}
