@@ -8,7 +8,8 @@ export type ProductType = 'estandar' | 'ropa' | 'calzado'
 
 export interface ColorOption {
   label: string
-  image: string
+  image?: string
+  hex?: string
 }
 
 export interface Product {

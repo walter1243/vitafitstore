@@ -31,10 +31,11 @@ export function ProductPageView({ product }: { product: Product }) {
     ? Math.round((1 - product.price / product.originalPrice) * 100)
     : null
 
-  function selectColor(label: string, image: string) {
+  function selectColor(label: string, image?: string) {
     setSelectedColor(label)
+    if (!image) return
     const idx = galleryImages.indexOf(image)
-    goToIndex(idx >= 0 ? idx : 0)
+    if (idx >= 0) goToIndex(idx)
   }
 
   function goToIndex(index: number) {
@@ -204,7 +205,11 @@ export function ProductPageView({ product }: { product: Product }) {
                     }`}
                     aria-label={c.label}
                   >
-                    <Image src={c.image} alt={c.label} fill className="object-cover" />
+                    {c.image ? (
+                      <Image src={c.image} alt={c.label} fill className="object-cover" />
+                    ) : (
+                      <span className="block h-full w-full" style={{ background: c.hex || '#c2410c' }} />
+                    )}
                   </button>
                 ))}
               </div>

@@ -119,8 +119,8 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   onProductTypeChange: (v: 'estandar' | 'ropa' | 'calzado') => void;
   sizes: string[];
   onSizesChange: (v: string[]) => void;
-  colorOptions: { label: string; image: string }[];
-  onColorOptionsChange: (v: { label: string; image: string }[]) => void;
+  colorOptions: { label: string; image: string; hex?: string }[];
+  onColorOptionsChange: (v: { label: string; image: string; hex?: string }[]) => void;
   onToggleForm: () => void;
   onEditProduct: (p: Product) => void;
   onFormChange: (k: string, v: string) => void;
@@ -155,6 +155,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   const [newSizeInput, setNewSizeInput] = useState('');
   const [newColorLabel, setNewColorLabel] = useState('');
   const [newColorImage, setNewColorImage] = useState('');
+  const [newColorHex, setNewColorHex] = useState('#c2410c');
   const [pricingForm, setPricingForm] = useState({
     costPrice: '',
     freightShare: '3.00',
@@ -343,10 +344,11 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
 
   function addColorOption() {
     const label = newColorLabel.trim();
-    if (!label || !newColorImage || colorOptions.length >= 5) return;
-    onColorOptionsChange([...colorOptions, { label, image: newColorImage }]);
+    if (!label || colorOptions.length >= 5) return;
+    onColorOptionsChange([...colorOptions, { label, image: newColorImage, hex: newColorHex }]);
     setNewColorLabel('');
     setNewColorImage('');
+    setNewColorHex('#c2410c');
   }
 
   function removeColorOption(label: string) {
@@ -756,10 +758,20 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
               <section className="rounded-2xl border border-white/10 bg-[#0f1117] p-5 shadow-none">
                 <div className="mb-4 flex items-center gap-2">
                   <Package size={16} className="text-green-500" />
-                  <h3 className="text-sm font-semibold text-white">Cores (opcional, com foto)</h3>
+                  <h3 className="text-sm font-semibold text-white">Cores (opcional)</h3>
                   <span className="ml-auto text-xs text-white/45">Máximo 5</span>
                 </div>
-                <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+                <p className="mb-3 text-[11px] text-white/40">
+                  Escolha a cor no seletor — se você também subir uma foto, ela substitui a imagem principal quando o cliente clicar na cor. Sem foto, aparece só a bolinha colorida.
+                </p>
+                <div className="grid gap-2 sm:grid-cols-[auto_1fr_1fr_auto]">
+                  <input
+                    type="color"
+                    value={newColorHex}
+                    onChange={e => setNewColorHex(e.target.value)}
+                    title="Escolher cor"
+                    className="h-[42px] w-14 cursor-pointer rounded-xl border border-white/10 bg-[#1c2236] p-1"
+                  />
                   <input
                     type="text"
                     value={newColorLabel}
@@ -769,12 +781,12 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                   />
                   <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-white/15 bg-white/[0.02] px-3 py-2.5 text-xs text-white/60 hover:border-white/25">
                     <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" className="hidden" onChange={e => readColorImageFile(e.target.files?.[0] ?? null)} />
-                    {newColorImage ? 'Foto selecionada ✓' : 'Escolher foto'}
+                    {newColorImage ? 'Foto selecionada ✓' : 'Foto (opcional)'}
                   </label>
                   <button
                     type="button"
                     onClick={addColorOption}
-                    disabled={!newColorLabel.trim() || !newColorImage || colorOptions.length >= 5}
+                    disabled={!newColorLabel.trim() || colorOptions.length >= 5}
                     className="rounded-xl bg-green-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-40"
                   >
                     Adicionar
@@ -784,7 +796,11 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                   <div className="mt-3 flex flex-wrap gap-3">
                     {colorOptions.map(c => (
                       <div key={c.label} className="relative overflow-hidden rounded-xl border border-white/10">
-                        <img src={c.image} alt={c.label} className="h-16 w-16 object-cover" />
+                        {c.image ? (
+                          <img src={c.image} alt={c.label} className="h-16 w-16 object-cover" />
+                        ) : (
+                          <div className="h-16 w-16" style={{ background: c.hex || '#c2410c' }} />
+                        )}
                         <button
                           type="button"
                           onClick={() => removeColorOption(c.label)}
@@ -1707,7 +1723,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
   const [prodImportCostPrice, setProdImportCostPrice] = useState('');
   const [prodProductType, setProdProductType] = useState<'estandar' | 'ropa' | 'calzado'>('estandar');
   const [prodSizes, setProdSizes] = useState<string[]>([]);
-  const [prodColorOptions, setProdColorOptions] = useState<{ label: string; image: string }[]>([]);
+  const [prodColorOptions, setProdColorOptions] = useState<{ label: string; image: string; hex?: string }[]>([]);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [pendingCategoryDelete, setPendingCategoryDelete] = useState<{ id: number; name: string } | null>(null);
   const [deletingCategory, setDeletingCategory] = useState(false);

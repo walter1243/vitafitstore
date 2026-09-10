@@ -39,10 +39,14 @@ function parseJsonArray(value: unknown): any[] {
   return [];
 }
 
-function parseColorOptions(value: unknown): { label: string; image: string }[] {
+function parseColorOptions(value: unknown): { label: string; image: string; hex: string }[] {
   return parseJsonArray(value)
-    .map((c: any) => ({ label: String(c?.label ?? '').trim(), image: String(c?.image ?? '').trim() }))
-    .filter(c => c.label && c.image)
+    .map((c: any) => ({
+      label: String(c?.label ?? '').trim(),
+      image: String(c?.image ?? '').trim(),
+      hex: String(c?.hex ?? '').trim(),
+    }))
+    .filter(c => c.label && (c.image || c.hex))
     .slice(0, 5);
 }
 

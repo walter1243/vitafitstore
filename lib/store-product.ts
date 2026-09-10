@@ -64,7 +64,7 @@ export function toStoreProduct(p: DbProduct): Product {
     ingredients: p.description || 'Detalles no informados.',
     usage: 'Sigue las instrucciones del envase.',
     productType: p.productType && p.productType !== 'estandar' ? p.productType : undefined,
-    colorOptions: Array.isArray(p.colorOptions) ? p.colorOptions.filter(c => c?.label && c?.image) : [],
+    colorOptions: Array.isArray(p.colorOptions) ? p.colorOptions.filter(c => c?.label && (c?.image || c?.hex)) : [],
     sizes: Array.isArray(p.sizes) ? p.sizes.filter(Boolean) : [],
     emoji: '✨',
     gradient: category === 'fitness' ? 'from-blue-400 to-indigo-600' : 'from-emerald-400 to-green-600',
