@@ -1,24 +1,45 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ChevronRight, Lock, Truck, RotateCcw, Minus, Plus, ShoppingCart, Check, Play } from 'lucide-react'
+import { ChevronRight, Lock, Truck, RotateCcw, Minus, Plus, ShoppingCart, Check, Play, Ruler } from 'lucide-react'
 import { useCart } from '@/lib/cart-context'
 import { type Product } from '@/lib/products'
 import { TrustpilotWidget } from '@/components/trustpilot-widget'
+import { SizeGuideModal } from '@/components/size-guide-modal'
 
 export function ProductPageView({ product }: { product: Product }) {
   const { addItem } = useCart()
+  const router = useRouter()
   const galleryImages = [product.mainImage ?? product.image, ...(product.additionalImages ?? [])].filter(Boolean) as string[]
   const [activeImage, setActiveImage] = useState(galleryImages[0])
   const [quantity, setQuantity] = useState(1)
   const [added, setAdded] = useState(false)
+  const [selectedColor, setSelectedColor] = useState(product.colorOptions?.[0]?.label ?? '')
+  const [selectedSize, setSelectedSize] = useState('')
+  const [sizeGuideOpen, setSizeGuideOpen] = useState(false)
+
+  const needsSize = Boolean(product.productType && product.productType !== 'estandar' && product.sizes?.length)
+  const canBuy = !needsSize || Boolean(selectedSize)
+
+  function selectColor(label: string, image: string) {
+    setSelectedColor(label)
+    setActiveImage(image)
+  }
 
   function handleAdd() {
+    if (!canBuy) return
     for (let i = 0; i < quantity; i++) addItem(product)
     setAdded(true)
     setTimeout(() => setAdded(false), 1800)
+  }
+
+  function handleBuyNow() {
+    if (!canBuy) return
+    for (let i = 0; i < quantity; i++) addItem(product)
+    router.push('/checkout')
   }
 
   return (
@@ -81,6 +102,57 @@ export function ProductPageView({ product }: { product: Product }) {
             <span className="text-4xl font-black text-slate-900">{product.price.toFixed(2)}€</span>
           </div>
 
+          {/* Color variants */}
+          {product.colorOptions && product.colorOptions.length > 0 && (
+            <div className="mt-6">
+              <p className="mb-2 text-sm font-medium text-slate-700">Color: <span className="font-semibold text-slate-900">{selectedColor}</span></p>
+              <div className="flex flex-wrap gap-2">
+                {product.colorOptions.map(c => (
+                  <button
+                    key={c.label}
+                    onClick={() => selectColor(c.label, c.image)}
+                    className={`relative h-14 w-14 overflow-hidden rounded-lg border-2 transition-colors ${
+                      selectedColor === c.label ? 'border-orange-600' : 'border-slate-200 hover:border-slate-300'
+                    }`}
+                    aria-label={c.label}
+                  >
+                    <Image src={c.image} alt={c.label} fill className="object-cover" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Size selector */}
+          {needsSize && (
+            <div className="mt-6">
+              <p className="mb-2 text-sm font-medium text-slate-700">
+                Talla: <span className="font-semibold text-slate-900">{selectedSize || 'Elige'}</span>
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {product.sizes!.map(size => (
+                  <button
+                    key={size}
+                    onClick={() => setSelectedSize(size)}
+                    className={`min-w-[3rem] rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${
+                      selectedSize === size
+                        ? 'border-orange-600 bg-orange-50 text-orange-700'
+                        : 'border-slate-200 text-slate-700 hover:border-slate-300'
+                    }`}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setSizeGuideOpen(true)}
+                className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-orange-700 hover:text-orange-800"
+              >
+                <Ruler size={13} /> Guía de tallas
+              </button>
+            </div>
+          )}
+
           <div className="mt-6 flex items-center gap-4">
             <span className="text-sm font-medium text-slate-500">Cantidad</span>
             <div className="flex items-center rounded-xl border border-slate-200 bg-white">
@@ -103,15 +175,31 @@ export function ProductPageView({ product }: { product: Product }) {
             <span className="text-xs font-medium text-orange-700">{product.stock} disponibles</span>
           </div>
 
-          <button
-            onClick={handleAdd}
-            className={`mt-5 flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold transition-all sm:w-auto sm:px-10 ${
-              added ? 'bg-orange-700 text-white' : 'bg-orange-700 text-white hover:bg-orange-600'
-            }`}
-          >
-            {added ? <Check className="h-4 w-4" /> : <ShoppingCart className="h-4 w-4" />}
-            {added ? '¡Añadido al carrito!' : 'Añadir al carrito'}
-          </button>
+          {needsSize && !selectedSize && (
+            <p className="mt-4 text-xs font-medium text-red-500">Elige una talla para continuar.</p>
+          )}
+
+          <div className="mt-3 flex flex-col gap-2.5 sm:max-w-xs">
+            <button
+              onClick={handleBuyNow}
+              disabled={!canBuy}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-700 px-6 py-3.5 text-sm font-semibold text-white transition-all hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Comprar ahora
+            </button>
+            <button
+              onClick={handleAdd}
+              disabled={!canBuy}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-orange-700 bg-white px-6 py-3.5 text-sm font-semibold text-orange-700 transition-all hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {added ? <Check className="h-4 w-4" /> : <ShoppingCart className="h-4 w-4" />}
+              {added ? '¡Añadido al carrito!' : 'Añadir al carrito'}
+            </button>
+          </div>
+
+          {sizeGuideOpen && product.productType && (
+            <SizeGuideModal type={product.productType} onClose={() => setSizeGuideOpen(false)} />
+          )}
 
           {/* Trust strip */}
           <div className="mt-6 flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-[0_2px_10px_rgba(0,0,0,0.03)]">

@@ -96,7 +96,8 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   onToggleForm, onFormChange, onImageChange, onAdditionalImagesChange, onDescChange, onUpsellChange, onSubmit, onDelete, onMove,
   categories, newCategoryName, onNewCategoryNameChange, onCreateCategory,
   onMoveCategory, onSaveCategoryMedia, onDeleteCategory, editingProductId, onEditProduct,
-  importSourceUrl, importSourceProductUrl, initialCostPrice }: {
+  importSourceUrl, importSourceProductUrl, initialCostPrice,
+  productType, onProductTypeChange, sizes, onSizesChange, colorOptions, onColorOptionsChange }: {
   products: Product[];
   categories: Category[];
   showForm: boolean;
@@ -111,6 +112,12 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   importSourceUrl?: string;
   importSourceProductUrl?: string;
   initialCostPrice?: string;
+  productType: 'estandar' | 'ropa' | 'calzado';
+  onProductTypeChange: (v: 'estandar' | 'ropa' | 'calzado') => void;
+  sizes: string[];
+  onSizesChange: (v: string[]) => void;
+  colorOptions: { label: string; image: string }[];
+  onColorOptionsChange: (v: { label: string; image: string }[]) => void;
   onToggleForm: () => void;
   onEditProduct: (p: Product) => void;
   onFormChange: (k: string, v: string) => void;
@@ -142,6 +149,9 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   const [productViewTab, setProductViewTab] = useState<'products' | 'cards' | 'kits'>('products');
   const [productsSearch, setProductsSearch] = useState('');
   const [categoryDrafts, setCategoryDrafts] = useState<Record<number, { bannerType: 'image' | 'video'; bannerUrl: string; logoUrl: string }>>({});
+  const [newSizeInput, setNewSizeInput] = useState('');
+  const [newColorLabel, setNewColorLabel] = useState('');
+  const [newColorImage, setNewColorImage] = useState('');
   const [pricingForm, setPricingForm] = useState({
     costPrice: '',
     freightShare: '3.00',
@@ -310,6 +320,34 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
     e.preventDefault();
     setGalleryDrag(false);
     handleAdditionalFiles(e.dataTransfer.files);
+  }
+
+  function addSize() {
+    const value = newSizeInput.trim();
+    if (!value || sizes.includes(value) || sizes.length >= 20) return;
+    onSizesChange([...sizes, value]);
+    setNewSizeInput('');
+  }
+
+  function removeSize(value: string) {
+    onSizesChange(sizes.filter(s => s !== value));
+  }
+
+  function readColorImageFile(file: File | null) {
+    if (!file) return;
+    readFileAsDataURL(file, url => setNewColorImage(url));
+  }
+
+  function addColorOption() {
+    const label = newColorLabel.trim();
+    if (!label || !newColorImage || colorOptions.length >= 5) return;
+    onColorOptionsChange([...colorOptions, { label, image: newColorImage }]);
+    setNewColorLabel('');
+    setNewColorImage('');
+  }
+
+  function removeColorOption(label: string) {
+    onColorOptionsChange(colorOptions.filter(c => c.label !== label));
   }
 
   function handleUploadPaste(e: React.ClipboardEvent) {
@@ -538,6 +576,20 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                   </div>
 
                   <div>
+                    <label className="mb-1.5 block text-xs font-medium text-white/50">Tipo de produto</label>
+                    <select
+                      value={productType}
+                      onChange={e => onProductTypeChange(e.target.value as 'estandar' | 'ropa' | 'calzado')}
+                      className="w-full rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                    >
+                      <option value="estandar">Padrão (sem tamanhos)</option>
+                      <option value="ropa">Roupa</option>
+                      <option value="calzado">Calçado</option>
+                    </select>
+                    <p className="mt-1 text-[11px] text-white/35">Define se aparece seletor de tamanho + guia de tallas na página do cliente.</p>
+                  </div>
+
+                  <div>
                     <label className="mb-1.5 block text-xs font-medium text-white/50">Preço formatado</label>
                     <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white/70">
                       €{(Number(form.price || 0) || 0).toFixed(2)}
@@ -657,6 +709,92 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                     )}
                   </div>
                 </div>
+              </section>
+
+              {productType !== 'estandar' && (
+                <section className="rounded-2xl border border-white/10 bg-[#0f1117] p-5 shadow-none">
+                  <div className="mb-4 flex items-center gap-2">
+                    <Package size={16} className="text-green-500" />
+                    <h3 className="text-sm font-semibold text-white">Tamanhos disponíveis</h3>
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newSizeInput}
+                      onChange={e => setNewSizeInput(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSize())}
+                      placeholder={productType === 'calzado' ? 'Ex: 40' : 'Ex: M ou 40'}
+                      className="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                    />
+                    <button
+                      type="button"
+                      onClick={addSize}
+                      className="shrink-0 rounded-xl bg-green-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-green-700"
+                    >
+                      Adicionar
+                    </button>
+                  </div>
+                  {sizes.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {sizes.map(s => (
+                        <span key={s} className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-white">
+                          {s}
+                          <button type="button" onClick={() => removeSize(s)} className="text-white/40 hover:text-red-400" aria-label={`Remover ${s}`}>
+                            <X size={12} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <p className="mt-2 text-[11px] text-white/35">Essas tallas aparecem como seletor na página do cliente, com o guia de tallas correspondente ({productType === 'ropa' ? 'roupa' : 'calçado'}).</p>
+                </section>
+              )}
+
+              <section className="rounded-2xl border border-white/10 bg-[#0f1117] p-5 shadow-none">
+                <div className="mb-4 flex items-center gap-2">
+                  <Package size={16} className="text-green-500" />
+                  <h3 className="text-sm font-semibold text-white">Cores (opcional, com foto)</h3>
+                  <span className="ml-auto text-xs text-white/45">Máximo 5</span>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+                  <input
+                    type="text"
+                    value={newColorLabel}
+                    onChange={e => setNewColorLabel(e.target.value)}
+                    placeholder="Nome da cor (ex: Preto)"
+                    className="rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                  />
+                  <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-white/15 bg-white/[0.02] px-3 py-2.5 text-xs text-white/60 hover:border-white/25">
+                    <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" className="hidden" onChange={e => readColorImageFile(e.target.files?.[0] ?? null)} />
+                    {newColorImage ? 'Foto selecionada ✓' : 'Escolher foto'}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={addColorOption}
+                    disabled={!newColorLabel.trim() || !newColorImage || colorOptions.length >= 5}
+                    className="rounded-xl bg-green-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-40"
+                  >
+                    Adicionar
+                  </button>
+                </div>
+                {colorOptions.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-3">
+                    {colorOptions.map(c => (
+                      <div key={c.label} className="relative overflow-hidden rounded-xl border border-white/10">
+                        <img src={c.image} alt={c.label} className="h-16 w-16 object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => removeColorOption(c.label)}
+                          className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-white hover:bg-red-500"
+                          aria-label={`Remover ${c.label}`}
+                        >
+                          <X size={10} />
+                        </button>
+                        <span className="absolute inset-x-0 bottom-0 bg-black/60 px-1 py-0.5 text-center text-[9px] text-white">{c.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </section>
 
               <section className="rounded-2xl border border-white/10 bg-[#0f1117] p-5 shadow-none">
@@ -1367,6 +1505,9 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
   const [prodSourceStoreUrl, setProdSourceStoreUrl] = useState('');
   const [prodSourceProductUrl, setProdSourceProductUrl] = useState('');
   const [prodImportCostPrice, setProdImportCostPrice] = useState('');
+  const [prodProductType, setProdProductType] = useState<'estandar' | 'ropa' | 'calzado'>('estandar');
+  const [prodSizes, setProdSizes] = useState<string[]>([]);
+  const [prodColorOptions, setProdColorOptions] = useState<{ label: string; image: string }[]>([]);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [pendingCategoryDelete, setPendingCategoryDelete] = useState<{ id: number; name: string } | null>(null);
   const [deletingCategory, setDeletingCategory] = useState(false);
@@ -1507,6 +1648,9 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
     setProdSourceStoreUrl('');
     setProdSourceProductUrl('');
     setProdImportCostPrice('');
+    setProdProductType('estandar');
+    setProdSizes([]);
+    setProdColorOptions([]);
   }
 
   function startEditProduct(product: Product) {
@@ -1524,6 +1668,9 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
     setProdSourceStoreUrl(product.sourceStoreUrl ?? '');
     setProdSourceProductUrl(product.sourceProductUrl ?? '');
     setProdImportCostPrice(product.costPrice != null ? String(product.costPrice) : '');
+    setProdProductType((product as any).productType ?? 'estandar');
+    setProdSizes(Array.isArray((product as any).sizes) ? (product as any).sizes : []);
+    setProdColorOptions(Array.isArray((product as any).colorOptions) ? (product as any).colorOptions : []);
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -1577,6 +1724,9 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
           sourceStoreUrl: prodSourceStoreUrl || null,
           sourceProductUrl: prodSourceProductUrl || null,
           costPrice: prodImportCostPrice ? parseFloat(prodImportCostPrice) : null,
+          productType: prodProductType,
+          sizes: prodSizes,
+          colorOptions: prodColorOptions,
         }),
       });
 
@@ -1963,6 +2113,12 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
               importSourceUrl={prodSourceStoreUrl || undefined}
               importSourceProductUrl={prodSourceProductUrl || undefined}
               initialCostPrice={prodImportCostPrice || undefined}
+              productType={prodProductType}
+              onProductTypeChange={setProdProductType}
+              sizes={prodSizes}
+              onSizesChange={setProdSizes}
+              colorOptions={prodColorOptions}
+              onColorOptionsChange={setProdColorOptions}
             />
           )}
           {section === 'import-supplier' && <ImportSupplierSection onImportToStore={preFillFromSupplier} />}

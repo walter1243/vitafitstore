@@ -1,4 +1,4 @@
-import { type Product } from '@/lib/products';
+import { type Product, type ProductType, type ColorOption } from '@/lib/products';
 
 export type DbProduct = {
   id: number;
@@ -10,6 +10,9 @@ export type DbProduct = {
   additionalImages?: string[];
   video?: string;
   stock?: number;
+  productType?: ProductType;
+  colorOptions?: ColorOption[];
+  sizes?: string[];
 };
 
 export function normalizeCategory(raw?: string) {
@@ -54,6 +57,9 @@ export function toStoreProduct(p: DbProduct): Product {
     benefits: ['Calidad certificada', 'Envío con seguimiento', 'Pago 100% seguro', 'Devolución 14 días'],
     ingredients: p.description || 'Detalles no informados.',
     usage: 'Sigue las instrucciones del envase.',
+    productType: p.productType && p.productType !== 'estandar' ? p.productType : undefined,
+    colorOptions: Array.isArray(p.colorOptions) ? p.colorOptions.filter(c => c?.label && c?.image) : [],
+    sizes: Array.isArray(p.sizes) ? p.sizes.filter(Boolean) : [],
     emoji: '✨',
     gradient: category === 'fitness' ? 'from-blue-400 to-indigo-600' : 'from-emerald-400 to-green-600',
   };

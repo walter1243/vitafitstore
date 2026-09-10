@@ -4,6 +4,13 @@ export interface ProductVariant {
   label: string
 }
 
+export type ProductType = 'estandar' | 'ropa' | 'calzado'
+
+export interface ColorOption {
+  label: string
+  image: string
+}
+
 export interface Product {
   id: number
   name: string
@@ -26,6 +33,9 @@ export interface Product {
   ingredients?: string
   usage?: string
   variants?: ProductVariant[]
+  productType?: ProductType
+  colorOptions?: ColorOption[]
+  sizes?: string[]
   emoji: string
   gradient: string
 }

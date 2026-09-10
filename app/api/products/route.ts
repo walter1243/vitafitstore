@@ -26,6 +26,38 @@ function parseAdditionalImages(value: unknown): string[] {
   return [];
 }
 
+function parseJsonArray(value: unknown): any[] {
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string' && value.trim()) {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+function parseColorOptions(value: unknown): { label: string; image: string }[] {
+  return parseJsonArray(value)
+    .map((c: any) => ({ label: String(c?.label ?? '').trim(), image: String(c?.image ?? '').trim() }))
+    .filter(c => c.label && c.image)
+    .slice(0, 5);
+}
+
+function parseSizes(value: unknown): string[] {
+  return parseJsonArray(value).map((s: any) => String(s).trim()).filter(Boolean).slice(0, 20);
+}
+
+const VALID_PRODUCT_TYPES = ['estandar', 'ropa', 'calzado'];
+
+async function ensureVariantColumns() {
+  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS product_type TEXT DEFAULT 'estandar'`;
+  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS color_options TEXT`;
+  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS sizes TEXT`;
+}
+
 function normalizeProduct(row: any) {
   return {
     ...row,
@@ -37,14 +69,19 @@ function normalizeProduct(row: any) {
     videoUrl: row.video ?? row.videoUrl ?? '',
     sourceStoreUrl: row.source_store_url ?? null,
     sourceProductUrl: row.source_product_url ?? null,
+    productType: row.product_type ?? 'estandar',
+    colorOptions: parseColorOptions(row.color_options),
+    sizes: parseSizes(row.sizes),
   };
 }
 
 export async function GET() {
   try {
+    await ensureVariantColumns();
     const rows = await sql`
       SELECT id, name, description, price, category, image, additional_images, video, stock, position,
              source_store_url, source_product_url, cost_price,
+             product_type, color_options, sizes,
              created_at AS "createdAt"
       FROM products
       ORDER BY COALESCE(position, 999999), created_at DESC
@@ -61,11 +98,13 @@ export async function POST(req: NextRequest) {
     const auth = await requireAdmin(req);
     if (!auth.ok) return auth.response;
 
+    await ensureVariantColumns();
     const body = await req.json();
     const {
       name, description, price, category, image, mainImage,
       video, videoUrl, stock, additionalImages,
       sourceStoreUrl, sourceProductUrl, costPrice,
+      productType, colorOptions, sizes,
     } = body;
 
     if (!name?.trim()) {
@@ -79,9 +118,12 @@ export async function POST(req: NextRequest) {
     const nextVideoUrl = String(videoUrl ?? video ?? '').trim();
     const nextAdditionalImages = parseAdditionalImages(additionalImages);
     const nextCostPrice = costPrice != null && !isNaN(Number(costPrice)) ? Number(costPrice) : null;
+    const nextProductType = VALID_PRODUCT_TYPES.includes(productType) ? productType : 'estandar';
+    const nextColorOptions = parseColorOptions(colorOptions);
+    const nextSizes = parseSizes(sizes);
 
     const [product] = await sql`
-      INSERT INTO products (name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price)
+      INSERT INTO products (name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes)
       VALUES (
         ${String(name).trim()},
         ${description ? String(description) : null},
@@ -94,9 +136,12 @@ export async function POST(req: NextRequest) {
         COALESCE((SELECT MAX(position) + 1 FROM products), 1),
         ${sourceStoreUrl ? String(sourceStoreUrl).trim() : null},
         ${sourceProductUrl ? String(sourceProductUrl).trim() : null},
-        ${nextCostPrice}
+        ${nextCostPrice},
+        ${nextProductType},
+        ${JSON.stringify(nextColorOptions)},
+        ${JSON.stringify(nextSizes)}
       )
-      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price
+      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes
     `;
 
     return NextResponse.json(normalizeProduct(product), { status: 201 });
@@ -111,6 +156,7 @@ export async function PATCH(req: NextRequest) {
     const auth = await requireAdmin(req);
     if (!auth.ok) return auth.response;
 
+    await ensureVariantColumns();
     const body = await req.json();
 
     if (body?.direction) {
@@ -174,6 +220,9 @@ export async function PATCH(req: NextRequest) {
     const sourceStoreUrl = body.sourceStoreUrl ? String(body.sourceStoreUrl).trim() : null;
     const sourceProductUrl = body.sourceProductUrl ? String(body.sourceProductUrl).trim() : null;
     const costPrice = body.costPrice != null && !isNaN(Number(body.costPrice)) ? Number(body.costPrice) : null;
+    const productType = VALID_PRODUCT_TYPES.includes(body.productType) ? body.productType : 'estandar';
+    const colorOptions = parseColorOptions(body.colorOptions);
+    const sizes = parseSizes(body.sizes);
 
     if (!name) {
       return NextResponse.json({ error: 'O campo "nome" é obrigatório.' }, { status: 400 });
@@ -195,9 +244,12 @@ export async function PATCH(req: NextRequest) {
         stock             = ${stock},
         source_store_url  = COALESCE(${sourceStoreUrl}, source_store_url),
         source_product_url = COALESCE(${sourceProductUrl}, source_product_url),
-        cost_price        = COALESCE(${costPrice}, cost_price)
+        cost_price        = COALESCE(${costPrice}, cost_price),
+        product_type      = ${productType},
+        color_options     = ${JSON.stringify(colorOptions)},
+        sizes             = ${JSON.stringify(sizes)}
       WHERE id = ${id}
-      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price
+      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes
     `;
 
     if (!product) {
