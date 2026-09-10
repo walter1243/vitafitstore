@@ -7,7 +7,7 @@ import { AdminUsersManager } from '@/components/admin-users-manager';
 import {
   LayoutDashboard, Package, ShoppingCart, Truck, Settings,
   Menu, X, Plus, Trash2, ExternalLink, Check, Euro, PackageSearch,
-  ChevronRight, Upload, Video, AlertCircle, CheckCircle2,
+  ChevronRight, ChevronLeft, Upload, Video, AlertCircle, CheckCircle2, ImagePlus,
   ArrowUp, ArrowDown, Monitor, Zap, ToggleLeft, ToggleRight,
   MessageCircle, Mail, Globe, RefreshCw, LogOut,
   Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, AlignJustify,
@@ -132,6 +132,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   const mainFileRef = useRef<HTMLInputElement>(null);
   const galleryFileRef = useRef<HTMLInputElement>(null);
   const [drag, setDrag] = useState(false);
+  const [galleryDrag, setGalleryDrag] = useState(false);
   const [mainUploadBusy, setMainUploadBusy] = useState(false);
   const [galleryBusy, setGalleryBusy] = useState(false);
   const [galleryUrl, setGalleryUrl] = useState('');
@@ -298,6 +299,17 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
         }
       });
     });
+  }
+
+  function handleGalleryDragOver(e: React.DragEvent) {
+    e.preventDefault();
+    setGalleryDrag(true);
+  }
+
+  function handleGalleryDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setGalleryDrag(false);
+    handleAdditionalFiles(e.dataTransfer.files);
   }
 
   function handleUploadPaste(e: React.ClipboardEvent) {
@@ -849,97 +861,91 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                 <span className="text-xs text-white/45">Máximo de 10 fotos</span>
               </div>
 
-              <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
-                <div>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <input
-                      type="url"
-                      value={form.videoUrl}
-                      onChange={e => onFormChange('videoUrl', e.target.value)}
-                      placeholder="URL do vídeo do produto (YouTube ou MP4)"
-                      className="w-full rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40 sm:col-span-2"
-                    />
-                    <input
-                      ref={galleryFileRef}
-                      type="file"
-                      multiple
-                      accept="image/jpeg,image/png,image/webp,image/avif"
-                      className="hidden"
-                      onChange={e => handleAdditionalFiles(e.target.files)}
-                    />
+              <input
+                type="url"
+                value={form.videoUrl}
+                onChange={e => onFormChange('videoUrl', e.target.value)}
+                placeholder="URL do vídeo do produto (YouTube ou MP4)"
+                className="mb-3 w-full rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+              />
+
+              <input
+                ref={galleryFileRef}
+                type="file"
+                multiple
+                accept="image/jpeg,image/png,image/webp,image/avif"
+                className="hidden"
+                onChange={e => handleAdditionalFiles(e.target.files)}
+              />
+
+              {/* Real dropzone — click to browse or drag files straight from the desktop */}
+              <div
+                onClick={() => galleryFileRef.current?.click()}
+                onDragOver={handleGalleryDragOver}
+                onDragLeave={() => setGalleryDrag(false)}
+                onDrop={handleGalleryDrop}
+                className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-6 py-8 text-center transition-colors ${
+                  galleryDrag
+                    ? 'border-green-500 bg-green-500/10'
+                    : 'border-white/15 bg-white/[0.02] hover:border-white/25 hover:bg-white/5'
+                }`}
+              >
+                <ImagePlus size={22} className={galleryDrag ? 'text-green-400' : 'text-white/40'} />
+                <p className="text-sm font-medium text-white">
+                  {galleryDrag ? 'Solte as fotos aqui' : 'Arraste fotos aqui ou clique para escolher'}
+                </p>
+                <p className="text-xs text-white/40">JPG, PNG, WEBP ou AVIF · até 10 fotos</p>
+              </div>
+
+              <div className="mt-3 flex gap-2">
+                <input
+                  type="url"
+                  value={galleryUrl}
+                  onChange={e => setGalleryUrl(e.target.value)}
+                  placeholder="Ou cole uma URL de foto"
+                  className="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!galleryUrl.trim() || additionalImages.length >= 10) return;
+                    onAdditionalImagesChange([...additionalImages, galleryUrl.trim()]);
+                    setGalleryUrl('');
+                  }}
+                  className="shrink-0 rounded-xl bg-green-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-green-700"
+                >
+                  Adicionar
+                </button>
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
+                {visibleAdditionalImages.map((src, index) => (
+                  <div key={`${src}-${index}`} className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#1c2236]">
+                    <img src={src} alt={`Foto adicional ${index + 1}`} className="aspect-square w-full object-cover" />
                     <button
                       type="button"
-                      onClick={() => galleryFileRef.current?.click()}
-                      className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-xs font-semibold text-white hover:bg-white/10"
+                      onClick={() => removeAdditionalImage(index)}
+                      className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                      aria-label="Remover foto"
                     >
-                      + Adicionar foto
+                      <X size={12} />
                     </button>
-                    <div className="flex gap-2">
-                      <input
-                        type="url"
-                        value={galleryUrl}
-                        onChange={e => setGalleryUrl(e.target.value)}
-                        placeholder="Cole uma URL de foto"
-                        className="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (!galleryUrl.trim() || additionalImages.length >= 10) return;
-                          onAdditionalImagesChange([...additionalImages, galleryUrl.trim()]);
-                          setGalleryUrl('');
-                        }}
-                        className="rounded-xl bg-green-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-green-700"
-                      >
-                        Adicionar
+                    <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5 text-white/90 opacity-0 transition-opacity group-hover:opacity-100">
+                      <button type="button" onClick={() => moveAdditionalImage(index, 'left')} className="rounded-full p-1 hover:bg-white/15" aria-label="Mover para esquerda">
+                        <ChevronLeft size={13} />
+                      </button>
+                      <span className="text-[10px]">{index + 1}/{Math.min(additionalImages.length, 10)}</span>
+                      <button type="button" onClick={() => moveAdditionalImage(index, 'right')} className="rounded-full p-1 hover:bg-white/15" aria-label="Mover para direita">
+                        <ChevronRight size={13} />
                       </button>
                     </div>
                   </div>
-
-                  <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-                    {visibleAdditionalImages.map((src, index) => (
-                      <div key={`${src}-${index}`} className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#1c2236]">
-                        <img src={src} alt={`Foto adicional ${index + 1}`} className="h-28 w-full object-cover" />
-                        <div className="absolute right-2 top-2 flex gap-1 opacity-100 transition-opacity">
-                          <button
-                            type="button"
-                            onClick={() => removeAdditionalImage(index)}
-                            className="flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-white hover:bg-red-500"
-                            aria-label="Remover foto"
-                          >
-                            <X size={12} />
-                          </button>
-                        </div>
-                        <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-black/55 px-2 py-1 text-[10px] text-white/80 opacity-100">
-                          <button type="button" onClick={() => moveAdditionalImage(index, 'left')} className="hover:text-white" aria-label="Mover para esquerda">←</button>
-                          <span>{index + 1}/{Math.min(additionalImages.length, 10)}</span>
-                          <button type="button" onClick={() => moveAdditionalImage(index, 'right')} className="hover:text-white" aria-label="Mover para direita">→</button>
-                        </div>
-                      </div>
-                    ))}
-                    {galleryBusy && (
-                      <div className="flex h-28 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white/60">
-                        <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/20 border-t-green-500" />
-                      </div>
-                    )}
+                ))}
+                {galleryBusy && (
+                  <div className="flex aspect-square items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white/60">
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/20 border-t-green-500" />
                   </div>
-                </div>
-
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/45">Preview da galeria</h4>
-                  <div className="mt-3 grid grid-cols-2 gap-2">
-                    {visibleAdditionalImages.slice(0, 4).map((src, index) => (
-                      <div key={index} className="aspect-square overflow-hidden rounded-xl border border-white/10 bg-[#1c2236]">
-                        <img src={src} alt={`Preview ${index + 1}`} className="h-full w-full object-cover" />
-                      </div>
-                    ))}
-                    {visibleAdditionalImages.length === 0 && (
-                      <div className="col-span-2 rounded-xl border border-dashed border-white/10 px-4 py-8 text-center text-xs text-white/45">
-                        As fotos adicionais aparecerão aqui.
-                      </div>
-                    )}
-                  </div>
-                </div>
+                )}
               </div>
             </section>
 
