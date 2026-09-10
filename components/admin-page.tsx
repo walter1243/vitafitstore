@@ -374,6 +374,37 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
     if (f && f.type.startsWith('image/')) handleMainFile(f);
   }
 
+  // Pasted/dropped images go straight into the description's HTML as base64
+  // — with no size limit, pasting several full-resolution photos can push
+  // that HTML past what the save request's body can carry (the exact same
+  // failure mode the main product image had before it moved to Blob
+  // uploads). Downscaling here keeps every image reasonable regardless of
+  // how many get pasted, so "cole quantas eu quiser" is actually safe.
+  const DESC_IMAGE_MAX_DIMENSION = 1000;
+
+  function compressImageFile(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new window.Image();
+        img.onload = () => {
+          const scale = Math.min(1, DESC_IMAGE_MAX_DIMENSION / Math.max(img.width, img.height));
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return reject(new Error('No se pudo procesar la imagen.'));
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', 0.8));
+        };
+        img.onerror = () => reject(new Error('No se pudo leer la imagen.'));
+        img.src = reader.result as string;
+      };
+      reader.onerror = () => reject(new Error('No se pudo leer el archivo.'));
+      reader.readAsDataURL(file);
+    });
+  }
+
   function insertDescImage(url: string) {
     document.execCommand('insertHTML', false, `<img src="${url}" style="max-width:100%;border-radius:12px;margin:8px 0;display:block;" />`);
     onDescChange(descRef.current?.innerHTML ?? '');
@@ -385,7 +416,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
         e.preventDefault();
         const f = item.getAsFile();
         if (!f) continue;
-        readFileAsDataURL(f, insertDescImage);
+        compressImageFile(f).then(insertDescImage).catch(() => readFileAsDataURL(f, insertDescImage));
         return;
       }
     }
@@ -419,11 +450,28 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
     const file = Array.from(e.dataTransfer.files).find(f => f.type.startsWith('image/'));
     if (!file) return;
     e.preventDefault();
-    readFileAsDataURL(file, insertDescImage);
+    compressImageFile(file).then(insertDescImage).catch(() => readFileAsDataURL(file, insertDescImage));
   }
 
   function focusDescEditor() {
     descRef.current?.focus();
+  }
+
+  // CJ-imported descriptions carry inline spec images the admin may want to
+  // remove or swap out. Clicking one selects it explicitly via the Selection
+  // API (more reliable than counting on the browser's own click-to-select
+  // behavior inside a plain contentEditable) so Delete/Backspace reliably
+  // removes it, and pasting a new image while it's selected replaces it in
+  // place instead of just inserting alongside it.
+  function handleDescClick(e: React.MouseEvent<HTMLDivElement>) {
+    const target = e.target as HTMLElement;
+    if (target.tagName !== 'IMG') return;
+    const selection = window.getSelection();
+    if (!selection) return;
+    const range = document.createRange();
+    range.selectNode(target);
+    selection.removeAllRanges();
+    selection.addRange(range);
   }
 
   function applyDescCommand(command: string, value?: string) {
@@ -998,13 +1046,14 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                 onPaste={handleDescPaste}
                 onDragOver={handleDescDragOver}
                 onDrop={handleDescDrop}
+                onClick={handleDescClick}
                 onInput={() => onDescChange(descRef.current?.innerHTML ?? '')}
-                className="min-h-[220px] rounded-2xl border border-white/10 bg-[#1c2236] px-4 py-3 text-sm text-white outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                className="min-h-[220px] rounded-2xl border border-white/10 bg-[#1c2236] px-4 py-3 text-sm text-white outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40 [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-6 [&_ul]:pl-6 [&_li]:mb-1 [&_img]:cursor-pointer"
                 style={{ lineHeight: '1.7' }}
                 data-placeholder="Descreva benefícios, composição, instruções e provas sociais. Cole ou arraste imagens diretamente aqui."
               />
               <div className="mt-3 flex items-center justify-between gap-3 text-xs text-white/45">
-                <span>Use negrito, listas e imagens inline para vender melhor.</span>
+                <span>Clique numa imagem pra selecioná-la — Delete remove, colar outra em cima substitui.</span>
                 <span>{stripHtml(desc).length} caracteres</span>
               </div>
             </section>
