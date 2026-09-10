@@ -15,6 +15,24 @@ async function ensureTable() {
   `;
 }
 
+// Content published before the niche pivot (supplements -> heating) can
+// still have these old product photos saved as a hero poster/image in the
+// database — the code-level defaults were fixed, but a published DB row
+// overrides the default and keeps serving the stale value. Strip it at
+// read time so old published content can't keep showing it.
+const LEGACY_IMAGE_PATTERN = /\/images\/(collagen|omega|vitajoint|multivita|slimburn|sleepwell|powerflex|resistband|legging|legraise|sporttop|yogamat)\.jpg/i;
+
+function stripLegacyImages<T extends Record<string, unknown>>(section: T): T {
+  const clean: Record<string, unknown> = { ...section };
+  for (const key of Object.keys(clean)) {
+    const value = clean[key];
+    if (typeof value === 'string' && LEGACY_IMAGE_PATTERN.test(value)) {
+      clean[key] = '';
+    }
+  }
+  return clean as T;
+}
+
 export async function getSiteContent(): Promise<SiteContent> {
   try {
     await ensureTable();
@@ -23,10 +41,10 @@ export async function getSiteContent(): Promise<SiteContent> {
     const result: SiteContent = { ...DEFAULT_SITE_CONTENT };
     for (const row of rows as { section: string; data: unknown }[]) {
       if ((SITE_CONTENT_SECTIONS as string[]).includes(row.section)) {
-        (result as any)[row.section] = {
+        (result as any)[row.section] = stripLegacyImages({
           ...(DEFAULT_SITE_CONTENT as any)[row.section],
           ...(row.data as object),
-        };
+        });
       }
     }
     return result;
