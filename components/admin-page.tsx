@@ -1364,6 +1364,14 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
   const [newCategoryName, setNewCategoryName] = useState('');
   const [pendingCategoryDelete, setPendingCategoryDelete] = useState<{ id: number; name: string } | null>(null);
   const [deletingCategory, setDeletingCategory] = useState(false);
+  const [sidebarLogoUrl, setSidebarLogoUrl] = useState('');
+
+  useEffect(() => {
+    fetch('/api/store-settings', { cache: 'no-store' })
+      .then(r => (r.ok ? r.json() : null))
+      .then(data => { if (data?.logoUrl) setSidebarLogoUrl(data.logoUrl); })
+      .catch(() => {});
+  }, []);
 
   const addToast = useCallback((type: Toast['type'], msg: string) => {
     const id = ++toastId.current;
@@ -1762,7 +1770,11 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
 
       <aside className={`fixed top-0 left-0 z-50 flex h-full w-64 flex-col bg-[#0d0f16] text-white transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:sticky lg:top-0 lg:h-screen lg:shrink-0 lg:translate-x-0`}>
         <div className="flex shrink-0 items-center gap-3 border-b border-white/10 px-5 py-4">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-green-600 text-lg font-bold">V</div>
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-green-600 text-lg font-bold">
+            {sidebarLogoUrl
+              ? <img src={sidebarLogoUrl} alt="Logo" className="h-full w-full object-cover" />
+              : 'V'}
+          </div>
           <div className="min-w-0">
             <div className="truncate text-sm font-bold">Painel Admin</div>
             <div className="text-[11px] text-white/40">Painel de Controle</div>
