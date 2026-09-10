@@ -155,6 +155,7 @@ export function Footer({ content }: { content?: FooterContent }) {
       ...footerSections.ayuda,
       title: footerContent.ayuda.title,
       description: footerContent.ayuda.description,
+      items: footerContent.ayuda.items?.length ? footerContent.ayuda.items : footerSections.ayuda.items,
     },
     legal: {
       ...footerSections.legal,

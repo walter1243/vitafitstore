@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -14,7 +14,10 @@ export function ProductPageView({ product }: { product: Product }) {
   const { addItem } = useCart()
   const router = useRouter()
   const galleryImages = [product.mainImage ?? product.image, ...(product.additionalImages ?? [])].filter(Boolean) as string[]
-  const [activeImage, setActiveImage] = useState(galleryImages[0])
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [slideDir, setSlideDir] = useState<'left' | 'right'>('right')
+  const activeImage = galleryImages[activeIndex] ?? galleryImages[0]
+  const touchStartX = useRef<number | null>(null)
   const [quantity, setQuantity] = useState(1)
   const [added, setAdded] = useState(false)
   const [selectedColor, setSelectedColor] = useState(product.colorOptions?.[0]?.label ?? '')
@@ -29,7 +32,28 @@ export function ProductPageView({ product }: { product: Product }) {
 
   function selectColor(label: string, image: string) {
     setSelectedColor(label)
-    setActiveImage(image)
+    const idx = galleryImages.indexOf(image)
+    goToIndex(idx >= 0 ? idx : 0)
+  }
+
+  function goToIndex(index: number) {
+    const len = galleryImages.length
+    const wrapped = ((index % len) + len) % len
+    setSlideDir(wrapped >= activeIndex ? 'right' : 'left')
+    setActiveIndex(wrapped)
+  }
+
+  function handleTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX
+  }
+
+  function handleTouchEnd(e: React.TouchEvent) {
+    if (touchStartX.current === null || galleryImages.length < 2) return
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current
+    const SWIPE_THRESHOLD = 40
+    if (deltaX > SWIPE_THRESHOLD) goToIndex(activeIndex - 1)
+    else if (deltaX < -SWIPE_THRESHOLD) goToIndex(activeIndex + 1)
+    touchStartX.current = null
   }
 
   const variant = {
@@ -74,9 +98,9 @@ export function ProductPageView({ product }: { product: Product }) {
               {galleryImages.map((img, i) => (
                 <button
                   key={i}
-                  onClick={() => setActiveImage(img)}
+                  onClick={() => goToIndex(i)}
                   className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-colors ${
-                    activeImage === img ? 'border-orange-600' : 'border-slate-200 hover:border-slate-300'
+                    activeIndex === i ? 'border-orange-600' : 'border-slate-200 hover:border-slate-300'
                   }`}
                 >
                   <Image src={img} alt="" fill className="object-cover" />
@@ -91,8 +115,19 @@ export function ProductPageView({ product }: { product: Product }) {
           )}
 
           <div className="min-w-0 flex-1">
-            <div className="relative aspect-square overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
-              <Image src={activeImage} alt={product.name} fill className="object-cover" priority />
+            <div
+              className="relative aspect-square overflow-hidden rounded-2xl border border-slate-200 bg-slate-50"
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+            >
+              <Image
+                key={activeIndex}
+                src={activeImage}
+                alt={product.name}
+                fill
+                className={`object-cover ${slideDir === 'right' ? 'slide-from-right' : 'slide-from-left'}`}
+                priority
+              />
             </div>
             {/* Horizontal thumbnails on mobile only */}
             {galleryImages.length > 1 && (
@@ -100,9 +135,9 @@ export function ProductPageView({ product }: { product: Product }) {
                 {galleryImages.map((img, i) => (
                   <button
                     key={i}
-                    onClick={() => setActiveImage(img)}
+                    onClick={() => goToIndex(i)}
                     className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-colors ${
-                      activeImage === img ? 'border-orange-600' : 'border-slate-200 hover:border-slate-300'
+                      activeIndex === i ? 'border-orange-600' : 'border-slate-200 hover:border-slate-300'
                     }`}
                   >
                     <Image src={img} alt="" fill className="object-cover" />

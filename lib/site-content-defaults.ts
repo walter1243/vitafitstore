@@ -143,9 +143,16 @@ export const DEFAULT_NEWSLETTER: NewsletterContent = {
   privacyText: 'Al suscribirte aceptas nuestra política de privacidad. Sin spam, lo prometemos.',
 };
 
+export type FooterItemContent = {
+  title: string;
+  description: string;
+  href?: string;
+};
+
 export type FooterSectionContent = {
   title: string;
   description: string;
+  items?: FooterItemContent[];
 };
 
 export type FooterContent = {
@@ -161,6 +168,12 @@ export const DEFAULT_FOOTER: FooterContent = {
   ayuda: {
     title: 'Ayuda y Soporte',
     description: 'Soporte profesional para pedidos, pagos, cambios y entregas.',
+    items: [
+      { title: 'Atención por WhatsApp', description: 'Lunes a viernes, 9:00 a 18:00 (Madrid).' },
+      { title: 'Envíos y entregas', description: 'Plazos, transportistas y seguimiento de pedidos.', href: '/legal/envios' },
+      { title: 'Devoluciones y reembolsos', description: 'Derecho de desistimiento de 14 días.', href: '/legal/devoluciones' },
+      { title: 'Pagos y facturación', description: 'Tarjeta, PayPal y métodos locales compatibles.' },
+    ],
   },
   legal: {
     title: 'Legal',
