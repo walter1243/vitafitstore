@@ -56,6 +56,8 @@ type Order = {
   city?: string;
   country?: string;
   product: string;
+  sourceStoreUrl?: string;
+  sourceProductUrl?: string;
   status: 'pending' | 'shipped' | 'delivered';
   tracking: string;
   total: number;
@@ -1134,6 +1136,9 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
 
 // ─── Orders ───────────────────────────────────────────────────────────────────
 
+const BLIND_SHIP_NOTE =
+  'We are doing dropshipping. Please DO NOT include any invoices, promotions, price tags or brand QR codes inside the package. Blind shipping only. Thank you!';
+
 function OrdersSection({ orders, onUpdateTracking, onRefresh }: {
   orders: Order[];
   onUpdateTracking: (id: number, tracking: string, status: Order['status']) => void;
@@ -1142,6 +1147,15 @@ function OrdersSection({ orders, onUpdateTracking, onRefresh }: {
   const [inputs, setInputs] = useState<Record<number, string>>({});
   const [forwarding, setForwarding] = useState<Record<number, boolean>>({});
   const [forwardResult, setForwardResult] = useState<Record<number, { ok: boolean; msg: string }>>({});
+  const [supplierPanelOpen, setSupplierPanelOpen] = useState<Record<number, boolean>>({});
+  const [copied, setCopied] = useState<string>('');
+
+  function copyText(key: string, text: string) {
+    navigator.clipboard?.writeText(text).then(() => {
+      setCopied(key);
+      setTimeout(() => setCopied(c => (c === key ? '' : c)), 2000);
+    }).catch(() => {});
+  }
 
   useEffect(() => {
     setInputs(Object.fromEntries(orders.map(o => [o.id, o.tracking ?? ''])));
@@ -1227,6 +1241,13 @@ function OrdersSection({ orders, onUpdateTracking, onRefresh }: {
                 <ExternalLink size={14} />Rastrear
               </a>
             )}
+            <button
+              onClick={() => setSupplierPanelOpen(s => ({ ...s, [o.id]: !s[o.id] }))}
+              className="flex cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-lg border border-amber-500/30 bg-amber-600/15 px-3 py-2 text-sm font-medium text-amber-300 transition-colors hover:bg-amber-600/25"
+            >
+              <PackageSearch size={14} />
+              {supplierPanelOpen[o.id] ? 'Fechar dados' : 'Fazer pedido no fornecedor'}
+            </button>
           </div>
 
           {forwardResult[o.id]?.msg && (
@@ -1237,6 +1258,68 @@ function OrdersSection({ orders, onUpdateTracking, onRefresh }: {
             }`}>
               {forwardResult[o.id].ok ? <CheckCircle2 size={13} /> : <AlertCircle size={13} />}
               {forwardResult[o.id].msg}
+            </div>
+          )}
+
+          {supplierPanelOpen[o.id] && (
+            <div className="mt-3 space-y-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+              <div>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-amber-300/80">Dados de entrega do cliente</p>
+                  <button
+                    onClick={() => copyText(`addr-${o.id}`, [
+                      o.customer,
+                      o.addressLine,
+                      [o.postalCode, o.city].filter(Boolean).join(' '),
+                      o.country,
+                      o.customerPhone,
+                    ].filter(Boolean).join('\n'))}
+                    className="flex cursor-pointer items-center gap-1 rounded-md border border-white/10 px-2 py-1 text-[11px] font-medium text-white/70 hover:bg-white/5"
+                  >
+                    {copied === `addr-${o.id}` ? <Check size={11} className="text-green-400" /> : null}
+                    {copied === `addr-${o.id}` ? 'Copiado!' : 'Copiar tudo'}
+                  </button>
+                </div>
+                <div className="rounded-lg border border-white/10 bg-[#161b28] p-3 font-mono text-xs leading-relaxed text-white/80">
+                  <div>{o.customer}</div>
+                  <div>{o.addressLine || '—'}</div>
+                  <div>{[o.postalCode, o.city].filter(Boolean).join(' ') || '—'}</div>
+                  <div>{o.country || '—'}</div>
+                  <div>{o.customerPhone || '—'}</div>
+                </div>
+              </div>
+
+              <div>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-amber-300/80">Nota para o vendedor (blind shipping)</p>
+                  <button
+                    onClick={() => copyText(`note-${o.id}`, BLIND_SHIP_NOTE)}
+                    className="flex cursor-pointer items-center gap-1 rounded-md border border-white/10 px-2 py-1 text-[11px] font-medium text-white/70 hover:bg-white/5"
+                  >
+                    {copied === `note-${o.id}` ? <Check size={11} className="text-green-400" /> : null}
+                    {copied === `note-${o.id}` ? 'Copiado!' : 'Copiar nota'}
+                  </button>
+                </div>
+                <div className="rounded-lg border border-white/10 bg-[#161b28] p-3 text-xs leading-relaxed text-white/70">
+                  {BLIND_SHIP_NOTE}
+                </div>
+              </div>
+
+              {o.sourceProductUrl ? (
+                <a
+                  href={o.sourceProductUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 rounded-lg bg-amber-600 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-amber-700"
+                >
+                  <ExternalLink size={14} />
+                  Abrir produto {o.sourceStoreUrl ? `no ${o.sourceStoreUrl}` : 'no fornecedor'}
+                </a>
+              ) : (
+                <p className="text-xs text-white/40">
+                  Este produto não tem um fornecedor de origem registrado — importe-o pela aba "Importar Produtos" pra ter esse link disponível aqui.
+                </p>
+              )}
             </div>
           )}
         </div>

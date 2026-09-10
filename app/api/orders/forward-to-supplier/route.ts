@@ -3,6 +3,32 @@ import { sql } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
+// This route joins products.supplier_id -> suppliers, but nothing else in
+// the app ever created that column or guaranteed the suppliers table
+// exists — without this, every click on "Encaminhar" 500s the moment a
+// real order is forwarded. Self-heal both here so the route never depends
+// on some other route having been hit first.
+async function ensureSupplierLinkSchema() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS suppliers (
+      id                     SERIAL PRIMARY KEY,
+      name                   TEXT NOT NULL,
+      base_url               TEXT NOT NULL,
+      api_key                TEXT,
+      active                 BOOLEAN NOT NULL DEFAULT TRUE,
+      scraper_url_template   TEXT,
+      scraper_stock_selector TEXT,
+      created_at             TIMESTAMP DEFAULT NOW()
+    )
+  `;
+  await sql`ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS shopify_domain       TEXT`;
+  await sql`ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS shopify_access_token TEXT`;
+  await sql`ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS order_method         TEXT DEFAULT 'email'`;
+  await sql`ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS contact_email        TEXT`;
+  await sql`ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS contact_whatsapp     TEXT`;
+  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS supplier_id INTEGER REFERENCES suppliers(id) ON DELETE SET NULL`;
+}
+
 async function sendWhatsApp(wapiUrl: string, wapiToken: string, phone: string, message: string) {
   if (!wapiUrl || !phone) return;
   try {
@@ -39,6 +65,8 @@ export async function POST(req: NextRequest) {
     if (!orderId || isNaN(orderId)) {
       return NextResponse.json({ error: 'order_id inválido' }, { status: 400 });
     }
+
+    await ensureSupplierLinkSchema();
 
     // Load order + product + supplier + automation settings
     const [order] = await sql`

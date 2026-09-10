@@ -17,6 +17,8 @@ export async function GET() {
         COALESCE(o.city, '')                         AS city,
         COALESCE(o.country, '')                      AS country,
         COALESCE(p.name, 'Produto removido')          AS product,
+        COALESCE(p.source_store_url, '')              AS "sourceStoreUrl",
+        COALESCE(p.source_product_url, '')             AS "sourceProductUrl",
         o.status,
         COALESCE(o.tracking_code, '')                 AS tracking,
         COALESCE(o.total_amount, 0)::FLOAT            AS total,
