@@ -23,6 +23,9 @@ export function ProductPageView({ product }: { product: Product }) {
 
   const needsSize = Boolean(product.productType && product.productType !== 'estandar' && product.sizes?.length)
   const canBuy = !needsSize || Boolean(selectedSize)
+  const discountPct = product.originalPrice && product.originalPrice > product.price
+    ? Math.round((1 - product.price / product.originalPrice) * 100)
+    : null
 
   function selectColor(label: string, image: string) {
     setSelectedColor(label)
@@ -62,14 +65,12 @@ export function ProductPageView({ product }: { product: Product }) {
         )}
       </nav>
 
-      <div className="grid gap-10 lg:grid-cols-2">
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         {/* Gallery */}
-        <div>
-          <div className="relative aspect-square overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
-            <Image src={activeImage} alt={product.name} fill className="object-cover" priority />
-          </div>
+        <div className="flex gap-3">
+          {/* Vertical thumbnail rail on desktop */}
           {galleryImages.length > 1 && (
-            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+            <div className="hidden shrink-0 flex-col gap-2 sm:flex lg:w-16">
               {galleryImages.map((img, i) => (
                 <button
                   key={i}
@@ -88,6 +89,28 @@ export function ProductPageView({ product }: { product: Product }) {
               )}
             </div>
           )}
+
+          <div className="min-w-0 flex-1">
+            <div className="relative aspect-square overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+              <Image src={activeImage} alt={product.name} fill className="object-cover" priority />
+            </div>
+            {/* Horizontal thumbnails on mobile only */}
+            {galleryImages.length > 1 && (
+              <div className="mt-3 flex gap-2 overflow-x-auto pb-1 sm:hidden">
+                {galleryImages.map((img, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveImage(img)}
+                    className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-colors ${
+                      activeImage === img ? 'border-orange-600' : 'border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <Image src={img} alt="" fill className="object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Info */}
@@ -103,9 +126,33 @@ export function ProductPageView({ product }: { product: Product }) {
             <TrustpilotWidget />
           </div>
 
-          <div className="mt-5 flex items-baseline gap-3">
-            <span className="text-4xl font-black text-slate-900">{product.price.toFixed(2)}€</span>
+          {/* Price block */}
+          <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
+            <div className="flex flex-wrap items-baseline gap-3">
+              {product.originalPrice && product.originalPrice > product.price && (
+                <span className="text-base text-slate-400 line-through">{product.originalPrice.toFixed(2)}€</span>
+              )}
+              <span className="text-4xl font-black text-slate-900">{product.price.toFixed(2)}€</span>
+              {discountPct && (
+                <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-700">-{discountPct}%</span>
+              )}
+            </div>
+            <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+              <Truck size={13} /> Envío gratis en pedidos +50€ · Entrega en 2-3 días laborables
+            </p>
           </div>
+
+          {/* Key highlights — pulled up near the price like a real listing, not buried at the bottom */}
+          {product.benefits.length > 0 && (
+            <ul className="mt-4 space-y-1.5">
+              {product.benefits.slice(0, 4).map((b, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
+                  <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-orange-700" />
+                  {b}
+                </li>
+              ))}
+            </ul>
+          )}
 
           {/* Color variants */}
           {product.colorOptions && product.colorOptions.length > 0 && (
@@ -158,48 +205,51 @@ export function ProductPageView({ product }: { product: Product }) {
             </div>
           )}
 
-          <div className="mt-6 flex items-center gap-4">
-            <span className="text-sm font-medium text-slate-500">Cantidad</span>
-            <div className="flex items-center rounded-xl border border-slate-200 bg-white">
+          {/* Buy box */}
+          <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4">
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-medium text-slate-500">Cantidad</span>
+              <div className="flex items-center rounded-xl border border-slate-200 bg-white">
+                <button
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="flex h-10 w-10 items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+                  aria-label="Reducir cantidad"
+                >
+                  <Minus className="h-4 w-4" />
+                </button>
+                <span className="w-10 text-center text-base font-bold text-slate-900">{quantity}</span>
+                <button
+                  onClick={() => setQuantity(quantity + 1)}
+                  className="flex h-10 w-10 items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+                  aria-label="Aumentar cantidad"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+              <span className="text-xs font-medium text-orange-700">{product.stock} disponibles</span>
+            </div>
+
+            {needsSize && !selectedSize && (
+              <p className="mt-4 text-xs font-medium text-red-500">Elige una talla para continuar.</p>
+            )}
+
+            <div className="mt-4 flex flex-col gap-2.5">
               <button
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="flex h-10 w-10 items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-slate-800"
-                aria-label="Reducir cantidad"
+                onClick={handleBuyNow}
+                disabled={!canBuy}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-700 px-6 py-3.5 text-sm font-semibold text-white transition-all hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <Minus className="h-4 w-4" />
+                Comprar ahora
               </button>
-              <span className="w-10 text-center text-base font-bold text-slate-900">{quantity}</span>
               <button
-                onClick={() => setQuantity(quantity + 1)}
-                className="flex h-10 w-10 items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-slate-800"
-                aria-label="Aumentar cantidad"
+                onClick={handleAdd}
+                disabled={!canBuy}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-orange-700 bg-white px-6 py-3.5 text-sm font-semibold text-orange-700 transition-all hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <Plus className="h-4 w-4" />
+                {added ? <Check className="h-4 w-4" /> : <ShoppingCart className="h-4 w-4" />}
+                {added ? '¡Añadido al carrito!' : 'Añadir al carrito'}
               </button>
             </div>
-            <span className="text-xs font-medium text-orange-700">{product.stock} disponibles</span>
-          </div>
-
-          {needsSize && !selectedSize && (
-            <p className="mt-4 text-xs font-medium text-red-500">Elige una talla para continuar.</p>
-          )}
-
-          <div className="mt-3 flex flex-col gap-2.5 sm:max-w-xs">
-            <button
-              onClick={handleBuyNow}
-              disabled={!canBuy}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-700 px-6 py-3.5 text-sm font-semibold text-white transition-all hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Comprar ahora
-            </button>
-            <button
-              onClick={handleAdd}
-              disabled={!canBuy}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-orange-700 bg-white px-6 py-3.5 text-sm font-semibold text-orange-700 transition-all hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {added ? <Check className="h-4 w-4" /> : <ShoppingCart className="h-4 w-4" />}
-              {added ? '¡Añadido al carrito!' : 'Añadir al carrito'}
-            </button>
           </div>
 
           {sizeGuideOpen && product.productType && (
@@ -207,7 +257,7 @@ export function ProductPageView({ product }: { product: Product }) {
           )}
 
           {/* Trust strip */}
-          <div className="mt-6 flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-[0_2px_10px_rgba(0,0,0,0.03)]">
+          <div className="mt-4 flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-[0_2px_10px_rgba(0,0,0,0.03)]">
             {[
               { icon: <Lock className="h-4 w-4 text-orange-700" />, label: 'Pago seguro' },
               { icon: <Truck className="h-4 w-4 text-orange-700" />, label: 'Envío gratis +50€' },
@@ -223,27 +273,12 @@ export function ProductPageView({ product }: { product: Product }) {
       </div>
 
       {/* Full description */}
-      <div className="mt-12 grid gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <h2 className="mb-4 text-lg font-bold text-slate-900">Descripción</h2>
-          <div
-            className="prose prose-sm max-w-none prose-p:text-slate-600 prose-p:leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: product.description }}
-          />
-        </div>
-        <div>
-          <h2 className="mb-4 text-lg font-bold text-slate-900">Beneficios</h2>
-          <div className="space-y-2">
-            {product.benefits.map((b, i) => (
-              <div key={i} className="flex items-center gap-2 text-sm text-slate-700">
-                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-50">
-                  <Check className="h-3 w-3 text-orange-700" />
-                </div>
-                {b}
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="mt-12 max-w-3xl">
+        <h2 className="mb-4 text-lg font-bold text-slate-900">Descripción</h2>
+        <div
+          className="prose prose-sm max-w-none prose-p:text-slate-600 prose-p:leading-relaxed"
+          dangerouslySetInnerHTML={{ __html: product.description }}
+        />
       </div>
     </div>
   )
