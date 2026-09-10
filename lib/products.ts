@@ -44,6 +44,8 @@ export interface CartItem {
   product: Product
   quantity: number
   selectedVariant?: ProductVariant
+  selectedColor?: string
+  selectedSize?: string
 }
 
 export interface Review {

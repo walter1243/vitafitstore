@@ -32,14 +32,17 @@ export async function POST(req: NextRequest) {
 
     const meta = pi.metadata ?? {};
     const amount = pi.amount / 100;
-    const items: Array<{ productId: number; quantity: number }> = JSON.parse(meta.items ?? '[]');
+    const items: Array<{ productId: number; quantity: number; color?: string; size?: string }> = JSON.parse(meta.items ?? '[]');
 
     try {
+      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS selected_color TEXT`;
+      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS selected_size TEXT`;
       await sql`
         INSERT INTO orders (
           customer_name, customer_email, customer_phone,
           address_line, postal_code, city, country,
-          product_id, total_amount, status, stripe_payment_id
+          product_id, total_amount, status, stripe_payment_id,
+          selected_color, selected_size
         ) VALUES (
           ${meta.customerName  || 'Anônimo'},
           ${meta.customerEmail || null},
@@ -51,7 +54,9 @@ export async function POST(req: NextRequest) {
           ${items[0]?.productId ?? null},
           ${amount},
           'pending',
-          ${pi.id}
+          ${pi.id},
+          ${items[0]?.color || null},
+          ${items[0]?.size || null}
         )
       `;
     } catch (dbErr) {

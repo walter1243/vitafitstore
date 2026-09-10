@@ -3,11 +3,13 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
 import { type Product, type CartItem } from './products'
 
+type Variant = { color?: string; size?: string }
+
 interface CartContextType {
   items: CartItem[]
-  addItem: (product: Product) => void
-  removeItem: (productId: number) => void
-  updateQuantity: (productId: number, quantity: number) => void
+  addItem: (product: Product, variant?: Variant) => void
+  removeItem: (productId: number, variant?: Variant) => void
+  updateQuantity: (productId: number, quantity: number, variant?: Variant) => void
   clearCart: () => void
   totalItems: number
   totalPrice: number
@@ -26,21 +28,31 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [showUpsell, setShowUpsell] = useState(false)
   const [lastAddedProduct, setLastAddedProduct] = useState<Product | null>(null)
 
-  const addItem = useCallback((product: Product) => {
+  // Two lines are "the same" only if product id AND color AND size all
+  // match — otherwise a red heater and a black heater (or a size 40 vs 42)
+  // would silently merge into one cart line and the wrong variant could
+  // ship. Calls that never pass a variant (quick-add from grids/carousels)
+  // naturally match only other variant-less lines of that same product.
+  const sameLine = (item: CartItem, productId: number, variant?: Variant) =>
+    item.product.id === productId &&
+    (item.selectedColor ?? '') === (variant?.color ?? '') &&
+    (item.selectedSize ?? '') === (variant?.size ?? '')
+
+  const addItem = useCallback((product: Product, variant?: Variant) => {
     setItems(prev => {
-      const existing = prev.find(item => item.product.id === product.id)
+      const existing = prev.find(item => sameLine(item, product.id, variant))
       if (existing) {
         return prev.map(item =>
-          item.product.id === product.id
+          sameLine(item, product.id, variant)
             ? { ...item, quantity: item.quantity + 1 }
             : item
         )
       }
-      return [...prev, { product, quantity: 1 }]
+      return [...prev, { product, quantity: 1, selectedColor: variant?.color, selectedSize: variant?.size }]
     })
-    
+
     setLastAddedProduct(product)
-    
+
     // Show upsell popup when adding health products
     if (product.category === 'salud') {
       setShowUpsell(true)
@@ -49,18 +61,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const removeItem = useCallback((productId: number) => {
-    setItems(prev => prev.filter(item => item.product.id !== productId))
+  const removeItem = useCallback((productId: number, variant?: Variant) => {
+    setItems(prev => prev.filter(item => !sameLine(item, productId, variant)))
   }, [])
 
-  const updateQuantity = useCallback((productId: number, quantity: number) => {
+  const updateQuantity = useCallback((productId: number, quantity: number, variant?: Variant) => {
     if (quantity <= 0) {
-      removeItem(productId)
+      removeItem(productId, variant)
       return
     }
     setItems(prev =>
       prev.map(item =>
-        item.product.id === productId ? { ...item, quantity } : item
+        sameLine(item, productId, variant) ? { ...item, quantity } : item
       )
     )
   }, [removeItem])

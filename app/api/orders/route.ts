@@ -6,6 +6,8 @@ const VALID_STATUSES = ['pending', 'shipped', 'delivered'];
 
 export async function GET() {
   try {
+    await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS selected_color TEXT`;
+    await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS selected_size TEXT`;
     const rows = await sql`
       SELECT
         o.id,
@@ -19,6 +21,8 @@ export async function GET() {
         COALESCE(p.name, 'Produto removido')          AS product,
         COALESCE(p.source_store_url, '')              AS "sourceStoreUrl",
         COALESCE(p.source_product_url, '')             AS "sourceProductUrl",
+        COALESCE(o.selected_color, '')                AS "selectedColor",
+        COALESCE(o.selected_size, '')                 AS "selectedSize",
         o.status,
         COALESCE(o.tracking_code, '')                 AS tracking,
         COALESCE(o.total_amount, 0)::FLOAT            AS total,

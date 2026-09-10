@@ -250,7 +250,11 @@ function OrderSummary({ items, totalPrice, shipping, total }: {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-slate-900 text-xs font-medium truncate">{item.product.name}</p>
-                {item.product.shortDescription && (
+                {(item.selectedColor || item.selectedSize) ? (
+                  <p className="text-[10px] font-medium text-orange-700">
+                    {[item.selectedColor && `Color: ${item.selectedColor}`, item.selectedSize && `Talla: ${item.selectedSize}`].filter(Boolean).join(' - ')}
+                  </p>
+                ) : item.product.shortDescription && (
                   <p className="text-[10px] text-slate-500 line-clamp-2">{item.product.shortDescription}</p>
                 )}
                 <p className="text-slate-500 text-xs">× {item.quantity}</p>
@@ -343,7 +347,7 @@ interface PaymentStepProps {
   total: number;
   name: string; email: string; phone: string;
   street: string; streetN: string; postal: string; city: string; country: string;
-  checkoutItems: Array<{ productId: number; quantity: number }>;
+  checkoutItems: Array<{ productId: number; quantity: number; color?: string; size?: string }>;
   clearCart: () => void;
   setSuccess: (v: boolean) => void;
   onBack: () => void;
@@ -509,7 +513,12 @@ function CheckoutFormInner() {
   const [errors,  setErrors]  = useState<Record<string,string>>({});
   const [success, setSuccess] = useState(false);
 
-  const checkoutItems = items.map(item => ({ productId:item.product.id, quantity:item.quantity }));
+  const checkoutItems = items.map(item => ({
+    productId: item.product.id,
+    quantity: item.quantity,
+    color: item.selectedColor,
+    size: item.selectedSize,
+  }));
 
   // Quote (for sidebar display)
   useEffect(() => {

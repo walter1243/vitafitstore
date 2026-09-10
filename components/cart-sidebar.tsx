@@ -145,7 +145,11 @@ export function CartSidebar() {
                         <h4 className="font-semibold text-slate-900 text-sm line-clamp-1 leading-tight">
                           {item.product.name}
                         </h4>
-                        {item.product.shortDescription && (
+                        {(item.selectedColor || item.selectedSize) ? (
+                          <p className="mt-0.5 text-[11px] font-medium text-slate-500">
+                            {[item.selectedColor && `Color: ${item.selectedColor}`, item.selectedSize && `Talla: ${item.selectedSize}`].filter(Boolean).join(' · ')}
+                          </p>
+                        ) : item.product.shortDescription && (
                           <p className="mt-0.5 line-clamp-2 text-[11px] text-slate-500">
                             {item.product.shortDescription}
                           </p>
@@ -160,7 +164,7 @@ export function CartSidebar() {
                         </p>
                       </div>
                       <button
-                        onClick={() => removeItem(item.product.id)}
+                        onClick={() => removeItem(item.product.id, { color: item.selectedColor, size: item.selectedSize })}
                         className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors cursor-pointer bg-white border border-slate-200"
                       >
                         <Trash2 className="h-3 w-3" />
@@ -174,7 +178,7 @@ export function CartSidebar() {
                         title={isKitProduct ? 'Quantidade de kits' : 'Quantidade de unidades'}
                       >
                         <button
-                          onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                          onClick={() => updateQuantity(item.product.id, item.quantity - 1, { color: item.selectedColor, size: item.selectedSize })}
                           className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-slate-800 transition-colors cursor-pointer"
                         >
                           <Minus className="h-3 w-3" />
@@ -183,7 +187,7 @@ export function CartSidebar() {
                           {item.quantity}
                         </span>
                         <button
-                          onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                          onClick={() => updateQuantity(item.product.id, item.quantity + 1, { color: item.selectedColor, size: item.selectedSize })}
                           className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-orange-700 transition-colors cursor-pointer"
                         >
                           <Plus className="h-3 w-3" />

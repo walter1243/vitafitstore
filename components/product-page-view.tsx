@@ -29,16 +29,21 @@ export function ProductPageView({ product }: { product: Product }) {
     setActiveImage(image)
   }
 
+  const variant = {
+    color: product.colorOptions?.length ? selectedColor : undefined,
+    size: needsSize ? selectedSize : undefined,
+  }
+
   function handleAdd() {
     if (!canBuy) return
-    for (let i = 0; i < quantity; i++) addItem(product)
+    for (let i = 0; i < quantity; i++) addItem(product, variant)
     setAdded(true)
     setTimeout(() => setAdded(false), 1800)
   }
 
   function handleBuyNow() {
     if (!canBuy) return
-    for (let i = 0; i < quantity; i++) addItem(product)
+    for (let i = 0; i < quantity; i++) addItem(product, variant)
     router.push('/checkout')
   }
 

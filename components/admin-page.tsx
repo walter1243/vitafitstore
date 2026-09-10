@@ -58,6 +58,8 @@ type Order = {
   product: string;
   sourceStoreUrl?: string;
   sourceProductUrl?: string;
+  selectedColor?: string;
+  selectedSize?: string;
   status: 'pending' | 'shipped' | 'delivered';
   tracking: string;
   total: number;
@@ -1350,7 +1352,15 @@ function OrdersSection({ orders, onUpdateTracking, onRefresh }: {
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4 text-sm">
             <div><div className="mb-1 text-xs font-semibold uppercase tracking-wide text-white/40">Cliente</div><div className="font-medium text-white">{o.customer}</div></div>
-            <div><div className="mb-1 text-xs font-semibold uppercase tracking-wide text-white/40">Produto</div><div className="text-white/70">{o.product}</div></div>
+            <div>
+              <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-white/40">Produto</div>
+              <div className="text-white/70">{o.product}</div>
+              {(o.selectedColor || o.selectedSize) && (
+                <div className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[11px] font-semibold text-amber-300">
+                  {[o.selectedColor && `Color: ${o.selectedColor}`, o.selectedSize && `Talla: ${o.selectedSize}`].filter(Boolean).join(' · ')}
+                </div>
+              )}
+            </div>
             <div><div className="mb-1 text-xs font-semibold uppercase tracking-wide text-white/40">Contato</div><div className="text-white/70">{o.customerEmail || '—'} {o.customerPhone ? `• ${o.customerPhone}` : ''}</div></div>
             <div className="sm:col-span-3"><div className="mb-1 text-xs font-semibold uppercase tracking-wide text-white/40">Endereço</div><div className="text-white/70">{o.addressLine || '—'} {o.postalCode ? `• ${o.postalCode}` : ''} {o.city ? `• ${o.city}` : ''} {o.country ? `• ${o.country}` : ''}</div></div>
           </div>
@@ -1407,6 +1417,14 @@ function OrdersSection({ orders, onUpdateTracking, onRefresh }: {
 
           {supplierPanelOpen[o.id] && (
             <div className="mt-3 space-y-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+              {(o.selectedColor || o.selectedSize) && (
+                <div className="rounded-lg border-2 border-amber-500/40 bg-amber-500/15 p-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-300">⚠ Variante pedida pelo cliente — selecione exatamente isso no fornecedor</p>
+                  <p className="mt-1 text-base font-bold text-white">
+                    {[o.selectedColor && `Color: ${o.selectedColor}`, o.selectedSize && `Talla: ${o.selectedSize}`].filter(Boolean).join('   ·   ')}
+                  </p>
+                </div>
+              )}
               <div>
                 <div className="mb-1.5 flex items-center justify-between">
                   <p className="text-xs font-semibold uppercase tracking-wide text-amber-300/80">Dados de entrega do cliente</p>
@@ -1417,6 +1435,7 @@ function OrdersSection({ orders, onUpdateTracking, onRefresh }: {
                       [o.postalCode, o.city].filter(Boolean).join(' '),
                       o.country,
                       o.customerPhone,
+                      (o.selectedColor || o.selectedSize) && [o.selectedColor && `Color: ${o.selectedColor}`, o.selectedSize && `Talla: ${o.selectedSize}`].filter(Boolean).join(' · '),
                     ].filter(Boolean).join('\n'))}
                     className="flex cursor-pointer items-center gap-1 rounded-md border border-white/10 px-2 py-1 text-[11px] font-medium text-white/70 hover:bg-white/5"
                   >
