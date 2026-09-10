@@ -123,6 +123,18 @@ async function cjGet(path: string, query: Record<string, string | number | undef
   return data.data;
 }
 
+// CJ sometimes returns a price as a range string for products with
+// variants (e.g. "6.77-24.10") instead of a plain number — Number() on
+// that yields NaN, which JSON.stringify silently turns into null,
+// crashing any .toFixed() call on the client. Take the first numeric
+// token found and always fall back to 0 rather than NaN.
+function parseCjPrice(raw: unknown): number {
+  if (typeof raw === 'number') return Number.isFinite(raw) ? raw : 0;
+  const match = String(raw ?? '').match(/[\d.]+/);
+  const value = match ? Number(match[0]) : 0;
+  return Number.isFinite(value) ? value : 0;
+}
+
 export type CjSearchResult = {
   pid: string;
   name: string;
@@ -145,7 +157,7 @@ export async function searchCjProducts(opts: { keyword?: string; page?: number; 
     pid: String(item.id),
     name: String(item.nameEn ?? ''),
     image: String(item.bigImage ?? ''),
-    priceUsd: Number(item.sellPrice ?? item.nowPrice ?? 0),
+    priceUsd: parseCjPrice(item.sellPrice ?? item.nowPrice),
     categoryName: String(item.threeCategoryName ?? ''),
   }));
 }
@@ -174,6 +186,6 @@ export async function getCjProductDetail(pid: string): Promise<CjProductDetail> 
     description: stripCjDescriptionStyles(data.description ?? ''),
     image: String(data.bigImage ?? images[0] ?? ''),
     images: images.filter(Boolean),
-    priceUsd: Number(data.sellPrice ?? 0),
+    priceUsd: parseCjPrice(data.sellPrice),
   };
 }

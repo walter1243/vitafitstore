@@ -2849,8 +2849,8 @@ function ImportSupplierSection({ onImportToStore }: { onImportToStore: (data: Im
                 </div>
                 <div className="p-2.5">
                   <p className="line-clamp-2 text-xs font-medium leading-tight text-white mb-1.5">{p.name}</p>
-                  <p className="text-xs text-white/45">Custo: <span className="font-mono">€{p.price.toFixed(2)}</span></p>
-                  <p className="text-xs text-green-400 font-medium">Venda: <span className="font-mono">€{p.suggestedPrice.toFixed(2)}</span></p>
+                  <p className="text-xs text-white/45">Custo: <span className="font-mono">€{(Number(p.price) || 0).toFixed(2)}</span></p>
+                  <p className="text-xs text-green-400 font-medium">Venda: <span className="font-mono">€{(Number(p.suggestedPrice) || 0).toFixed(2)}</span></p>
                   <button
                     onClick={() => openDrawer(p)}
                     className="mt-2 w-full rounded-lg bg-white/5 px-2 py-1.5 text-xs font-medium text-white/80 transition-colors hover:bg-green-600 hover:text-white"
@@ -2920,18 +2920,18 @@ function ImportSupplierSection({ onImportToStore }: { onImportToStore: (data: Im
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-xl border border-white/10 bg-[#161b28] p-3">
                   <p className="text-xs text-white/45 mb-0.5">Custo (distribuidora)</p>
-                  <p className="text-lg font-bold text-white">€{drawer.price.toFixed(2)}</p>
+                  <p className="text-lg font-bold text-white">€{(Number(drawer.price) || 0).toFixed(2)}</p>
                 </div>
                 <div className="rounded-xl border border-green-500/20 bg-green-500/10 p-3">
                   <p className="text-xs text-green-300/70 mb-0.5">Venda sugerida (+{margin}%)</p>
-                  <p className="text-lg font-bold text-green-300">€{drawer.suggestedPrice.toFixed(2)}</p>
+                  <p className="text-lg font-bold text-green-300">€{(Number(drawer.suggestedPrice) || 0).toFixed(2)}</p>
                 </div>
               </div>
 
               <div>
                 <p className="text-xs text-white/45 mb-1.5">Lucro estimado</p>
                 <p className="text-sm font-semibold text-green-400">
-                  €{(drawer.suggestedPrice - drawer.price).toFixed(2)} por venda
+                  €{((Number(drawer.suggestedPrice) || 0) - (Number(drawer.price) || 0)).toFixed(2)} por venda
                 </p>
               </div>
 
