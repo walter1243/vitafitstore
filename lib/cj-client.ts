@@ -73,9 +73,11 @@ async function cjPost(path: string, body: Record<string, unknown>) {
 }
 
 async function requestFreshTokenFromApiKey() {
-  const apiKey = process.env.CJ_API_KEY;
+  // Accept either name — CJ_API_KEY is the documented one, CJ_KEY is a
+  // shorter alias some environments end up using instead.
+  const apiKey = process.env.CJ_API_KEY || process.env.CJ_KEY;
   if (!apiKey) {
-    throw new CjApiError('CJ_API_KEY não configurada no ambiente.');
+    throw new CjApiError('CJ_API_KEY (ou CJ_KEY) não configurada no ambiente.');
   }
   const data = await cjPost('/authentication/getAccessToken', { apiKey });
   await saveCjTokens(data);
