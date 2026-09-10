@@ -156,6 +156,8 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   const [newColorLabel, setNewColorLabel] = useState('');
   const [newColorImage, setNewColorImage] = useState('');
   const [newColorHex, setNewColorHex] = useState('#c2410c');
+  const [selectedDescImg, setSelectedDescImg] = useState<HTMLImageElement | null>(null);
+  const [descHandlePos, setDescHandlePos] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
   const [pricingForm, setPricingForm] = useState({
     costPrice: '',
     freightShare: '3.00',
@@ -463,15 +465,61 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   // behavior inside a plain contentEditable) so Delete/Backspace reliably
   // removes it, and pasting a new image while it's selected replaces it in
   // place instead of just inserting alongside it.
+  function measureDescHandle(img: HTMLImageElement) {
+    // offsetLeft/Top are relative to the nearest positioned ancestor, which
+    // is the editor div itself (it's given position:relative below) — no
+    // scroll-position math needed since both live in the same coordinate
+    // space.
+    setDescHandlePos({ left: img.offsetLeft, top: img.offsetTop, width: img.offsetWidth, height: img.offsetHeight });
+  }
+
   function handleDescClick(e: React.MouseEvent<HTMLDivElement>) {
     const target = e.target as HTMLElement;
-    if (target.tagName !== 'IMG') return;
+    if (target.tagName !== 'IMG') {
+      setSelectedDescImg(null);
+      setDescHandlePos(null);
+      return;
+    }
+    const img = target as HTMLImageElement;
     const selection = window.getSelection();
-    if (!selection) return;
-    const range = document.createRange();
-    range.selectNode(target);
-    selection.removeAllRanges();
-    selection.addRange(range);
+    if (selection) {
+      const range = document.createRange();
+      range.selectNode(img);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+    setSelectedDescImg(img);
+    measureDescHandle(img);
+  }
+
+  // Word-style resize: drag the handle at the selected image's corner,
+  // width follows the cursor and height is left to "auto" so the aspect
+  // ratio stays intact — no native contentEditable resize handles exist in
+  // modern Chrome, so this is done by hand.
+  function handleDescResizeStart(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    const img = selectedDescImg;
+    if (!img) return;
+    const startX = e.clientX;
+    const startWidth = img.offsetWidth;
+    const containerWidth = descRef.current?.clientWidth ?? startWidth;
+
+    function onMove(ev: MouseEvent) {
+      if (!img) return;
+      const delta = ev.clientX - startX;
+      const nextWidth = Math.max(40, Math.min(containerWidth, startWidth + delta));
+      img.style.width = `${nextWidth}px`;
+      img.style.height = 'auto';
+      measureDescHandle(img);
+    }
+    function onUp() {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      onDescChange(descRef.current?.innerHTML ?? '');
+    }
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
   }
 
   function applyDescCommand(command: string, value?: string) {
@@ -1039,21 +1087,37 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                 </button>
               </div>
 
-              <div
-                ref={descRef}
-                contentEditable
-                suppressContentEditableWarning
-                onPaste={handleDescPaste}
-                onDragOver={handleDescDragOver}
-                onDrop={handleDescDrop}
-                onClick={handleDescClick}
-                onInput={() => onDescChange(descRef.current?.innerHTML ?? '')}
-                className="min-h-[220px] rounded-2xl border border-white/10 bg-[#1c2236] px-4 py-3 text-sm text-white outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40 [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-6 [&_ul]:pl-6 [&_li]:mb-1 [&_img]:cursor-pointer"
-                style={{ lineHeight: '1.7' }}
-                data-placeholder="Descreva benefícios, composição, instruções e provas sociais. Cole ou arraste imagens diretamente aqui."
-              />
+              <div className="relative">
+                <div
+                  ref={descRef}
+                  contentEditable
+                  suppressContentEditableWarning
+                  onPaste={handleDescPaste}
+                  onDragOver={handleDescDragOver}
+                  onDrop={handleDescDrop}
+                  onClick={handleDescClick}
+                  onInput={() => {
+                    onDescChange(descRef.current?.innerHTML ?? '');
+                    if (selectedDescImg && !descRef.current?.contains(selectedDescImg)) {
+                      setSelectedDescImg(null);
+                      setDescHandlePos(null);
+                    }
+                  }}
+                  className="min-h-[220px] rounded-2xl border border-white/10 bg-[#1c2236] px-4 py-3 text-sm text-white outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40 [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-6 [&_ul]:pl-6 [&_li]:mb-1 [&_img]:cursor-pointer"
+                  style={{ lineHeight: '1.7' }}
+                  data-placeholder="Descreva benefícios, composição, instruções e provas sociais. Cole ou arraste imagens diretamente aqui."
+                />
+                {selectedDescImg && descHandlePos && (
+                  <div
+                    onMouseDown={handleDescResizeStart}
+                    className="absolute z-10 h-4 w-4 cursor-nwse-resize rounded-full border-2 border-white bg-green-500"
+                    style={{ left: descHandlePos.left + descHandlePos.width - 8, top: descHandlePos.top + descHandlePos.height - 8 }}
+                    title="Arraste para redimensionar"
+                  />
+                )}
+              </div>
               <div className="mt-3 flex items-center justify-between gap-3 text-xs text-white/45">
-                <span>Clique numa imagem pra selecioná-la — Delete remove, colar outra em cima substitui.</span>
+                <span>Clique numa imagem pra selecioná-la e arrastar a bolinha verde pra redimensionar — Delete remove, colar outra em cima substitui.</span>
                 <span>{stripHtml(desc).length} caracteres</span>
               </div>
             </section>
