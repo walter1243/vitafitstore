@@ -125,17 +125,17 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
   return (
     <section
       ref={sectionRef}
-      className="relative w-full aspect-[4/3] sm:aspect-auto sm:h-[85svh] lg:h-screen flex items-center justify-center overflow-hidden bg-slate-900"
+      className="relative w-full h-[480px] sm:h-[85svh] lg:h-screen flex items-start justify-center sm:items-center overflow-hidden bg-slate-900"
     >
-      {/* The source video is 16:9 (1280x720) — on mobile, object-contain
-         inside a tall viewport-height box left big gray letterbox bars
-         (box way taller/narrower than the video), and plain object-cover
-         in that same tall box cropped away most of the frame's width
-         (~64%) to fill it. Sizing the mobile box to 4:3 instead — much
-         closer to the video's own 16:9 shape — lets object-cover fill it
-         edge-to-edge while cropping only ~12% off each side, barely
-         noticeable. From sm: up there's enough viewport width that the
-         original viewport-height sizing crops very little anyway. */}
+      {/* The source video is 16:9 (1280x720). On mobile a fixed, moderate
+         height (not scaled to viewport height, which ballooned up to
+         ~600px+ on tall phones) keeps the object-cover crop reasonable
+         (~27% off each side instead of ~64%) while staying tall enough
+         for the fixed header + two thin top bars to float over it without
+         swallowing the title — see the content wrapper's pt- below, sized
+         to that same header stack. From sm: up there's enough viewport
+         width that the original viewport-height sizing crops very little
+         anyway. */}
       {needsVideo && (
         <video
           ref={videoRef}
@@ -188,8 +188,13 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
         <div className="animate-blob animation-delay-2000 absolute top-10 right-1/4 h-64 w-64 rounded-full bg-orange-600/10 blur-[100px]" />
       </div>
 
-      {/* Main content */}
-      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+      {/* Main content — pt-[104px] on mobile reserves space for the fixed
+         header + its two thin top bars (Christmas countdown + free-shipping
+         announcement) floating over the hero, so the title never ends up
+         hidden behind them on the now-shorter mobile hero. Both bars are
+         gone by sm: (header becomes much shorter there too, and the hero
+         itself is tall enough that centering clears it on its own). */}
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pt-[104px] sm:px-6 sm:pt-0 lg:px-8">
       <div
         ref={textRef}
         className="text-white text-center flex flex-col items-center max-w-5xl mx-auto"
