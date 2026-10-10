@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { ChevronDown, Flame, Instagram, Mail, MessageCircle, PhoneCall } from 'lucide-react'
+import { ChevronDown, Instagram, Mail, MessageCircle, PhoneCall } from 'lucide-react'
 import { ScrollReveal } from '@/components/scroll-reveal'
 import { PAYMENT_LOGOS } from '@/components/payment-logos'
 import { DEFAULT_FOOTER, type FooterContent } from '@/lib/site-content-defaults'
@@ -84,6 +84,8 @@ function normalizeInstagramHref(input: string) {
 export function Footer({ content }: { content?: FooterContent }) {
   const footerContent = { ...DEFAULT_FOOTER, ...content }
   const [storeName, setStoreName] = useState('Nuestra Tienda')
+  const [logoUrl, setLogoUrl] = useState('')
+  const [themeColor, setThemeColor] = useState('#c2410c')
   const [instagram, setInstagram] = useState('')
   const [whatsapp, setWhatsapp] = useState('')
   const [email, setEmail] = useState('')
@@ -119,6 +121,8 @@ export function Footer({ content }: { content?: FooterContent }) {
         if (settingsRes.ok) {
           const data = await settingsRes.json()
           setStoreName(data?.storeName ?? 'Nuestra Tienda')
+          setLogoUrl(data?.logoUrl ?? '')
+          setThemeColor(data?.themeColor ?? '#c2410c')
           setInstagram(data?.instagram ?? '')
           setWhatsapp(data?.whatsapp ?? '')
           setEmail(data?.email ?? '')
@@ -181,24 +185,29 @@ export function Footer({ content }: { content?: FooterContent }) {
 
   return (
     <footer className="border-t border-slate-200 bg-white">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <ScrollReveal className="grid gap-8 md:grid-cols-2 lg:grid-cols-6">
-          {/* Brand */}
-          <div className="lg:col-span-2">
-            <Link href="/" className="mb-4 flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-700">
-                <Flame className="h-5 w-5 text-white" />
+      {/* Band 1 — Brand: logo, description and social, laid out horizontally */}
+      <div className="border-b border-slate-100" style={{ background: 'rgba(194,65,12,0.025)' }}>
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          <ScrollReveal className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <Link href="/" className="flex shrink-0 items-center gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg overflow-hidden" style={{ background: themeColor }}>
+                {logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={logoUrl} alt="Logo" className="h-full w-full object-cover" />
+                ) : (
+                  <span className="text-sm font-black text-white">{storeName.charAt(0).toUpperCase()}</span>
+                )}
               </div>
               <span className="text-xl font-bold text-slate-900">
                 {storeName}
               </span>
             </Link>
-            <p className="mb-6 max-w-xs text-sm text-slate-500">
+
+            <p className="max-w-md text-sm text-slate-500">
               {footerContent.brandDescription}
             </p>
 
-            {/* Social Links */}
-            <div className="flex items-center gap-4">
+            <div className="flex shrink-0 items-center gap-3">
               {socialLinks.map((social) => (
                 <a
                   key={social.label}
@@ -212,87 +221,99 @@ export function Footer({ content }: { content?: FooterContent }) {
                 </a>
               ))}
             </div>
-          </div>
+          </ScrollReveal>
+        </div>
+      </div>
 
-          {/* Links — click a section to expand it inline (accordion), same behavior at every screen size */}
-          {(Object.keys(dynamicSections) as FooterSectionKey[]).map((sectionKey) => {
-            const isOpen = openSections.has(sectionKey)
-            const section = dynamicSections[sectionKey]
-            return (
-              <div key={sectionKey} id={sectionKey === 'ayuda' ? 'ayuda-soporte' : undefined} className="scroll-mt-24">
-                <button
-                  type="button"
-                  onClick={() => toggleSection(sectionKey)}
-                  aria-expanded={isOpen}
-                  className="flex w-full items-center justify-between gap-2 text-left font-semibold text-slate-800 transition-colors hover:text-orange-700 cursor-pointer"
-                >
-                  {section.title}
-                  <ChevronDown
-                    className={`h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-                  />
-                </button>
-                <p className="mt-2 text-sm text-slate-500">{section.description}</p>
+      {/* Band 2 — Links: Productos / Ayuda / Legal, three columns in one row */}
+      <div className="border-b border-slate-100">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          <ScrollReveal className="grid grid-cols-1 gap-8 sm:grid-cols-3">
+            {(Object.keys(dynamicSections) as FooterSectionKey[]).map((sectionKey) => {
+              const isOpen = openSections.has(sectionKey)
+              const section = dynamicSections[sectionKey]
+              return (
+                <div key={sectionKey} id={sectionKey === 'ayuda' ? 'ayuda-soporte' : undefined} className="scroll-mt-24">
+                  <button
+                    type="button"
+                    onClick={() => toggleSection(sectionKey)}
+                    aria-expanded={isOpen}
+                    className="flex w-full items-center justify-between gap-2 text-left font-semibold text-slate-800 transition-colors hover:text-orange-700 cursor-pointer"
+                  >
+                    {section.title}
+                    <ChevronDown
+                      className={`h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+                  <p className="mt-2 text-sm text-slate-500">{section.description}</p>
 
-                <div
-                  className={`overflow-hidden transition-all duration-300 ${isOpen ? 'mt-3' : ''}`}
-                  style={{ maxHeight: isOpen ? '600px' : '0px', opacity: isOpen ? 1 : 0 }}
-                >
-                  <div className="space-y-2">
-                    {section.items.map((item) => (
-                      <div key={item.title} className="rounded-lg border border-slate-200 bg-slate-50/60 p-3">
-                        {item.href ? (
-                          <Link href={item.href} className="text-sm font-semibold text-slate-800 transition-colors hover:text-orange-700">
-                            {item.title}
-                          </Link>
-                        ) : (
-                          <p className="text-sm font-semibold text-slate-800">{item.title}</p>
-                        )}
-                        <p className="mt-1 text-xs leading-relaxed text-slate-500">{item.description}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {sectionKey === 'ayuda' && (
-                    <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                      {whatsapp.trim() && (
-                        <a
-                          href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center gap-2 rounded-lg bg-orange-700 px-3 py-2 text-xs font-semibold text-white hover:bg-orange-600"
-                        >
-                          <MessageCircle size={14} /> WhatsApp SAC
-                        </a>
-                      )}
-                      {instagramHref && (
-                        <a
-                          href={instagramHref}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                        >
-                          <Instagram size={14} /> Instagram
-                        </a>
-                      )}
-                      {emailHref && (
-                        <a
-                          href={emailHref}
-                          className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                        >
-                          <Mail size={14} /> Email SAC
-                        </a>
-                      )}
+                  <div
+                    className={`overflow-hidden transition-all duration-300 ${isOpen ? 'mt-3' : ''}`}
+                    style={{ maxHeight: isOpen ? '600px' : '0px', opacity: isOpen ? 1 : 0 }}
+                  >
+                    <div className="space-y-2">
+                      {section.items.map((item) => (
+                        <div key={item.title} className="rounded-lg border border-slate-200 bg-slate-50/60 p-3">
+                          {item.href ? (
+                            <Link href={item.href} className="text-sm font-semibold text-slate-800 transition-colors hover:text-orange-700">
+                              {item.title}
+                            </Link>
+                          ) : (
+                            <p className="text-sm font-semibold text-slate-800">{item.title}</p>
+                          )}
+                          <p className="mt-1 text-xs leading-relaxed text-slate-500">{item.description}</p>
+                        </div>
+                      ))}
                     </div>
-                  )}
-                </div>
-              </div>
-            )
-          })}
 
-          {/* Seguridad y logística */}
-          <div>
-            <p className="mb-2 font-semibold text-slate-800">Seguridad y Logística</p>
-            <p className="mb-3 text-sm text-slate-500">Pago encriptado y envío con seguimiento en toda España.</p>
+                    {sectionKey === 'ayuda' && (
+                      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                        {whatsapp.trim() && (
+                          <a
+                            href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-orange-700 px-3 py-2 text-xs font-semibold text-white hover:bg-orange-600"
+                          >
+                            <MessageCircle size={14} /> WhatsApp SAC
+                          </a>
+                        )}
+                        {instagramHref && (
+                          <a
+                            href={instagramHref}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                          >
+                            <Instagram size={14} /> Instagram
+                          </a>
+                        )}
+                        {emailHref && (
+                          <a
+                            href={emailHref}
+                            className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                          >
+                            <Mail size={14} /> Email SAC
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </ScrollReveal>
+        </div>
+      </div>
+
+      {/* Band 3 — Pagos y seguridad, one horizontal row */}
+      <div className="border-b border-slate-100" style={{ background: 'rgba(15,81,50,0.03)' }}>
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-semibold text-slate-800">Seguridad y Logística</p>
+              <p className="text-sm text-slate-500">Pago encriptado y envío con seguimiento en toda España.</p>
+            </div>
             <div className="flex flex-wrap gap-1.5">
               {PAYMENT_LOGOS.map(({ key, label, Logo }) => (
                 <span key={key} title={label} className="overflow-hidden rounded-md">
@@ -301,31 +322,31 @@ export function Footer({ content }: { content?: FooterContent }) {
               ))}
             </div>
           </div>
-        </ScrollReveal>
+        </div>
+      </div>
 
-        {/* Bottom */}
-        <div className="mt-12 border-t border-slate-200 pt-8">
-          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-            <p className="text-sm text-slate-500">
-              © 2026 {storeName}. {footerContent.copyrightNote}
-            </p>
-            <div className="flex items-center gap-4">
-              {whatsapp.trim() && (
-                <a
-                  href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-orange-700"
-                >
-                  <PhoneCall className="h-3.5 w-3.5" /> Soporte por WhatsApp
-                </a>
-              )}
-              {emailHref && (
-                <a href={emailHref} className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-orange-700">
-                  <Mail className="h-3.5 w-3.5" /> {email}
-                </a>
-              )}
-            </div>
+      {/* Band 4 — Copyright + contacto, one horizontal row */}
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+          <p className="text-sm text-slate-500">
+            © 2026 {storeName}. {footerContent.copyrightNote}
+          </p>
+          <div className="flex items-center gap-4">
+            {whatsapp.trim() && (
+              <a
+                href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-orange-700"
+              >
+                <PhoneCall className="h-3.5 w-3.5" /> Soporte por WhatsApp
+              </a>
+            )}
+            {emailHref && (
+              <a href={emailHref} className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-orange-700">
+                <Mail className="h-3.5 w-3.5" /> {email}
+              </a>
+            )}
           </div>
         </div>
       </div>

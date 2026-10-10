@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Header } from '@/components/header'
 import HeroVideo from '../components/hero-video'
-import { ChristmasPromo } from '@/components/christmas-promo'
+import { GiftBasketBanner } from '@/components/gift-basket-banner'
 import { Snowfall } from '@/components/snowfall'
 import { TrustBadges } from '@/components/trust-badges'
 import ProductCarousels from '../components/product-carousels'
@@ -77,7 +77,7 @@ export default async function HomePage() {
           {visibleBlocks.map(block => (
             <div key={block.key}>
               {map[block.key]}
-              {block.key === 'hero' && <ChristmasPromo />}
+              {block.key === 'hero' && <GiftBasketBanner />}
             </div>
           ))}
           <FeaturedProductsGrid />

@@ -1,8 +1,9 @@
 'use client';
 import Link from 'next/link';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { ShoppingCart, Menu, X, Flame } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
+import { ChristmasPromo } from '@/components/christmas-promo';
 
 type CategoryMeta = {
   name: string;
@@ -72,6 +73,24 @@ export function Header() {
   const [categories, setCategories] = useState<CategoryMeta[]>([]);
   const [products, setProducts] = useState<DbProduct[]>([]);
   const [announcement, setAnnouncement] = useState('');
+
+  // The header floats fixed below whatever stack of thin bars (free-shipping
+  // announcement, Christmas countdown) is showing — both can appear
+  // independently, so the offset is measured instead of hardcoded, and
+  // updates itself whenever a bar is added/removed (e.g. the countdown
+  // disappearing once Christmas passes).
+  const topBarRef = useRef<HTMLDivElement>(null);
+  const [topBarHeight, setTopBarHeight] = useState(0);
+
+  useEffect(() => {
+    const el = topBarRef.current;
+    if (!el) return;
+    const update = () => setTopBarHeight(el.offsetHeight);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     fetch('/api/site-content', { cache: 'no-store' })
@@ -180,14 +199,18 @@ export function Header() {
 
   return (
     <>
-      {announcement && (
-        <div className="fixed top-0 left-0 right-0 z-[60] bg-[#431407] px-4 py-1 text-center text-[10px] font-medium tracking-wide text-white sm:text-[11px]">
-          {announcement}
-        </div>
-      )}
+      <div ref={topBarRef} className="fixed top-0 left-0 right-0 z-[60]">
+        <ChristmasPromo />
+        {announcement && (
+          <div className="bg-[#431407] px-4 py-1 text-center text-[10px] font-medium tracking-wide text-white sm:text-[11px]">
+            {announcement}
+          </div>
+        )}
+      </div>
       <header
-        className={`fixed left-0 right-0 z-50 transition-all duration-500 ${announcement ? 'top-5 sm:top-6' : 'top-0'}`}
+        className="fixed left-0 right-0 z-50 transition-all duration-500"
         style={{
+          top: topBarHeight,
           background: scrolled
             ? 'rgba(251, 248, 245, 0.92)'
             : 'rgba(251, 248, 245, 0.65)',
