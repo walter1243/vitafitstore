@@ -7,7 +7,6 @@ import { TrustBadges } from '@/components/trust-badges'
 import ProductCarousels from '../components/product-carousels'
 import { CategorySpotlight } from '@/components/category-spotlight'
 import { FeaturedProductsGrid } from '@/components/featured-products-grid'
-import { Newsletter } from '@/components/newsletter'
 import { Footer } from '@/components/footer'
 import { CartSidebar } from '@/components/cart-sidebar'
 import { UpsellPopup } from '@/components/upsell-popup'
@@ -64,7 +63,10 @@ export default async function HomePage() {
       </section>
     ),
     pin: <CategorySpotlight />,
-    newsletter: <Newsletter data={content.newsletter} />,
+    // The old newsletter card ("Prepárate para el frío") is retired in
+    // favor of the Christmas gift-basket banner — same slot, same toggle
+    // in Admin → Blocos da Home, now a real photo instead of a flat card.
+    newsletter: <GiftBasketBanner />,
   }
 
   const visibleBlocks = blocks.filter(b => b.enabled)
@@ -75,10 +77,7 @@ export default async function HomePage() {
         <Header />
         <main className="flex-1">
           {visibleBlocks.map(block => (
-            <div key={block.key}>
-              {map[block.key]}
-              {block.key === 'hero' && <GiftBasketBanner />}
-            </div>
+            <div key={block.key}>{map[block.key]}</div>
           ))}
           <FeaturedProductsGrid />
         </main>
