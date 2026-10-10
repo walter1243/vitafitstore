@@ -125,21 +125,21 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
   return (
     <section
       ref={sectionRef}
-      className="relative w-full h-[480px] sm:h-[85svh] lg:h-screen flex items-start justify-center sm:items-center overflow-hidden bg-slate-900"
+      className="relative w-full h-[480px] sm:h-[85svh] lg:h-screen flex items-start justify-center sm:items-center overflow-hidden"
+      style={{ background: 'linear-gradient(160deg, #211611 0%, #120d0a 100%)' }}
     >
-      {/* The source video is 16:9 (1280x720). On mobile a fixed, moderate
-         height (not scaled to viewport height, which ballooned up to
-         ~600px+ on tall phones) keeps the object-cover crop reasonable
-         (~27% off each side instead of ~64%) while staying tall enough
-         for the fixed header + two thin top bars to float over it without
-         swallowing the title — see the content wrapper's pt- below, sized
-         to that same header stack. From sm: up there's enough viewport
-         width that the original viewport-height sizing crops very little
-         anyway. */}
+      {/* The source video is 16:9 (1280x720) and has its own baked-in brand
+         text near the bottom of frame — cropping it with object-cover (the
+         sm:+ behavior) cuts that text off unevenly on a narrow mobile box.
+         object-contain on mobile shows the whole frame uncropped instead,
+         shrunk to fit; the warm dark gradient behind it (matching the rest
+         of the hero's palette) fills the letterbox bars instead of looking
+         like empty space. From sm: up the viewport is wide enough that
+         object-cover's crop is minor and the full-bleed look is worth it. */}
       {needsVideo && (
         <video
           ref={videoRef}
-          className={`absolute inset-0 w-full h-full object-cover z-0 ${videoVisibilityClass}`}
+          className={`absolute inset-0 w-full h-full object-contain sm:object-cover z-0 ${videoVisibilityClass}`}
           style={{
             objectPosition:
               hero.videoPosition === 'top' ? 'center 15%' : hero.videoPosition === 'bottom' ? 'center 85%' : 'center center',
@@ -161,11 +161,9 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
           <img
             src={heroImage}
             alt=""
-            className={`absolute inset-0 w-full h-full object-cover z-0 ${imageVisibilityClass}`}
+            className={`absolute inset-0 w-full h-full object-contain sm:object-cover z-0 ${imageVisibilityClass}`}
           />
-        ) : (
-          <div className={`absolute inset-0 z-0 bg-slate-900 ${imageVisibilityClass}`} />
-        )
+        ) : null
       )}
 
       {/* Gradient overlay — flat vertical tint instead of a diagonal wash, so
