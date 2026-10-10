@@ -125,17 +125,18 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
   return (
     <section
       ref={sectionRef}
-      className="relative w-full h-[72svh] min-h-[460px] sm:h-[85svh] lg:h-screen flex items-center justify-center overflow-hidden"
+      className="relative w-full h-[72svh] min-h-[460px] sm:h-[85svh] lg:h-screen flex items-center justify-center overflow-hidden bg-slate-900"
     >
-      {/* Video — object-cover always fills the section on any screen size/
-         orientation without letterboxing; videoPosition controls which part
-         of the frame gets cropped when the video's aspect ratio doesn't
-         match the viewport's. Only mounted when at least mobile or desktop
-         is actually set to video. */}
+      {/* Video — object-contain on mobile so the whole frame stays visible
+         (no cropping on a narrow/short viewport); object-cover kicks back
+         in from sm: up for the full-bleed desktop look, where the wider
+         viewport leaves much less of the frame to crop. The section's dark
+         bg fills any letterbox bars on mobile. videoPosition only matters
+         once object-cover is active. */}
       {needsVideo && (
         <video
           ref={videoRef}
-          className={`absolute inset-0 w-full h-full object-cover z-0 ${videoVisibilityClass}`}
+          className={`absolute inset-0 w-full h-full object-contain sm:object-cover z-0 ${videoVisibilityClass}`}
           style={{
             objectPosition:
               hero.videoPosition === 'top' ? 'center 15%' : hero.videoPosition === 'bottom' ? 'center 85%' : 'center center',
@@ -157,7 +158,7 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
           <img
             src={heroImage}
             alt=""
-            className={`absolute inset-0 w-full h-full object-cover z-0 ${imageVisibilityClass}`}
+            className={`absolute inset-0 w-full h-full object-contain sm:object-cover z-0 ${imageVisibilityClass}`}
           />
         ) : (
           <div className={`absolute inset-0 z-0 bg-slate-900 ${imageVisibilityClass}`} />
