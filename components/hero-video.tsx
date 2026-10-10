@@ -125,18 +125,21 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
   return (
     <section
       ref={sectionRef}
-      className="relative w-full h-[72svh] min-h-[460px] sm:h-[85svh] lg:h-screen flex items-center justify-center overflow-hidden bg-slate-900"
+      className="relative w-full aspect-[4/3] sm:aspect-auto sm:h-[85svh] lg:h-screen flex items-center justify-center overflow-hidden bg-slate-900"
     >
-      {/* Video — object-contain on mobile so the whole frame stays visible
-         (no cropping on a narrow/short viewport); object-cover kicks back
-         in from sm: up for the full-bleed desktop look, where the wider
-         viewport leaves much less of the frame to crop. The section's dark
-         bg fills any letterbox bars on mobile. videoPosition only matters
-         once object-cover is active. */}
+      {/* The source video is 16:9 (1280x720) — on mobile, object-contain
+         inside a tall viewport-height box left big gray letterbox bars
+         (box way taller/narrower than the video), and plain object-cover
+         in that same tall box cropped away most of the frame's width
+         (~64%) to fill it. Sizing the mobile box to 4:3 instead — much
+         closer to the video's own 16:9 shape — lets object-cover fill it
+         edge-to-edge while cropping only ~12% off each side, barely
+         noticeable. From sm: up there's enough viewport width that the
+         original viewport-height sizing crops very little anyway. */}
       {needsVideo && (
         <video
           ref={videoRef}
-          className={`absolute inset-0 w-full h-full object-contain sm:object-cover z-0 ${videoVisibilityClass}`}
+          className={`absolute inset-0 w-full h-full object-cover z-0 ${videoVisibilityClass}`}
           style={{
             objectPosition:
               hero.videoPosition === 'top' ? 'center 15%' : hero.videoPosition === 'bottom' ? 'center 85%' : 'center center',
@@ -158,7 +161,7 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
           <img
             src={heroImage}
             alt=""
-            className={`absolute inset-0 w-full h-full object-contain sm:object-cover z-0 ${imageVisibilityClass}`}
+            className={`absolute inset-0 w-full h-full object-cover z-0 ${imageVisibilityClass}`}
           />
         ) : (
           <div className={`absolute inset-0 z-0 bg-slate-900 ${imageVisibilityClass}`} />
