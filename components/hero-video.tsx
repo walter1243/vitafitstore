@@ -188,13 +188,16 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
         <div className="animate-blob animation-delay-2000 absolute top-10 right-1/4 h-64 w-64 rounded-full bg-orange-600/10 blur-[100px]" />
       </div>
 
-      {/* Main content — pt-[104px] on mobile reserves space for the fixed
+      {/* Main content — pt-[140px] on mobile reserves space for the fixed
          header + its two thin top bars (Christmas countdown + free-shipping
          announcement) floating over the hero, so the title never ends up
-         hidden behind them on the now-shorter mobile hero. Both bars are
-         gone by sm: (header becomes much shorter there too, and the hero
-         itself is tall enough that centering clears it on its own). */}
-      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pt-[104px] sm:px-6 sm:pt-0 lg:px-8">
+         hidden behind them on the now-shorter mobile hero. Measured stack:
+         ~34px countdown + ~22px announcement + ~62px header row (42px logo
+         + padding) ≈ 118px — 140px leaves real breathing room instead of
+         sitting right at the edge. Both bars are gone by sm: (header
+         becomes much shorter there too, and the hero itself is tall enough
+         that centering clears it on its own). */}
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pt-[140px] sm:px-6 sm:pt-0 lg:px-8">
       <div
         ref={textRef}
         className="text-white text-center flex flex-col items-center max-w-5xl mx-auto"
