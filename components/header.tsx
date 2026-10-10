@@ -201,13 +201,13 @@ export function Header() {
           <div className={`flex items-center justify-between transition-all duration-400 ${scrolled ? 'py-2' : 'py-2.5'}`}>
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg group-hover:opacity-90 transition-colors duration-200 overflow-hidden"
+              <div className="flex h-[42px] w-[42px] items-center justify-center rounded-lg group-hover:opacity-90 transition-colors duration-200 overflow-hidden"
                 style={{ background: themeColor }}>
                 {logoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={logoUrl} alt="Logo" className="h-full w-full object-cover" />
                 ) : (
-                  <Flame className="h-4 w-4 text-white" />
+                  <Flame className="h-5 w-5 text-white" />
                 )}
               </div>
               <span className="text-lg font-bold">

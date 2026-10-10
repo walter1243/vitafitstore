@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react'
 import { Header } from '@/components/header'
 import HeroVideo from '../components/hero-video'
+import { ChristmasPromo } from '@/components/christmas-promo'
+import { Snowfall } from '@/components/snowfall'
 import { TrustBadges } from '@/components/trust-badges'
 import ProductCarousels from '../components/product-carousels'
 import { CategorySpotlight } from '@/components/category-spotlight'
@@ -69,10 +71,14 @@ export default async function HomePage() {
 
   return (
     <div className="flex min-h-screen flex-col">
+        <Snowfall />
         <Header />
         <main className="flex-1">
           {visibleBlocks.map(block => (
-            <div key={block.key}>{map[block.key]}</div>
+            <div key={block.key}>
+              {map[block.key]}
+              {block.key === 'hero' && <ChristmasPromo />}
+            </div>
           ))}
           <FeaturedProductsGrid />
         </main>

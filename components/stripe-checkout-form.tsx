@@ -10,6 +10,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
+import { Snowfall } from '@/components/snowfall';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '');
 
@@ -490,8 +491,40 @@ function PaymentStepInner({
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
+const BRANDING_CACHE_KEY = 'store_branding_cache';
+
+function readCachedBranding() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.sessionStorage.getItem(BRANDING_CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
 function CheckoutFormInner() {
   const { items, totalPrice, clearCart } = useCart();
+
+  // Same branding cache the header writes to — without it this previously
+  // hardcoded "V" / "Nuestra Tienda", never reflecting the real store name
+  // or logo (including seasonal ones set from the admin panel).
+  const cachedBranding = readCachedBranding();
+  const [storeName, setStoreName] = useState(cachedBranding?.storeName ?? 'Nuestra Tienda');
+  const [logoUrl, setLogoUrl] = useState(cachedBranding?.logoUrl ?? '');
+  const [themeColor, setThemeColor] = useState(cachedBranding?.themeColor ?? '#c2410c');
+
+  useEffect(() => {
+    fetch('/api/store-settings', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data) return;
+        setStoreName(data.storeName ?? 'Nuestra Tienda');
+        setLogoUrl(data.logoUrl ?? '');
+        setThemeColor(data.themeColor ?? '#c2410c');
+      })
+      .catch(() => {});
+  }, []);
 
   const [step, setStep] = useState<1 | 2>(1);
   const [clientSecret,   setClientSecret]   = useState<string | null>(null);
@@ -732,11 +765,31 @@ function CheckoutFormInner() {
   // ── Layout ──────────────────────────────────────────────────
   return (
     <div className="min-h-screen py-8 sm:py-12 px-4" style={{ background:'#FAF8F5' }}>
+      <Snowfall count={22} />
+
+      {/* Seasonal strip — festive touch through checkout, same red/green/gold
+         palette as the homepage Christmas promo. Purely decorative, doesn't
+         touch pricing or order logic. */}
+      <div className="max-w-5xl mx-auto mb-4">
+        <div className="flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs sm:text-sm font-semibold text-white"
+          style={{ background: 'linear-gradient(90deg, #7a1225, #0f5132)' }}>
+          🎄 Envolvemos tu pedido con cariño navideño — entrega cuidada para estas fiestas
+        </div>
+      </div>
+
       <div className="max-w-5xl mx-auto">
         <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <Link href="/" className="flex items-center gap-2 text-orange-600 font-bold text-lg">
-            <div className="w-8 h-8 rounded-lg bg-orange-700 flex items-center justify-center text-white font-black text-sm">V</div>
-            Nuestra Tienda
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-black text-sm overflow-hidden"
+              style={{ background: themeColor }}>
+              {logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logoUrl} alt="Logo" className="h-full w-full object-cover" />
+              ) : (
+                storeName.charAt(0).toUpperCase()
+              )}
+            </div>
+            {storeName}
           </Link>
           <div className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold text-orange-600"
             style={{ background:'rgba(194,65,12,0.08)', border:'1px solid rgba(194,65,12,0.2)' }}>

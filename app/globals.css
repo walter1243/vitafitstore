@@ -263,6 +263,13 @@ button, [role="button"], a, [onClick] {
 .animation-delay-2000 { animation-delay: 2s; }
 .animation-delay-4000 { animation-delay: 4s; }
 
+/* ─── Christmas snowfall ──────────────────────────── */
+@keyframes snow-fall {
+  0%   { transform: translate(0, 0); }
+  50%  { transform: translate(var(--drift), 50vh); }
+  100% { transform: translate(0, 110vh); }
+}
+
 /* ─── Step Progress ──────────────────────────────── */
 @keyframes step-fill {
   from { width: 0%; }
