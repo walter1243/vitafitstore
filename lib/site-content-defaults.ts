@@ -71,6 +71,10 @@ export const DEFAULT_HERO: HeroContent = {
 
 export type DestaqueFeature = {
   icon: IconKey;
+  // A custom uploaded badge/seal image overrides the preset icon when set —
+  // lets the store use its own AI-generated seal art instead of a generic
+  // lucide icon.
+  imageUrl?: string;
   title: string;
   desc: string;
 };
@@ -110,6 +114,14 @@ export const DEFAULT_DESTAQUES: DestaquesContent = {
       desc: 'Cobertura europea total.',
     },
   ],
+};
+
+export type ProductsIntroContent = {
+  eyebrow: string;
+};
+
+export const DEFAULT_PRODUCTS_INTRO: ProductsIntroContent = {
+  eyebrow: 'Calidez y eficiencia para tu hogar',
 };
 
 export type TrustBadge = {
@@ -234,6 +246,7 @@ export const DEFAULT_ABOUT: AboutContent = {
 
 export type SiteContent = {
   hero: HeroContent;
+  productsIntro: ProductsIntroContent;
   destaques: DestaquesContent;
   trustBadges: TrustBadgesContent;
   about: AboutContent;
@@ -243,6 +256,7 @@ export type SiteContent = {
 
 export const DEFAULT_SITE_CONTENT: SiteContent = {
   hero: DEFAULT_HERO,
+  productsIntro: DEFAULT_PRODUCTS_INTRO,
   destaques: DEFAULT_DESTAQUES,
   trustBadges: DEFAULT_TRUST_BADGES,
   about: DEFAULT_ABOUT,

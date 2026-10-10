@@ -3,11 +3,12 @@
 import { useEffect, useState } from 'react'
 import { Header } from '@/components/header'
 import HeroVideo from '@/components/hero-video'
+import { GiftBasketBanner } from '@/components/gift-basket-banner'
+import { DestacadosSection } from '@/components/destacados-section'
 import { TrustBadges } from '@/components/trust-badges'
 import ProductCarousels from '@/components/product-carousels'
 import { CategorySpotlight } from '@/components/category-spotlight'
 import { FeaturedProductsGrid } from '@/components/featured-products-grid'
-import { Newsletter } from '@/components/newsletter'
 import { Footer } from '@/components/footer'
 import type { SiteContent } from '@/lib/site-content-defaults'
 
@@ -45,12 +46,13 @@ export default function PreviewPage() {
       <Header />
       <main className="flex-1">
         <HeroVideo content={content.hero} />
+        <GiftBasketBanner />
         <TrustBadges data={content.trustBadges} />
         <section id="productos">
           <ProductCarousels />
         </section>
+        <DestacadosSection data={content.destaques} />
         <CategorySpotlight />
-        <Newsletter data={content.newsletter} />
         <FeaturedProductsGrid />
       </main>
       <Footer content={content.footer} />

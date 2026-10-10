@@ -7,6 +7,7 @@ import {
   type SiteContent,
 } from '@/lib/site-content-defaults';
 import { HeroForm } from './content/HeroForm';
+import { ProductsIntroForm } from './content/ProductsIntroForm';
 import { DestaquesForm } from './content/DestaquesForm';
 import { TrustBadgesForm } from './content/TrustBadgesForm';
 import { AboutForm } from './content/AboutForm';
@@ -17,6 +18,7 @@ type SectionKey = keyof SiteContent;
 
 const SECTION_META: Record<SectionKey, { label: string; desc: string; icon: typeof Video }> = {
   hero: { label: 'Hero principal', desc: 'Vídeo, título, subtítulo e botão de ação da vitrine.', icon: Video },
+  productsIntro: { label: 'Texto dos produtos', desc: 'Pequena chamada que aparece acima de cada categoria.', icon: Sparkles },
   destaques: { label: 'Destacados', desc: 'Os 4 cards de diferenciais logo abaixo dos produtos.', icon: Sparkles },
   trustBadges: { label: 'Selos de confiança', desc: 'Faixa de selos (envio, garantia, pagamento...).', icon: PanelBottom },
   about: { label: 'Sobre a loja', desc: 'Seção "Nosotros": textos, diferenciais e cartão visual.', icon: Users },
@@ -24,7 +26,7 @@ const SECTION_META: Record<SectionKey, { label: string; desc: string; icon: type
   footer: { label: 'Rodapé', desc: 'Descrição da marca, colunas e nota de direitos autorais.', icon: PanelBottom },
 };
 
-const SECTION_ORDER: SectionKey[] = ['hero', 'destaques', 'trustBadges', 'about', 'newsletter', 'footer'];
+const SECTION_ORDER: SectionKey[] = ['hero', 'productsIntro', 'destaques', 'trustBadges', 'about', 'newsletter', 'footer'];
 const DRAFT_STORAGE_KEY = 'vitafit-admin-site-content-draft';
 
 // Drafts saved to localStorage before media fields switched from
@@ -286,6 +288,9 @@ export function ContentEditor() {
 
             {editingSection === 'hero' && (
               <HeroForm data={draft as SiteContent['hero']} onChange={(d) => setDraft(d)} />
+            )}
+            {editingSection === 'productsIntro' && (
+              <ProductsIntroForm data={draft as SiteContent['productsIntro']} onChange={(d) => setDraft(d)} />
             )}
             {editingSection === 'destaques' && (
               <DestaquesForm data={draft as SiteContent['destaques']} onChange={(d) => setDraft(d)} />

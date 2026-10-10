@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Header } from '@/components/header'
 import HeroVideo from '../components/hero-video'
 import { GiftBasketBanner } from '@/components/gift-basket-banner'
+import { DestacadosSection } from '@/components/destacados-section'
 import { Snowfall } from '@/components/snowfall'
 import { TrustBadges } from '@/components/trust-badges'
 import ProductCarousels from '../components/product-carousels'
@@ -58,9 +59,12 @@ export default async function HomePage() {
     hero: <HeroVideo content={content.hero} />,
     trust: <TrustBadges data={content.trustBadges} />,
     products: (
-      <section id="productos">
-        <ProductCarousels />
-      </section>
+      <>
+        <section id="productos">
+          <ProductCarousels />
+        </section>
+        <DestacadosSection data={content.destaques} />
+      </>
     ),
     pin: <CategorySpotlight />,
     // The old newsletter card ("Prepárate para el frío") is retired in

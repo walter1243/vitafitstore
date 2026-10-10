@@ -19,6 +19,14 @@ export default function ProductCarousels() {
   const [dbProducts, setDbProducts] = useState<DbProduct[]>([]);
   const [categoryMetaByKey, setCategoryMetaByKey] = useState<Record<string, CategoryMeta>>({});
   const [orderedCategories, setOrderedCategories] = useState<CategoryMeta[]>([]);
+  const [eyebrow, setEyebrow] = useState('Calidez y eficiencia para tu hogar');
+
+  useEffect(() => {
+    fetch('/api/site-content', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (data?.productsIntro?.eyebrow) setEyebrow(data.productsIntro.eyebrow); })
+      .catch(() => {});
+  }, []);
 
   function titleFor(category: string) {
     if (category === 'geral') return 'Productos';
@@ -149,7 +157,7 @@ export default function ProductCarousels() {
           <ProductCarousel
             products={items}
             title={title}
-            subtitle="Calidez y eficiencia para tu hogar"
+            subtitle={eyebrow}
             categoryLabel={title}
             categoryMedia={meta}
           />

@@ -1,7 +1,7 @@
-import { ArrowUp, ArrowDown, Trash2, Plus } from 'lucide-react';
+import { ArrowUp, ArrowDown, Trash2, Plus, X } from 'lucide-react';
 import { ICON_OPTIONS, type DestaquesContent, type DestaqueFeature } from '@/lib/site-content-defaults';
 import { getIcon } from '@/lib/icon-map';
-import { Field, inputCls, textareaCls } from './shared';
+import { Field, inputCls, textareaCls, MediaUploadField } from './shared';
 
 export function DestaquesForm({ data, onChange }: { data: DestaquesContent; onChange: (d: DestaquesContent) => void }) {
   function set<K extends keyof DestaquesContent>(key: K, value: DestaquesContent[K]) {
@@ -61,13 +61,19 @@ export function DestaquesForm({ data, onChange }: { data: DestaquesContent; onCh
           return (
             <div key={idx} className="rounded-xl border border-white/10 bg-[#0f1117] p-3">
               <div className="mb-2 flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/5">
-                  <Icon size={14} className="text-green-400" />
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-white/5">
+                  {f.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={f.imageUrl} alt="" className="h-full w-full object-contain" />
+                  ) : (
+                    <Icon size={14} className="text-green-400" />
+                  )}
                 </span>
                 <select
                   value={f.icon}
+                  disabled={!!f.imageUrl}
                   onChange={(e) => updateFeature(idx, { icon: e.target.value as DestaqueFeature['icon'] })}
-                  className="flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-2 py-1.5 text-xs text-white outline-none"
+                  className="flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-2 py-1.5 text-xs text-white outline-none disabled:opacity-40"
                 >
                   {ICON_OPTIONS.map((opt) => (
                     <option key={opt.key} value={opt.key}>{opt.label}</option>
@@ -77,6 +83,27 @@ export function DestaquesForm({ data, onChange }: { data: DestaquesContent; onCh
                 <button type="button" onClick={() => moveFeature(idx, 'down')} className="rounded-lg border border-white/15 p-1.5 text-white/70 hover:bg-white/10"><ArrowDown size={12} /></button>
                 <button type="button" onClick={() => removeFeature(idx)} className="rounded-lg border border-red-500/40 p-1.5 text-red-300 hover:bg-red-500/15"><Trash2 size={12} /></button>
               </div>
+
+              {f.imageUrl ? (
+                <button
+                  type="button"
+                  onClick={() => updateFeature(idx, { imageUrl: '' })}
+                  className="mb-2 inline-flex items-center gap-1 rounded-lg border border-white/15 px-2 py-1 text-[11px] text-white/60 hover:bg-white/10"
+                >
+                  <X size={10} /> Remover selo e voltar pro ícone
+                </button>
+              ) : (
+                <div className="mb-2">
+                  <MediaUploadField
+                    label="Selo personalizado (opcional)"
+                    hint="Importe uma imagem (ex: feita com IA) para usar no lugar do ícone acima."
+                    kind="image"
+                    value={f.imageUrl ?? ''}
+                    onChange={(url) => updateFeature(idx, { imageUrl: url })}
+                  />
+                </div>
+              )}
+
               <input
                 className={`${inputCls} mb-2`}
                 value={f.title}
