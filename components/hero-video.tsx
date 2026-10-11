@@ -125,21 +125,20 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
   return (
     <section
       ref={sectionRef}
-      className="relative w-full h-[480px] sm:h-[85svh] lg:h-screen flex items-start justify-center sm:items-center overflow-hidden"
+      className="relative w-full aspect-[4/5] sm:aspect-auto sm:h-[85svh] lg:h-screen flex items-start justify-center sm:items-center overflow-hidden"
       style={{ background: 'linear-gradient(160deg, #211611 0%, #120d0a 100%)' }}
     >
-      {/* The source video is 16:9 (1280x720) and has its own baked-in brand
-         text near the bottom of frame — cropping it with object-cover (the
-         sm:+ behavior) cuts that text off unevenly on a narrow mobile box.
-         object-contain on mobile shows the whole frame uncropped instead,
-         shrunk to fit; the warm dark gradient behind it (matching the rest
-         of the hero's palette) fills the letterbox bars instead of looking
-         like empty space. From sm: up the viewport is wide enough that
-         object-cover's crop is minor and the full-bleed look is worth it. */}
+      {/* Mobile box is a fixed 4:5 aspect ratio (not a crop trick) so the
+         hero video can be re-exported at exactly that ratio — see the
+         admin note on hero.videoUrl for the pixel sizes — and fill it
+         edge-to-edge with object-cover, no cropping and no letterbox bars,
+         at any phone width. Until the video is re-edited to 4:5 it'll
+         still get a mild center-crop here. From sm: up the box goes back
+         to viewport-height sizing with the original 16:9 video. */}
       {needsVideo && (
         <video
           ref={videoRef}
-          className={`absolute inset-0 w-full h-full object-contain sm:object-cover z-0 ${videoVisibilityClass}`}
+          className={`absolute inset-0 w-full h-full object-cover z-0 ${videoVisibilityClass}`}
           style={{
             objectPosition:
               hero.videoPosition === 'top' ? 'center 15%' : hero.videoPosition === 'bottom' ? 'center 85%' : 'center center',
@@ -161,7 +160,7 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
           <img
             src={heroImage}
             alt=""
-            className={`absolute inset-0 w-full h-full object-contain sm:object-cover z-0 ${imageVisibilityClass}`}
+            className={`absolute inset-0 w-full h-full object-cover z-0 ${imageVisibilityClass}`}
           />
         ) : null
       )}
