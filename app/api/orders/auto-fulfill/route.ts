@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
       sku: order.supplier_sku,
       quantity: 1,
       shipping: shippingAddress,
-      reference: `VITAFIT-${orderId}`,
+      reference: `PEDIDO-${orderId}`,
       notify_url: `${req.nextUrl.origin}/api/webhook/tracking`,
     };
 

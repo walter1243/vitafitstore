@@ -5,6 +5,7 @@ import { Header } from '@/components/header'
 import HeroVideo from '@/components/hero-video'
 import { GiftBasketBanner } from '@/components/gift-basket-banner'
 import { DestacadosSection } from '@/components/destacados-section'
+import { AboutSection } from '@/components/about-section'
 import { TrustBadges } from '@/components/trust-badges'
 import ProductCarousels from '@/components/product-carousels'
 import { CategorySpotlight } from '@/components/category-spotlight'
@@ -46,14 +47,15 @@ export default function PreviewPage() {
       <Header />
       <main className="flex-1">
         <HeroVideo content={content.hero} />
-        <GiftBasketBanner />
         <TrustBadges data={content.trustBadges} />
         <section id="productos">
           <ProductCarousels />
         </section>
         <DestacadosSection data={content.destaques} />
         <CategorySpotlight />
+        <GiftBasketBanner data={content.giftBanner} />
         <FeaturedProductsGrid />
+        <AboutSection data={content.about} />
       </main>
       <Footer content={content.footer} />
     </div>

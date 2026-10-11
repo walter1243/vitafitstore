@@ -26,13 +26,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
-      url: 'https://www.vitafitstore.es/#cat-pre-treino',
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
-      url: 'https://www.vitafitstore.es/#nosotros',
+      url: 'https://www.vitafitstore.es/#ayuda-soporte',
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.6,

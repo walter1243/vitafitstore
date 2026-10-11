@@ -33,7 +33,7 @@ export const LEGAL_PAGES: Record<string, LegalPage> = {
       {
         heading: 'Objeto',
         body: [
-          'Este sitio web tiene como finalidad la venta online de productos de calefacción y confort térmico para el hogar.',
+          'Este sitio web tiene como finalidad la venta online de cestas de regalo personalizadas y cestas de Navidad.',
         ],
       },
       {

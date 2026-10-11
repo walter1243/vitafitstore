@@ -100,7 +100,7 @@ function MastercardLogo({ w = 40, h = 25 }: { w?: number; h?: number }) {
 
 // ─── Success Screen ───────────────────────────────────────────────────────────
 
-function SuccessScreen({ name }: { name: string }) {
+function SuccessScreen({ name, storeName }: { name: string; storeName: string }) {
   return (
     <>
       <style>{`
@@ -132,7 +132,7 @@ function SuccessScreen({ name }: { name: string }) {
                 style={{ background:'linear-gradient(135deg,#c2410c,#9a3412)' }}>
                 <div className="w-8 h-0.5 rounded-full bg-orange-700" />
               </div>
-              <span className="text-xs font-bold text-white/90 tracking-wider">VITAFIT</span>
+              <span className="text-xs font-bold text-white/90 tracking-wider uppercase truncate max-w-[70px]">{storeName}</span>
               <div className="absolute top-0.5 left-1/2 -translate-x-1/2 w-10 h-1.5 rounded-full opacity-50"
                 style={{ background:'#fbbf24' }} />
             </div>
@@ -654,7 +654,7 @@ function CheckoutFormInner() {
     );
   }
 
-  if (success) return <SuccessScreen name={name} />;
+  if (success) return <SuccessScreen name={name} storeName={storeName} />;
 
   // ── Step 1 ──────────────────────────────────────────────────
   const step1 = (

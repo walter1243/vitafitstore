@@ -3,6 +3,7 @@ import { Header } from '@/components/header'
 import HeroVideo from '../components/hero-video'
 import { GiftBasketBanner } from '@/components/gift-basket-banner'
 import { DestacadosSection } from '@/components/destacados-section'
+import { AboutSection } from '@/components/about-section'
 import { Snowfall } from '@/components/snowfall'
 import { TrustBadges } from '@/components/trust-badges'
 import ProductCarousels from '../components/product-carousels'
@@ -70,7 +71,7 @@ export default async function HomePage() {
     // The old newsletter card ("Prepárate para el frío") is retired in
     // favor of the Christmas gift-basket banner — same slot, same toggle
     // in Admin → Blocos da Home, now a real photo instead of a flat card.
-    newsletter: <GiftBasketBanner />,
+    newsletter: <GiftBasketBanner data={content.giftBanner} />,
   }
 
   const visibleBlocks = blocks.filter(b => b.enabled)
@@ -84,6 +85,7 @@ export default async function HomePage() {
             <div key={block.key}>{map[block.key]}</div>
           ))}
           <FeaturedProductsGrid />
+          <AboutSection data={content.about} />
         </main>
         <Footer content={content.footer} />
         <WhatsAppFloating />

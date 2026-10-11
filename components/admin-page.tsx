@@ -550,7 +550,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   }
 
   const fields = [
-    { k: 'name', label: 'Nome do produto *', ph: 'Ex: Whey Protein 1kg', type: 'text' },
+    { k: 'name', label: 'Nome do produto *', ph: 'Ex: Cesta de Navidad Premium', type: 'text' },
     { k: 'price', label: 'Preço (€) *', ph: '29.99', type: 'number' },
     { k: 'stock', label: 'Estoque (un.)', ph: '100', type: 'number' },
   ];
@@ -1242,7 +1242,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                 type="text"
                 value={newCategoryName}
                 onChange={e => onNewCategoryNameChange(e.target.value)}
-                placeholder="Ex: Suplementos"
+                placeholder="Ex: Cestas de Navidad"
                 className="flex-1 rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
               />
               <button
@@ -3463,7 +3463,7 @@ function ImportSupplierSection({ onImportToStore }: { onImportToStore: (data: Im
           <div className="flex gap-2">
             <input
               className="flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
-              placeholder="Ex: calefactor eléctrico, manta térmica…"
+              placeholder="Ex: cesta de vime, caixa de presente…"
               value={keyword}
               onChange={e => setKeyword(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleCjSearch()}
@@ -4022,7 +4022,7 @@ function ImportTab({ onImportDone }: { onImportDone: () => void }) {
 
         <div className="max-w-lg rounded-2xl border border-white/10 bg-white/5 p-4 text-xs text-white/55">
           <p className="mb-1 font-medium text-white/80">Exemplo de CSV aceito:</p>
-          <pre className="overflow-x-auto rounded border border-white/10 bg-[#0f1117] p-2 font-mono">{`sku,nome,preco_custo,estoque,categoria,imagem\nWHEY001,Whey Protein 1kg,89.90,42,Proteínas,https://...\nCREA001,Creatina 300g,45.00,18,Performance,https://...`}</pre>
+          <pre className="overflow-x-auto rounded border border-white/10 bg-[#0f1117] p-2 font-mono">{`sku,nome,preco_custo,estoque,categoria,imagem\nCESTA001,Cesta de Navidad Premium,34.90,42,Cestas de Navidad,https://...\nCESTA002,Cesta Personalizada Dulce,22.00,18,Cestas Personalizadas,https://...`}</pre>
         </div>
       </div>
     );
@@ -4398,9 +4398,9 @@ function SettingsSection({
         <h2 className="mb-4 font-semibold text-white">WhatsApp e Redes Sociais</h2>
         <div className="space-y-4">
           {[
-            { label: 'Instagram', value: ig, setter: setIg, ph: '@vitafit' },
+            { label: 'Instagram', value: ig, setter: setIg, ph: '@cestayencanto' },
             { label: 'WhatsApp', value: wa, setter: setWa, ph: '+34 601 678 657' },
-            { label: 'E-mail', value: email, setter: setEmail, ph: 'contato@vitafitstore.com' },
+            { label: 'E-mail', value: email, setter: setEmail, ph: 'contato@cestayencanto.com' },
           ].map(f => (
             <div key={f.label}>
               <label className="mb-1.5 block text-xs font-medium text-white/50">{f.label}</label>

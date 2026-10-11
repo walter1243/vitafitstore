@@ -28,12 +28,12 @@ export function DestacadosSection({ data }: { data?: DestaquesContent }) {
                 key={idx}
                 className="rounded-2xl border border-stone-200/70 bg-white p-6 text-center shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(0,0,0,0.08)]"
               >
-                <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl bg-orange-50">
+                <span className="mx-auto mb-4 flex h-24 w-24 items-center justify-center overflow-hidden rounded-xl bg-orange-50">
                   {f.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={f.imageUrl} alt="" className="h-full w-full object-contain" />
                   ) : (
-                    <Icon className="h-6 w-6 text-orange-600" />
+                    <Icon className="h-11 w-11 text-orange-600" />
                   )}
                 </span>
                 <h3 className="font-semibold text-slate-900">{f.title}</h3>

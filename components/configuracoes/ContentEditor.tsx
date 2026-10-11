@@ -11,22 +11,26 @@ import { ProductsIntroForm } from './content/ProductsIntroForm';
 import { DestaquesForm } from './content/DestaquesForm';
 import { TrustBadgesForm } from './content/TrustBadgesForm';
 import { AboutForm } from './content/AboutForm';
-import { NewsletterForm } from './content/NewsletterForm';
+import { GiftBannerForm } from './content/GiftBannerForm';
 import { FooterForm } from './content/FooterForm';
+import { PagePosition } from './content/PagePosition';
 
 type SectionKey = keyof SiteContent;
 
-const SECTION_META: Record<SectionKey, { label: string; desc: string; icon: typeof Video }> = {
-  hero: { label: 'Hero principal', desc: 'Vídeo, título, subtítulo e botão de ação da vitrine.', icon: Video },
-  productsIntro: { label: 'Texto dos produtos', desc: 'Pequena chamada que aparece acima de cada categoria.', icon: Sparkles },
-  destaques: { label: 'Destacados', desc: 'Os 4 cards de diferenciais logo abaixo dos produtos.', icon: Sparkles },
-  trustBadges: { label: 'Selos de confiança', desc: 'Faixa de selos (envio, garantia, pagamento...).', icon: PanelBottom },
-  about: { label: 'Sobre a loja', desc: 'Seção "Nosotros": textos, diferenciais e cartão visual.', icon: Users },
-  newsletter: { label: 'Newsletter', desc: 'Título, texto e aviso da seção de inscrição por e-mail.', icon: Mail },
-  footer: { label: 'Rodapé', desc: 'Descrição da marca, colunas e nota de direitos autorais.', icon: PanelBottom },
+// desc says exactly where on the page this shows up — index feeds the
+// PagePosition dots (see that file for the full landmark list) so each
+// card also shows it visually, not just in words.
+const SECTION_META: Record<SectionKey, { label: string; desc: string; icon: typeof Video; pageIndex: number }> = {
+  hero: { label: 'Hero principal', desc: 'O vídeo/imagem grande do topo da loja, com título, subtítulo e botão.', icon: Video, pageIndex: 1 },
+  productsIntro: { label: 'Texto dos produtos', desc: 'A frase pequena que aparece acima de "Productos", repetida em cada categoria.', icon: Sparkles, pageIndex: 3 },
+  destaques: { label: 'Destacados', desc: 'Os 4 cards com ícone/selo que aparecem logo abaixo da lista de produtos.', icon: Sparkles, pageIndex: 4 },
+  trustBadges: { label: 'Selos de confiança', desc: 'A faixa com 4 selos (envio, devolução, pagamento...) acima dos produtos.', icon: PanelBottom, pageIndex: 2 },
+  about: { label: 'Sobre a loja', desc: 'Seção com o texto "Por que nos escolher", diferenciais e estatísticas, perto do fim da página.', icon: Users, pageIndex: 8 },
+  giftBanner: { label: 'Banner de presente', desc: 'O banner grande com a foto da cesta, depois das categorias em destaque.', icon: Mail, pageIndex: 6 },
+  footer: { label: 'Rodapé', desc: 'Descrição da marca, colunas e nota de direitos autorais, no final da página.', icon: PanelBottom, pageIndex: 9 },
 };
 
-const SECTION_ORDER: SectionKey[] = ['hero', 'productsIntro', 'destaques', 'trustBadges', 'about', 'newsletter', 'footer'];
+const SECTION_ORDER: SectionKey[] = ['hero', 'trustBadges', 'productsIntro', 'destaques', 'giftBanner', 'about', 'footer'];
 const DRAFT_STORAGE_KEY = 'vitafit-admin-site-content-draft';
 
 // Drafts saved to localStorage before media fields switched from
@@ -257,6 +261,7 @@ export function ContentEditor() {
                     <div>
                       <h3 className="text-sm font-semibold text-white">{meta.label}</h3>
                       <p className="mt-0.5 text-xs text-white/45">{meta.desc}</p>
+                      <PagePosition index={meta.pageIndex} />
                     </div>
                   </div>
                   {sectionDirty && (
@@ -307,8 +312,8 @@ export function ContentEditor() {
             {editingSection === 'about' && (
               <AboutForm data={draft as SiteContent['about']} onChange={(d) => setDraft(d)} />
             )}
-            {editingSection === 'newsletter' && (
-              <NewsletterForm data={draft as SiteContent['newsletter']} onChange={(d) => setDraft(d)} />
+            {editingSection === 'giftBanner' && (
+              <GiftBannerForm data={draft as SiteContent['giftBanner']} onChange={(d) => setDraft(d)} />
             )}
             {editingSection === 'footer' && (
               <FooterForm data={draft as SiteContent['footer']} onChange={(d) => setDraft(d)} />

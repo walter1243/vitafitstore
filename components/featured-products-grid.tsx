@@ -44,7 +44,7 @@ export function FeaturedProductsGrid() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-10 text-center">
           <p className="mb-2 text-sm font-semibold uppercase tracking-[0.3em] text-orange-700">
-            Colección invierno
+            Selección especial
           </p>
           <h2 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
             Los más elegidos

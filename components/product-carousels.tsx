@@ -19,7 +19,7 @@ export default function ProductCarousels() {
   const [dbProducts, setDbProducts] = useState<DbProduct[]>([]);
   const [categoryMetaByKey, setCategoryMetaByKey] = useState<Record<string, CategoryMeta>>({});
   const [orderedCategories, setOrderedCategories] = useState<CategoryMeta[]>([]);
-  const [eyebrow, setEyebrow] = useState('Calidez y eficiencia para tu hogar');
+  const [eyebrow, setEyebrow] = useState('Hecho con cariño para regalar');
 
   useEffect(() => {
     fetch('/api/site-content', { cache: 'no-store' })

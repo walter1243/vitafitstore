@@ -56,10 +56,10 @@ export type HeroContent = {
 
 export const DEFAULT_HERO: HeroContent = {
   badgeText: 'Envío gratis en pedidos +50€ · España',
-  titleLine1: 'Mantén tu hogar cálido este invierno',
-  titleLine2: 'sin disparar tu factura de luz',
-  subtitle: 'Soluciones de calefacción eficiente y confort térmico para no pasar frío en casa. Diseñadas para el invierno peninsular.',
-  ctaText: 'Descubrir Productos',
+  titleLine1: 'Cestas personalizadas',
+  titleLine2: 'llenas de amor',
+  subtitle: 'Regalos y cestas gourmet para cada ocasión: cumpleaños, Navidad, empresas y más. Hechas a mano, listas para sorprender.',
+  ctaText: 'Descubrir Regalos',
   ctaHref: '#productos',
   videoPosition: 'center',
   videoUrl: '/video-hero.mp4',
@@ -91,27 +91,27 @@ export const DEFAULT_DESTAQUES: DestaquesContent = {
   eyebrow: 'Por qué elegirnos',
   title: 'Destacados',
   highlight: 'de la temporada',
-  subtitle: 'Lo que nos hace diferentes: calidez, eficiencia y confort real para el frío.',
+  subtitle: 'Lo que hace especiales a nuestras cestas: calidad, presentación y cariño en cada detalle.',
   features: [
     {
-      icon: 'flame',
-      title: 'Calor Instantáneo',
-      desc: 'Listo en 3 segundos.',
+      icon: 'award',
+      title: 'Presentación de Lujo',
+      desc: 'Cestas y estuches preparados al detalle, listos para impresionar desde el primer momento en que se abren.',
     },
     {
-      icon: 'zap',
-      title: 'Bajo Consumo',
-      desc: 'Ahorro energético certificado.',
+      icon: 'leaf',
+      title: 'Productos Artesanales y Gourmet',
+      desc: 'Seleccionamos cuidadosamente embutidos, vinos, dulces y turrones de máxima calidad para tu mesa.',
     },
     {
       icon: 'truck',
-      title: 'Envío Rápido 24/48h',
-      desc: 'Desde almacén peninsular.',
+      title: 'Envío Rápido y Seguro',
+      desc: 'Entregas garantizadas en toda España para que tus regalos lleguen justo a tiempo.',
     },
     {
-      icon: 'shield',
-      title: 'Garantía de 3 Años',
-      desc: 'Cobertura europea total.',
+      icon: 'gift',
+      title: 'Tarjeta Dedicatoria Gratis',
+      desc: 'Añade un mensaje personalizado en cada cesta para emocionar a familiares, amigos o empleados.',
     },
   ],
 };
@@ -121,7 +121,7 @@ export type ProductsIntroContent = {
 };
 
 export const DEFAULT_PRODUCTS_INTRO: ProductsIntroContent = {
-  eyebrow: 'Calidez y eficiencia para tu hogar',
+  eyebrow: 'Hecho con cariño para regalar',
 };
 
 export type TrustBadge = {
@@ -143,16 +143,23 @@ export const DEFAULT_TRUST_BADGES: TrustBadgesContent = {
   ],
 };
 
-export type NewsletterContent = {
-  title: string;
-  text: string;
-  privacyText: string;
+// Drives the Christmas gift-basket photo banner (components/gift-basket-banner.tsx)
+// — this used to be a plain email-signup newsletter card ("Prepárate para el
+// frío"); that card and its signup form are gone, replaced by this banner,
+// so the editable copy here was repurposed to match instead of leaving a
+// dead "Newsletter" admin section that edited text nobody could see.
+export type GiftBannerContent = {
+  badgeText: string;
+  heading: string;
+  description: string;
+  ctaText: string;
 };
 
-export const DEFAULT_NEWSLETTER: NewsletterContent = {
-  title: 'Prepárate para el frío',
-  text: 'Recibe ofertas exclusivas de temporada, consejos de confort térmico y novedades antes que nadie. ¡10% de descuento en tu primera compra!',
-  privacyText: 'Al suscribirte aceptas nuestra política de privacidad. Sin spam, lo prometemos.',
+export const DEFAULT_GIFT_BANNER: GiftBannerContent = {
+  badgeText: 'Edición Navidad',
+  heading: 'El regalo que se recibe con una sonrisa',
+  description: 'Cestas armadas a mano, con productos seleccionados y presentación lista para regalar. Perfecta para sorprender esta Navidad.',
+  ctaText: 'Descubrir cestas de regalo',
 };
 
 export type FooterItemContent = {
@@ -175,7 +182,7 @@ export type FooterContent = {
 };
 
 export const DEFAULT_FOOTER: FooterContent = {
-  brandDescription: 'Tu tienda online de calefacción y confort térmico en España. Productos de calidad para pasar el invierno con calidez.',
+  brandDescription: 'Tu tienda online de cestas de regalo personalizadas en España. Detalles cuidados para cada ocasión especial.',
   copyrightNote: 'Todos los derechos reservados.',
   ayuda: {
     title: 'Ayuda y Soporte',
@@ -220,16 +227,16 @@ export type AboutContent = {
 
 export const DEFAULT_ABOUT: AboutContent = {
   title: '¿Por qué elegir',
-  highlight: 'nuestra tienda',
-  paragraph1: 'Creemos que el confort en invierno debe ser accesible para todos. Por eso seleccionamos cuidadosamente cada producto, priorizando la calidez, la eficiencia y la seguridad.',
-  paragraph2: 'Nuestro equipo trabaja constantemente para ofrecerte las mejores soluciones de calefacción y confort térmico para tu hogar. Desde calefactores hasta accesorios de abrigo, todo lo que necesitas para pasar el invierno con calidez está aquí.',
+  highlight: 'Cesta & Encanto',
+  paragraph1: 'Creemos que un buen regalo se nota en los detalles. Por eso preparamos cada cesta a mano, seleccionando productos gourmet y una presentación que sorprende desde el primer momento.',
+  paragraph2: 'Trabajamos con cariño en cada pedido, ya sea para una ocasión especial, un regalo de empresa o una cesta de Navidad. Desde embutidos y vinos hasta dulces y detalles personalizados, todo lo que necesitas para regalar algo memorable está aquí.',
   features: [
-    { icon: 'flame', title: 'Calor real', desc: 'Productos que calientan de verdad, probados para el frío europeo.' },
-    { icon: 'award', title: 'Calidad certificada', desc: 'Todos nuestros productos cumplen con los más estrictos estándares de seguridad europeos.' },
-    { icon: 'zap', title: 'Bajo consumo', desc: 'Tecnología eficiente pensada para no disparar tu factura de luz.' },
+    { icon: 'award', title: 'Presentación de lujo', desc: 'Cestas y estuches preparados al detalle, listos para impresionar.' },
+    { icon: 'leaf', title: 'Productos artesanales', desc: 'Seleccionamos cuidadosamente productos gourmet de máxima calidad.' },
+    { icon: 'gift', title: 'Toque personal', desc: 'Tarjeta dedicatoria gratis en cada cesta, con el mensaje que elijas.' },
     { icon: 'lock', title: 'Pago 100% seguro', desc: 'Transacciones encriptadas y verificadas a través de Stripe y PayPal.' },
   ],
-  tagline: 'Tu confort, nuestra prioridad',
+  tagline: 'Cada cesta, un detalle con cariño',
   // Honest service commitments — not inflated metrics. A brand-new store
   // has no verifiable "50K+ clientes" to show, and a visitor who tries to
   // check a fabricated number and finds nothing will abandon the purchase.
@@ -250,7 +257,7 @@ export type SiteContent = {
   destaques: DestaquesContent;
   trustBadges: TrustBadgesContent;
   about: AboutContent;
-  newsletter: NewsletterContent;
+  giftBanner: GiftBannerContent;
   footer: FooterContent;
 };
 
@@ -260,7 +267,7 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
   destaques: DEFAULT_DESTAQUES,
   trustBadges: DEFAULT_TRUST_BADGES,
   about: DEFAULT_ABOUT,
-  newsletter: DEFAULT_NEWSLETTER,
+  giftBanner: DEFAULT_GIFT_BANNER,
   footer: DEFAULT_FOOTER,
 };
 
