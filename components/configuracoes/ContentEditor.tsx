@@ -81,7 +81,13 @@ export function ContentEditor() {
         const savedDraft = typeof window !== 'undefined' ? window.localStorage.getItem(DRAFT_STORAGE_KEY) : null;
         if (savedDraft) {
           try {
-            setContent(JSON.parse(savedDraft));
+            // A draft saved before a new content section existed (e.g.
+            // "Texto dos produtos") won't have that key at all — publishing
+            // it as-is sends `data: undefined` for that section and the API
+            // rejects it with "Dados inválidos.". Layering the draft over
+            // the freshly fetched published content fills in anything the
+            // old draft is missing instead of leaving it undefined.
+            setContent({ ...data, ...JSON.parse(savedDraft) });
             setRestoredDraft(true);
           } catch {
             setContent(data);
