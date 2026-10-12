@@ -471,7 +471,7 @@ function PaymentStepInner({
         </div>
       )}
 
-      <div className="flex gap-3">
+      <div className="hidden sm:flex gap-3">
         <button type="button" onClick={onBack}
           className="flex items-center gap-1.5 px-5 py-4 rounded-xl font-semibold text-sm text-slate-400 hover:text-slate-900 transition-colors cursor-pointer"
           style={{ background:'#F8FAFC', border:'1px solid #E2E8F0' }}>
@@ -483,6 +483,29 @@ function PaymentStepInner({
           {loading
             ? <><Loader2 size={18} className="animate-spin" /> Procesando...</>
             : <><Lock size={16} /> Pagar €{total.toFixed(2)}</>}
+        </button>
+      </div>
+
+      {/* Mobile sticky total + CTA, same pattern as step 1 — type="submit"
+         still works here since this whole block renders inside the <form>. */}
+      <div className="sm:hidden fixed inset-x-0 bottom-0 z-40 flex items-center gap-2 border-t bg-white px-4 py-3"
+        style={{ borderColor: 'rgba(194,65,12,0.12)', boxShadow: '0 -4px 20px rgba(0,0,0,0.06)' }}>
+        <button type="button" onClick={onBack}
+          className="flex shrink-0 items-center justify-center rounded-xl p-3.5 text-slate-400 cursor-pointer"
+          style={{ background:'#F8FAFC', border:'1px solid #E2E8F0' }}
+          aria-label="Volver">
+          <ChevronLeft size={18} />
+        </button>
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] text-slate-500">Total</p>
+          <p className="text-base font-bold text-orange-600 truncate">€{total.toFixed(2)}</p>
+        </div>
+        <button type="submit" disabled={loading || !stripe || !elements}
+          className="flex shrink-0 items-center justify-center gap-1.5 rounded-xl px-5 py-3.5 font-bold text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
+          style={{ background:'linear-gradient(135deg,#c2410c,#9a3412)' }}>
+          {loading
+            ? <Loader2 size={18} className="animate-spin" />
+            : <><Lock size={14} /> Pagar</>}
         </button>
       </div>
     </form>
@@ -730,12 +753,30 @@ function CheckoutFormInner() {
       )}
 
       <button type="button" onClick={goToStep2} disabled={intentLoading}
-        className="w-full flex items-center justify-center gap-2 rounded-xl py-4 font-bold text-base text-white disabled:opacity-60 cursor-pointer transition-all"
+        className="hidden sm:flex w-full items-center justify-center gap-2 rounded-xl py-4 font-bold text-base text-white disabled:opacity-60 cursor-pointer transition-all"
         style={{ background:'linear-gradient(135deg,#c2410c,#9a3412)', boxShadow:'0 8px 32px rgba(194,65,12,0.25)' }}>
         {intentLoading
           ? <><Loader2 size={18} className="animate-spin" /> Preparando pago...</>
           : <>Continuar al Pago <ChevronRight size={18} /></>}
       </button>
+
+      {/* Mobile sticky total + CTA — on a tall form, the price and the next
+         step used to be scrolled far out of view; this keeps both visible
+         the whole time, same pattern as most mobile checkout flows. */}
+      <div className="sm:hidden fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t bg-white px-4 py-3"
+        style={{ borderColor: 'rgba(194,65,12,0.12)', boxShadow: '0 -4px 20px rgba(0,0,0,0.06)' }}>
+        <div className="min-w-0">
+          <p className="text-[10px] text-slate-500">Total</p>
+          <p className="text-lg font-bold text-orange-600">€{total.toFixed(2)}</p>
+        </div>
+        <button type="button" onClick={goToStep2} disabled={intentLoading}
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl py-3.5 font-bold text-sm text-white disabled:opacity-60 cursor-pointer transition-all"
+          style={{ background:'linear-gradient(135deg,#c2410c,#9a3412)' }}>
+          {intentLoading
+            ? <Loader2 size={18} className="animate-spin" />
+            : <>Continuar al Pago <ChevronRight size={16} /></>}
+        </button>
+      </div>
     </div>
   );
 
@@ -764,7 +805,7 @@ function CheckoutFormInner() {
 
   // ── Layout ──────────────────────────────────────────────────
   return (
-    <div className="min-h-screen py-8 sm:py-12 px-4" style={{ background:'#FAF8F5' }}>
+    <div className="min-h-screen py-8 pb-28 sm:pb-12 sm:py-12 px-4" style={{ background:'#FAF8F5' }}>
       <Snowfall count={22} />
 
       {/* Seasonal strip — festive touch through checkout, same red/green/gold
