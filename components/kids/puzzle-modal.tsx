@@ -5,10 +5,11 @@ import Link from 'next/link';
 import { PartyPopper, RotateCcw } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 
-// Posicao do buraco na imagem do quebra-cabeca (577x433 px): a peca foi
-// recortada comparando a imagem inteira com a que tem o buraco.
-const BOARD = { w: 577, h: 433 };
-const HOLE = { x: 375, y: 107, size: 73 };
+// Posicao do buraco na imagem do quebra-cabeca (473x303 px, ja recortada
+// sem as bordas transparentes): a peca foi recortada comparando a imagem
+// inteira com a que tem o buraco.
+const BOARD = { w: 473, h: 303 };
+const HOLE = { x: 325, y: 44, size: 73 };
 const HOLE_PCT = {
   left: (HOLE.x / BOARD.w) * 100,
   top: (HOLE.y / BOARD.h) * 100,
@@ -42,7 +43,7 @@ export function PuzzleModal({ open, onOpenChange, collectionHref }: {
       x: board.left - area.left + (HOLE.x / BOARD.w) * board.width,
       y: board.top - area.top + (HOLE.y / BOARD.h) * board.height,
     };
-    const start = { x: area.width / 2 - size / 2, y: board.bottom - area.top + 18 };
+    const start = { x: area.width / 2 - size / 2, y: board.bottom - area.top + 14 };
     return { size, hole, start };
   }
 
@@ -100,23 +101,23 @@ export function PuzzleModal({ open, onOpenChange, collectionHref }: {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="kids max-h-[95vh] overflow-y-auto rounded-[32px] border-0 bg-[#EAF4FF] p-5 sm:max-w-[680px] sm:p-8">
+      <DialogContent className="kids max-h-[95vh] w-full overflow-y-auto rounded-[32px] border-0 bg-[#EAF4FF] p-5 sm:max-w-[600px] sm:p-7">
         <DialogTitle className="text-center font-kids text-3xl font-bold text-[#23263f] sm:text-4xl">
           {done ? '¡Enhorabuena!' : '¡Pon la pieza que falta!'}
         </DialogTitle>
         <DialogDescription className="text-center text-base text-[#565a78]">
           {done
-            ? 'Has completado el rompecabezas.'
+            ? '¡Has completado el rompecabezas!'
             : 'Arrastra la pieza suelta hasta el hueco… o tócala y verás.'}
         </DialogDescription>
 
-        <div ref={areaRef} className={`relative mx-auto w-full select-none ${done ? '' : 'pb-28'}`} style={{ touchAction: 'none' }}>
+        <div ref={areaRef} className={`relative mx-auto w-full max-w-[480px] select-none ${done ? '' : 'pb-24'}`} style={{ touchAction: 'none' }}>
           <div ref={boardRef} className="relative w-full" style={{ aspectRatio: `${BOARD.w} / ${BOARD.h}` }}>
             <Image
               src={done ? '/images/rompecabezas-completo.png' : '/images/rompecabezas-hueco.png'}
               alt={done ? 'Rompecabezas completo de un perrito jugando con una pelota' : 'Rompecabezas de un perrito con una pieza que falta'}
               fill
-              sizes="(min-width: 640px) 620px, 90vw"
+              sizes="(min-width: 640px) 480px, 90vw"
               className="object-contain"
               draggable={false}
             />
@@ -152,9 +153,9 @@ export function PuzzleModal({ open, onOpenChange, collectionHref }: {
           )}
 
           {done && (
-            <div className="mt-4 flex flex-col items-center gap-3 rounded-3xl bg-white p-5 text-center shadow-[0_8px_24px_rgba(35,38,63,0.12)]" role="status">
-              <PartyPopper className="h-10 w-10 text-[#FF8A00]" aria-hidden="true" />
-              <p className="font-kids text-2xl font-bold text-[#23263f]">¡Has completado el rompecabezas! ¿Pedimos el juego?</p>
+            <div className="mt-4 flex items-center justify-center gap-3 rounded-3xl bg-white p-4 text-center" role="status">
+              <PartyPopper className="h-8 w-8 shrink-0 text-[#FF8A00]" aria-hidden="true" />
+              <p className="font-kids text-2xl font-bold text-[#23263f]">¿Pedimos el juego?</p>
             </div>
           )}
         </div>
