@@ -128,7 +128,7 @@ export function Header() {
 
   return (
     <>
-      <div ref={topBarRef} className="fixed top-0 left-0 right-0 z-[60]">
+      <div ref={topBarRef} className="fixed top-0 left-0 right-0 z-40">
         {announcement && (
           <div className="bg-[#23263f] px-4 py-1.5 text-center text-xs font-semibold text-white">
             {announcement}
