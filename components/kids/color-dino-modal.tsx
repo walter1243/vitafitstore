@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Check, Eraser, RotateCcw, ShoppingCart, Sparkles } from 'lucide-react';
@@ -23,38 +23,79 @@ const PALETTE = [
 ];
 const WHITE = '#FFFFFF';
 
-// Estegossauro de perfil, em partes que a crianca pinta tocando nelas.
-// A ordem importa: as de cima no array ficam atras das de baixo.
-const PARTS = [
-  { id: 'placa1', label: 'Placa 1', d: 'M98 94 L110 60 L128 88 Z' },
-  { id: 'placa2', label: 'Placa 2', d: 'M126 80 L146 40 L164 74 Z' },
-  { id: 'placa3', label: 'Placa 3', d: 'M164 72 L186 30 L206 70 Z' },
-  { id: 'placa4', label: 'Placa 4', d: 'M206 76 L226 42 L242 84 Z' },
-  { id: 'placa5', label: 'Placa 5', d: 'M238 92 L256 64 L264 104 Z' },
-  { id: 'pataTrasera2', label: 'Pata trasera', d: 'M226 140 L230 196 L252 196 L250 132 Z' },
-  { id: 'pataDelantera2', label: 'Pata delantera', d: 'M98 140 L94 194 L116 194 L122 146 Z' },
-  { id: 'puas', label: 'Púas de la cola', d: 'M292 98 L306 74 L304 102 Z M280 106 L290 82 L292 110 Z' },
-  { id: 'cola', label: 'Cola', d: 'M252 116 C282 110 304 98 314 88 C308 112 290 136 256 148 Z' },
-  { id: 'cuerpo', label: 'Cuerpo', d: 'M78 122 C78 74 148 56 200 70 C242 80 262 106 262 126 C262 152 228 166 170 166 C118 166 78 156 78 122 Z' },
-  { id: 'barriga', label: 'Barriga', d: 'M104 146 C134 162 220 162 250 142 C240 160 202 168 170 168 C132 168 110 160 104 146 Z' },
-  { id: 'pataTrasera', label: 'Pata trasera', d: 'M196 150 L194 198 L218 198 L222 150 Z' },
-  { id: 'pataDelantera', label: 'Pata delantera', d: 'M126 156 L124 200 L148 200 L150 158 Z' },
-  { id: 'cabeza', label: 'Cabeza', d: 'M90 116 C70 108 42 110 30 124 C20 136 30 152 52 152 C68 152 82 144 92 134 Z' },
-];
-const COLORABLE = PARTS.map((p) => p.id);
-const emptyFill = () => Object.fromEntries(COLORABLE.map((id) => [id, WHITE])) as Record<string, string>;
+// Desenho de colorir (triceratops no ovo) — linhas pretas sobre branco.
+const DRAWING = '/images/dino-colorear.png';
+const SCALE = 2;          // canvas em 2x pra pintura ficar nitida
+const LINE_LUM = 160;     // mais escuro que isso = linha (borda das areas)
+const MIN_AREA = 60;      // areas menores (respingos do traco) nao contam
 
-// "¡Colorea a tu manera!" — dinossauro em branco (como os brinquedos que
-// chegam pra pintar). Pintou tudo (ou tocou em "¡Terminé!") → pergunta se
-// quer levar o dinossauro: adiciona ao carrinho e abre o carrinho.
+type Regions = {
+  w: number;
+  h: number;
+  lum: Uint8Array;        // luminosidade original (pra manter o traco ao pintar)
+  label: Int32Array;      // area de cada pixel (-1 = linha)
+  outside: number;        // area do fundo em volta do desenho
+  paintable: number[];    // areas "de verdade" pra pintar
+};
+
+// Divide o desenho nas areas fechadas pelas linhas (como o balde de tinta
+// dos livros de colorir digitais). Roda uma vez, quando o desenho carrega.
+function buildRegions(data: ImageData): Regions {
+  const { width: w, height: h } = data;
+  const lum = new Uint8Array(w * h);
+  for (let i = 0; i < w * h; i++) {
+    const r = data.data[i * 4], g = data.data[i * 4 + 1], b = data.data[i * 4 + 2];
+    lum[i] = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+  }
+  const label = new Int32Array(w * h).fill(-2);
+  const sizes: number[] = [];
+  const stack: number[] = [];
+  for (let start = 0; start < w * h; start++) {
+    if (label[start] !== -2) continue;
+    if (lum[start] < LINE_LUM) { label[start] = -1; continue; }
+    const id = sizes.length;
+    let size = 0;
+    stack.push(start);
+    label[start] = id;
+    while (stack.length) {
+      const p = stack.pop()!;
+      size++;
+      const x = p % w, y = (p - x) / w;
+      const n = [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, y > 0 ? p - w : -1, y < h - 1 ? p + w : -1];
+      for (const q of n) {
+        if (q < 0 || label[q] !== -2) continue;
+        if (lum[q] < LINE_LUM) { label[q] = -1; continue; }
+        label[q] = id;
+        stack.push(q);
+      }
+    }
+    sizes.push(size);
+  }
+  const outside = label[0];
+  const paintable = sizes.map((s, id) => (id !== outside && s >= MIN_AREA ? id : -1)).filter((id) => id >= 0);
+  return { w, h, lum, label, outside, paintable };
+}
+
+function hexToRgb(hex: string) {
+  const n = parseInt(hex.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+// "¡Colorea a tu manera!" — a crianca toca nas areas do desenho do
+// dinossauro e elas se enchem de cor. Pintou tudo (ou "¡Terminé!") →
+// pergunta se quer levar: adiciona ao carrinho e abre o carrinho.
 export function ColorDinoModal({ open, onOpenChange, collectionHref, slug }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   collectionHref: string;
   slug: string;
 }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const regionsRef = useRef<Regions | null>(null);
+  const fillsRef = useRef<Map<number, string>>(new Map());
+  const [ready, setReady] = useState(false);
   const [color, setColor] = useState(PALETTE[0].hex);
-  const [fills, setFills] = useState<Record<string, string>>(emptyFill);
+  const [painted, setPainted] = useState(0);
   const [finished, setFinished] = useState(false);
   const { products } = useStoreProducts();
   const { addItem, setIsCartOpen } = useCart();
@@ -63,22 +104,102 @@ export function ColorDinoModal({ open, onOpenChange, collectionHref, slug }: {
   // primeiro da colecao. Sem produto cadastrado ainda, leva pra colecao.
   const offer = useMemo(() => {
     const items = products.filter((p) => collectionForCategory(p.category)?.slug === slug);
-    const dino = items.find((p) => /dino|estego|t-?rex|stego/i.test(p.name));
+    const dino = items.find((p) => /dino|tricer|estego|t-?rex|stego/i.test(p.name));
     const chosen = dino ?? items[0];
     return chosen ? toStoreProduct(chosen) : null;
   }, [products, slug]);
 
-  useEffect(() => { if (open) { setFills(emptyFill()); setFinished(false); } }, [open]);
+  // Redesenha tudo: cor da area multiplicada pela luminosidade original,
+  // assim o traco e o sombreado do desenho continuam por cima da tinta.
+  const render = useCallback(() => {
+    const canvas = canvasRef.current;
+    const reg = regionsRef.current;
+    if (!canvas || !reg) return;
+    // O popup recria o canvas a cada abertura — garante o tamanho certo.
+    if (canvas.width !== reg.w) { canvas.width = reg.w; canvas.height = reg.h; }
+    const ctx = canvas.getContext('2d')!;
+    const img = ctx.createImageData(reg.w, reg.h);
+    const rgbByLabel = new Map<number, number[]>();
+    fillsRef.current.forEach((hex, id) => rgbByLabel.set(id, hexToRgb(hex)));
+    for (let i = 0; i < reg.w * reg.h; i++) {
+      const l = reg.lum[i];
+      const rgb = rgbByLabel.get(reg.label[i]);
+      const o = i * 4;
+      if (rgb) {
+        img.data[o] = (rgb[0] * l) / 255;
+        img.data[o + 1] = (rgb[1] * l) / 255;
+        img.data[o + 2] = (rgb[2] * l) / 255;
+      } else {
+        img.data[o] = l; img.data[o + 1] = l; img.data[o + 2] = l;
+      }
+      img.data[o + 3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+    const reg2 = regionsRef.current!;
+    setPainted(reg2.paintable.filter((id) => fillsRef.current.has(id)).length);
+  }, []);
 
-  const painted = COLORABLE.filter((id) => fills[id] !== WHITE).length;
-  useEffect(() => { if (painted === COLORABLE.length) setFinished(true); }, [painted]);
+  // Carrega o desenho e calcula as areas quando o popup abre.
+  useEffect(() => {
+    if (!open) return;
+    setFinished(false);
+    fillsRef.current = new Map();
+    setPainted(0);
+    if (regionsRef.current) { requestAnimationFrame(render); return; }
+    const img = new window.Image();
+    img.src = DRAWING;
+    img.onload = () => {
+      const w = img.naturalWidth * SCALE, h = img.naturalHeight * SCALE;
+      const off = document.createElement('canvas');
+      off.width = w; off.height = h;
+      const octx = off.getContext('2d')!;
+      octx.imageSmoothingQuality = 'high';
+      octx.drawImage(img, 0, 0, w, h);
+      regionsRef.current = buildRegions(octx.getImageData(0, 0, w, h));
+      const canvas = canvasRef.current;
+      if (canvas) { canvas.width = w; canvas.height = h; }
+      setReady(true);
+      render();
+    };
+  }, [open, render]);
 
-  function paint(id: string) {
-    setFills((f) => ({ ...f, [id]: color }));
+  const total = regionsRef.current?.paintable.length ?? 0;
+  useEffect(() => { if (total > 0 && painted === total) setFinished(true); }, [painted, total]);
+
+  function paintAt(clientX: number, clientY: number) {
+    const canvas = canvasRef.current;
+    const reg = regionsRef.current;
+    if (!canvas || !reg || finished) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = Math.floor(((clientX - rect.left) / rect.width) * reg.w);
+    const y = Math.floor(((clientY - rect.top) / rect.height) * reg.h);
+    // Tocou bem em cima da linha: procura a area mais proxima.
+    let id = -1;
+    for (let r = 0; r <= 8 && id < 0; r += 2) {
+      for (const [dx, dy] of [[0, 0], [r, 0], [-r, 0], [0, r], [0, -r]]) {
+        const px = x + dx, py = y + dy;
+        if (px < 0 || py < 0 || px >= reg.w || py >= reg.h) continue;
+        const l = reg.label[py * reg.w + px];
+        if (l >= 0) { id = l; break; }
+      }
+    }
+    if (id < 0 || id === reg.outside) return;
+    if (color === WHITE) fillsRef.current.delete(id);
+    else fillsRef.current.set(id, color);
+    render();
   }
 
   function surprise() {
-    setFills(Object.fromEntries(COLORABLE.map((id) => [id, PALETTE[Math.floor(Math.random() * PALETTE.length)].hex])));
+    const reg = regionsRef.current;
+    if (!reg) return;
+    for (const id of reg.paintable) fillsRef.current.set(id, PALETTE[Math.floor(Math.random() * PALETTE.length)].hex);
+    render();
+  }
+
+  function restart() {
+    fillsRef.current = new Map();
+    setFinished(false);
+    render();
   }
 
   function addToCart() {
@@ -90,38 +211,26 @@ export function ColorDinoModal({ open, onOpenChange, collectionHref, slug }: {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="kids max-h-[95vh] w-full overflow-y-auto rounded-[32px] border-0 bg-[#F1FBEF] p-5 sm:max-w-[600px] sm:p-7">
+      <DialogContent className="kids max-h-[95vh] w-full overflow-y-auto rounded-[32px] border-0 bg-[#F1FBEF] p-5 sm:max-w-[560px] sm:p-7">
         <DialogTitle className="text-center font-kids text-3xl font-bold text-[#23263f] sm:text-4xl">
           {finished ? '¡Qué dinosaurio tan bonito!' : '¡Colorea a tu manera!'}
         </DialogTitle>
         <DialogDescription className="text-center text-base text-[#565a78]">
           {finished
             ? 'Así de divertido es pintar nuestros juguetes impresos en 3D.'
-            : 'Elige un color y toca el dinosaurio para pintarlo.'}
+            : 'Elige un color y toca una parte del dinosaurio para pintarla.'}
         </DialogDescription>
 
-        <div className="rounded-[28px] bg-white p-3">
-          <svg viewBox="0 0 330 215" className="h-auto w-full" role="group" aria-label="Dinosaurio para colorear">
-            <path d="M8 204 Q165 190 322 204" fill="none" stroke="#CDE8C4" strokeWidth="6" strokeLinecap="round" aria-hidden="true" />
-            {PARTS.map((p) => (
-              <path
-                key={p.id}
-                d={p.d}
-                fill={fills[p.id]}
-                stroke="#23263f"
-                strokeWidth="3.5"
-                strokeLinejoin="round"
-                role="button"
-                tabIndex={0}
-                aria-label={`Pintar ${p.label}`}
-                className="cursor-pointer outline-none transition-[fill] duration-300 focus-visible:stroke-[#1E88FF]"
-                onClick={() => paint(p.id)}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); paint(p.id); } }}
-              />
-            ))}
-            <circle cx="48" cy="126" r="4.5" fill="#23263f" aria-hidden="true" />
-            <path d="M36 140 Q46 146 58 141" fill="none" stroke="#23263f" strokeWidth="3" strokeLinecap="round" aria-hidden="true" />
-          </svg>
+        <div className="mx-auto w-full max-w-[300px] rounded-[28px] bg-white p-3">
+          <canvas
+            ref={canvasRef}
+            role="img"
+            aria-label="Dibujo de un triceratops saliendo del huevo para colorear"
+            onPointerDown={(e) => paintAt(e.clientX, e.clientY)}
+            className={`block h-auto w-full touch-manipulation ${finished ? '' : 'cursor-crosshair'}`}
+            style={{ aspectRatio: '298 / 357' }}
+          />
+          {!ready && <p className="py-2 text-center text-sm text-[#565a78]">Cargando dibujo…</p>}
         </div>
 
         {finished ? (
@@ -159,10 +268,10 @@ export function ColorDinoModal({ open, onOpenChange, collectionHref, slug }: {
             )}
             <button
               type="button"
-              onClick={() => { setFills(emptyFill()); setFinished(false); }}
+              onClick={restart}
               className="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-[#F2F4FA] font-extrabold text-[#23263f] transition-colors hover:bg-[#E6E9F3]"
             >
-              <RotateCcw className="h-5 w-5" /> Pintar otro
+              <RotateCcw className="h-5 w-5" /> Pintar otra vez
             </button>
           </div>
         ) : (
@@ -184,7 +293,7 @@ export function ColorDinoModal({ open, onOpenChange, collectionHref, slug }: {
                 type="button"
                 role="radio"
                 aria-checked={color === WHITE}
-                aria-label="Goma (blanco)"
+                aria-label="Goma (borrar)"
                 onClick={() => setColor(WHITE)}
                 className={`flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-2 border-[#efe7da] bg-white transition-transform duration-150 ${color === WHITE ? 'scale-110 ring-4 ring-[#23263f] ring-offset-2 ring-offset-[#F1FBEF]' : 'hover:scale-105'}`}
               >
