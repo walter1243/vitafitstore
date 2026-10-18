@@ -76,7 +76,7 @@ export function LampSwitchModal({ open, onOpenChange, collectionHref }: {
               style={{ background: on ? '#22B14C' : '#9aa0b4' }}
             />
           </button>
-          <span className="text-center font-kids text-xl font-bold">
+          <span className="text-center font-kids text-xl font-bold text-white">
             {on ? 'Apagar la lámpara' : 'Encender la lámpara'}
           </span>
           <Link
