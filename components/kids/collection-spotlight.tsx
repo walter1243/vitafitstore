@@ -1,26 +1,27 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { getCollection } from '@/lib/collections';
-import { CollectionPlayButton, PILL } from './collection-play';
+import { CollectionPlayButton } from './collection-play';
+import { PILL } from './pill';
+import { useSectors } from './sectors-context';
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Cenario de cada colecao no destaque. Claro/escuro alternam com corte seco
-// (padrao .claude/skills/apple-style-showcase): rompecabezas claro,
-// lampadas escuro (a luminaria brilha no escuro), pintar claro.
-const SCENES: Record<string, { dark: boolean; background: string; photo?: string; art?: string; artRatio?: string }> = {
-  rompecabezas: { dark: false, background: 'linear-gradient(180deg, #EAF2FF 0%, #F7FAFF 100%)', art: '/images/rompecabezas-completo.png', artRatio: '473 / 303' },
-  lamparas: { dark: true, background: '#07080f', photo: '/images/lampara-cohete-habitacion.jpg' },
-  'para-pintar': { dark: false, background: 'linear-gradient(180deg, #FFF1DF 0%, #FFF9F1 100%)', art: '/images/juguetes-para-pintar.png', artRatio: '1 / 1' },
-};
+// Clareia uma cor (#RRGGBB) misturando com branco — fim do degrade claro.
+function lighten(hex: string, amount = 0.6) {
+  const n = parseInt(hex.slice(1), 16);
+  const mix = (c: number) => Math.round(c + (255 - c) * amount);
+  return `rgb(${mix((n >> 16) & 255)}, ${mix((n >> 8) & 255)}, ${mix(n & 255)})`;
+}
 
-// Destaque estilo Apple de UMA colecao: secao de tela cheia, titulo enorme,
-// uma linha de texto e exatamente duas pilulas do mesmo tamanho — ver a
-// colecao (cheia) e a brincadeira dela (contornada). Sem setas, sem cards.
+// Destaque estilo Apple de UMA colecao (.claude/skills/apple-style-showcase):
+// secao de tela cheia, titulo enorme, uma linha e duas pilulas do mesmo
+// tamanho — ver a colecao (cheia) e a brincadeira dela (contornada), ou o
+// setor quando a colecao nao tem brincadeira. Tema, cor, imagem e foto vem
+// do Admin → Setores e coleções.
 export function CollectionSpotlight({ slug, count, primaryHref, primaryLabel, headingLevel = 'h2', priority, first }: {
   slug: string;
   count?: number;
@@ -32,8 +33,9 @@ export function CollectionSpotlight({ slug, count, primaryHref, primaryLabel, he
   first?: boolean;
 }) {
   const ref = useRef<HTMLElement>(null);
+  const { getCollection, getSector } = useSectors();
   const collection = getCollection(slug);
-  const scene = SCENES[slug];
+  const [ratio, setRatio] = useState('4 / 3');
 
   // Uma unica animacao: o conteudo aparece subindo, uma vez, ao rolar.
   useEffect(() => {
@@ -53,19 +55,23 @@ export function CollectionSpotlight({ slug, count, primaryHref, primaryLabel, he
     return () => mm.revert();
   }, []);
 
-  if (!collection || !scene) return null;
+  if (!collection) return null;
   const Heading = headingLevel;
-  const dark = scene.dark;
+  const dark = collection.theme === 'dark';
+  const photo = dark ? collection.photoUrl : '';
+  const art = !photo ? collection.imageUrl : '';
+  const sector = getSector(collection.sectorId);
+  const background = dark ? collection.bgColor : `linear-gradient(180deg, ${collection.bgColor} 0%, ${lighten(collection.bgColor)} 100%)`;
 
   return (
     <section
       ref={ref}
       className={`relative flex min-h-[88vh] w-full flex-col items-center justify-center overflow-hidden px-4 pb-16 text-center sm:pb-20 ${first ? 'pt-36 sm:pt-40' : 'pt-20 sm:pt-24'}`}
-      style={{ background: scene.background }}
+      style={{ background }}
     >
-      {scene.photo && (
+      {photo && (
         <>
-          <Image src={scene.photo} alt="" fill priority={priority} sizes="100vw" className="object-cover" />
+          <Image src={photo} alt="" fill priority={priority} sizes="100vw" className="object-cover" />
           <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(7,8,15,0.88) 0%, rgba(7,8,15,0.55) 38%, rgba(7,8,15,0.15) 70%, rgba(7,8,15,0.55) 100%)' }} />
         </>
       )}
@@ -74,10 +80,12 @@ export function CollectionSpotlight({ slug, count, primaryHref, primaryLabel, he
         <Heading className={`text-5xl font-bold sm:text-6xl md:text-7xl ${dark ? 'text-white' : 'text-[#23263f]'}`}>
           {collection.name}
         </Heading>
-        <p className={`mt-3 text-lg sm:text-xl ${dark ? 'text-white/85' : 'text-[#565a78]'}`}>
-          {collection.tagline}
-          {count ? ` · ${count} ${count === 1 ? 'producto' : 'productos'}` : ''}
-        </p>
+        {(collection.tagline || count) ? (
+          <p className={`mt-3 text-lg sm:text-xl ${dark ? 'text-white/85' : 'text-[#565a78]'}`}>
+            {collection.tagline}
+            {count ? `${collection.tagline ? ' · ' : ''}${count} ${count === 1 ? 'producto' : 'productos'}` : ''}
+          </p>
+        ) : null}
         <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row">
           <Link
             href={primaryHref ?? `/coleccion/${collection.slug}`}
@@ -85,14 +93,34 @@ export function CollectionSpotlight({ slug, count, primaryHref, primaryLabel, he
           >
             {primaryLabel ?? `Ver ${collection.shortName.toLowerCase()}`}
           </Link>
-          <CollectionPlayButton slug={collection.slug} appearance={dark ? 'pill-dark' : 'pill'} />
+          {collection.interactive !== 'none' ? (
+            <CollectionPlayButton slug={collection.slug} appearance={dark ? 'pill-dark' : 'pill'} />
+          ) : sector ? (
+            <Link
+              href={`/sector/${sector.slug}`}
+              className={`${PILL} border-2 ${dark ? 'border-white text-white hover:bg-white/10' : 'border-[#23263f] text-[#23263f] hover:bg-[#23263f]/5'}`}
+            >
+              Ver todo {sector.name.toLowerCase()}
+            </Link>
+          ) : null}
         </div>
       </div>
 
-      {scene.art && (
+      {art && (
         <div data-reveal className="relative z-10 mt-10 w-full max-w-3xl sm:mt-12">
-          <div className="relative mx-auto w-full max-w-[560px]" style={{ aspectRatio: scene.artRatio }}>
-            <Image src={scene.art} alt={collection.name} fill priority={priority} sizes="(min-width: 768px) 560px, 92vw" className="object-contain" />
+          <div className="relative mx-auto w-full max-w-[560px]" style={{ aspectRatio: ratio }}>
+            <Image
+              src={art}
+              alt={collection.name}
+              fill
+              priority={priority}
+              sizes="(min-width: 768px) 560px, 92vw"
+              className="object-contain"
+              onLoad={(e) => {
+                const img = e.currentTarget;
+                if (img.naturalWidth && img.naturalHeight) setRatio(`${img.naturalWidth} / ${img.naturalHeight}`);
+              }}
+            />
             {collection.interactive === 'colorear' && <span className="paint-reveal" aria-hidden="true" />}
           </div>
         </div>

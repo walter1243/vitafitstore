@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Check, Eraser, RotateCcw, ShoppingCart, Sparkles } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { useCart } from '@/lib/cart-context';
-import { collectionForCategory } from '@/lib/collections';
+import { useSectors } from './sectors-context';
 import { toStoreProduct } from '@/lib/store-product';
 import { useStoreProducts } from './use-store-products';
 
@@ -92,6 +92,7 @@ export function ColorDinoModal({ open, onOpenChange, collectionHref, slug }: {
   const [finished, setFinished] = useState(false);
   const { products } = useStoreProducts();
   const { addItem, setIsCartOpen } = useCart();
+  const { collectionForCategory } = useSectors();
 
   // Produto oferecido no fim: um "dino" da colecao de pintar, senao o
   // primeiro da colecao. Sem produto cadastrado ainda, leva pra colecao.
@@ -100,7 +101,7 @@ export function ColorDinoModal({ open, onOpenChange, collectionHref, slug }: {
     const dino = items.find((p) => /dino|tricer|estego|t-?rex|stego/i.test(p.name));
     const chosen = dino ?? items[0];
     return chosen ? toStoreProduct(chosen) : null;
-  }, [products, slug]);
+  }, [products, slug, collectionForCategory]);
 
   // Redesenha tudo: cor da area multiplicada pela luminosidade original,
   // assim o traco e o sombreado do desenho continuam por cima da tinta.

@@ -10,10 +10,11 @@ import { type Product } from '@/lib/products'
 import { TrustpilotWidget } from '@/components/trustpilot-widget'
 import { SizeGuideModal } from '@/components/size-guide-modal'
 import { ProductReviews } from '@/components/product-reviews'
-import { collectionForCategory } from '@/lib/collections'
+import { useSectors } from '@/components/kids/sectors-context'
 
 export function ProductPageView({ product }: { product: Product }) {
   const { addItem } = useCart()
+  const { collectionForCategory } = useSectors()
   const collection = collectionForCategory(product.categoryLabel)
   const router = useRouter()
   const galleryImages = [product.mainImage ?? product.image, ...(product.additionalImages ?? [])].filter(Boolean) as string[]

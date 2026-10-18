@@ -1,25 +1,29 @@
 'use client';
 import { useState } from 'react';
 import Image from 'next/image';
-import { Lightbulb, Paintbrush, Puzzle } from 'lucide-react';
-import { getCollection } from '@/lib/collections';
+import { Lamp, Lightbulb, Paintbrush, Palette, Puzzle, Sparkles } from 'lucide-react';
+import { type Interactive } from '@/lib/sectors-shared';
+import { useSectors } from './sectors-context';
+import { PILL } from './pill';
 import { ColorDinoModal } from './color-dino-modal';
 import { LampSwitchModal } from './lamp-switch-modal';
 import { PuzzleModal } from './puzzle-modal';
 
-// Recebem so o `slug` (texto): a configuracao da colecao tem o icone, que
-// e uma funcao, e funcao nao pode atravessar de uma pagina do servidor pra
-// um componente do navegador — passar o objeto inteiro derrubava as
-// paginas de colecao com erro 500.
+// Recebem so o `slug` e buscam a colecao nos setores (Admin → Setores e
+// coleções). Icone de uma colecao = o da brincadeira dela.
+export function iconFor(interactive: Interactive) {
+  return interactive === 'rompecabezas' ? Puzzle : interactive === 'colorear' ? Palette : interactive === 'encender' ? Lamp : Sparkles;
+}
 
 // Imagem da colecao. Na de pintar, as cores "pintam" os brinquedos em
 // branco em loop (classe .paint-reveal em globals.css).
 export function CollectionImage({ slug, sizes, priority }: { slug: string; sizes: string; priority?: boolean }) {
+  const { getCollection } = useSectors();
   const collection = getCollection(slug);
-  if (!collection) return null;
+  if (!collection || !collection.imageUrl) return null;
   return (
     <>
-      <Image src={collection.image} alt={collection.name} fill sizes={sizes} priority={priority} className="object-contain" />
+      <Image src={collection.imageUrl} alt={collection.name} fill sizes={sizes} priority={priority} className="object-contain" />
       {collection.interactive === 'colorear' && <span className="paint-reveal" aria-hidden="true" />}
     </>
   );
@@ -28,12 +32,12 @@ export function CollectionImage({ slug, sizes, priority }: { slug: string; sizes
 // Botao da brincadeira da colecao + o modal dela. "solid": botao cheio na
 // cor da colecao; "pill"/"pill-dark": pilula contornada dos destaques
 // estilo Apple (mesmo tamanho da pilula cheia ao lado).
-export const PILL = 'inline-flex min-h-12 cursor-pointer items-center justify-center rounded-full px-7 text-base font-bold transition-colors duration-200';
 
 export function CollectionPlayButton({ slug, appearance = 'solid' }: { slug: string; appearance?: 'solid' | 'pill' | 'pill-dark' }) {
   const [open, setOpen] = useState(false);
+  const { getCollection } = useSectors();
   const collection = getCollection(slug);
-  if (!collection) return null;
+  if (!collection || collection.interactive === 'none') return null;
   const href = `/coleccion/${collection.slug}`;
   const kind = collection.interactive;
   const Icon = kind === 'colorear' ? Paintbrush : kind === 'encender' ? Lightbulb : Puzzle;
@@ -45,7 +49,7 @@ export function CollectionPlayButton({ slug, appearance = 'solid' }: { slug: str
           type="button"
           onClick={() => setOpen(true)}
           className="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-2xl px-5 font-extrabold text-white transition-colors duration-200"
-          style={{ background: collection.color.main }}
+          style={{ background: '#23263f' }}
         >
           <Icon className="h-5 w-5" aria-hidden="true" />
           {label}

@@ -3,16 +3,8 @@ import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { ShoppingCart, Menu, X, Smile } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
-import { COLLECTIONS } from '@/lib/collections';
+import { useSectors } from '@/components/kids/sectors-context';
 
-// Menu fixo da vitrine infantil: as colecoes vem de lib/collections.ts
-// (cada uma com a sua pagina), entao o cabecalho nao precisa mais buscar
-// categorias/produtos a cada 15s pra montar os links.
-const navLinks = [
-  ...COLLECTIONS.map((c) => ({ href: `/coleccion/${c.slug}`, label: c.shortName })),
-  { href: '/#colecciones', label: 'Colecciones' },
-  { href: '/#como-se-hace', label: 'Nuestro taller' },
-];
 
 // Logo da marca (Kitoys 3D) mostrado inteiro no modo "logo direto". A logo
 // enviada no admin continua sendo usada no modo "icone + nome".
@@ -36,7 +28,13 @@ function readCachedBranding() {
   }
 }
 
+// Menu: um link por setor (Admin → Setores e coleções) + Nuestro taller.
 export function Header() {
+  const { sectors } = useSectors();
+  const navLinks = [
+    ...sectors.filter((s) => s.collections.length > 0).map((s) => ({ href: `/sector/${s.slug}`, label: s.name })),
+    { href: '/#como-se-hace', label: 'Nuestro taller' },
+  ];
   const { totalItems, setIsCartOpen } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);

@@ -1,10 +1,11 @@
 import { MetadataRoute } from 'next';
 import { getAllProductIds } from '@/lib/get-product';
 import { slugifyCategory } from '@/lib/store-product';
-import { COLLECTIONS } from '@/lib/collections';
+import { getSectors } from '@/lib/sectors';
+import { enabledCollections } from '@/lib/sectors-shared';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const products = await getAllProductIds();
+  const [products, sectors] = await Promise.all([getAllProductIds(), getSectors()]);
   const productEntries: MetadataRoute.Sitemap = products.map((p) => ({
     url: `https://www.vitafitstore.es/producto/${p.id}-${slugifyCategory(p.name)}`,
     lastModified: new Date(),
@@ -20,7 +21,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'daily',
       priority: 1,
     },
-    ...COLLECTIONS.map((c) => ({
+    ...sectors.map((s) => ({
+      url: `https://www.kitoys3d.com/sector/${s.slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.9,
+    })),
+    ...enabledCollections(sectors).map((c) => ({
       url: `https://www.vitafitstore.es/coleccion/${c.slug}`,
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,

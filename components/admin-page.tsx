@@ -1,4 +1,5 @@
 'use client';
+import { AdminSectors } from '@/components/admin-sectors';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { BlocosEditor, type BlocosEditorHandle } from '@/components/configuracoes/BlocosEditor';
 import { ContentEditor } from '@/components/configuracoes/ContentEditor';
@@ -11,12 +12,12 @@ import {
   ArrowUp, ArrowDown, Monitor, Zap, ToggleLeft, ToggleRight,
   MessageCircle, Mail, Globe, RefreshCw, LogOut,
   Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  List, ListOrdered, Undo2, Redo2, Star,
+  List, ListOrdered, Undo2, Redo2, Star, LayoutGrid,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Section = 'dashboard' | 'products' | 'orders' | 'tracking' | 'settings' | 'automation' | 'import-supplier' | 'reviews';
+type Section = 'dashboard' | 'products' | 'sectors' | 'orders' | 'tracking' | 'settings' | 'automation' | 'import-supplier' | 'reviews';
 
 type Product = {
   id: number;
@@ -2262,6 +2263,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
       label: 'Catálogo',
       items: [
         { key: 'products', label: 'Produtos', icon: <Package size={18} /> },
+        { key: 'sectors', label: 'Setores e coleções', icon: <LayoutGrid size={18} /> },
         { key: 'import-supplier', label: 'Importar Produtos', icon: <PackageSearch size={18} /> },
       ],
     },
@@ -2277,6 +2279,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
   const SECTION_DESCRIPTIONS: Record<Section, string> = {
     dashboard: 'Visão geral de vendas, pedidos e produtos.',
     products: 'Cadastre, edite e organize os produtos da vitrine.',
+    sectors: 'Organize a vitrine em setores e coleções (as faixas de tela cheia da home).',
     'import-supplier': 'Importe produtos de fornecedores direto para o catálogo.',
     orders: 'Acompanhe e gerencie os pedidos recebidos.',
     tracking: 'Atualize o status e o código de rastreio dos envios.',
@@ -2539,6 +2542,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
               onColorOptionsChange={setProdColorOptions}
             />
           )}
+          {section === 'sectors' && <AdminSectors />}
           {section === 'import-supplier' && <ImportSupplierSection onImportToStore={preFillFromSupplier} />}
           {section === 'orders' && <OrdersSection orders={orders} onUpdateTracking={updateTracking} onRefresh={fetchData} />}
           {section === 'reviews' && <ReviewsSection />}

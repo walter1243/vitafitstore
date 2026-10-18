@@ -6,6 +6,8 @@ import { WhatsAppFloating } from '@/components/whatsapp-floating'
 import { KidsStorefront } from '@/components/kids/kids-storefront'
 import { KidsHowItsMade } from '@/components/kids/kids-how-its-made'
 import { getSiteContent } from '@/lib/site-content'
+import { getSectors } from '@/lib/sectors'
+import { SectorsProvider } from '@/components/kids/sectors-context'
 
 // Without this, Next.js statically generates the homepage at build time
 // (a raw `sql` query doesn't trip its automatic dynamic-rendering
@@ -19,9 +21,10 @@ export const revalidate = 0
 // → compra por colecao → prateleiras → "Nuestro taller". So o conteudo da pagina fica dentro de .kids — carrinho,
 // popup e checkout mantem o visual de antes.
 export default async function HomePage() {
-  const content = await getSiteContent()
+  const [content, sectors] = await Promise.all([getSiteContent(), getSectors()])
 
   return (
+    <SectorsProvider sectors={sectors}>
     <div className="flex min-h-screen flex-col bg-white">
       <Header />
       <main className="kids flex-1">
@@ -33,5 +36,6 @@ export default async function HomePage() {
       <CartSidebar />
       <UpsellPopup />
     </div>
+    </SectorsProvider>
   )
 }

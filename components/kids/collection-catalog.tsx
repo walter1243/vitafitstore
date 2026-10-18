@@ -2,7 +2,9 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Home, Printer } from 'lucide-react';
-import { COLLECTIONS, collectionForCategory } from '@/lib/collections';
+import { softOf } from '@/lib/sectors-shared';
+import { iconFor } from './collection-play';
+import { useSectors } from './sectors-context';
 import { toStoreProduct } from '@/lib/store-product';
 import { KidsProductCard } from './kids-product-card';
 import { useStoreProducts } from './use-store-products';
@@ -19,14 +21,15 @@ const SORTS: { key: Sort; label: string }[] = [
 // (ex: "Puzzles", "Juegos de mesa" — vem do admin), ordenacao e grade de
 // cards. Embaixo, atalhos pra outra colecao e pra home.
 export function CollectionCatalog({ slug }: { slug: string }) {
-  const collection = COLLECTIONS.find((c) => c.slug === slug)!;
+  const { getCollection, getSector, collectionForCategory } = useSectors();
+  const collection = getCollection(slug)!;
   const { products, loaded } = useStoreProducts();
   const [group, setGroup] = useState<string>('todo');
   const [sort, setSort] = useState<Sort>('destacados');
 
   const items = useMemo(
     () => products.filter((p) => collectionForCategory(p.category)?.slug === slug).map(toStoreProduct),
-    [products, slug],
+    [products, slug, collectionForCategory],
   );
 
   const groups = useMemo(() => {
@@ -45,7 +48,10 @@ export function CollectionCatalog({ slug }: { slug: string }) {
     return list;
   }, [items, group, sort, collection.shortName]);
 
-  const others = COLLECTIONS.filter((c) => c.slug !== slug);
+  // Outras colecoes do MESMO setor pra continuar navegando.
+  const sector = getSector(collection.sectorId);
+  const others = (sector?.collections ?? []).filter((c) => c.slug !== slug && c.enabled);
+  const soft = softOf(collection);
   const chip = (active: boolean) =>
     `min-h-11 cursor-pointer rounded-full px-5 text-base font-bold transition-colors duration-200 ${
       active ? 'bg-[var(--k-ink)] text-white' : 'bg-[#F2F4FA] text-[var(--k-ink)] hover:bg-[#E6E9F3]'
@@ -89,37 +95,37 @@ export function CollectionCatalog({ slug }: { slug: string }) {
             <KidsProductCard
               key={p.id}
               product={p}
-              soft={collection.color.soft}
+              soft={soft}
               tag={groups.length > 1 && group === 'todo' ? p.categoryLabel : undefined}
             />
           ))}
         </div>
       ) : loaded ? (
-        <div className="rounded-[32px] px-6 py-14 text-center" style={{ background: collection.color.soft }}>
-          <Printer className="mx-auto h-12 w-12" style={{ color: collection.color.main }} strokeWidth={1.75} aria-hidden="true" />
+        <div className="rounded-[32px] px-6 py-14 text-center" style={{ background: soft }}>
+          <Printer className="mx-auto h-12 w-12 text-[#23263f]" strokeWidth={1.75} aria-hidden="true" />
           <p className="mt-4 font-kids text-3xl font-bold text-[var(--k-ink)]">La impresora está trabajando</p>
           <p className="mt-1 text-lg text-[var(--k-muted)]">Muy pronto habrá nuevas creaciones aquí.</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="aspect-[3/4] animate-pulse rounded-[28px]" style={{ background: collection.color.soft }} />
+            <div key={i} className="aspect-[3/4] animate-pulse rounded-[28px]" style={{ background: soft }} />
           ))}
         </div>
       )}
 
       <div className="mt-16 grid gap-4 md:grid-cols-2">
         {others.map((c) => {
-          const Icon = c.icon;
+          const Icon = iconFor(c.interactive);
           return (
             <Link
               key={c.slug}
               href={`/coleccion/${c.slug}`}
               className="group flex cursor-pointer items-center gap-5 rounded-3xl p-5 transition-transform duration-200 hover:-translate-y-0.5"
-              style={{ background: c.color.soft }}
+              style={{ background: softOf(c) }}
             >
               <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white">
-                <Icon className="h-7 w-7" style={{ color: c.color.main }} strokeWidth={1.75} aria-hidden="true" />
+                <Icon className="h-7 w-7 text-[#23263f]" strokeWidth={1.75} aria-hidden="true" />
               </span>
               <span className="flex-1">
                 <span className="block text-sm font-semibold text-[var(--k-muted)]">Descubre también</span>
@@ -129,7 +135,7 @@ export function CollectionCatalog({ slug }: { slug: string }) {
           );
         })}
         <Link
-          href="/#colecciones"
+          href={sector ? `/sector/${sector.slug}` : '/#colecciones'}
           className="group flex cursor-pointer items-center gap-5 rounded-3xl bg-[#F2F4FA] p-5 transition-transform duration-200 hover:-translate-y-0.5"
         >
           <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white">
@@ -137,7 +143,7 @@ export function CollectionCatalog({ slug }: { slug: string }) {
           </span>
           <span className="flex-1">
             <span className="block text-sm font-semibold text-[var(--k-muted)]">Volver</span>
-            <span className="block font-kids text-2xl font-bold text-[var(--k-ink)]">Todas las colecciones</span>
+            <span className="block font-kids text-2xl font-bold text-[var(--k-ink)]">{sector ? `Todo ${sector.name.toLowerCase()}` : 'Todas las colecciones'}</span>
           </span>
         </Link>
       </div>

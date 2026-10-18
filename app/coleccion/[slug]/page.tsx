@@ -7,7 +7,9 @@ import { UpsellPopup } from '@/components/upsell-popup'
 import { WhatsAppFloating } from '@/components/whatsapp-floating'
 import { CollectionCatalog } from '@/components/kids/collection-catalog'
 import { CollectionSpotlight } from '@/components/kids/collection-spotlight'
-import { getCollection } from '@/lib/collections'
+import { SectorsProvider } from '@/components/kids/sectors-context'
+import { getSectors } from '@/lib/sectors'
+import { enabledCollections } from '@/lib/sectors-shared'
 import { getSiteContent } from '@/lib/site-content'
 
 export const dynamic = 'force-dynamic'
@@ -16,36 +18,38 @@ type PageProps = { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
-  const collection = getCollection(slug)
+  const collection = enabledCollections(await getSectors()).find((c) => c.slug === slug)
   if (!collection) return { title: 'Colección no encontrada' }
   return {
-    title: `${collection.name} para niños`,
-    description: collection.description,
+    title: collection.name,
+    description: collection.description || collection.tagline,
     alternates: { canonical: `/coleccion/${collection.slug}` },
   }
 }
 
+// Pagina de uma colecao (Admin → Setores e coleções): o destaque de tela
+// cheia dela no topo e todos os produtos das categorias vinculadas.
 export default async function CollectionPage({ params }: PageProps) {
   const { slug } = await params
-  const collection = getCollection(slug)
+  const [sectors, content] = await Promise.all([getSectors(), getSiteContent()])
+  const collection = enabledCollections(sectors).find((c) => c.slug === slug)
   if (!collection) notFound()
 
-  const content = await getSiteContent()
-
   return (
-    <div className="flex min-h-screen flex-col bg-white">
-      <Header />
-      <main className="kids flex-1">
-        <CollectionSpotlight slug={collection.slug} first priority headingLevel="h1" primaryHref="#productos" primaryLabel="Ver productos" />
-
-        <div id="productos" className="scroll-mt-24">
-        <CollectionCatalog slug={collection.slug} />
-        </div>
-      </main>
-      <Footer content={content.footer} />
-      <WhatsAppFloating />
-      <CartSidebar />
-      <UpsellPopup />
-    </div>
+    <SectorsProvider sectors={sectors}>
+      <div className="flex min-h-screen flex-col bg-white">
+        <Header />
+        <main className="kids flex-1">
+          <CollectionSpotlight slug={collection.slug} first priority headingLevel="h1" primaryHref="#productos" primaryLabel="Ver productos" />
+          <div id="productos" className="scroll-mt-24">
+            <CollectionCatalog slug={collection.slug} />
+          </div>
+        </main>
+        <Footer content={content.footer} />
+        <WhatsAppFloating />
+        <CartSidebar />
+        <UpsellPopup />
+      </div>
+    </SectorsProvider>
   )
 }

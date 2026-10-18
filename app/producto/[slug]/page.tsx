@@ -8,6 +8,8 @@ import { WhatsAppFloating } from '@/components/whatsapp-floating'
 import { ProductPageView } from '@/components/product-page-view'
 import { getProductById } from '@/lib/get-product'
 import { getSiteContent } from '@/lib/site-content'
+import { getSectors } from '@/lib/sectors'
+import { SectorsProvider } from '@/components/kids/sectors-context'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,9 +40,10 @@ export default async function ProductPage({ params }: PageProps) {
 
   if (!product) notFound()
 
-  const content = await getSiteContent()
+  const [content, sectors] = await Promise.all([getSiteContent(), getSectors()])
 
   return (
+    <SectorsProvider sectors={sectors}>
     <div className="flex min-h-screen flex-col bg-[#FAF8F5]">
       <Header />
       <main className="flex-1">
@@ -51,5 +54,6 @@ export default async function ProductPage({ params }: PageProps) {
       <CartSidebar />
       <UpsellPopup />
     </div>
+    </SectorsProvider>
   )
 }
