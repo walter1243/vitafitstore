@@ -47,36 +47,36 @@ export function CollectionCatalog({ slug }: { slug: string }) {
 
   const others = COLLECTIONS.filter((c) => c.slug !== slug);
   const chip = (active: boolean) =>
-    `min-h-11 rounded-full border-[3px] border-[#1f2340] px-5 font-kids text-lg font-bold transition-colors duration-200 ${
-      active ? 'text-white' : 'bg-white text-[#1f2340] hover:bg-[#F3F6FF]'
+    `min-h-11 cursor-pointer rounded-full px-5 text-base font-bold transition-colors duration-200 ${
+      active ? 'bg-[var(--k-ink)] text-white' : 'bg-[#F2F4FA] text-[var(--k-ink)] hover:bg-[#E6E9F3]'
     }`;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 pb-20 pt-6 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-7xl px-4 pb-20 pt-10 sm:px-6 lg:px-8">
       <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         {groups.length > 1 ? (
           <div className="flex flex-wrap gap-2" aria-label="Tipos dentro de la colección">
-            <button type="button" onClick={() => setGroup('todo')} className={chip(group === 'todo')} style={group === 'todo' ? { background: collection.color.main } : undefined}>
+            <button type="button" onClick={() => setGroup('todo')} className={chip(group === 'todo')}>
               Todo ({items.length})
             </button>
             {groups.map(([name, count]) => (
-              <button key={name} type="button" onClick={() => setGroup(name)} className={chip(group === name)} style={group === name ? { background: collection.color.main } : undefined}>
+              <button key={name} type="button" onClick={() => setGroup(name)} className={chip(group === name)}>
                 {name} ({count})
               </button>
             ))}
           </div>
         ) : (
-          <p className="font-kids text-2xl font-bold text-[#1f2340]">
+          <p className="text-base font-semibold text-[var(--k-muted)]">
             {loaded ? `${items.length} ${items.length === 1 ? 'creación' : 'creaciones'}` : 'Cargando…'}
           </p>
         )}
 
-        <label className="flex items-center gap-2 font-kids text-lg font-bold text-[#1f2340]">
-          Ordenar:
+        <label className="flex items-center gap-2 text-base font-semibold text-[var(--k-muted)]">
+          Ordenar por
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value as Sort)}
-            className="min-h-11 cursor-pointer rounded-full border-[3px] border-[#1f2340] bg-white px-4 text-base font-bold text-[#1f2340] outline-none"
+            className="min-h-11 cursor-pointer rounded-full border border-[var(--k-line)] bg-white px-4 text-base font-bold text-[var(--k-ink)] outline-none focus:border-[var(--k-ink)]"
           >
             {SORTS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
           </select>
@@ -84,22 +84,21 @@ export function CollectionCatalog({ slug }: { slug: string }) {
       </div>
 
       {visible.length > 0 ? (
-        <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 lg:grid-cols-4">
           {visible.map((p) => (
             <KidsProductCard
               key={p.id}
               product={p}
-              color={collection.color.main}
               soft={collection.color.soft}
               tag={groups.length > 1 && group === 'todo' ? p.categoryLabel : undefined}
             />
           ))}
         </div>
       ) : loaded ? (
-        <div className="rounded-[32px] border-4 border-dashed px-6 py-14 text-center" style={{ borderColor: collection.color.main, background: collection.color.soft }}>
-          <Printer className="mx-auto h-14 w-14" style={{ color: collection.color.main }} aria-hidden="true" />
-          <p className="mt-4 font-kids text-3xl font-extrabold text-[#1f2340]">¡La impresora está trabajando!</p>
-          <p className="mt-1 text-lg font-semibold text-[#4a4f72]">Muy pronto habrá nuevas creaciones aquí.</p>
+        <div className="rounded-[32px] px-6 py-14 text-center" style={{ background: collection.color.soft }}>
+          <Printer className="mx-auto h-12 w-12" style={{ color: collection.color.main }} strokeWidth={1.75} aria-hidden="true" />
+          <p className="mt-4 font-kids text-3xl font-bold text-[var(--k-ink)]">La impresora está trabajando</p>
+          <p className="mt-1 text-lg text-[var(--k-muted)]">Muy pronto habrá nuevas creaciones aquí.</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
@@ -109,39 +108,39 @@ export function CollectionCatalog({ slug }: { slug: string }) {
         </div>
       )}
 
-      <div className="mt-16 grid gap-5 md:grid-cols-2">
+      <div className="mt-16 grid gap-4 md:grid-cols-2">
         {others.map((c) => {
           const Icon = c.icon;
           return (
             <Link
               key={c.slug}
               href={`/coleccion/${c.slug}`}
-              className="kid-card group flex cursor-pointer items-center gap-5 rounded-[32px] border-4 border-[#1f2340] p-6 text-white"
-              style={{ background: c.color.main }}
+              className="group flex cursor-pointer items-center gap-5 rounded-3xl p-5 transition-transform duration-200 hover:-translate-y-0.5"
+              style={{ background: c.color.soft }}
             >
-              <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border-4 border-[#1f2340] bg-white">
-                <Icon className="h-8 w-8" style={{ color: c.color.main }} aria-hidden="true" />
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white">
+                <Icon className="h-7 w-7" style={{ color: c.color.main }} strokeWidth={1.75} aria-hidden="true" />
               </span>
               <span className="flex-1">
-                <span className="block font-kids text-lg font-bold">¡Mira también!</span>
-                <span className="block font-kids text-3xl font-extrabold">{c.shortName}</span>
+                <span className="block text-sm font-semibold text-[var(--k-muted)]">Descubre también</span>
+                <span className="block font-kids text-2xl font-bold text-[var(--k-ink)]">{c.name}</span>
               </span>
-              <ArrowRight className="h-7 w-7 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+              <ArrowRight className="h-5 w-5 text-[var(--k-ink)] transition-transform group-hover:translate-x-1" aria-hidden="true" />
             </Link>
           );
         })}
         <Link
           href="/#colecciones"
-          className="kid-card group flex cursor-pointer items-center gap-5 rounded-[32px] border-4 border-[#1f2340] bg-[#FFC93C] p-6 text-[#1f2340]"
+          className="group flex cursor-pointer items-center gap-5 rounded-3xl bg-[#F2F4FA] p-5 transition-transform duration-200 hover:-translate-y-0.5"
         >
-          <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border-4 border-[#1f2340] bg-white">
-            <Home className="h-8 w-8" aria-hidden="true" />
+          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white">
+            <Home className="h-7 w-7 text-[var(--k-ink)]" strokeWidth={1.75} aria-hidden="true" />
           </span>
           <span className="flex-1">
-            <span className="block font-kids text-lg font-bold">Volver</span>
-            <span className="block font-kids text-3xl font-extrabold">Todas las colecciones</span>
+            <span className="block text-sm font-semibold text-[var(--k-muted)]">Volver</span>
+            <span className="block font-kids text-2xl font-bold text-[var(--k-ink)]">Todas las colecciones</span>
           </span>
-          <ArrowRight className="h-7 w-7 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+          <ArrowRight className="h-5 w-5 text-[var(--k-ink)] transition-transform group-hover:translate-x-1" aria-hidden="true" />
         </Link>
       </div>
     </div>

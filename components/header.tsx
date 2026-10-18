@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
-import { ShoppingCart, Menu, X, Smile, LayoutGrid, Printer } from 'lucide-react';
+import { ShoppingCart, Menu, X, Smile } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 import { COLLECTIONS } from '@/lib/collections';
 
@@ -9,9 +9,9 @@ import { COLLECTIONS } from '@/lib/collections';
 // (cada uma com a sua pagina), entao o cabecalho nao precisa mais buscar
 // categorias/produtos a cada 15s pra montar os links.
 const navLinks = [
-  { href: '/#colecciones', label: 'Colecciones', icon: LayoutGrid, color: '#F2384A' },
-  ...COLLECTIONS.map((c) => ({ href: `/coleccion/${c.slug}`, label: c.shortName, icon: c.icon, color: c.color.main })),
-  { href: '/#como-se-hace', label: 'Nuestro taller', icon: Printer, color: '#22B14C' },
+  ...COLLECTIONS.map((c) => ({ href: `/coleccion/${c.slug}`, label: c.shortName })),
+  { href: '/#colecciones', label: 'Colecciones' },
+  { href: '/#como-se-hace', label: 'Nuestro taller' },
 ];
 
 // Logo padrao da marca — usado no modo "logo direto" enquanto o admin nao
@@ -125,37 +125,31 @@ export function Header() {
     };
   }, []);
 
-  const directLogo = logoUrl || DEFAULT_LOGO;
 
   return (
     <>
       <div ref={topBarRef} className="fixed top-0 left-0 right-0 z-[60]">
         {announcement && (
-          <div className="bg-[#1f2340] px-4 py-1 text-center text-[10px] font-semibold tracking-wide text-white sm:text-[11px]">
+          <div className="bg-[#23263f] px-4 py-1.5 text-center text-xs font-semibold text-white">
             {announcement}
           </div>
         )}
       </div>
       <header
-        className="kids fixed left-0 right-0 z-50 px-3 transition-all duration-300 sm:px-5"
-        style={{ top: topBarHeight + (scrolled ? 6 : 12) }}
+        className={`kids fixed left-0 right-0 z-50 border-b bg-white transition-shadow duration-300 ${scrolled ? 'border-transparent shadow-[0_4px_20px_rgba(35,38,63,0.08)]' : 'border-[#efe7da]'}`}
+        style={{ top: topBarHeight }}
       >
-        <div
-          className={`mx-auto flex max-w-7xl items-center justify-between rounded-full border-4 border-[#1f2340] bg-white py-1 pl-3 pr-2 transition-shadow duration-300 sm:pl-5 ${scrolled ? 'shadow-[0_6px_0_rgba(31,35,64,0.18)]' : 'shadow-[0_4px_0_rgba(31,35,64,0.12)]'}`}
-        >
+        <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           {/* Logo — "logo_direto" (padrao; Admin → Informações da Loja)
               mostra a imagem do logo sozinha, do jeito que ela e. */}
           {logoStyle === 'logo_direto' ? (
-            <Link href="/" className="-my-3 flex items-center transition-transform duration-200 hover:scale-105" aria-label={storeName}>
+            <Link href="/" className="flex shrink-0 items-center" aria-label={storeName}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={directLogo} alt={storeName} className="h-[68px] w-auto object-contain sm:h-[76px]" />
+              <img src={logoUrl || DEFAULT_LOGO} alt={storeName} className="h-16 w-auto object-contain" />
             </Link>
           ) : (
-            <Link href="/" className="group flex items-center gap-2 py-1">
-              <div
-                className="flex h-[42px] w-[42px] items-center justify-center overflow-hidden rounded-full"
-                style={{ background: themeColor }}
-              >
+            <Link href="/" className="flex shrink-0 items-center gap-2">
+              <div className="flex h-[42px] w-[42px] items-center justify-center overflow-hidden rounded-xl" style={{ background: themeColor }}>
                 {logoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={logoUrl} alt="Logo" className="h-full w-full object-cover" />
@@ -163,37 +157,34 @@ export function Header() {
                   <Smile className="h-6 w-6 text-white" aria-hidden="true" />
                 )}
               </div>
-              <span className="font-kids text-xl font-bold text-[#1f2340]">{storeName}</span>
+              <span className="font-kids text-xl font-bold text-[#23263f]">{storeName}</span>
             </Link>
           )}
 
           {/* Desktop nav */}
-          <nav className="hidden items-center gap-1 lg:flex">
-            {navLinks.map((link) => {
-              const Icon = link.icon;
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="flex min-h-11 items-center gap-2 rounded-full px-4 font-kids text-lg font-bold text-[#1f2340] transition-colors duration-200 hover:bg-[#F3F6FF]"
-                >
-                  <Icon className="h-5 w-5" style={{ color: link.color }} aria-hidden="true" />
-                  {link.label}
-                </Link>
-              );
-            })}
+          <nav className="hidden items-center gap-8 md:flex">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="group relative py-2 font-kids text-lg font-semibold text-[#23263f] transition-colors duration-200 hover:text-[#c2410c]"
+              >
+                {link.label}
+                <span className="absolute bottom-0.5 left-0 h-0.5 w-full origin-left scale-x-0 rounded-full bg-[#c2410c] transition-transform duration-200 group-hover:scale-x-100" />
+              </Link>
+            ))}
           </nav>
 
           {/* Right side */}
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsCartOpen(true)}
-              className="kid-btn relative flex h-12 w-12 items-center justify-center rounded-full border-[3px] border-[#1f2340] bg-[#FFC93C]"
+              className="relative flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-[#FFF4E0] transition-colors duration-200 hover:bg-[#FFE8C2]"
               aria-label="Abrir carrito"
             >
-              <ShoppingCart className="h-5 w-5 text-[#1f2340]" />
+              <ShoppingCart className="h-5 w-5 text-[#23263f]" />
               {totalItems > 0 && (
-                <span className="absolute -right-2 -top-2 flex h-6 min-w-6 items-center justify-center rounded-full border-2 border-[#1f2340] bg-[#F2384A] px-1 text-xs font-extrabold text-white">
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#c2410c] px-1 text-[11px] font-extrabold text-white">
                   {totalItems}
                 </span>
               )}
@@ -201,11 +192,11 @@ export function Header() {
 
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="flex h-12 w-12 items-center justify-center rounded-full border-[3px] border-[#1f2340] bg-white lg:hidden"
+              className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-[#F2F4FA] transition-colors hover:bg-[#E6E9F3] md:hidden"
               aria-label="Menú"
               aria-expanded={mobileOpen}
             >
-              {mobileOpen ? <X className="h-5 w-5 text-[#1f2340]" /> : <Menu className="h-5 w-5 text-[#1f2340]" />}
+              {mobileOpen ? <X className="h-5 w-5 text-[#23263f]" /> : <Menu className="h-5 w-5 text-[#23263f]" />}
             </button>
           </div>
         </div>
@@ -214,37 +205,29 @@ export function Header() {
       {/* Mobile drawer */}
       {mobileOpen && (
         <>
-          <div
-            className="fixed inset-0 z-40 bg-[#1f2340]/40 backdrop-blur-sm lg:hidden"
-            onClick={() => setMobileOpen(false)}
-          />
-          <div className="kids fixed bottom-0 right-0 top-0 z-50 flex w-[290px] flex-col rounded-l-[32px] border-l-4 border-[#1f2340] bg-[#F3FAFF] lg:hidden">
-            <div className="flex items-center justify-between p-6">
-              <span className="font-kids text-3xl font-extrabold text-[#1f2340]">¡Hola!</span>
+          <div className="fixed inset-0 z-40 bg-[#23263f]/40 md:hidden" onClick={() => setMobileOpen(false)} />
+          <div className="kids fixed bottom-0 right-0 top-0 z-50 flex w-72 flex-col bg-white md:hidden">
+            <div className="flex items-center justify-between border-b border-[#efe7da] p-5">
+              <span className="font-kids text-2xl font-bold text-[#23263f]">Menú</span>
               <button
                 onClick={() => setMobileOpen(false)}
-                className="flex h-11 w-11 items-center justify-center rounded-full border-[3px] border-[#1f2340] bg-white text-[#1f2340]"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F2F4FA] text-[#23263f]"
                 aria-label="Cerrar menú"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <nav className="flex flex-col gap-3 px-5">
-              {navLinks.map((link) => {
-                const Icon = link.icon;
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setMobileOpen(false)}
-                    className="kid-btn flex min-h-14 items-center gap-3 rounded-2xl px-5 font-kids text-xl font-bold text-white"
-                    style={{ background: link.color }}
-                  >
-                    <Icon className="h-6 w-6" aria-hidden="true" />
-                    {link.label}
-                  </Link>
-                );
-              })}
+            <nav className="flex flex-col p-3">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="rounded-xl px-4 py-3.5 font-kids text-xl font-semibold text-[#23263f] transition-colors hover:bg-[#FFF4E0]"
+                >
+                  {link.label}
+                </Link>
+              ))}
             </nav>
           </div>
         </>

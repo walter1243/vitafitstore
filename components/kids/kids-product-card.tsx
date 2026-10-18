@@ -6,11 +6,11 @@ import { Check, ShoppingCart } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 import { type Product } from '@/lib/products';
 
-type Props = { product: Product; color?: string; soft?: string; tag?: string };
+type Props = { product: Product; soft?: string; tag?: string };
 
-// Card "de brinquedo": borda grossa colorida, foto num fundo pastel, preco
-// em destaque e botao gordinho. A cor vem da colecao do produto.
-export function KidsProductCard({ product, color = '#1E88FF', soft = '#E6F3FF', tag }: Props) {
+// Card de produto da vitrine infantil: foto num fundo pastel macio, nome,
+// preco e botao de adicionar. Limpo, como numa loja de brinquedos real.
+export function KidsProductCard({ product, soft = '#F2F4FA', tag }: Props) {
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
   const [hovered, setHovered] = useState(false);
@@ -32,10 +32,9 @@ export function KidsProductCard({ product, color = '#1E88FF', soft = '#E6F3FF', 
       href={`/producto/${product.id}-${product.slug}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="kid-card group flex h-full cursor-pointer flex-col overflow-hidden rounded-[28px] border-4 bg-white"
-      style={{ borderColor: soft }}
+      className="group flex h-full cursor-pointer flex-col"
     >
-      <div className="relative m-2 aspect-square overflow-hidden rounded-[22px]" style={{ background: soft }}>
+      <div className="relative aspect-square overflow-hidden rounded-3xl" style={{ background: soft }}>
         <Image
           src={hovered && secondary ? secondary : (product.mainImage ?? product.image)}
           alt={product.name}
@@ -44,18 +43,20 @@ export function KidsProductCard({ product, color = '#1E88FF', soft = '#E6F3FF', 
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
         {tag && (
-          <span className="absolute left-2.5 top-2.5 rounded-full px-3 py-1 text-xs font-extrabold text-white" style={{ background: color }}>
+          <span className="absolute left-3 top-3 rounded-full bg-white px-3 py-1 text-xs font-extrabold text-[var(--k-ink)]">
             {tag}
           </span>
         )}
       </div>
 
-      <div className="flex flex-1 flex-col px-4 pb-4 pt-2">
-        <h3 className="line-clamp-2 text-lg font-bold text-[var(--k-ink)]">{product.name}</h3>
-        <div className="mt-auto flex items-center justify-between gap-2 pt-3">
-          <span className="font-kids text-2xl font-extrabold" style={{ color }}>{product.price.toFixed(2)}€</span>
+      <div className="flex flex-1 flex-col pt-3">
+        <h3 className="line-clamp-2 text-base font-bold leading-snug text-[var(--k-ink)] sm:text-lg" style={{ fontFamily: 'Nunito, system-ui, sans-serif' }}>
+          {product.name}
+        </h3>
+        <div className="mt-auto flex items-center justify-between gap-2 pt-2">
+          <span className="text-lg font-extrabold text-[var(--k-ink)]">{product.price.toFixed(2)}€</span>
           {needsChoice ? (
-            <span className="kid-btn flex min-h-11 items-center rounded-full px-4 text-sm font-extrabold text-white" style={{ background: color }}>
+            <span className="inline-flex min-h-11 items-center rounded-xl border-2 border-[var(--k-ink)] px-3 text-sm font-extrabold text-[var(--k-ink)] transition-colors group-hover:bg-[var(--k-ink)] group-hover:text-white">
               Elegir
             </span>
           ) : (
@@ -63,11 +64,10 @@ export function KidsProductCard({ product, color = '#1E88FF', soft = '#E6F3FF', 
               type="button"
               onClick={handleAdd}
               aria-label={`Añadir ${product.name} al carrito`}
-              className="kid-btn flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full px-4 text-sm font-extrabold text-white"
-              style={{ background: added ? '#22B14C' : color }}
+              className={`inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-extrabold text-white transition-colors duration-200 ${added ? 'bg-[#15803d]' : 'bg-[var(--k-cta)] hover:bg-[var(--k-cta-hover)]'}`}
             >
               {added ? <Check className="h-4 w-4" /> : <ShoppingCart className="h-4 w-4" />}
-              <span className="hidden sm:inline">{added ? '¡Listo!' : 'Añadir'}</span>
+              <span className="hidden sm:inline">{added ? 'Añadido' : 'Añadir'}</span>
             </button>
           )}
         </div>

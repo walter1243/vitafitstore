@@ -53,7 +53,7 @@ async function getProductFromPreview(id: number): Promise<Product | null> {
   const from = process.env.NODE_ENV === 'development' ? process.env.PREVIEW_API_FROM : '';
   if (!from) return null;
   try {
-    const res = await fetch(`${from.replace(//$/, '')}/api/products`, { cache: 'no-store' });
+    const res = await fetch(`${from.replace(/\/$/, '')}/api/products`, { cache: 'no-store' });
     if (!res.ok) return null;
     const rows = (await res.json()) as DbProduct[];
     const row = Array.isArray(rows) ? rows.find((r) => Number(r.id) === id) : undefined;

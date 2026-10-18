@@ -13,8 +13,8 @@ export type Collection = {
   tagline: string;
   description: string;
   match: string[];
-  // Cor de brinquedo da colecao (paleta do logo). main: fundo de blocos
-  // grandes (texto branco grande passa contraste); soft: fundos claros.
+  // Cor da colecao. main: texto/icone/botao (contraste AA com branco);
+  // soft: fundo pastel dos blocos e fotos.
   color: { main: string; soft: string };
 };
 
@@ -27,7 +27,7 @@ export const COLLECTIONS: Collection[] = [
     tagline: 'Para jugar, montar y compartir',
     description:
       'Puzzles, juegos de mesa, figuras y retos de ingenio que salen de nuestra impresora 3D, capa a capa, listos para horas de diversión en familia.',
-    color: { main: '#E86A00', soft: '#FFF0DC' },
+    color: { main: '#C2410C', soft: '#FFEBD9' },
     match: ['juego', 'jogo', 'juguete', 'brinquedo', 'puzzle', 'rompecabeza', 'game', 'figura', 'toy'],
   },
   {
@@ -38,7 +38,7 @@ export const COLLECTIONS: Collection[] = [
     tagline: 'Luz suave para soñar',
     description:
       'Lámparas impresas en 3D con formas divertidas para decorar la habitación de los peques y acompañarles a la hora de dormir.',
-    color: { main: '#7B2FD0', soft: '#F1E6FF' },
+    color: { main: '#6D28D9', soft: '#F1E8FF' },
     match: ['lampara', 'luminaria', 'luz', 'luces', 'lamp', 'quitamiedo', 'nocturna'],
   },
 ];

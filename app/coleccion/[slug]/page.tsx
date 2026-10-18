@@ -7,7 +7,6 @@ import { CartSidebar } from '@/components/cart-sidebar'
 import { UpsellPopup } from '@/components/upsell-popup'
 import { WhatsAppFloating } from '@/components/whatsapp-floating'
 import { CollectionCatalog } from '@/components/kids/collection-catalog'
-import { Cloud, Cube, Wave } from '@/components/kids/kid-shapes'
 import { getCollection } from '@/lib/collections'
 import { getSiteContent } from '@/lib/site-content'
 
@@ -38,29 +37,23 @@ export default async function CollectionPage({ params }: PageProps) {
     <div className="flex min-h-screen flex-col bg-white">
       <Header />
       <main className="kids flex-1">
-        <section className="kid-confetti relative overflow-hidden pt-36 sm:pt-40" style={{ backgroundColor: collection.color.main }}>
-          <Cloud className="pointer-events-none absolute -left-8 top-32 w-40 opacity-30" />
-          <Cube top="#FFE08A" left="#FFC93C" right="#E0A800" className="animate-kid-float pointer-events-none absolute right-[6%] top-36 hidden w-28 md:block" />
-          <div className="relative mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
-            <nav aria-label="Ruta" className="mb-5 font-kids text-lg font-bold text-white/90">
+        <section className="px-4 pt-32 sm:px-6 sm:pt-36 lg:px-8">
+          <div className="mx-auto max-w-7xl rounded-[32px] px-6 py-10 sm:px-10 sm:py-12" style={{ background: collection.color.soft }}>
+            <nav aria-label="Ruta" className="mb-6 text-sm font-semibold text-[var(--k-muted)]">
               <Link href="/" className="hover:underline">Inicio</Link>
-              <span className="mx-2">›</span>
-              <span>{collection.shortName}</span>
+              <span className="mx-2">/</span>
+              <span className="text-[var(--k-ink)]">{collection.shortName}</span>
             </nav>
             <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
-              <span className="flex h-24 w-24 shrink-0 items-center justify-center rounded-[28px] border-4 border-[#1f2340] bg-white">
-                <Icon className="h-12 w-12" style={{ color: collection.color.main }} aria-hidden="true" />
+              <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-white">
+                <Icon className="h-10 w-10" style={{ color: collection.color.main }} strokeWidth={1.75} aria-hidden="true" />
               </span>
               <div>
-                <p className="font-kids text-xl font-bold text-white">{collection.tagline}</p>
-                <h1 className="text-5xl font-extrabold text-white sm:text-6xl" style={{ textShadow: '0 4px 0 rgba(31,35,64,0.35)' }}>
-                  {collection.name}
-                </h1>
-                <p className="mt-3 max-w-2xl text-lg font-semibold leading-relaxed text-white">{collection.description}</p>
+                <h1 className="text-4xl font-bold text-[var(--k-ink)] sm:text-5xl">{collection.name}</h1>
+                <p className="mt-2 max-w-2xl text-lg leading-relaxed text-[var(--k-muted)]">{collection.description}</p>
               </div>
             </div>
           </div>
-          <Wave color="#ffffff" />
         </section>
 
         <CollectionCatalog slug={collection.slug} />

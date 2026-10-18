@@ -5,11 +5,10 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { COLLECTIONS, collectionForCategory, type Collection } from '@/lib/collections';
 import { toStoreProduct, type DbProduct } from '@/lib/store-product';
+import { KidsHero } from './kids-hero';
 import { KidsProductCard } from './kids-product-card';
 import { useStoreProducts } from './use-store-products';
-import { Cube } from './kid-shapes';
 
-const OTHER = { main: '#1E88FF', soft: '#E6F3FF' };
 const SHELF_SIZE = 4;
 
 function coverOf(items: DbProduct[]) {
@@ -17,48 +16,57 @@ function coverOf(items: DbProduct[]) {
   return cover?.image;
 }
 
-// Caixa de brinquedo de cada colecao: fundo na cor da colecao com confete,
-// icone num selo branco, titulo grande e a foto de capa numa moldura torta.
-function CollectionCard({ collection, items }: { collection: Collection; items: DbProduct[] }) {
+// "Compra por colección" — circulos com foto, como nas lojas de brinquedo.
+function CollectionCircle({ collection, items }: { collection: Collection; items: DbProduct[] }) {
   const cover = coverOf(items);
   const Icon = collection.icon;
   return (
-    <Link
-      href={`/coleccion/${collection.slug}`}
-      className="kid-card kid-confetti group relative flex min-h-[300px] cursor-pointer flex-col overflow-hidden rounded-[36px] border-4 border-[var(--k-ink)] p-6 sm:min-h-[360px] sm:p-8"
-      style={{ backgroundColor: collection.color.main }}
-    >
-      <span className="flex h-16 w-16 items-center justify-center rounded-2xl border-4 border-[var(--k-ink)] bg-white">
-        <Icon className="h-8 w-8" style={{ color: collection.color.main }} aria-hidden="true" />
-      </span>
-      <h3 className="mt-4 max-w-[62%] text-4xl font-extrabold text-white sm:text-5xl" style={{ textShadow: '0 4px 0 rgba(31,35,64,0.35)' }}>
-        {collection.shortName}
-      </h3>
-      <p className="mt-2 max-w-[60%] text-base font-bold text-white sm:text-lg">{collection.tagline}</p>
-
-      <span className="kid-btn mt-auto inline-flex w-fit items-center gap-2 rounded-full bg-white px-6 py-3 font-kids text-lg font-bold text-[var(--k-ink)]">
-        ¡Ver todo! <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" aria-hidden="true" />
-      </span>
-
-      <div className="absolute bottom-6 right-5 h-32 w-32 rotate-6 overflow-hidden rounded-[26px] border-4 border-[var(--k-ink)] bg-white transition-transform duration-300 group-hover:rotate-0 sm:h-44 sm:w-44">
+    <Link href={`/coleccion/${collection.slug}`} className="group flex cursor-pointer flex-col items-center text-center">
+      <span
+        className="relative flex h-36 w-36 items-center justify-center overflow-hidden rounded-full ring-4 ring-transparent transition-all duration-300 group-hover:ring-[var(--k-ink)] sm:h-44 sm:w-44"
+        style={{ background: collection.color.soft }}
+      >
         {cover ? (
-          <Image src={cover} alt="" fill sizes="180px" className="object-cover" />
+          <Image src={cover} alt="" fill sizes="180px" className="object-cover transition-transform duration-500 group-hover:scale-105" />
         ) : (
-          <div className="flex h-full w-full items-center justify-center" style={{ background: collection.color.soft }}>
-            <Cube top="#FFE08A" left="#FFC93C" right="#E0A800" className="w-2/3" />
-          </div>
+          <Icon className="h-14 w-14" style={{ color: collection.color.main }} strokeWidth={1.75} aria-hidden="true" />
         )}
-      </div>
+      </span>
+      <span className="mt-4 font-kids text-2xl font-bold text-[var(--k-ink)]">{collection.shortName}</span>
+      <span className="text-sm text-[var(--k-muted)]">{collection.tagline}</span>
     </Link>
   );
 }
 
-function SectionTitle({ eyebrow, title, color }: { eyebrow: string; title: string; color: string }) {
+function Shelf({ title, subtitle, href, total, products, soft }: {
+  title: string;
+  subtitle: string;
+  href?: string;
+  total: number;
+  products: DbProduct[];
+  soft: string;
+}) {
   return (
-    <div>
-      <p className="font-kids text-lg font-bold" style={{ color }}>{eyebrow}</p>
-      <h2 className="text-4xl font-extrabold text-[var(--k-ink)] sm:text-5xl">{title}</h2>
-    </div>
+    <section className="px-4 py-12 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-3 border-b border-[var(--k-line)] pb-4">
+          <div>
+            <h2 className="text-3xl font-bold text-[var(--k-ink)] sm:text-4xl">{title}</h2>
+            <p className="mt-1 text-base text-[var(--k-muted)]">{subtitle}</p>
+          </div>
+          {href && (
+            <Link href={href} className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-base font-extrabold text-[var(--k-cta)] hover:underline">
+              Ver todo{total > products.length ? ` (${total})` : ''} <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          )}
+        </div>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 lg:grid-cols-4">
+          {products.map((p) => (
+            <KidsProductCard key={p.id} product={toStoreProduct(p)} soft={soft} />
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -77,15 +85,15 @@ export function KidsStorefront() {
   }, [products]);
 
   return (
-    <div className="bg-white">
-      <section id="colecciones" className="scroll-mt-28 px-4 pb-8 pt-4 sm:pt-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-8 text-center">
-            <SectionTitle eyebrow="¡Hola, peques!" title="¿A qué jugamos hoy?" color="var(--k-red)" />
-          </div>
-          <div className="grid gap-6 md:grid-cols-2">
+    <>
+      <KidsHero byCollection={byCollection} />
+
+      <section id="colecciones" className="scroll-mt-28 px-4 pb-4 pt-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl text-center">
+          <h2 className="text-3xl font-bold text-[var(--k-ink)] sm:text-4xl">Compra por colección</h2>
+          <div className="mt-10 flex flex-wrap justify-center gap-10 sm:gap-20">
             {COLLECTIONS.map((c) => (
-              <CollectionCard key={c.slug} collection={c} items={byCollection.get(c.slug) ?? []} />
+              <CollectionCircle key={c.slug} collection={c} items={byCollection.get(c.slug) ?? []} />
             ))}
           </div>
         </div>
@@ -96,47 +104,24 @@ export function KidsStorefront() {
           const items = byCollection.get(c.slug) ?? [];
           if (!items.length) return null;
           return (
-            <section key={c.slug} className="px-4 py-12">
-              <div className="mx-auto max-w-7xl">
-                <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
-                  <SectionTitle eyebrow={c.tagline} title={c.name} color={c.color.main} />
-                  {items.length > SHELF_SIZE && (
-                    <Link href={`/coleccion/${c.slug}`} className="kid-btn inline-flex min-h-12 items-center gap-2 rounded-full px-6 font-kids text-lg font-bold text-white" style={{ background: c.color.main }}>
-                      Ver las {items.length} <ArrowRight className="h-5 w-5" aria-hidden="true" />
-                    </Link>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
-                  {items.slice(0, SHELF_SIZE).map((p) => (
-                    <KidsProductCard key={p.id} product={toStoreProduct(p)} color={c.color.main} soft={c.color.soft} />
-                  ))}
-                </div>
-              </div>
-            </section>
+            <Shelf
+              key={c.slug}
+              title={c.name}
+              subtitle={c.tagline}
+              href={`/coleccion/${c.slug}`}
+              total={items.length}
+              products={items.slice(0, SHELF_SIZE)}
+              soft={c.color.soft}
+            />
           );
         })}
-
         {others.length > 0 && (
-          <section className="px-4 py-12">
-            <div className="mx-auto max-w-7xl">
-              <div className="mb-7">
-                <SectionTitle eyebrow="Recién salidas de la impresora" title="Más creaciones" color={OTHER.main} />
-              </div>
-              <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
-                {others.map((p) => (
-                  <KidsProductCard key={p.id} product={toStoreProduct(p)} color={OTHER.main} soft={OTHER.soft} />
-                ))}
-              </div>
-            </div>
-          </section>
+          <Shelf title="Más creaciones" subtitle="Recién salidas de la impresora" total={others.length} products={others} soft="#EEF4FB" />
         )}
-
         {loaded && products.length === 0 && (
-          <p className="px-4 py-12 text-center font-kids text-2xl font-bold text-[var(--k-ink)]">
-            ¡Estamos imprimiendo nuevas creaciones! Vuelve muy pronto.
-          </p>
+          <p className="px-4 py-12 text-center text-lg text-[var(--k-muted)]">Estamos imprimiendo nuevas creaciones. ¡Vuelve muy pronto!</p>
         )}
       </div>
-    </div>
+    </>
   );
 }
