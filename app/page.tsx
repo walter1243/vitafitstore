@@ -1,19 +1,11 @@
-import type { ReactNode } from 'react'
 import { Header } from '@/components/header'
-import HeroVideo from '../components/hero-video'
-import { GiftBasketBanner } from '@/components/gift-basket-banner'
-import { DestacadosSection } from '@/components/destacados-section'
-import { AboutSection } from '@/components/about-section'
-import { Snowfall } from '@/components/snowfall'
-import { TrustBadges } from '@/components/trust-badges'
-import ProductCarousels from '../components/product-carousels'
-import { CategorySpotlight } from '@/components/category-spotlight'
-import { FeaturedProductsGrid } from '@/components/featured-products-grid'
 import { Footer } from '@/components/footer'
 import { CartSidebar } from '@/components/cart-sidebar'
 import { UpsellPopup } from '@/components/upsell-popup'
 import { WhatsAppFloating } from '@/components/whatsapp-floating'
-import { sql } from '@/lib/db'
+import { KidsHero } from '@/components/kids/kids-hero'
+import { KidsStorefront } from '@/components/kids/kids-storefront'
+import { KidsHowItsMade } from '@/components/kids/kids-how-its-made'
 import { getSiteContent } from '@/lib/site-content'
 
 // Without this, Next.js statically generates the homepage at build time
@@ -24,73 +16,23 @@ import { getSiteContent } from '@/lib/site-content'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-type HomeBlock = {
-  key: 'hero' | 'trust' | 'products' | 'pin' | 'newsletter'
-  label: string
-  position: number
-  enabled: boolean
-}
-
-const DEFAULT_BLOCKS: HomeBlock[] = [
-  { key: 'hero', label: 'Hero Vídeo', position: 1, enabled: true },
-  { key: 'trust', label: 'Selos de Confiança', position: 2, enabled: true },
-  { key: 'products', label: 'Produtos', position: 3, enabled: true },
-  { key: 'pin', label: 'Categorias em Destaque', position: 4, enabled: true },
-  { key: 'newsletter', label: 'Newsletter', position: 5, enabled: true },
-]
-
-async function getHomeBlocks(): Promise<HomeBlock[]> {
-  try {
-    const rows = await sql`
-      SELECT block_key AS key, label, position, enabled
-      FROM home_blocks
-      ORDER BY position ASC
-    `
-    if (!rows?.length) return DEFAULT_BLOCKS
-    return rows as HomeBlock[]
-  } catch {
-    return DEFAULT_BLOCKS
-  }
-}
-
+// Vitrine infantil: hero → colecoes (cards clicaveis) → prateleira de cada
+// colecao → como e feito. Cada colecao tem a sua pagina em /coleccion/[slug].
 export default async function HomePage() {
-  const [blocks, content] = await Promise.all([getHomeBlocks(), getSiteContent()])
-
-  const map: Record<HomeBlock['key'], ReactNode> = {
-    hero: <HeroVideo content={content.hero} />,
-    trust: <TrustBadges data={content.trustBadges} />,
-    products: (
-      <>
-        <section id="productos">
-          <ProductCarousels />
-        </section>
-        <DestacadosSection data={content.destaques} />
-      </>
-    ),
-    pin: <CategorySpotlight />,
-    // The old newsletter card ("Prepárate para el frío") is retired in
-    // favor of the Christmas gift-basket banner — same slot, same toggle
-    // in Admin → Blocos da Home, now a real photo instead of a flat card.
-    newsletter: <GiftBasketBanner data={content.giftBanner} />,
-  }
-
-  const visibleBlocks = blocks.filter(b => b.enabled)
+  const content = await getSiteContent()
 
   return (
-    <div className="flex min-h-screen flex-col">
-        <Snowfall />
-        <Header />
-        <main className="flex-1">
-          {visibleBlocks.map(block => (
-            <div key={block.key}>{map[block.key]}</div>
-          ))}
-          <FeaturedProductsGrid />
-          <AboutSection data={content.about} />
-        </main>
-        <Footer content={content.footer} />
-        <WhatsAppFloating />
-        <CartSidebar />
-        <UpsellPopup />
+    <div className="kids flex min-h-screen flex-col bg-white">
+      <Header />
+      <main className="flex-1">
+        <KidsHero />
+        <KidsStorefront />
+        <KidsHowItsMade />
+      </main>
+      <Footer content={content.footer} />
+      <WhatsAppFloating />
+      <CartSidebar />
+      <UpsellPopup />
     </div>
   )
 }

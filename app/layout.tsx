@@ -19,32 +19,24 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Cestas de Regalo Personalizadas Online | Cesta & Encanto',
-    template: '%s | Cesta & Encanto',
+    default: 'Juegos y lámparas infantiles impresos en 3D | Kitoys 3D',
+    template: '%s | Kitoys 3D',
   },
   description:
-    'Cestas de regalo personalizadas y cestas de Navidad en España: productos gourmet, presentación de lujo y tarjeta dedicatoria gratis. Envío gratis +50€. Entrega en 2-3 días.',
+    'Juegos, puzzles y lámparas para habitaciones infantiles impresos en 3D, capa a capa. Elige tu colección y recíbelo en casa en toda España.',
   keywords: [
-    'cestas de regalo España',
-    'cestas de Navidad online',
-    'cestas personalizadas regalo',
-    'regalos gourmet España',
-    'cestas de regalo empresa',
-    'regalos de Navidad online',
-    'cestas gourmet personalizadas',
-    'comprar cesta de regalo online',
-    'tienda de cestas de regalo',
-    'regalos originales España',
-    'cestas de regalo entrega rápida',
-    'cestas de regalo calidad premium',
-    'tienda de regalos online España',
-    'cestas de Navidad personalizadas',
-    'regalos corporativos Navidad',
-    'cestas de regalo Madrid',
-    'cestas de regalo Barcelona',
-    'comprar cesta de regalo España',
+    'juguetes impresos en 3D',
+    'juegos infantiles impresión 3D',
+    'puzzles 3D para niños',
+    'juegos de mesa impresos en 3D',
+    'lámparas infantiles',
+    'lámpara habitación niños',
+    'lámpara quitamiedos 3D',
+    'decoración habitación infantil',
+    'regalos originales para niños',
+    'juguetes 3D España',
   ],
-  authors: [{ name: 'Cesta & Encanto' }],
+  authors: [{ name: 'Kitoys 3D' }],
   alternates: {
     canonical: 'https://www.vitafitstore.es/',
   },
@@ -57,11 +49,10 @@ export const metadata: Metadata = {
     apple: [{ url: '/apple-icon-vitafit.png', sizes: '180x180', type: 'image/png' }],
   },
   openGraph: {
-    title: 'Cestas de Regalo Personalizadas Online | Cesta & Encanto',
-    description:
-      'Cestas de regalo y cestas de Navidad hechas a mano, con productos gourmet seleccionados y presentación de lujo. Envío gratis en pedidos +50€. Entrega 2-3 días en toda España.',
+    title: 'Juegos y lámparas infantiles impresos en 3D | Kitoys 3D',
+    description: 'Juegos, puzzles y lámparas para habitaciones infantiles impresos en 3D, capa a capa. Elige tu colección y recíbelo en casa en toda España.',
     url: 'https://www.vitafitstore.es/',
-    siteName: 'Cesta & Encanto',
+    siteName: 'Kitoys 3D',
     locale: 'es_ES',
     type: 'website',
     images: [
@@ -69,15 +60,14 @@ export const metadata: Metadata = {
         url: 'https://www.vitafitstore.es/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'Cestas de Regalo Personalizadas de Cesta & Encanto',
+        alt: 'Juegos y lámparas infantiles impresos en 3D — Kitoys 3D',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Cestas de Regalo Personalizadas Online | Cesta & Encanto',
-    description:
-      'Cestas de regalo y cestas de Navidad con productos gourmet. Envío gratis +50€. Entrega 2-3 días en España.',
+    title: 'Juegos y lámparas infantiles impresos en 3D | Kitoys 3D',
+    description: 'Juegos, puzzles y lámparas para habitaciones infantiles impresos en 3D, capa a capa. Elige tu colección y recíbelo en casa en toda España.',
     images: ['https://www.vitafitstore.es/og-image.jpg'],
     creator: '@vitafitstore_es',
   },
@@ -100,7 +90,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#c2410c',
+  themeColor: '#FF6B6B',
 }
 
 export default function RootLayout({

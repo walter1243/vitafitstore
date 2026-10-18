@@ -10,9 +10,11 @@ import { type Product } from '@/lib/products'
 import { TrustpilotWidget } from '@/components/trustpilot-widget'
 import { SizeGuideModal } from '@/components/size-guide-modal'
 import { ProductReviews } from '@/components/product-reviews'
+import { collectionForCategory } from '@/lib/collections'
 
 export function ProductPageView({ product }: { product: Product }) {
   const { addItem } = useCart()
+  const collection = collectionForCategory(product.categoryLabel)
   const router = useRouter()
   const galleryImages = [product.mainImage ?? product.image, ...(product.additionalImages ?? [])].filter(Boolean) as string[]
   const [activeIndex, setActiveIndex] = useState(0)
@@ -77,12 +79,16 @@ export function ProductPageView({ product }: { product: Product }) {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+    <div className="mx-auto max-w-7xl px-4 pb-10 pt-36 sm:px-6 sm:pt-40 lg:px-8">
       {/* Breadcrumb */}
       <nav className="mb-6 flex items-center gap-1.5 text-xs text-slate-500">
         <Link href="/" className="hover:text-slate-800">Inicio</Link>
         <ChevronRight size={12} />
-        <Link href="/#productos" className="hover:text-slate-800">Productos</Link>
+        {collection ? (
+          <Link href={`/coleccion/${collection.slug}`} className="hover:text-slate-800">{collection.shortName}</Link>
+        ) : (
+          <Link href="/#colecciones" className="hover:text-slate-800">Colecciones</Link>
+        )}
         {product.categoryLabel && (
           <>
             <ChevronRight size={12} />
@@ -102,7 +108,7 @@ export function ProductPageView({ product }: { product: Product }) {
                   key={i}
                   onClick={() => goToIndex(i)}
                   className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-colors ${
-                    activeIndex === i ? 'border-orange-600' : 'border-slate-200 hover:border-slate-300'
+                    activeIndex === i ? 'border-[#FF8585]' : 'border-slate-200 hover:border-slate-300'
                   }`}
                 >
                   <Image src={img} alt="" fill className="object-cover" />
@@ -139,7 +145,7 @@ export function ProductPageView({ product }: { product: Product }) {
                     key={i}
                     onClick={() => goToIndex(i)}
                     className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-colors ${
-                      activeIndex === i ? 'border-orange-600' : 'border-slate-200 hover:border-slate-300'
+                      activeIndex === i ? 'border-[#FF8585]' : 'border-slate-200 hover:border-slate-300'
                     }`}
                   >
                     <Image src={img} alt="" fill className="object-cover" />
@@ -153,7 +159,7 @@ export function ProductPageView({ product }: { product: Product }) {
         {/* Info */}
         <div>
           {product.categoryLabel && (
-            <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.15em] text-orange-700">{product.categoryLabel}</p>
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.15em] text-[#FF6B6B]">{product.categoryLabel}</p>
           )}
           <h1 className="text-2xl font-bold leading-tight text-slate-900 sm:text-3xl" style={{ fontFamily: 'var(--font-heading)' }}>
             {product.name}
@@ -184,7 +190,7 @@ export function ProductPageView({ product }: { product: Product }) {
             <ul className="mt-4 space-y-1.5">
               {product.benefits.slice(0, 4).map((b, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
-                  <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-orange-700" />
+                  <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#FF6B6B]" />
                   {b}
                 </li>
               ))}
@@ -201,7 +207,7 @@ export function ProductPageView({ product }: { product: Product }) {
                     key={c.label}
                     onClick={() => selectColor(c.label, c.image)}
                     className={`relative h-14 w-14 overflow-hidden rounded-lg border-2 transition-colors ${
-                      selectedColor === c.label ? 'border-orange-600' : 'border-slate-200 hover:border-slate-300'
+                      selectedColor === c.label ? 'border-[#FF8585]' : 'border-slate-200 hover:border-slate-300'
                     }`}
                     aria-label={c.label}
                   >
@@ -229,7 +235,7 @@ export function ProductPageView({ product }: { product: Product }) {
                     onClick={() => setSelectedSize(size)}
                     className={`min-w-[3rem] rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${
                       selectedSize === size
-                        ? 'border-orange-600 bg-orange-50 text-orange-700'
+                        ? 'border-[#FF8585] bg-[#FFE3E1] text-[#FF6B6B]'
                         : 'border-slate-200 text-slate-700 hover:border-slate-300'
                     }`}
                   >
@@ -239,7 +245,7 @@ export function ProductPageView({ product }: { product: Product }) {
               </div>
               <button
                 onClick={() => setSizeGuideOpen(true)}
-                className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-orange-700 hover:text-orange-800"
+                className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-[#FF6B6B] hover:text-[#C2364A]"
               >
                 <Ruler size={13} /> Guía de tallas
               </button>
@@ -267,7 +273,7 @@ export function ProductPageView({ product }: { product: Product }) {
                   <Plus className="h-4 w-4" />
                 </button>
               </div>
-              <span className="text-xs font-medium text-orange-700">{product.stock} disponibles</span>
+              <span className="text-xs font-medium text-[#FF6B6B]">{product.stock} disponibles</span>
             </div>
 
             {needsSize && !selectedSize && (
@@ -278,14 +284,14 @@ export function ProductPageView({ product }: { product: Product }) {
               <button
                 onClick={handleBuyNow}
                 disabled={!canBuy}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-700 px-6 py-3.5 text-sm font-semibold text-white transition-all hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#FF6B6B] px-6 py-3.5 text-sm font-semibold text-white transition-all hover:bg-[#FF8585] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Comprar ahora
               </button>
               <button
                 onClick={handleAdd}
                 disabled={!canBuy}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-orange-700 bg-white px-6 py-3.5 text-sm font-semibold text-orange-700 transition-all hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#FF6B6B] bg-white px-6 py-3.5 text-sm font-semibold text-[#FF6B6B] transition-all hover:bg-[#FFE3E1] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {added ? <Check className="h-4 w-4" /> : <ShoppingCart className="h-4 w-4" />}
                 {added ? '¡Añadido al carrito!' : 'Añadir al carrito'}
@@ -300,9 +306,9 @@ export function ProductPageView({ product }: { product: Product }) {
           {/* Trust strip */}
           <div className="mt-4 flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-[0_2px_10px_rgba(0,0,0,0.03)]">
             {[
-              { icon: <Lock className="h-4 w-4 text-orange-700" />, label: 'Pago seguro' },
-              { icon: <Truck className="h-4 w-4 text-orange-700" />, label: 'Envío gratis +50€' },
-              { icon: <RotateCcw className="h-4 w-4 text-orange-700" />, label: 'Devolución 14 días' },
+              { icon: <Lock className="h-4 w-4 text-[#FF6B6B]" />, label: 'Pago seguro' },
+              { icon: <Truck className="h-4 w-4 text-[#FF6B6B]" />, label: 'Envío gratis +50€' },
+              { icon: <RotateCcw className="h-4 w-4 text-[#FF6B6B]" />, label: 'Devolución 14 días' },
             ].map((item, i) => (
               <div key={i} className="flex flex-col items-center gap-1.5">
                 {item.icon}

@@ -1,47 +1,18 @@
 'use client';
 import Link from 'next/link';
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { ShoppingCart, Menu, X, Flame } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { ShoppingCart, Menu, X, LayoutGrid, Printer, Smile } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 import { ChristmasPromo } from '@/components/christmas-promo';
+import { COLLECTIONS } from '@/lib/collections';
 
-type CategoryMeta = {
-  name: string;
-  slug: string;
-  enabled?: boolean;
-  position?: number;
-};
-
-type DbProduct = {
-  category?: string;
-};
-
-function normalizeCategory(raw?: string) {
-  if (!raw) return 'geral';
-  return raw.trim().toLowerCase();
-}
-
-function slugifyCategory(raw?: string) {
-  if (!raw) return 'geral';
-  return raw
-    .trim()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(new RegExp('[\\u0300-\\u036f]', 'g'), '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
-}
-
-function toAnchor(raw?: string) {
-  const slug = slugifyCategory(raw);
-  if (slug === 'salud') return '#salud';
-  if (slug === 'fitness') return '#fitness';
-  return `#cat-${slug}`;
-}
-
-const fallbackNavLinks = [
-  { href: '#productos', label: 'Productos' },
-  { href: '#ayuda-soporte', label: 'Nosotros' },
+// Menu fixo da vitrine infantil: as colecoes vem de lib/collections.ts
+// (cada uma com a sua pagina), entao o cabecalho nao precisa mais buscar
+// categorias/produtos a cada 15s pra montar os links.
+const navLinks = [
+  { href: '/#colecciones', label: 'Colecciones', icon: LayoutGrid, color: '#1D4ED8' },
+  ...COLLECTIONS.map((c) => ({ href: `/coleccion/${c.slug}`, label: c.shortName, icon: c.icon, color: c.color.deep })),
+  { href: '/#como-se-hace', label: 'Cómo se hace', icon: Printer, color: '#15803D' },
 ];
 
 const BRANDING_CACHE_KEY = 'store_branding_cache';
@@ -69,9 +40,7 @@ export function Header() {
   const cachedBranding = readCachedBranding();
   const [storeName, setStoreName] = useState(cachedBranding?.storeName ?? 'Nuestra Tienda');
   const [logoUrl, setLogoUrl] = useState(cachedBranding?.logoUrl ?? '');
-  const [themeColor, setThemeColor] = useState(cachedBranding?.themeColor ?? '#c2410c');
-  const [categories, setCategories] = useState<CategoryMeta[]>([]);
-  const [products, setProducts] = useState<DbProduct[]>([]);
+  const [themeColor, setThemeColor] = useState(cachedBranding?.themeColor ?? '#FF6B6B');
   const [announcement, setAnnouncement] = useState('');
 
   // The header floats fixed below whatever stack of thin bars (free-shipping
@@ -113,7 +82,7 @@ export function Header() {
         const data = await res.json();
         const nextStoreName = data?.storeName ?? 'Nuestra Tienda';
         const nextLogoUrl = data?.logoUrl ?? '';
-        const nextThemeColor = data?.themeColor ?? '#c2410c';
+        const nextThemeColor = data?.themeColor ?? '#FF6B6B';
         setStoreName(nextStoreName);
         setLogoUrl(nextLogoUrl);
         setThemeColor(nextThemeColor);
@@ -129,46 +98,15 @@ export function Header() {
       }
     };
 
-    const loadCategories = async () => {
-      try {
-        const res = await fetch('/api/categories', { cache: 'no-store' });
-        if (!res.ok) return;
-        const data = (await res.json()) as CategoryMeta[];
-        if (!Array.isArray(data)) return;
-        const enabled = data.filter(c => c.enabled !== false);
-        setCategories(enabled);
-      } catch {
-        // ignore category load errors
-      }
-    };
-
-    const loadProducts = async () => {
-      try {
-        const res = await fetch('/api/products', { cache: 'no-store' });
-        if (!res.ok) return;
-        const data = (await res.json()) as DbProduct[];
-        if (!Array.isArray(data)) return;
-        setProducts(data);
-      } catch {
-        // ignore product load errors
-      }
-    };
-
     void loadStoreSettings();
-    void loadCategories();
-    void loadProducts();
 
     const intervalId = window.setInterval(() => {
       void loadStoreSettings();
-      void loadCategories();
-      void loadProducts();
     }, 15000);
 
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
         void loadStoreSettings();
-        void loadCategories();
-        void loadProducts();
       }
     };
 
@@ -182,103 +120,79 @@ export function Header() {
     };
   }, []);
 
-  const categoriesWithProducts = useMemo(() => {
-    if (!categories.length) return [] as CategoryMeta[];
-
-    const used = new Set(products.map((p) => normalizeCategory(p.category)));
-    return categories.filter((c) => used.has(normalizeCategory(c.name)) || used.has(normalizeCategory(c.slug)));
-  }, [categories, products]);
-
-  const navLinks = categoriesWithProducts.length
-    ? [
-        { href: '#productos', label: 'Productos' },
-        ...categoriesWithProducts.map((c) => ({ href: toAnchor(c.slug || c.name), label: c.name })),
-        { href: '#ayuda-soporte', label: 'Nosotros' },
-      ]
-    : fallbackNavLinks;
-
   return (
     <>
       <div ref={topBarRef} className="fixed top-0 left-0 right-0 z-[60]">
         <ChristmasPromo />
         {announcement && (
-          <div className="bg-[#431407] px-4 py-1 text-center text-[10px] font-medium tracking-wide text-white sm:text-[11px]">
+          <div className="bg-[#1e2a4a] px-4 py-1 text-center text-[10px] font-bold tracking-wide text-white sm:text-[11px]">
             {announcement}
           </div>
         )}
       </div>
       <header
-        className="fixed left-0 right-0 z-50 transition-all duration-500"
-        style={{
-          top: topBarHeight,
-          background: scrolled
-            ? 'rgba(251, 248, 245, 0.92)'
-            : 'rgba(251, 248, 245, 0.65)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(30, 41, 59, 0.08)',
-          boxShadow: scrolled ? '0 4px 24px rgba(30,41,59,0.06)' : 'none',
-        }}
+        className="kids fixed left-0 right-0 z-50 px-2 transition-all duration-500 sm:px-4"
+        style={{ top: topBarHeight + (scrolled ? 6 : 10) }}
       >
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className={`flex items-center justify-between transition-all duration-400 ${scrolled ? 'py-2' : 'py-2.5'}`}>
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="flex h-[42px] w-[42px] items-center justify-center rounded-lg group-hover:opacity-90 transition-colors duration-200 overflow-hidden"
-                style={{ background: themeColor }}>
-                {logoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={logoUrl} alt="Logo" className="h-full w-full object-cover" />
-                ) : (
-                  <Flame className="h-5 w-5 text-white" />
-                )}
-              </div>
-              <span className="text-lg font-bold">
-                <span className="text-slate-800">{storeName}</span>
-              </span>
-            </Link>
+        <div
+          className={`mx-auto flex max-w-7xl items-center justify-between rounded-full border-[3px] border-white bg-white/90 pl-2 pr-2 backdrop-blur-xl transition-all duration-500 sm:pl-3 ${scrolled ? 'py-1.5 shadow-[0_8px_24px_rgba(30,42,74,0.12)]' : 'py-2 shadow-[0_4px_0_rgba(30,42,74,0.08)]'}`}
+        >
+          {/* Logo */}
+          <Link href="/" className="group flex items-center gap-2">
+            <div
+              className="flex h-[42px] w-[42px] items-center justify-center overflow-hidden rounded-full transition-transform duration-300 group-hover:rotate-12"
+              style={{ background: themeColor }}
+            >
+              {logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logoUrl} alt="Logo" className="h-full w-full object-cover" />
+              ) : (
+                <Smile className="h-6 w-6 text-white" aria-hidden="true" />
+              )}
+            </div>
+            <span className="font-kids text-lg font-bold text-[#1e2a4a] sm:text-xl">{storeName}</span>
+          </Link>
 
-            {/* Desktop nav */}
-            <nav className="hidden md:flex items-center gap-8">
-              {navLinks.map((link) => (
+          {/* Desktop nav */}
+          <nav className="hidden items-center gap-1 lg:flex">
+            {navLinks.map((link) => {
+              const Icon = link.icon;
+              return (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="relative text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors duration-200 group cursor-pointer"
+                  className="flex min-h-11 items-center gap-1.5 rounded-full px-3.5 text-sm font-extrabold text-[#1e2a4a] transition-colors duration-200 hover:bg-slate-100"
                 >
+                  <Icon className="h-4 w-4" style={{ color: link.color }} aria-hidden="true" />
                   {link.label}
-                  <span className="absolute -bottom-0.5 left-0 h-px w-full bg-orange-600 scale-x-0 origin-left transition-transform duration-300 group-hover:scale-x-100" />
                 </Link>
-              ))}
-            </nav>
+              );
+            })}
+          </nav>
 
-            {/* Right side */}
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setIsCartOpen(true)}
-                className="relative p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-all duration-200 cursor-pointer"
-                aria-label="Abrir carrito"
-              >
-                <ShoppingCart className="h-5 w-5 text-slate-700" />
-                {totalItems > 0 && (
-                  <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-orange-700 text-xs font-bold text-white animate-pulse">
-                    {totalItems}
-                  </span>
-                )}
-              </button>
+          {/* Right side */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className="relative flex h-11 w-11 items-center justify-center rounded-full bg-[#FFD23F] transition-transform duration-200 hover:scale-105 active:scale-95"
+              aria-label="Abrir carrito"
+            >
+              <ShoppingCart className="h-5 w-5 text-[#1e2a4a]" />
+              {totalItems > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-[#FF6B6B] px-1 text-[11px] font-extrabold text-white">
+                  {totalItems}
+                </span>
+              )}
+            </button>
 
-              <button
-                onClick={() => setMobileOpen(!mobileOpen)}
-                className="md:hidden p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-all duration-200 cursor-pointer"
-                aria-label="Menú"
-              >
-                {mobileOpen ? (
-                  <X className="h-5 w-5 text-slate-700" />
-                ) : (
-                  <Menu className="h-5 w-5 text-slate-700" />
-                )}
-              </button>
-            </div>
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 transition-colors hover:bg-slate-200 lg:hidden"
+              aria-label="Menú"
+              aria-expanded={mobileOpen}
+            >
+              {mobileOpen ? <X className="h-5 w-5 text-[#1e2a4a]" /> : <Menu className="h-5 w-5 text-[#1e2a4a]" />}
+            </button>
           </div>
         </div>
       </header>
@@ -287,35 +201,36 @@ export function Header() {
       {mobileOpen && (
         <>
           <div
-            className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm md:hidden"
+            className="fixed inset-0 z-40 bg-[#1e2a4a]/40 backdrop-blur-sm lg:hidden"
             onClick={() => setMobileOpen(false)}
           />
-          <div
-            className="fixed top-0 right-0 bottom-0 z-50 w-72 md:hidden flex flex-col bg-[#FAF8F5]"
-            style={{
-              borderLeft: '1px solid rgba(30,41,59,0.08)',
-            }}
-          >
-            <div className="flex justify-between items-center p-6 border-b border-slate-200">
-              <span className="text-lg font-bold text-slate-800">Menú</span>
+          <div className="kids fixed bottom-0 right-0 top-0 z-50 flex w-[290px] flex-col rounded-l-[32px] bg-[#FFF8EC] lg:hidden">
+            <div className="flex items-center justify-between p-6">
+              <span className="font-kids text-2xl font-bold text-[#1e2a4a]">¡Hola!</span>
               <button
                 onClick={() => setMobileOpen(false)}
-                className="p-2 rounded-xl border border-slate-200 text-slate-600 hover:text-slate-900 cursor-pointer"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#1e2a4a]"
+                aria-label="Cerrar menú"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <nav className="flex flex-col gap-2 p-6">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileOpen(false)}
-                  className="px-4 py-3 rounded-xl text-base font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200 cursor-pointer"
-                >
-                  {link.label}
-                </Link>
-              ))}
+            <nav className="flex flex-col gap-3 px-5">
+              {navLinks.map((link) => {
+                const Icon = link.icon;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMobileOpen(false)}
+                    className="flex min-h-14 items-center gap-3 rounded-2xl px-4 text-base font-extrabold text-white shadow-[0_4px_0_rgba(30,42,74,0.12)] transition-transform active:scale-[0.98]"
+                    style={{ background: link.color }}
+                  >
+                    <Icon className="h-6 w-6" aria-hidden="true" />
+                    {link.label}
+                  </Link>
+                );
+              })}
             </nav>
           </div>
         </>

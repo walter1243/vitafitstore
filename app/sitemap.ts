@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next';
 import { getAllProductIds } from '@/lib/get-product';
 import { slugifyCategory } from '@/lib/store-product';
+import { COLLECTIONS } from '@/lib/collections';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const products = await getAllProductIds();
@@ -19,6 +20,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'daily',
       priority: 1,
     },
+    ...COLLECTIONS.map((c) => ({
+      url: `https://www.vitafitstore.es/coleccion/${c.slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.9,
+    })),
     {
       url: 'https://www.vitafitstore.es/#productos',
       lastModified: new Date(),
