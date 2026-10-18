@@ -20,7 +20,7 @@ export function LampSwitchModal({ open, onOpenChange, collectionHref }: {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="kids lamp-dark max-h-[95vh] overflow-y-auto rounded-[32px] border-0 bg-[#0b0d1a] p-5 text-white sm:max-w-[760px] sm:p-8 [&>button]:text-white"
+        className="kids lamp-dark max-h-[95vh] overflow-y-auto rounded-[32px] border-0 bg-[#0b0d1a] p-5 text-white sm:max-w-[920px] sm:p-8 [&>button]:text-white"
       >
         <DialogTitle className="text-center font-kids text-3xl font-bold text-white sm:text-4xl">
           {on ? '¡Buenas noches!' : 'Shhh... es hora de dormir'}
@@ -29,7 +29,8 @@ export function LampSwitchModal({ open, onOpenChange, collectionHref }: {
           {on ? 'Así ilumina nuestra lámpara cohete la habitación.' : 'La habitación está a oscuras. Pulsa el interruptor.'}
         </DialogDescription>
 
-        <div className="relative mt-2 overflow-hidden rounded-[24px]">
+        <div className="mt-2 grid items-center gap-6 sm:grid-cols-[1fr_200px]">
+        <div className="relative overflow-hidden rounded-[24px]">
           <div className="relative aspect-[4/3]">
             <Image
               src="/images/lampara-cohete-habitacion.jpg"
@@ -51,8 +52,8 @@ export function LampSwitchModal({ open, onOpenChange, collectionHref }: {
           </div>
         </div>
 
-        {/* Interruptor de parede */}
-        <div className="flex flex-col items-center gap-3">
+        {/* Interruptor de parede — ao lado da foto, sempre a vista */}
+        <div className="flex flex-col items-center gap-4">
           <button
             type="button"
             role="switch"
@@ -75,18 +76,18 @@ export function LampSwitchModal({ open, onOpenChange, collectionHref }: {
               style={{ background: on ? '#22B14C' : '#9aa0b4' }}
             />
           </button>
-          <span className="font-kids text-xl font-bold">
+          <span className="text-center font-kids text-xl font-bold">
             {on ? 'Apagar la lámpara' : 'Encender la lámpara'}
           </span>
+          <Link
+            href={collectionHref}
+            onClick={() => onOpenChange(false)}
+            className="inline-flex min-h-12 w-full cursor-pointer items-center justify-center rounded-2xl bg-[#FFC93C] px-4 font-extrabold text-[#23263f] transition-colors hover:bg-[#FFB800]"
+          >
+            Ver lámparas
+          </Link>
         </div>
-
-        <Link
-          href={collectionHref}
-          onClick={() => onOpenChange(false)}
-          className="inline-flex min-h-12 cursor-pointer items-center justify-center rounded-2xl bg-[#FFC93C] font-extrabold text-[#23263f] transition-colors hover:bg-[#FFB800]"
-        >
-          Ver lámparas
-        </Link>
+        </div>
       </DialogContent>
     </Dialog>
   );
