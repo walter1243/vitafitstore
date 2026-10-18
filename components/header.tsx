@@ -4,11 +4,15 @@ import { useState, useEffect, useRef } from 'react';
 import { ShoppingCart, Menu, X, Smile } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 import { useSectors } from '@/components/kids/sectors-context';
+import { softOf } from '@/lib/sectors-shared';
 
 
 // Logo da marca (Kitoys 3D) mostrado inteiro no modo "logo direto". A logo
 // enviada no admin continua sendo usada no modo "icone + nome".
 const DEFAULT_LOGO = '/images/logo-kitoys-3d.png';
+
+const NAV_ITEM = 'rounded-full px-4 py-2 font-kids text-lg font-semibold text-[#23263f] transition-colors duration-200 hover:bg-[#FFF4E0] cursor-pointer';
+const MOBILE_ITEM = 'block rounded-xl px-4 py-3 font-kids text-xl font-bold text-[#23263f] transition-colors hover:bg-[#FFF4E0]';
 
 const BRANDING_CACHE_KEY = 'store_branding_cache';
 
@@ -31,10 +35,22 @@ function readCachedBranding() {
 // Menu: um link por setor (Admin → Setores e coleções) + Nuestro taller.
 export function Header() {
   const { sectors } = useSectors();
-  const navLinks = [
-    ...sectors.filter((s) => s.collections.length > 0).map((s) => ({ href: `/sector/${s.slug}`, label: s.name })),
-    { href: '/#como-se-hace', label: 'Nuestro taller' },
-  ];
+  const menuSectors = sectors.filter((s) => s.collections.length > 0);
+  // Painel "Colecciones": abre no hover (desktop) ou clique; fecha com Esc,
+  // clique fora ou ao escolher um link.
+  const [colOpen, setColOpen] = useState(false);
+  const colRef = useRef<HTMLDivElement>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const openCols = () => { if (closeTimer.current) clearTimeout(closeTimer.current); setColOpen(true); };
+  const closeColsSoon = () => { closeTimer.current = setTimeout(() => setColOpen(false), 160); };
+  useEffect(() => {
+    if (!colOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setColOpen(false); };
+    const onClick = (e: MouseEvent) => { if (colRef.current && !colRef.current.contains(e.target as Node)) setColOpen(false); };
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('mousedown', onClick);
+    return () => { document.removeEventListener('keydown', onKey); document.removeEventListener('mousedown', onClick); };
+  }, [colOpen]);
   const { totalItems, setIsCartOpen } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -137,41 +153,47 @@ export function Header() {
         className={`kids fixed left-0 right-0 z-50 border-b bg-white transition-shadow duration-300 ${scrolled ? 'border-transparent shadow-[0_4px_20px_rgba(35,38,63,0.08)]' : 'border-[#efe7da]'}`}
         style={{ top: topBarHeight }}
       >
+        <div ref={colRef} className="relative">
         <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-          {/* Logo — "logo_direto" (padrao; Admin → Informações da Loja)
-              mostra a imagem do logo sozinha, do jeito que ela e. */}
-          {logoStyle === 'logo_direto' ? (
-            <Link href="/" className="flex shrink-0 items-center" aria-label={storeName}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={DEFAULT_LOGO} alt="Kitoys 3D" className="h-[58px] w-auto object-contain" />
-            </Link>
-          ) : (
-            <Link href="/" className="flex shrink-0 items-center gap-2">
-              <div className="flex h-[42px] w-[42px] items-center justify-center overflow-hidden rounded-xl" style={{ background: themeColor }}>
-                {logoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={logoUrl} alt="Logo" className="h-full w-full object-cover" />
-                ) : (
-                  <Smile className="h-6 w-6 text-white" aria-hidden="true" />
-                )}
-              </div>
-              <span className="font-kids text-xl font-bold text-[#23263f]">{storeName}</span>
-            </Link>
-          )}
-
-          {/* Desktop nav */}
-          <nav className="hidden items-center gap-8 md:flex">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="group relative py-2 font-kids text-lg font-semibold text-[#23263f] transition-colors duration-200 hover:text-[#c2410c]"
-              >
-                {link.label}
-                <span className="absolute bottom-0.5 left-0 h-0.5 w-full origin-left scale-x-0 rounded-full bg-[#c2410c] transition-transform duration-200 group-hover:scale-x-100" />
+          <div className="flex items-center gap-10">
+            {/* Logo — "logo_direto" (padrao; Admin → Informações da Loja)
+                mostra a imagem do logo sozinha, do jeito que ela e. */}
+            {logoStyle === 'logo_direto' ? (
+              <Link href="/" className="flex shrink-0 items-center" aria-label={`${storeName} — Inicio`}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={DEFAULT_LOGO} alt="Kitoys 3D" className="h-[58px] w-auto object-contain" />
               </Link>
-            ))}
-          </nav>
+            ) : (
+              <Link href="/" className="flex shrink-0 items-center gap-2">
+                <div className="flex h-[42px] w-[42px] items-center justify-center overflow-hidden rounded-xl" style={{ background: themeColor }}>
+                  {logoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={logoUrl} alt="Logo" className="h-full w-full object-cover" />
+                  ) : (
+                    <Smile className="h-6 w-6 text-white" aria-hidden="true" />
+                  )}
+                </div>
+                <span className="font-kids text-xl font-bold text-[#23263f]">{storeName}</span>
+              </Link>
+            )}
+
+            {/* Menu: Inicio · Colecciones (painel com setores) · Nuestro taller */}
+            <nav className="hidden items-center gap-1 md:flex" aria-label="Principal">
+              <Link href="/" className={NAV_ITEM}>Inicio</Link>
+              <button
+                type="button"
+                className={`${NAV_ITEM} ${colOpen ? 'bg-[#FFF4E0]' : ''}`}
+                aria-expanded={colOpen}
+                aria-controls="menu-colecciones"
+                onClick={() => setColOpen((v) => !v)}
+                onMouseEnter={openCols}
+                onMouseLeave={closeColsSoon}
+              >
+                Colecciones
+              </button>
+              <Link href="/#como-se-hace" className={NAV_ITEM}>Nuestro taller</Link>
+            </nav>
+          </div>
 
           {/* Right side */}
           <div className="flex items-center gap-2">
@@ -198,13 +220,57 @@ export function Header() {
             </button>
           </div>
         </div>
+
+        {/* Painel "Colecciones": uma coluna por setor, com as colecoes dele */}
+        {colOpen && (
+          <div
+            id="menu-colecciones"
+            className="absolute inset-x-0 top-full hidden border-t border-[#efe7da] bg-white shadow-[0_24px_48px_rgba(35,38,63,0.12)] md:block"
+            onMouseEnter={openCols}
+            onMouseLeave={closeColsSoon}
+          >
+            <div className="mx-auto grid max-w-7xl gap-10 px-8 py-8" style={{ gridTemplateColumns: `repeat(${Math.min(Math.max(menuSectors.length, 1), 4)}, minmax(0, 1fr))` }}>
+              {menuSectors.map((sector) => (
+                <div key={sector.id || sector.slug}>
+                  <Link href={`/sector/${sector.slug}`} onClick={() => setColOpen(false)} className="font-kids text-2xl font-bold text-[#23263f] hover:text-[#c2410c]">
+                    {sector.name}
+                  </Link>
+                  {sector.tagline && <p className="mt-0.5 text-sm text-[#565a78]">{sector.tagline}</p>}
+                  <ul className="mt-4 space-y-1">
+                    {sector.collections.map((c) => (
+                      <li key={c.slug}>
+                        <Link
+                          href={`/coleccion/${c.slug}`}
+                          onClick={() => setColOpen(false)}
+                          className="flex items-center gap-3 rounded-2xl p-2 transition-colors hover:bg-[#FFF8EF]"
+                        >
+                          <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl" style={{ background: softOf(c) }}>
+                            {(c.imageUrl || c.photoUrl) && (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={c.imageUrl || c.photoUrl} alt="" className="h-full w-full object-contain p-1" />
+                            )}
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block truncate font-bold text-[#23263f]">{c.name}</span>
+                            {c.tagline && <span className="block truncate text-sm text-[#565a78]">{c.tagline}</span>}
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        </div>
       </header>
 
-      {/* Mobile drawer */}
+      {/* Mobile drawer: Inicio, setores com as colecoes e Nuestro taller */}
       {mobileOpen && (
         <>
           <div className="fixed inset-0 z-40 bg-[#23263f]/40 md:hidden" onClick={() => setMobileOpen(false)} />
-          <div className="kids fixed bottom-0 right-0 top-0 z-50 flex w-72 flex-col bg-white md:hidden">
+          <div className="kids fixed bottom-0 right-0 top-0 z-50 flex w-[300px] flex-col bg-white md:hidden">
             <div className="flex items-center justify-between border-b border-[#efe7da] p-5">
               <span className="font-kids text-2xl font-bold text-[#23263f]">Menú</span>
               <button
@@ -215,17 +281,32 @@ export function Header() {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <nav className="flex flex-col p-3">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileOpen(false)}
-                  className="rounded-xl px-4 py-3.5 font-kids text-xl font-semibold text-[#23263f] transition-colors hover:bg-[#FFF4E0]"
-                >
-                  {link.label}
-                </Link>
+            <nav className="flex flex-1 flex-col overflow-y-auto p-3" aria-label="Principal">
+              <Link href="/" onClick={() => setMobileOpen(false)} className={MOBILE_ITEM}>Inicio</Link>
+              {menuSectors.map((sector) => (
+                <div key={sector.id || sector.slug} className="mt-2">
+                  <Link href={`/sector/${sector.slug}`} onClick={() => setMobileOpen(false)} className={MOBILE_ITEM}>
+                    {sector.name}
+                  </Link>
+                  {sector.collections.map((c) => (
+                    <Link
+                      key={c.slug}
+                      href={`/coleccion/${c.slug}`}
+                      onClick={() => setMobileOpen(false)}
+                      className="ml-3 flex items-center gap-3 rounded-xl px-3 py-2 text-base font-semibold text-[#565a78] transition-colors hover:bg-[#FFF4E0] hover:text-[#23263f]"
+                    >
+                      <span className="h-9 w-9 shrink-0 overflow-hidden rounded-lg" style={{ background: softOf(c) }}>
+                        {(c.imageUrl || c.photoUrl) && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={c.imageUrl || c.photoUrl} alt="" className="h-full w-full object-contain p-0.5" />
+                        )}
+                      </span>
+                      {c.name}
+                    </Link>
+                  ))}
+                </div>
               ))}
+              <Link href="/#como-se-hace" onClick={() => setMobileOpen(false)} className={`${MOBILE_ITEM} mt-2`}>Nuestro taller</Link>
             </nav>
           </div>
         </>
