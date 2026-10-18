@@ -2,14 +2,14 @@
 import { useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Printer, Sparkles, type LucideIcon } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { COLLECTIONS, collectionForCategory, type Collection } from '@/lib/collections';
 import { toStoreProduct, type DbProduct } from '@/lib/store-product';
-import { type Product } from '@/lib/products';
 import { KidsProductCard } from './kids-product-card';
 import { useStoreProducts } from './use-store-products';
+import { Cube } from './kid-shapes';
 
-const OTHER_COLOR = { main: '#0EA5E9', soft: '#E0F2FE', deep: '#0369A1' };
+const OTHER = { main: '#1E88FF', soft: '#E6F3FF' };
 const SHELF_SIZE = 4;
 
 function coverOf(items: DbProduct[]) {
@@ -17,82 +17,48 @@ function coverOf(items: DbProduct[]) {
   return cover?.image;
 }
 
+// Caixa de brinquedo de cada colecao: fundo na cor da colecao com confete,
+// icone num selo branco, titulo grande e a foto de capa numa moldura torta.
 function CollectionCard({ collection, items }: { collection: Collection; items: DbProduct[] }) {
   const cover = coverOf(items);
   const Icon = collection.icon;
   return (
     <Link
       href={`/coleccion/${collection.slug}`}
-      className="kids-pop group relative flex min-h-[320px] flex-col overflow-hidden rounded-[36px] p-6 sm:min-h-[380px] sm:p-8"
-      style={{ background: collection.color.deep }}
+      className="kid-card kid-confetti group relative flex min-h-[300px] cursor-pointer flex-col overflow-hidden rounded-[36px] border-4 border-[var(--k-ink)] p-6 sm:min-h-[360px] sm:p-8"
+      style={{ backgroundColor: collection.color.main }}
     >
-      <div className="pointer-events-none absolute -right-10 -top-10 h-44 w-44 rounded-full bg-white/15" />
-      <div className="pointer-events-none absolute -bottom-16 left-10 h-40 w-40 rounded-full bg-black/10" />
+      <span className="flex h-16 w-16 items-center justify-center rounded-2xl border-4 border-[var(--k-ink)] bg-white">
+        <Icon className="h-8 w-8" style={{ color: collection.color.main }} aria-hidden="true" />
+      </span>
+      <h3 className="mt-4 max-w-[62%] text-4xl font-extrabold text-white sm:text-5xl" style={{ textShadow: '0 4px 0 rgba(31,35,64,0.35)' }}>
+        {collection.shortName}
+      </h3>
+      <p className="mt-2 max-w-[60%] text-base font-bold text-white sm:text-lg">{collection.tagline}</p>
 
-      <div className="relative z-10 max-w-[60%]">
-        <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 sm:h-20 sm:w-20">
-          <Icon className="h-9 w-9 text-white sm:h-11 sm:w-11" aria-hidden="true" />
-        </span>
-        <h3 className="mt-3 text-3xl font-bold leading-tight text-white sm:text-4xl">{collection.name}</h3>
-        <p className="mt-2 text-base font-bold text-white">{collection.tagline}</p>
-      </div>
+      <span className="kid-btn mt-auto inline-flex w-fit items-center gap-2 rounded-full bg-white px-6 py-3 font-kids text-lg font-bold text-[var(--k-ink)]">
+        ¡Ver todo! <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+      </span>
 
-      <div className="relative z-10 mt-auto flex flex-col items-start gap-2 pt-6">
-        {items.length > 0 && (
-          <span className="text-sm font-bold text-white">
-            {items.length} {items.length === 1 ? 'creación' : 'creaciones'}
-          </span>
+      <div className="absolute bottom-6 right-5 h-32 w-32 rotate-6 overflow-hidden rounded-[26px] border-4 border-[var(--k-ink)] bg-white transition-transform duration-300 group-hover:rotate-0 sm:h-44 sm:w-44">
+        {cover ? (
+          <Image src={cover} alt="" fill sizes="180px" className="object-cover" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center" style={{ background: collection.color.soft }}>
+            <Cube top="#FFE08A" left="#FFC93C" right="#E0A800" className="w-2/3" />
+          </div>
         )}
-        <span className="flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-extrabold" style={{ color: collection.color.deep }}>
-          Ver colección <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-        </span>
       </div>
-
-      {cover && (
-        <div className="absolute bottom-6 right-5 h-28 w-28 rotate-6 overflow-hidden rounded-[28px] border-[5px] border-white shadow-xl transition-transform duration-500 group-hover:rotate-0 group-hover:scale-105 sm:h-48 sm:w-48">
-          <Image src={cover} alt={collection.name} fill sizes="200px" className="object-cover" />
-        </div>
-      )}
     </Link>
   );
 }
 
-function Shelf({ id, title, icon: Icon, subtitle, color, products, href, total }: {
-  id: string;
-  title: string;
-  icon: LucideIcon;
-  subtitle: string;
-  color: Collection['color'];
-  products: Product[];
-  href?: string;
-  total: number;
-}) {
+function SectionTitle({ eyebrow, title, color }: { eyebrow: string; title: string; color: string }) {
   return (
-    <section id={id} className="scroll-mt-32 py-12 sm:py-16">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl" style={{ background: color.soft, color: color.deep }}>
-              <Icon className="h-7 w-7" aria-hidden="true" />
-            </span>
-            <div>
-              <p className="text-sm font-extrabold uppercase tracking-widest" style={{ color: color.deep }}>{subtitle}</p>
-              <h2 className="text-3xl font-bold text-[#1e2a4a] sm:text-4xl">{title}</h2>
-            </div>
-          </div>
-          {href && total > products.length && (
-            <Link href={href} className="flex min-h-11 items-center gap-1.5 rounded-full px-5 text-sm font-extrabold text-white transition-opacity duration-200 hover:opacity-90" style={{ background: color.deep }}>
-              Ver las {total} <ArrowRight className="h-4 w-4" />
-            </Link>
-          )}
-        </div>
-        <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
-          {products.map((p) => (
-            <KidsProductCard key={p.id} product={p} color={color} />
-          ))}
-        </div>
-      </div>
-    </section>
+    <div>
+      <p className="font-kids text-lg font-bold" style={{ color }}>{eyebrow}</p>
+      <h2 className="text-4xl font-extrabold text-[var(--k-ink)] sm:text-5xl">{title}</h2>
+    </div>
   );
 }
 
@@ -112,13 +78,12 @@ export function KidsStorefront() {
 
   return (
     <div className="bg-white">
-      <section id="colecciones" className="scroll-mt-32 pb-6 pt-6 sm:pt-10">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section id="colecciones" className="scroll-mt-28 px-4 pb-8 pt-4 sm:pt-8">
+        <div className="mx-auto max-w-7xl">
           <div className="mb-8 text-center">
-            <p className="text-sm font-extrabold uppercase tracking-widest text-[#1D4ED8]">Nuestras colecciones</p>
-            <h2 className="mt-1 text-3xl font-bold text-[#1e2a4a] sm:text-5xl">¿A qué jugamos hoy?</h2>
+            <SectionTitle eyebrow="¡Hola, peques!" title="¿A qué jugamos hoy?" color="var(--k-red)" />
           </div>
-          <div className="grid gap-5 md:grid-cols-2">
+          <div className="grid gap-6 md:grid-cols-2">
             {COLLECTIONS.map((c) => (
               <CollectionCard key={c.slug} collection={c} items={byCollection.get(c.slug) ?? []} />
             ))}
@@ -126,41 +91,49 @@ export function KidsStorefront() {
         </div>
       </section>
 
-      <div id="productos">
+      <div id="productos" className="scroll-mt-28">
         {COLLECTIONS.map((c) => {
           const items = byCollection.get(c.slug) ?? [];
           if (!items.length) return null;
           return (
-            <Shelf
-              key={c.slug}
-              id={`shelf-${c.slug}`}
-              title={c.name}
-              icon={c.icon}
-              subtitle={c.tagline}
-              color={c.color}
-              products={items.slice(0, SHELF_SIZE).map(toStoreProduct)}
-              href={`/coleccion/${c.slug}`}
-              total={items.length}
-            />
+            <section key={c.slug} className="px-4 py-12">
+              <div className="mx-auto max-w-7xl">
+                <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
+                  <SectionTitle eyebrow={c.tagline} title={c.name} color={c.color.main} />
+                  {items.length > SHELF_SIZE && (
+                    <Link href={`/coleccion/${c.slug}`} className="kid-btn inline-flex min-h-12 items-center gap-2 rounded-full px-6 font-kids text-lg font-bold text-white" style={{ background: c.color.main }}>
+                      Ver las {items.length} <ArrowRight className="h-5 w-5" aria-hidden="true" />
+                    </Link>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+                  {items.slice(0, SHELF_SIZE).map((p) => (
+                    <KidsProductCard key={p.id} product={toStoreProduct(p)} color={c.color.main} soft={c.color.soft} />
+                  ))}
+                </div>
+              </div>
+            </section>
           );
         })}
 
         {others.length > 0 && (
-          <Shelf
-            id="otras-creaciones"
-            title="Más creaciones"
-            icon={Sparkles}
-            subtitle="Recién salidas de la impresora"
-            color={OTHER_COLOR}
-            products={others.map(toStoreProduct)}
-            total={others.length}
-          />
+          <section className="px-4 py-12">
+            <div className="mx-auto max-w-7xl">
+              <div className="mb-7">
+                <SectionTitle eyebrow="Recién salidas de la impresora" title="Más creaciones" color={OTHER.main} />
+              </div>
+              <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+                {others.map((p) => (
+                  <KidsProductCard key={p.id} product={toStoreProduct(p)} color={OTHER.main} soft={OTHER.soft} />
+                ))}
+              </div>
+            </div>
+          </section>
         )}
 
         {loaded && products.length === 0 && (
-          <p className="mx-auto flex max-w-md flex-col items-center gap-3 px-4 py-12 text-center text-slate-600">
-            <Printer className="h-10 w-10 text-[#2563EB]" aria-hidden="true" />
-            Estamos imprimiendo nuevas creaciones. ¡Vuelve muy pronto!
+          <p className="px-4 py-12 text-center font-kids text-2xl font-bold text-[var(--k-ink)]">
+            ¡Estamos imprimiendo nuevas creaciones! Vuelve muy pronto.
           </p>
         )}
       </div>

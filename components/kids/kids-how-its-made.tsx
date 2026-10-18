@@ -1,66 +1,64 @@
 import Image from 'next/image';
 import { Package, PenTool, Printer } from 'lucide-react';
+import { Star, Wave } from './kid-shapes';
 
 const STEPS = [
-  { icon: PenTool, title: 'Lo diseñamos', desc: 'Cada juego y cada lámpara empieza como un dibujo en 3D en el ordenador.', color: '#2563EB' },
-  { icon: Printer, title: 'Lo imprimimos', desc: 'La impresora 3D lo construye capa a capa, como una torre de bloques muy fina.', color: '#C2410C' },
-  { icon: Package, title: 'Llega a casa', desc: 'Lo revisamos, lo empaquetamos con cariño y te lo enviamos listo para disfrutar.', color: '#15803D' },
+  { icon: PenTool, title: 'Lo diseñamos', desc: 'Cada juguete empieza como un dibujo en 3D.', color: 'var(--k-blue)' },
+  { icon: Printer, title: 'Lo imprimimos', desc: 'La impresora lo construye capa a capa.', color: 'var(--k-orange)' },
+  { icon: Package, title: '¡Llega a casa!', desc: 'Lo empaquetamos con cariño y te lo enviamos.', color: 'var(--k-green)' },
 ];
 
-// "Nuestro taller": foto real da nossa impressora 3D com uma crianca
-// brincando com uma peca recem-impressa, seguida dos 3 passos de como cada
-// criacao e feita. Sem faixa de selos/garantias — pedido do usuario, a
-// vitrine e infantil e fica mais leve sem eles.
+// "Nuestro taller": foto real da crianca brincando com uma peca impressa,
+// numa moldura de brinquedo, e os 3 passos em bolinhas coloridas.
 export function KidsHowItsMade() {
   return (
-    <section id="como-se-hace" className="scroll-mt-32 bg-[#EFF6FF] py-16 sm:py-24">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid items-center gap-10 lg:grid-cols-[1.15fr_1fr] lg:gap-14">
+    <section id="como-se-hace" className="scroll-mt-28">
+      <Wave color="#FFF6D6" />
+      <div className="bg-[#FFF6D6] px-4 pb-20 pt-6">
+        <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-2">
           <div className="relative">
-            <div className="absolute -bottom-3 -right-3 h-full w-full rotate-2 rounded-[40px] bg-[#F97316] sm:-bottom-5 sm:-right-5" aria-hidden="true" />
-            <figure className="relative overflow-hidden rounded-[36px] border-[6px] border-white bg-white shadow-[0_20px_50px_rgba(30,42,74,0.15)]">
+            <Star color="#FFC93C" className="animate-kid-float absolute -left-3 -top-5 z-10 w-14" />
+            <Star color="#FF7A88" className="animate-kid-float-slow absolute -bottom-4 right-6 z-10 w-10" />
+            <div className="-rotate-2 overflow-hidden rounded-[36px] border-[6px] border-[var(--k-ink)] bg-white shadow-[0_10px_0_rgba(31,35,64,0.15)]">
               <div className="relative aspect-[1024/559]">
                 <Image
                   src="/images/taller-nina-impresora-3d.jpg"
                   alt="Niña sonriendo mientras juega con un estegosaurio impreso en 3D, junto a nuestra impresora 3D"
                   fill
-                  sizes="(min-width: 1024px) 55vw, 100vw"
+                  sizes="(min-width: 1024px) 50vw, 100vw"
                   className="object-cover"
                 />
               </div>
-            </figure>
+            </div>
           </div>
 
           <div>
-            <p className="text-sm font-extrabold uppercase tracking-widest text-[#1D4ED8]">Nuestro taller</p>
-            <h2 className="mt-2 text-4xl font-extrabold text-[#1e2a4a] sm:text-5xl">De la impresora a sus manos</h2>
-            <p className="mt-4 text-lg leading-relaxed text-slate-700">
-              Todo sale de nuestra impresora 3D: los dinosaurios, los puzzles y las lámparas se imprimen aquí,
-              pieza a pieza, antes de viajar a tu casa.
-            </p>
+            <p className="font-kids text-lg font-bold text-[var(--k-green)]">Nuestro taller</p>
+            <h2 className="text-4xl font-extrabold text-[var(--k-ink)] sm:text-5xl">¡De la impresora a tus manos!</h2>
+            <ol className="mt-8 space-y-5">
+              {STEPS.map((s, i) => {
+                const Icon = s.icon;
+                return (
+                  <li key={s.title} className="flex items-center gap-4">
+                    <span
+                      className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-4 border-[var(--k-ink)] text-white"
+                      style={{ background: s.color }}
+                    >
+                      <Icon className="h-7 w-7" aria-hidden="true" />
+                      <span className="absolute -right-1 -top-1 flex h-7 w-7 items-center justify-center rounded-full border-[3px] border-[var(--k-ink)] bg-white font-kids text-sm font-extrabold text-[var(--k-ink)]">
+                        {i + 1}
+                      </span>
+                    </span>
+                    <span>
+                      <span className="block font-kids text-2xl font-bold text-[var(--k-ink)]">{s.title}</span>
+                      <span className="block text-base font-semibold text-[#4a4f72]">{s.desc}</span>
+                    </span>
+                  </li>
+                );
+              })}
+            </ol>
           </div>
         </div>
-
-        <ol className="mt-14 grid gap-5 md:grid-cols-3">
-          {STEPS.map((s, i) => {
-            const Icon = s.icon;
-            return (
-              <li key={s.title} className="flex gap-4 rounded-[28px] bg-white p-6 shadow-[0_6px_0_rgba(30,42,74,0.08)]">
-                <span
-                  className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-white"
-                  style={{ background: s.color }}
-                >
-                  <Icon className="h-7 w-7" aria-hidden="true" />
-                </span>
-                <span>
-                  <span className="block text-sm font-extrabold text-slate-500">Paso {i + 1}</span>
-                  <span className="font-kids block text-2xl font-bold text-[#1e2a4a]">{s.title}</span>
-                  <span className="mt-1 block text-base leading-relaxed text-slate-700">{s.desc}</span>
-                </span>
-              </li>
-            );
-          })}
-        </ol>
       </div>
     </section>
   );

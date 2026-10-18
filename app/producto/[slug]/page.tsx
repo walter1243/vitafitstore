@@ -41,7 +41,7 @@ export default async function ProductPage({ params }: PageProps) {
   const content = await getSiteContent()
 
   return (
-    <div className="kids flex min-h-screen flex-col bg-[#FFF8EC]">
+    <div className="flex min-h-screen flex-col bg-[#FAF8F5]">
       <Header />
       <main className="flex-1">
         <ProductPageView product={product} />

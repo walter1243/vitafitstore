@@ -16,15 +16,16 @@ import { getSiteContent } from '@/lib/site-content'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-// Vitrine infantil: hero → colecoes (cards clicaveis) → prateleira de cada
-// colecao → como e feito. Cada colecao tem a sua pagina em /coleccion/[slug].
+// Vitrine infantil: hero com blocos de montar → colecoes → prateleiras →
+// "Nuestro taller". So o conteudo da pagina fica dentro de .kids — carrinho,
+// popup e checkout mantem o visual de antes.
 export default async function HomePage() {
   const content = await getSiteContent()
 
   return (
-    <div className="kids flex min-h-screen flex-col bg-white">
+    <div className="flex min-h-screen flex-col bg-white">
       <Header />
-      <main className="flex-1">
+      <main className="kids flex-1">
         <KidsHero />
         <KidsStorefront />
         <KidsHowItsMade />

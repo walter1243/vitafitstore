@@ -2,21 +2,18 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Check, ShoppingCart, Sparkles } from 'lucide-react';
+import { Check, ShoppingCart } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 import { type Product } from '@/lib/products';
 
-type Props = {
-  product: Product;
-  color: { main: string; soft: string; deep: string };
-  tag?: string;
-};
+type Props = { product: Product; color?: string; soft?: string; tag?: string };
 
-export function KidsProductCard({ product, color, tag }: Props) {
+// Card "de brinquedo": borda grossa colorida, foto num fundo pastel, preco
+// em destaque e botao gordinho. A cor vem da colecao do produto.
+export function KidsProductCard({ product, color = '#1E88FF', soft = '#E6F3FF', tag }: Props) {
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
   const [hovered, setHovered] = useState(false);
-  const href = `/producto/${product.id}-${product.slug}`;
   const secondary = product.additionalImages?.[0];
   // Produto com cor/tamanho precisa escolher na pagina dele — adicionar
   // direto daqui iria pro carrinho sem a opcao.
@@ -32,57 +29,45 @@ export function KidsProductCard({ product, color, tag }: Props) {
 
   return (
     <Link
-      href={href}
+      href={`/producto/${product.id}-${product.slug}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="kids-pop group flex h-full cursor-pointer flex-col overflow-hidden rounded-[28px] border-[3px] bg-white"
-      style={{ borderColor: color.soft }}
+      className="kid-card group flex h-full cursor-pointer flex-col overflow-hidden rounded-[28px] border-4 bg-white"
+      style={{ borderColor: soft }}
     >
-      <div className="relative m-2.5 aspect-square overflow-hidden rounded-[22px]" style={{ background: color.soft }}>
+      <div className="relative m-2 aspect-square overflow-hidden rounded-[22px]" style={{ background: soft }}>
         <Image
           src={hovered && secondary ? secondary : (product.mainImage ?? product.image)}
           alt={product.name}
           fill
           sizes="(min-width: 1024px) 25vw, 50vw"
-          className="object-cover transition-transform duration-500 group-hover:scale-[1.06]"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
         {tag && (
-          <span
-            className="absolute left-2.5 top-2.5 rounded-full px-2.5 py-1 text-[11px] font-extrabold text-white shadow-sm"
-            style={{ background: color.deep }}
-          >
+          <span className="absolute left-2.5 top-2.5 rounded-full px-3 py-1 text-xs font-extrabold text-white" style={{ background: color }}>
             {tag}
           </span>
         )}
       </div>
 
-      <div className="flex flex-1 flex-col px-4 pb-4 pt-1">
-        <h3 className="line-clamp-2 text-base font-semibold leading-snug text-[#1e2a4a] sm:text-lg">
-          {product.name}
-        </h3>
-        <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-slate-600">{product.shortDescription}</p>
-
+      <div className="flex flex-1 flex-col px-4 pb-4 pt-2">
+        <h3 className="line-clamp-2 text-lg font-bold text-[var(--k-ink)]">{product.name}</h3>
         <div className="mt-auto flex items-center justify-between gap-2 pt-3">
-          <span className="font-kids text-xl font-bold" style={{ color: color.deep }}>
-            {product.price.toFixed(2)}€
-          </span>
+          <span className="font-kids text-2xl font-extrabold" style={{ color }}>{product.price.toFixed(2)}€</span>
           {needsChoice ? (
-            <span
-              className="flex min-h-11 items-center gap-1 rounded-full px-3.5 text-sm font-extrabold text-white"
-              style={{ background: color.deep }}
-            >
-              <Sparkles className="h-3.5 w-3.5" /> Elegir
+            <span className="kid-btn flex min-h-11 items-center rounded-full px-4 text-sm font-extrabold text-white" style={{ background: color }}>
+              Elegir
             </span>
           ) : (
             <button
               type="button"
               onClick={handleAdd}
               aria-label={`Añadir ${product.name} al carrito`}
-              className="flex min-h-11 items-center gap-1 rounded-full px-3.5 text-sm font-extrabold text-white transition-colors duration-200 active:scale-95"
-              style={{ background: added ? '#15803D' : color.deep }}
+              className="kid-btn flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full px-4 text-sm font-extrabold text-white"
+              style={{ background: added ? '#22B14C' : color }}
             >
-              {added ? <Check className="h-3.5 w-3.5" /> : <ShoppingCart className="h-3.5 w-3.5" />}
-              {added ? '¡Listo!' : 'Añadir'}
+              {added ? <Check className="h-4 w-4" /> : <ShoppingCart className="h-4 w-4" />}
+              <span className="hidden sm:inline">{added ? '¡Listo!' : 'Añadir'}</span>
             </button>
           )}
         </div>

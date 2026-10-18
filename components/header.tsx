@@ -1,19 +1,22 @@
 'use client';
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
-import { ShoppingCart, Menu, X, LayoutGrid, Printer, Smile } from 'lucide-react';
+import { ShoppingCart, Menu, X, Smile, LayoutGrid, Printer } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
-import { ChristmasPromo } from '@/components/christmas-promo';
 import { COLLECTIONS } from '@/lib/collections';
 
 // Menu fixo da vitrine infantil: as colecoes vem de lib/collections.ts
 // (cada uma com a sua pagina), entao o cabecalho nao precisa mais buscar
 // categorias/produtos a cada 15s pra montar os links.
 const navLinks = [
-  { href: '/#colecciones', label: 'Colecciones', icon: LayoutGrid, color: '#1D4ED8' },
-  ...COLLECTIONS.map((c) => ({ href: `/coleccion/${c.slug}`, label: c.shortName, icon: c.icon, color: c.color.deep })),
-  { href: '/#como-se-hace', label: 'Cómo se hace', icon: Printer, color: '#15803D' },
+  { href: '/#colecciones', label: 'Colecciones', icon: LayoutGrid, color: '#F2384A' },
+  ...COLLECTIONS.map((c) => ({ href: `/coleccion/${c.slug}`, label: c.shortName, icon: c.icon, color: c.color.main })),
+  { href: '/#como-se-hace', label: 'Nuestro taller', icon: Printer, color: '#22B14C' },
 ];
+
+// Logo padrao da marca — usado no modo "logo direto" enquanto o admin nao
+// tiver enviado uma logo.
+const DEFAULT_LOGO = '/images/logo-kitoys-3d.png';
 
 const BRANDING_CACHE_KEY = 'store_branding_cache';
 
@@ -40,14 +43,14 @@ export function Header() {
   const cachedBranding = readCachedBranding();
   const [storeName, setStoreName] = useState(cachedBranding?.storeName ?? 'Nuestra Tienda');
   const [logoUrl, setLogoUrl] = useState(cachedBranding?.logoUrl ?? '');
-  const [themeColor, setThemeColor] = useState(cachedBranding?.themeColor ?? '#FF6B6B');
+  const [logoStyle, setLogoStyle] = useState<'icone_nome' | 'logo_direto'>(cachedBranding?.logoStyle ?? 'logo_direto');
+  const [themeColor, setThemeColor] = useState(cachedBranding?.themeColor ?? '#c2410c');
   const [announcement, setAnnouncement] = useState('');
 
   // The header floats fixed below whatever stack of thin bars (free-shipping
-  // announcement, Christmas countdown) is showing — both can appear
+  // announcement) is showing — it can appear
   // independently, so the offset is measured instead of hardcoded, and
-  // updates itself whenever a bar is added/removed (e.g. the countdown
-  // disappearing once Christmas passes).
+  // updates itself whenever the bar is added/removed.
   const topBarRef = useRef<HTMLDivElement>(null);
   const [topBarHeight, setTopBarHeight] = useState(0);
 
@@ -82,13 +85,15 @@ export function Header() {
         const data = await res.json();
         const nextStoreName = data?.storeName ?? 'Nuestra Tienda';
         const nextLogoUrl = data?.logoUrl ?? '';
-        const nextThemeColor = data?.themeColor ?? '#FF6B6B';
+        const nextThemeColor = data?.themeColor ?? '#c2410c';
+        const nextLogoStyle = data?.logoStyle === 'icone_nome' ? 'icone_nome' : 'logo_direto';
         setStoreName(nextStoreName);
         setLogoUrl(nextLogoUrl);
         setThemeColor(nextThemeColor);
+        setLogoStyle(nextLogoStyle);
         try {
           window.sessionStorage.setItem(BRANDING_CACHE_KEY, JSON.stringify({
-            storeName: nextStoreName, logoUrl: nextLogoUrl, themeColor: nextThemeColor,
+            storeName: nextStoreName, logoUrl: nextLogoUrl, themeColor: nextThemeColor, logoStyle: nextLogoStyle,
           }));
         } catch {
           // sessionStorage unavailable (private mode, etc.) — just skip caching
@@ -120,38 +125,47 @@ export function Header() {
     };
   }, []);
 
+  const directLogo = logoUrl || DEFAULT_LOGO;
+
   return (
     <>
       <div ref={topBarRef} className="fixed top-0 left-0 right-0 z-[60]">
-        <ChristmasPromo />
         {announcement && (
-          <div className="bg-[#1e2a4a] px-4 py-1 text-center text-[10px] font-bold tracking-wide text-white sm:text-[11px]">
+          <div className="bg-[#1f2340] px-4 py-1 text-center text-[10px] font-semibold tracking-wide text-white sm:text-[11px]">
             {announcement}
           </div>
         )}
       </div>
       <header
-        className="kids fixed left-0 right-0 z-50 px-2 transition-all duration-500 sm:px-4"
-        style={{ top: topBarHeight + (scrolled ? 6 : 10) }}
+        className="kids fixed left-0 right-0 z-50 px-3 transition-all duration-300 sm:px-5"
+        style={{ top: topBarHeight + (scrolled ? 6 : 12) }}
       >
         <div
-          className={`mx-auto flex max-w-7xl items-center justify-between rounded-full border-[3px] border-white bg-white/90 pl-2 pr-2 backdrop-blur-xl transition-all duration-500 sm:pl-3 ${scrolled ? 'py-1.5 shadow-[0_8px_24px_rgba(30,42,74,0.12)]' : 'py-2 shadow-[0_4px_0_rgba(30,42,74,0.08)]'}`}
+          className={`mx-auto flex max-w-7xl items-center justify-between rounded-full border-4 border-[#1f2340] bg-white py-1 pl-3 pr-2 transition-shadow duration-300 sm:pl-5 ${scrolled ? 'shadow-[0_6px_0_rgba(31,35,64,0.18)]' : 'shadow-[0_4px_0_rgba(31,35,64,0.12)]'}`}
         >
-          {/* Logo */}
-          <Link href="/" className="group flex items-center gap-2">
-            <div
-              className="flex h-[42px] w-[42px] items-center justify-center overflow-hidden rounded-full transition-transform duration-300 group-hover:rotate-12"
-              style={{ background: themeColor }}
-            >
-              {logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={logoUrl} alt="Logo" className="h-full w-full object-cover" />
-              ) : (
-                <Smile className="h-6 w-6 text-white" aria-hidden="true" />
-              )}
-            </div>
-            <span className="font-kids text-lg font-bold text-[#1e2a4a] sm:text-xl">{storeName}</span>
-          </Link>
+          {/* Logo — "logo_direto" (padrao; Admin → Informações da Loja)
+              mostra a imagem do logo sozinha, do jeito que ela e. */}
+          {logoStyle === 'logo_direto' ? (
+            <Link href="/" className="-my-3 flex items-center transition-transform duration-200 hover:scale-105" aria-label={storeName}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={directLogo} alt={storeName} className="h-[68px] w-auto object-contain sm:h-[76px]" />
+            </Link>
+          ) : (
+            <Link href="/" className="group flex items-center gap-2 py-1">
+              <div
+                className="flex h-[42px] w-[42px] items-center justify-center overflow-hidden rounded-full"
+                style={{ background: themeColor }}
+              >
+                {logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={logoUrl} alt="Logo" className="h-full w-full object-cover" />
+                ) : (
+                  <Smile className="h-6 w-6 text-white" aria-hidden="true" />
+                )}
+              </div>
+              <span className="font-kids text-xl font-bold text-[#1f2340]">{storeName}</span>
+            </Link>
+          )}
 
           {/* Desktop nav */}
           <nav className="hidden items-center gap-1 lg:flex">
@@ -161,9 +175,9 @@ export function Header() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="flex min-h-11 items-center gap-1.5 rounded-full px-3.5 text-sm font-extrabold text-[#1e2a4a] transition-colors duration-200 hover:bg-slate-100"
+                  className="flex min-h-11 items-center gap-2 rounded-full px-4 font-kids text-lg font-bold text-[#1f2340] transition-colors duration-200 hover:bg-[#F3F6FF]"
                 >
-                  <Icon className="h-4 w-4" style={{ color: link.color }} aria-hidden="true" />
+                  <Icon className="h-5 w-5" style={{ color: link.color }} aria-hidden="true" />
                   {link.label}
                 </Link>
               );
@@ -174,12 +188,12 @@ export function Header() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsCartOpen(true)}
-              className="relative flex h-11 w-11 items-center justify-center rounded-full bg-[#FFD23F] transition-transform duration-200 hover:scale-105 active:scale-95"
+              className="kid-btn relative flex h-12 w-12 items-center justify-center rounded-full border-[3px] border-[#1f2340] bg-[#FFC93C]"
               aria-label="Abrir carrito"
             >
-              <ShoppingCart className="h-5 w-5 text-[#1e2a4a]" />
+              <ShoppingCart className="h-5 w-5 text-[#1f2340]" />
               {totalItems > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-[#FF6B6B] px-1 text-[11px] font-extrabold text-white">
+                <span className="absolute -right-2 -top-2 flex h-6 min-w-6 items-center justify-center rounded-full border-2 border-[#1f2340] bg-[#F2384A] px-1 text-xs font-extrabold text-white">
                   {totalItems}
                 </span>
               )}
@@ -187,11 +201,11 @@ export function Header() {
 
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 transition-colors hover:bg-slate-200 lg:hidden"
+              className="flex h-12 w-12 items-center justify-center rounded-full border-[3px] border-[#1f2340] bg-white lg:hidden"
               aria-label="Menú"
               aria-expanded={mobileOpen}
             >
-              {mobileOpen ? <X className="h-5 w-5 text-[#1e2a4a]" /> : <Menu className="h-5 w-5 text-[#1e2a4a]" />}
+              {mobileOpen ? <X className="h-5 w-5 text-[#1f2340]" /> : <Menu className="h-5 w-5 text-[#1f2340]" />}
             </button>
           </div>
         </div>
@@ -201,15 +215,15 @@ export function Header() {
       {mobileOpen && (
         <>
           <div
-            className="fixed inset-0 z-40 bg-[#1e2a4a]/40 backdrop-blur-sm lg:hidden"
+            className="fixed inset-0 z-40 bg-[#1f2340]/40 backdrop-blur-sm lg:hidden"
             onClick={() => setMobileOpen(false)}
           />
-          <div className="kids fixed bottom-0 right-0 top-0 z-50 flex w-[290px] flex-col rounded-l-[32px] bg-[#FFF8EC] lg:hidden">
+          <div className="kids fixed bottom-0 right-0 top-0 z-50 flex w-[290px] flex-col rounded-l-[32px] border-l-4 border-[#1f2340] bg-[#F3FAFF] lg:hidden">
             <div className="flex items-center justify-between p-6">
-              <span className="font-kids text-2xl font-bold text-[#1e2a4a]">¡Hola!</span>
+              <span className="font-kids text-3xl font-extrabold text-[#1f2340]">¡Hola!</span>
               <button
                 onClick={() => setMobileOpen(false)}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#1e2a4a]"
+                className="flex h-11 w-11 items-center justify-center rounded-full border-[3px] border-[#1f2340] bg-white text-[#1f2340]"
                 aria-label="Cerrar menú"
               >
                 <X className="h-5 w-5" />
@@ -223,7 +237,7 @@ export function Header() {
                     key={link.href}
                     href={link.href}
                     onClick={() => setMobileOpen(false)}
-                    className="flex min-h-14 items-center gap-3 rounded-2xl px-4 text-base font-extrabold text-white shadow-[0_4px_0_rgba(30,42,74,0.12)] transition-transform active:scale-[0.98]"
+                    className="kid-btn flex min-h-14 items-center gap-3 rounded-2xl px-5 font-kids text-xl font-bold text-white"
                     style={{ background: link.color }}
                   >
                     <Icon className="h-6 w-6" aria-hidden="true" />

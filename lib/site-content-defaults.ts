@@ -56,11 +56,11 @@ export type HeroContent = {
 
 export const DEFAULT_HERO: HeroContent = {
   badgeText: 'Envío gratis en pedidos +50€ · España',
-  titleLine1: 'Cestas personalizadas',
-  titleLine2: 'llenas de amor',
-  subtitle: 'Regalos y cestas gourmet para cada ocasión: cumpleaños, Navidad, empresas y más. Hechas a mano, listas para sorprender.',
-  ctaText: 'Descubrir Regalos',
-  ctaHref: '#productos',
+  titleLine1: 'Juguetes y lámparas',
+  titleLine2: 'impresos en 3D',
+  subtitle: 'Juegos para montar y compartir, y lámparas con formas divertidas para la habitación de los peques.',
+  ctaText: 'Ver colecciones',
+  ctaHref: '#colecciones',
   videoPosition: 'center',
   videoUrl: '/video-hero.mp4',
   posterUrl: '',

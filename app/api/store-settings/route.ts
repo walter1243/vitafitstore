@@ -8,6 +8,10 @@ export const revalidate = 0;
 const DEFAULT_SETTINGS = {
   storeName: "Nuestra Tienda",
   logoUrl: "",
+  // "icone_nome": logo pequeno redondo + nome da loja ao lado (padrao).
+  // "logo_direto": a imagem do logo sozinha, do jeito que ela e (ex: um
+  // logo que ja traz o nome escrito, como o da Kitoys 3D).
+  logoStyle: "logo_direto",
   themeColor: "#c2410c",
   instagram: "",
   whatsapp: "+34 601 678 657",
@@ -57,7 +61,8 @@ async function ensureStoreSettingsColumns() {
     ADD COLUMN IF NOT EXISTS whatsapp_future_template TEXT,
     ADD COLUMN IF NOT EXISTS whatsapp_review_template TEXT,
     ADD COLUMN IF NOT EXISTS trustpilot_business_id TEXT,
-    ADD COLUMN IF NOT EXISTS meta_pixel_id TEXT
+    ADD COLUMN IF NOT EXISTS meta_pixel_id TEXT,
+    ADD COLUMN IF NOT EXISTS logo_style TEXT
   `;
 
   await sql`
@@ -72,6 +77,7 @@ export async function GET() {
     await ensureStoreSettingsColumns();
     const [row] = await sql`
       SELECT store_name AS "storeName", logo_url AS "logoUrl", theme_color AS "themeColor",
+             COALESCE(logo_style, 'logo_direto') AS "logoStyle",
              instagram,
              whatsapp,
              email,
@@ -108,6 +114,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const storeName = String(body.storeName ?? DEFAULT_SETTINGS.storeName).trim() || DEFAULT_SETTINGS.storeName;
     const logoUrl = String(body.logoUrl ?? "").trim();
+    const logoStyle = body.logoStyle === "icone_nome" ? "icone_nome" : "logo_direto";
     const themeColor = String(body.themeColor ?? DEFAULT_SETTINGS.themeColor).trim() || DEFAULT_SETTINGS.themeColor;
     const instagram = String(body.instagram ?? "").trim();
     const whatsapp = String(body.whatsapp ?? "").trim();
@@ -126,6 +133,7 @@ export async function POST(req: NextRequest) {
         id,
         store_name,
         logo_url,
+        logo_style,
         theme_color,
         instagram,
         whatsapp,
@@ -143,6 +151,7 @@ export async function POST(req: NextRequest) {
         1,
         ${storeName},
         ${logoUrl || null},
+        ${logoStyle},
         ${themeColor},
         ${instagram || null},
         ${whatsapp || null},
@@ -160,6 +169,7 @@ export async function POST(req: NextRequest) {
       DO UPDATE SET
         store_name = EXCLUDED.store_name,
         logo_url = EXCLUDED.logo_url,
+        logo_style = EXCLUDED.logo_style,
         theme_color = EXCLUDED.theme_color,
         instagram = EXCLUDED.instagram,
         whatsapp = EXCLUDED.whatsapp,

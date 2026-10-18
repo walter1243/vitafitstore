@@ -4200,6 +4200,7 @@ function SettingsSection({
   const [storeName, setStore] = useState('Nuestra Tienda');
   const [themeColor, setThemeColor] = useState('#c2410c');
   const [logoUrl, setLogoUrl] = useState('');
+  const [logoStyle, setLogoStyle] = useState<'icone_nome' | 'logo_direto'>('logo_direto');
   const [saved, setSaved] = useState(false);
   const [savingConfig, setSavingConfig] = useState(false);
   const [saveError, setSaveError] = useState('');
@@ -4214,6 +4215,7 @@ function SettingsSection({
         setStore(data?.storeName ?? 'Nuestra Tienda');
         setThemeColor(data?.themeColor ?? '#c2410c');
         setLogoUrl(data?.logoUrl ?? '');
+        setLogoStyle(data?.logoStyle === 'icone_nome' ? 'icone_nome' : 'logo_direto');
         setIg(data?.instagram ?? '');
         setWa(data?.whatsapp ?? '+34 601 678 657');
         setEmail(data?.email ?? '');
@@ -4257,6 +4259,7 @@ function SettingsSection({
               storeName: storeName.trim(),
               themeColor,
               logoUrl,
+              logoStyle,
               instagram: ig.trim(),
               whatsapp: wa.trim(),
               email: email.trim(),
@@ -4348,6 +4351,38 @@ function SettingsSection({
           className="mb-3 w-full text-sm text-white/70"
         />
         {logoUrl && <img src={logoUrl} alt="Logo" className="h-14 w-auto rounded border border-white/10 object-contain p-1" />}
+
+        <label className="mb-1.5 mt-5 block text-xs font-medium text-white/50">Como a logo aparece no topo do site</label>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {([
+            { key: 'icone_nome', title: 'Ícone + nome', desc: 'Logo pequena redonda com o nome da loja ao lado.' },
+            { key: 'logo_direto', title: 'Logo direto', desc: 'A imagem da logo sozinha, do jeito que ela é (já com o nome).' },
+          ] as const).map(opt => (
+            <button
+              key={opt.key}
+              type="button"
+              onClick={() => setLogoStyle(opt.key)}
+              className={`rounded-xl border p-3 text-left transition ${logoStyle === opt.key ? 'border-green-500/60 bg-green-500/10' : 'border-white/10 bg-[#1c2236] hover:border-white/25'}`}
+            >
+              <div className="mb-2 flex h-12 items-center gap-2 rounded-lg bg-white px-2">
+                {opt.key === 'icone_nome' ? (
+                  <>
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full" style={{ background: themeColor }}>
+                      {logoUrl && <img src={logoUrl} alt="" className="h-full w-full object-cover" />}
+                    </span>
+                    <span className="truncate text-sm font-bold text-slate-800">{storeName || 'Nome da loja'}</span>
+                  </>
+                ) : logoUrl ? (
+                  <img src={logoUrl} alt="" className="h-10 w-auto object-contain" />
+                ) : (
+                  <span className="text-xs text-slate-400">Envie a logo acima</span>
+                )}
+              </div>
+              <p className="text-sm font-semibold text-white">{opt.title}</p>
+              <p className="text-xs text-white/50">{opt.desc}</p>
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-[#161b28] p-5 shadow-none">

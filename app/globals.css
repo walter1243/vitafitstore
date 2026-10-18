@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Raleway:wght@300;400;500;600;700&family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Raleway:wght@300;400;500;600;700&family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800;900&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @plugin '@tailwindcss/typography';
@@ -376,61 +376,58 @@ button, [role="button"], a, [onClick] {
   }
 }
 
-/* ─── Vitrine infantil (Kitoys 3D) ───────────────────
-   Escopo .kids — so a vitrine (home, colecoes, cabecalho) usa; checkout
-   e admin continuam com a tipografia/cores de antes. */
-.kids {
-  font-family: 'Nunito', 'Raleway', system-ui, sans-serif;
-  color: #1e2a4a;
-}
-.kids h1, .kids h2, .kids h3, .kids h4, .font-kids {
-  font-family: 'Baloo 2', 'Nunito', system-ui, sans-serif;
-  letter-spacing: -0.01em;
-  line-height: 1.1;
-}
-/* Foco visivel pra navegacao por teclado (azul de confianca do design system) */
-.kids a:focus-visible,
-.kids button:focus-visible {
+/* ─── Foco visivel pra navegacao por teclado ───────── */
+a:focus-visible,
+button:focus-visible {
   outline: 3px solid #2563eb;
   outline-offset: 3px;
 }
-.kids-dots {
-  background-image: radial-gradient(rgba(30, 42, 74, 0.07) 1.5px, transparent 1.6px);
-  background-size: 22px 22px;
+
+/* ─── Vitrine infantil Kitoys 3D ─────────────────────
+   Escopo .kids — so a vitrine (home, colecoes, cabecalho) usa. Carrinho,
+   checkout e admin continuam com o visual de antes. Paleta tirada do logo. */
+.kids {
+  --k-orange: #ff8a00;
+  --k-blue: #1e88ff;
+  --k-red: #f2384a;
+  --k-green: #22b14c;
+  --k-purple: #8b3fd9;
+  --k-yellow: #ffc93c;
+  --k-ink: #1f2340;
+  font-family: 'Nunito', 'Raleway', system-ui, sans-serif;
+  color: var(--k-ink);
 }
-.kids-pop {
-  box-shadow: 0 6px 0 rgba(30, 42, 74, 0.12);
-  transition: transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 300ms ease;
+.kids h1, .kids h2, .kids h3, .font-kids {
+  font-family: 'Baloo 2', 'Nunito', system-ui, sans-serif;
+  line-height: 1.05;
 }
-.kids-pop:hover {
-  transform: translateY(-6px) rotate(-0.6deg);
-  box-shadow: 0 14px 0 rgba(30, 42, 74, 0.10);
+/* Botao "de brinquedo": sombra solida embaixo que afunda ao clicar */
+.kid-btn {
+  box-shadow: 0 5px 0 rgba(31, 35, 64, 0.25);
+  transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
 }
-.kids-pop:active {
-  transform: translateY(1px);
-  box-shadow: 0 2px 0 rgba(30, 42, 74, 0.14);
+.kid-btn:hover { filter: brightness(1.06); transform: translateY(-2px); box-shadow: 0 7px 0 rgba(31, 35, 64, 0.25); }
+.kid-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(31, 35, 64, 0.25); }
+.kid-card {
+  box-shadow: 0 8px 0 rgba(31, 35, 64, 0.08);
+  transition: transform 250ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 250ms ease;
 }
-@keyframes kids-bob {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-10px); }
+.kid-card:hover { transform: translateY(-6px); box-shadow: 0 14px 0 rgba(31, 35, 64, 0.08); }
+.kid-confetti {
+  background-image:
+    radial-gradient(circle, rgba(255, 138, 0, 0.35) 3px, transparent 3.5px),
+    radial-gradient(circle, rgba(30, 136, 255, 0.30) 3px, transparent 3.5px),
+    radial-gradient(circle, rgba(139, 63, 217, 0.25) 2.5px, transparent 3px);
+  background-size: 120px 120px, 160px 160px, 90px 90px;
+  background-position: 10px 20px, 70px 90px, 40px 50px;
 }
-@keyframes kids-wiggle {
-  0%, 100% { transform: rotate(-4deg); }
-  50%      { transform: rotate(4deg); }
+@keyframes kid-float {
+  0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+  50%      { transform: translateY(-14px) rotate(var(--r, 0deg)); }
 }
-@keyframes kids-nozzle {
-  0%, 100% { transform: translateX(-38px); }
-  50%      { transform: translateX(38px); }
-}
-@keyframes kids-glow {
-  0%, 100% { opacity: 0.55; }
-  50%      { opacity: 0.95; }
-}
-.animate-kids-bob     { animation: kids-bob 4s ease-in-out infinite; }
-.animate-kids-wiggle  { animation: kids-wiggle 3s ease-in-out infinite; }
-.animate-kids-nozzle  { animation: kids-nozzle 2.6s ease-in-out infinite; }
-.animate-kids-glow    { animation: kids-glow 3s ease-in-out infinite; }
+.animate-kid-float { animation: kid-float 5s ease-in-out infinite; }
+.animate-kid-float-slow { animation: kid-float 7s ease-in-out infinite; animation-delay: 1s; }
 @media (prefers-reduced-motion: reduce) {
-  .animate-kids-bob, .animate-kids-wiggle, .animate-kids-nozzle, .animate-kids-glow { animation: none; }
-  .kids-pop:hover { transform: none; }
+  .animate-kid-float, .animate-kid-float-slow { animation: none; }
+  .kid-btn:hover, .kid-card:hover { transform: none; }
 }

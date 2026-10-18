@@ -15,9 +15,9 @@ const SORTS: { key: Sort; label: string }[] = [
   { key: 'precio-desc', label: 'Mayor precio' },
 ];
 
-// Catalogo de UMA colecao: chips pras categorias reais dentro dela
+// Catalogo de UMA colecao: botoes pras categorias reais dentro dela
 // (ex: "Puzzles", "Juegos de mesa" — vem do admin), ordenacao e grade de
-// cards. Abaixo, um card grande levando pra(s) outra(s) colecao(oes).
+// cards. Embaixo, atalhos pra outra colecao e pra home.
 export function CollectionCatalog({ slug }: { slug: string }) {
   const collection = COLLECTIONS.find((c) => c.slug === slug)!;
   const { products, loaded } = useStoreProducts();
@@ -47,72 +47,62 @@ export function CollectionCatalog({ slug }: { slug: string }) {
 
   const others = COLLECTIONS.filter((c) => c.slug !== slug);
   const chip = (active: boolean) =>
-    `min-h-11 rounded-full border-[3px] px-4 text-sm font-extrabold transition-colors duration-200 ${active ? 'text-white' : 'bg-white text-[#1e2a4a] hover:bg-slate-50'}`;
+    `min-h-11 rounded-full border-[3px] border-[#1f2340] px-5 font-kids text-lg font-bold transition-colors duration-200 ${
+      active ? 'text-white' : 'bg-white text-[#1f2340] hover:bg-[#F3F6FF]'
+    }`;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+    <div className="mx-auto max-w-7xl px-4 pb-20 pt-6 sm:px-6 lg:px-8">
       <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         {groups.length > 1 ? (
-          <div className="flex flex-wrap gap-2" role="tablist" aria-label="Tipos dentro de la colección">
-            <button
-              type="button"
-              onClick={() => setGroup('todo')}
-              className={chip(group === 'todo')}
-              style={group === 'todo' ? { background: collection.color.deep, borderColor: collection.color.deep } : { borderColor: collection.color.soft }}
-            >
+          <div className="flex flex-wrap gap-2" aria-label="Tipos dentro de la colección">
+            <button type="button" onClick={() => setGroup('todo')} className={chip(group === 'todo')} style={group === 'todo' ? { background: collection.color.main } : undefined}>
               Todo ({items.length})
             </button>
             {groups.map(([name, count]) => (
-              <button
-                key={name}
-                type="button"
-                onClick={() => setGroup(name)}
-                className={chip(group === name)}
-                style={group === name ? { background: collection.color.deep, borderColor: collection.color.deep } : { borderColor: collection.color.soft }}
-              >
+              <button key={name} type="button" onClick={() => setGroup(name)} className={chip(group === name)} style={group === name ? { background: collection.color.main } : undefined}>
                 {name} ({count})
               </button>
             ))}
           </div>
         ) : (
-          <p className="font-kids text-xl font-semibold text-[#1e2a4a]">
-            {loaded ? `${items.length} ${items.length === 1 ? 'creación' : 'creaciones'}` : 'Cargando creaciones…'}
+          <p className="font-kids text-2xl font-bold text-[#1f2340]">
+            {loaded ? `${items.length} ${items.length === 1 ? 'creación' : 'creaciones'}` : 'Cargando…'}
           </p>
         )}
 
-        <div className="flex flex-wrap gap-2">
-          {SORTS.map((s) => (
-            <button
-              key={s.key}
-              type="button"
-              onClick={() => setSort(s.key)}
-              className={`min-h-11 rounded-full px-4 text-sm font-extrabold transition-colors duration-200 ${sort === s.key ? 'bg-[#1e2a4a] text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
+        <label className="flex items-center gap-2 font-kids text-lg font-bold text-[#1f2340]">
+          Ordenar:
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as Sort)}
+            className="min-h-11 cursor-pointer rounded-full border-[3px] border-[#1f2340] bg-white px-4 text-base font-bold text-[#1f2340] outline-none"
+          >
+            {SORTS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+          </select>
+        </label>
       </div>
 
       {visible.length > 0 ? (
-        <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
           {visible.map((p) => (
             <KidsProductCard
               key={p.id}
               product={p}
-              color={collection.color}
+              color={collection.color.main}
+              soft={collection.color.soft}
               tag={groups.length > 1 && group === 'todo' ? p.categoryLabel : undefined}
             />
           ))}
         </div>
       ) : loaded ? (
-        <div className="rounded-[30px] border-[3px] border-dashed p-10 text-center" style={{ borderColor: collection.color.soft }}>
-          <Printer className="mx-auto h-12 w-12" style={{ color: collection.color.deep }} aria-hidden="true" />
-          <p className="mt-3 font-kids text-2xl font-semibold text-[#1e2a4a]">¡La impresora está trabajando!</p>
-          <p className="mt-1 text-base text-slate-600">Muy pronto habrá nuevas creaciones en esta colección.</p>
+        <div className="rounded-[32px] border-4 border-dashed px-6 py-14 text-center" style={{ borderColor: collection.color.main, background: collection.color.soft }}>
+          <Printer className="mx-auto h-14 w-14" style={{ color: collection.color.main }} aria-hidden="true" />
+          <p className="mt-4 font-kids text-3xl font-extrabold text-[#1f2340]">¡La impresora está trabajando!</p>
+          <p className="mt-1 text-lg font-semibold text-[#4a4f72]">Muy pronto habrá nuevas creaciones aquí.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="aspect-[3/4] animate-pulse rounded-[28px]" style={{ background: collection.color.soft }} />
           ))}
@@ -123,35 +113,35 @@ export function CollectionCatalog({ slug }: { slug: string }) {
         {others.map((c) => {
           const Icon = c.icon;
           return (
-          <Link
-            key={c.slug}
-            href={`/coleccion/${c.slug}`}
-            className="kids-pop group flex items-center gap-5 rounded-[30px] p-6 text-white"
-            style={{ background: c.color.deep }}
-          >
-            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20">
-              <Icon className="h-8 w-8" aria-hidden="true" />
-            </span>
-            <span className="flex-1">
-              <span className="block text-sm font-extrabold uppercase tracking-widest text-white">Descubre también</span>
-              <span className="font-kids block text-2xl font-bold">{c.name}</span>
-            </span>
-            <ArrowRight className="h-6 w-6 transition-transform group-hover:translate-x-1" aria-hidden="true" />
-          </Link>
+            <Link
+              key={c.slug}
+              href={`/coleccion/${c.slug}`}
+              className="kid-card group flex cursor-pointer items-center gap-5 rounded-[32px] border-4 border-[#1f2340] p-6 text-white"
+              style={{ background: c.color.main }}
+            >
+              <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border-4 border-[#1f2340] bg-white">
+                <Icon className="h-8 w-8" style={{ color: c.color.main }} aria-hidden="true" />
+              </span>
+              <span className="flex-1">
+                <span className="block font-kids text-lg font-bold">¡Mira también!</span>
+                <span className="block font-kids text-3xl font-extrabold">{c.shortName}</span>
+              </span>
+              <ArrowRight className="h-7 w-7 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+            </Link>
           );
         })}
         <Link
           href="/#colecciones"
-          className="kids-pop flex items-center gap-5 rounded-[30px] border-[3px] border-slate-200 bg-white p-6 text-[#1e2a4a]"
+          className="kid-card group flex cursor-pointer items-center gap-5 rounded-[32px] border-4 border-[#1f2340] bg-[#FFC93C] p-6 text-[#1f2340]"
         >
-          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-slate-100">
+          <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border-4 border-[#1f2340] bg-white">
             <Home className="h-8 w-8" aria-hidden="true" />
           </span>
           <span className="flex-1">
-            <span className="block text-sm font-extrabold uppercase tracking-widest text-slate-600">Volver</span>
-            <span className="font-kids block text-2xl font-bold">Todas las colecciones</span>
+            <span className="block font-kids text-lg font-bold">Volver</span>
+            <span className="block font-kids text-3xl font-extrabold">Todas las colecciones</span>
           </span>
-          <ArrowRight className="h-6 w-6" />
+          <ArrowRight className="h-7 w-7 transition-transform group-hover:translate-x-1" aria-hidden="true" />
         </Link>
       </div>
     </div>

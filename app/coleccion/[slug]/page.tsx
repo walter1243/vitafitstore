@@ -7,6 +7,7 @@ import { CartSidebar } from '@/components/cart-sidebar'
 import { UpsellPopup } from '@/components/upsell-popup'
 import { WhatsAppFloating } from '@/components/whatsapp-floating'
 import { CollectionCatalog } from '@/components/kids/collection-catalog'
+import { Cloud, Cube, Wave } from '@/components/kids/kid-shapes'
 import { getCollection } from '@/lib/collections'
 import { getSiteContent } from '@/lib/site-content'
 
@@ -34,40 +35,32 @@ export default async function CollectionPage({ params }: PageProps) {
   const Icon = collection.icon
 
   return (
-    <div className="kids flex min-h-screen flex-col bg-white">
+    <div className="flex min-h-screen flex-col bg-white">
       <Header />
-      <main className="flex-1">
-        <section className="relative overflow-hidden pt-36 sm:pt-40" style={{ background: collection.color.soft }}>
-          <div className="kids-dots pointer-events-none absolute inset-0" />
-          <div
-            className="pointer-events-none absolute -right-16 -top-10 h-72 w-72 rounded-full opacity-30 blur-2xl"
-            style={{ background: collection.color.main }}
-          />
-          <div className="relative mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
-            <nav aria-label="Ruta" className="mb-6 text-sm font-bold text-slate-600">
+      <main className="kids flex-1">
+        <section className="kid-confetti relative overflow-hidden pt-36 sm:pt-40" style={{ backgroundColor: collection.color.main }}>
+          <Cloud className="pointer-events-none absolute -left-8 top-32 w-40 opacity-30" />
+          <Cube top="#FFE08A" left="#FFC93C" right="#E0A800" className="animate-kid-float pointer-events-none absolute right-[6%] top-36 hidden w-28 md:block" />
+          <div className="relative mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
+            <nav aria-label="Ruta" className="mb-5 font-kids text-lg font-bold text-white/90">
               <Link href="/" className="hover:underline">Inicio</Link>
               <span className="mx-2">›</span>
-              <span style={{ color: collection.color.deep }}>{collection.shortName}</span>
+              <span>{collection.shortName}</span>
             </nav>
             <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
-              <span
-                className="animate-kids-bob flex h-24 w-24 shrink-0 items-center justify-center rounded-[28px] text-white shadow-[0_6px_0_rgba(30,42,74,0.15)]"
-                style={{ background: collection.color.deep }}
-              >
-                <Icon className="h-12 w-12" aria-hidden="true" />
+              <span className="flex h-24 w-24 shrink-0 items-center justify-center rounded-[28px] border-4 border-[#1f2340] bg-white">
+                <Icon className="h-12 w-12" style={{ color: collection.color.main }} aria-hidden="true" />
               </span>
               <div>
-                <p className="text-sm font-extrabold uppercase tracking-widest" style={{ color: collection.color.deep }}>
-                  {collection.tagline}
-                </p>
-                <h1 className="mt-1 text-4xl font-bold leading-tight text-[#1e2a4a] sm:text-5xl">{collection.name}</h1>
-                <p className="mt-3 max-w-2xl text-lg leading-relaxed text-slate-700">{collection.description}</p>
+                <p className="font-kids text-xl font-bold text-white">{collection.tagline}</p>
+                <h1 className="text-5xl font-extrabold text-white sm:text-6xl" style={{ textShadow: '0 4px 0 rgba(31,35,64,0.35)' }}>
+                  {collection.name}
+                </h1>
+                <p className="mt-3 max-w-2xl text-lg font-semibold leading-relaxed text-white">{collection.description}</p>
               </div>
             </div>
           </div>
-          <svg viewBox="0 0 1440 60" preserveAspectRatio="none" className="relative block h-10 w-full sm:h-14" aria-hidden="true">
-            <path d="M0 30 C 240 70 480 -10 720 30 S 1200 70 1440 30 V60 H0z" fill="#ffffff" />
-          </svg>
+          <Wave color="#ffffff" />
         </section>
 
         <CollectionCatalog slug={collection.slug} />

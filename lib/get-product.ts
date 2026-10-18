@@ -40,7 +40,25 @@ export async function getProductById(id: number): Promise<Product | null> {
 
     return toStoreProduct(dbProduct);
   } catch (err) {
+    const fromPreview = await getProductFromPreview(id);
+    if (fromPreview) return fromPreview;
     console.error('[getProductById]', err);
+    return null;
+  }
+}
+
+// Pre-visualizacao local sem banco (ver PREVIEW_API_FROM em next.config.mjs):
+// busca o produto na API do site publicado. So roda em desenvolvimento.
+async function getProductFromPreview(id: number): Promise<Product | null> {
+  const from = process.env.NODE_ENV === 'development' ? process.env.PREVIEW_API_FROM : '';
+  if (!from) return null;
+  try {
+    const res = await fetch(`${from.replace(//$/, '')}/api/products`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const rows = (await res.json()) as DbProduct[];
+    const row = Array.isArray(rows) ? rows.find((r) => Number(r.id) === id) : undefined;
+    return row ? toStoreProduct(row) : null;
+  } catch {
     return null;
   }
 }
