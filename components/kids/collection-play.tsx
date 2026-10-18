@@ -25,8 +25,12 @@ export function CollectionImage({ slug, sizes, priority }: { slug: string; sizes
   );
 }
 
-// Botao da brincadeira da colecao + o modal dela.
-export function CollectionPlayButton({ slug, className }: { slug: string; className?: string }) {
+// Botao da brincadeira da colecao + o modal dela. "solid": botao cheio na
+// cor da colecao; "pill"/"pill-dark": pilula contornada dos destaques
+// estilo Apple (mesmo tamanho da pilula cheia ao lado).
+export const PILL = 'inline-flex min-h-12 cursor-pointer items-center justify-center rounded-full px-7 text-base font-bold transition-colors duration-200';
+
+export function CollectionPlayButton({ slug, appearance = 'solid' }: { slug: string; appearance?: 'solid' | 'pill' | 'pill-dark' }) {
   const [open, setOpen] = useState(false);
   const collection = getCollection(slug);
   if (!collection) return null;
@@ -36,15 +40,25 @@ export function CollectionPlayButton({ slug, className }: { slug: string; classN
   const label = kind === 'colorear' ? '¡Pinta el dinosaurio!' : kind === 'encender' ? 'Enciende la lámpara' : '¡Pon la pieza que falta!';
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className={`inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-2xl px-5 font-extrabold text-white transition-colors duration-200 ${className ?? ''}`}
-        style={{ background: collection.color.main }}
-      >
-        <Icon className="h-5 w-5" aria-hidden="true" />
-        {label}
-      </button>
+      {appearance === 'solid' ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-2xl px-5 font-extrabold text-white transition-colors duration-200"
+          style={{ background: collection.color.main }}
+        >
+          <Icon className="h-5 w-5" aria-hidden="true" />
+          {label}
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className={`${PILL} border-2 ${appearance === 'pill-dark' ? 'border-white text-white hover:bg-white/10' : 'border-[#23263f] text-[#23263f] hover:bg-[#23263f]/5'}`}
+        >
+          {label}
+        </button>
+      )}
       {kind === 'colorear' && <ColorDinoModal open={open} onOpenChange={setOpen} collectionHref={href} slug={collection.slug} />}
       {kind === 'encender' && <LampSwitchModal open={open} onOpenChange={setOpen} collectionHref={href} />}
       {kind === 'rompecabezas' && <PuzzleModal open={open} onOpenChange={setOpen} collectionHref={href} />}

@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
@@ -7,7 +6,7 @@ import { CartSidebar } from '@/components/cart-sidebar'
 import { UpsellPopup } from '@/components/upsell-popup'
 import { WhatsAppFloating } from '@/components/whatsapp-floating'
 import { CollectionCatalog } from '@/components/kids/collection-catalog'
-import { CollectionImage, CollectionPlayButton } from '@/components/kids/collection-play'
+import { CollectionSpotlight } from '@/components/kids/collection-spotlight'
 import { getCollection } from '@/lib/collections'
 import { getSiteContent } from '@/lib/site-content'
 
@@ -32,40 +31,16 @@ export default async function CollectionPage({ params }: PageProps) {
   if (!collection) notFound()
 
   const content = await getSiteContent()
-  const Icon = collection.icon
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <Header />
       <main className="kids flex-1">
-        <section className="px-4 pt-32 sm:px-6 sm:pt-36 lg:px-8">
-          <div className="mx-auto grid max-w-7xl items-center gap-8 rounded-[32px] px-6 py-10 sm:px-10 sm:py-12 lg:grid-cols-[1.3fr_1fr]" style={{ background: collection.color.soft }}>
-            <div>
-            <nav aria-label="Ruta" className="mb-6 text-sm font-semibold text-[var(--k-muted)]">
-              <Link href="/" className="hover:underline">Inicio</Link>
-              <span className="mx-2">/</span>
-              <span className="text-[var(--k-ink)]">{collection.shortName}</span>
-            </nav>
-            <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
-              <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-white">
-                <Icon className="h-10 w-10" style={{ color: collection.color.main }} strokeWidth={1.75} aria-hidden="true" />
-              </span>
-              <div>
-                <h1 className="text-4xl font-bold text-[var(--k-ink)] sm:text-5xl">{collection.name}</h1>
-                <p className="mt-2 max-w-2xl text-lg leading-relaxed text-[var(--k-muted)]">{collection.description}</p>
-              </div>
-            </div>
-            </div>
-            <div className="flex flex-col gap-4">
-              <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-white">
-                <CollectionImage slug={collection.slug} sizes="(min-width: 1024px) 35vw, 90vw" priority />
-              </div>
-              <CollectionPlayButton slug={collection.slug} />
-            </div>
-          </div>
-        </section>
+        <CollectionSpotlight slug={collection.slug} first priority headingLevel="h1" primaryHref="#productos" primaryLabel="Ver productos" />
 
+        <div id="productos" className="scroll-mt-24">
         <CollectionCatalog slug={collection.slug} />
+        </div>
       </main>
       <Footer content={content.footer} />
       <WhatsAppFloating />
