@@ -1,11 +1,12 @@
-import { Lamp, Palette, type LucideIcon } from 'lucide-react';
+import { Lamp, Palette, Puzzle, type LucideIcon } from 'lucide-react';
 import { slugifyCategory } from '@/lib/store-product';
 
 // As colecoes da vitrine infantil — o visual e as animacoes de cada uma
 // ficam aqui no codigo; os PRODUTOS entram pelo admin. Um produto aparece
 // na colecao quando o nome da CATEGORIA dele (Admin → Categorias) contem
 // uma das palavras de `match` (sem acento, minusculo).
-// Ex: "Juguetes para pintar", "Puzzles 3D" → Para pintar; "Lámparas luna" → Lámparas.
+// Ex: "Rompecabezas", "Puzzles 3D" → Rompecabezas; "Juguetes para pintar" →
+// Para pintar; "Lámparas luna" → Lámparas. Vale a primeira colecao da lista.
 export type Collection = {
   slug: string;
   name: string;
@@ -17,14 +18,28 @@ export type Collection = {
   // Imagem da colecao (cards, circulos e banner da pagina).
   image: string;
   // Brincadeira da colecao: "colorear" abre o foguete para pintar;
-  // "encender" escurece o site e mostra o interruptor da lampada.
-  interactive: 'colorear' | 'encender';
+  // "encender" escurece o site e mostra o interruptor da lampada;
+  // "rompecabezas" mostra o quebra-cabeca faltando uma peca.
+  interactive: 'colorear' | 'encender' | 'rompecabezas';
   // Cor da colecao. main: texto/icone/botao (contraste AA com branco);
   // soft: fundo pastel dos blocos e fotos.
   color: { main: string; soft: string };
 };
 
 export const COLLECTIONS: Collection[] = [
+  {
+    slug: 'rompecabezas',
+    name: 'Rompecabezas',
+    shortName: 'Rompecabezas',
+    icon: Puzzle,
+    tagline: '¡Encuentra la pieza que falta!',
+    description:
+      'Rompecabezas impresos en 3D con dibujos divertidos para montar (y colorear) en familia.',
+    image: '/images/rompecabezas-completo.png',
+    interactive: 'rompecabezas',
+    color: { main: '#1D4ED8', soft: '#E3EEFF' },
+    match: ['rompecabeza', 'puzzle', 'puzle', 'quebra'],
+  },
   {
     slug: 'para-pintar',
     name: 'Juguetes para pintar',
@@ -36,7 +51,7 @@ export const COLLECTIONS: Collection[] = [
     image: '/images/juguetes-para-pintar.png',
     interactive: 'colorear',
     color: { main: '#C2410C', soft: '#FFEBD9' },
-    match: ['pintar', 'colorear', 'colorir', 'juego', 'jogo', 'juguete', 'brinquedo', 'puzzle', 'rompecabeza', 'figura', 'toy'],
+    match: ['pintar', 'colorear', 'colorir', 'juego', 'jogo', 'juguete', 'brinquedo', 'figura', 'toy'],
   },
   {
     slug: 'lamparas',
