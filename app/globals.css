@@ -401,3 +401,41 @@ button:focus-visible {
   line-height: 1.1;
   letter-spacing: -0.01em;
 }
+
+/* Cena da lampada: o site inteiro fica escuro atras do modal */
+body:has(.lamp-dark) [data-slot="dialog-overlay"] {
+  background: rgba(3, 4, 12, 0.94);
+}
+@keyframes lamp-glow {
+  0%, 100% { opacity: 0.85; }
+  50%      { opacity: 1; }
+}
+
+/* "Pintando" a imagem dos brinquedos em branco: uma camada de cores com
+   mix-blend-mode: color tinge a foto cinza, revelada por um circulo que
+   cresce como uma pincelada, segura e some — em loop. */
+.paint-reveal { position: absolute; inset: 0; pointer-events: none; }
+.paint-reveal::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: color;
+  background:
+    radial-gradient(circle at 28% 62%, #f2384a 0 14%, transparent 15%),
+    radial-gradient(circle at 46% 40%, #ff8a00 0 13%, transparent 14%),
+    radial-gradient(circle at 56% 66%, #1e88ff 0 14%, transparent 15%),
+    radial-gradient(circle at 72% 52%, #8b3fd9 0 13%, transparent 14%),
+    radial-gradient(circle at 38% 78%, #22b14c 0 12%, transparent 13%),
+    radial-gradient(circle at 66% 30%, #ffc93c 0 11%, transparent 12%);
+  clip-path: circle(0% at 30% 70%);
+  animation: paint-sweep 7s ease-in-out infinite;
+}
+@keyframes paint-sweep {
+  0%, 8%    { clip-path: circle(0% at 30% 70%); opacity: 1; }
+  45%, 80%  { clip-path: circle(85% at 30% 70%); opacity: 1; }
+  92%       { clip-path: circle(85% at 30% 70%); opacity: 0; }
+  100%      { clip-path: circle(0% at 30% 70%); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .paint-reveal::after { animation: none; clip-path: circle(85% at 30% 70%); }
+}

@@ -7,6 +7,7 @@ import { CartSidebar } from '@/components/cart-sidebar'
 import { UpsellPopup } from '@/components/upsell-popup'
 import { WhatsAppFloating } from '@/components/whatsapp-floating'
 import { CollectionCatalog } from '@/components/kids/collection-catalog'
+import { CollectionImage, CollectionPlayButton } from '@/components/kids/collection-play'
 import { getCollection } from '@/lib/collections'
 import { getSiteContent } from '@/lib/site-content'
 
@@ -38,7 +39,8 @@ export default async function CollectionPage({ params }: PageProps) {
       <Header />
       <main className="kids flex-1">
         <section className="px-4 pt-32 sm:px-6 sm:pt-36 lg:px-8">
-          <div className="mx-auto max-w-7xl rounded-[32px] px-6 py-10 sm:px-10 sm:py-12" style={{ background: collection.color.soft }}>
+          <div className="mx-auto grid max-w-7xl items-center gap-8 rounded-[32px] px-6 py-10 sm:px-10 sm:py-12 lg:grid-cols-[1.3fr_1fr]" style={{ background: collection.color.soft }}>
+            <div>
             <nav aria-label="Ruta" className="mb-6 text-sm font-semibold text-[var(--k-muted)]">
               <Link href="/" className="hover:underline">Inicio</Link>
               <span className="mx-2">/</span>
@@ -52,6 +54,13 @@ export default async function CollectionPage({ params }: PageProps) {
                 <h1 className="text-4xl font-bold text-[var(--k-ink)] sm:text-5xl">{collection.name}</h1>
                 <p className="mt-2 max-w-2xl text-lg leading-relaxed text-[var(--k-muted)]">{collection.description}</p>
               </div>
+            </div>
+            </div>
+            <div className="flex flex-col gap-4">
+              <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-white">
+                <CollectionImage collection={collection} sizes="(min-width: 1024px) 35vw, 90vw" priority />
+              </div>
+              <CollectionPlayButton collection={collection} />
             </div>
           </div>
         </section>

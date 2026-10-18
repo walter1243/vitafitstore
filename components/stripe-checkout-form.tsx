@@ -10,64 +10,61 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
-import { Snowfall } from '@/components/snowfall';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '');
 
-// ─── Stripe appearance (dark theme) ──────────────────────────────────────────
+// ─── Stripe appearance (tema infantil da vitrine) ────────────────────────────
 
 const stripeAppearance = {
   theme: 'stripe' as const,
   variables: {
     colorPrimary:     '#c2410c',
     colorBackground:  '#FFFFFF',
-    colorText:        '#0f172a',
-    colorTextSecondary: '#64748b',
+    colorText:        '#23263f',
+    colorTextSecondary: '#565a78',
     colorDanger:      '#f87171',
-    borderRadius:     '12px',
+    borderRadius:     '16px',
     fontFamily:       'system-ui, -apple-system, sans-serif',
-    fontSizeBase:     '14px',
+    fontSizeBase:     '15px',
     spacingUnit:      '4px',
   },
   rules: {
     '.Input': {
-      backgroundColor: '#F8FAFC',
-      border: '1px solid rgba(194,65,12,0.2)',
-      color: '#0f172a',
+      backgroundColor: '#FFFFFF',
+      border: '2px solid #efe7da',
+      color: '#23263f',
       padding: '12px 16px',
     },
     '.Input:focus': {
-      border: '1px solid #c2410c',
-      boxShadow: '0 0 0 1px rgba(194,65,12,0.3)',
+      border: '2px solid #23263f',
+      boxShadow: 'none',
     },
     '.Input--invalid': {
       border: '1px solid #f87171',
     },
     '.Label': {
-      color: '#c2410c',
-      fontSize: '10px',
-      fontWeight: '600',
-      textTransform: 'uppercase',
-      letterSpacing: '0.1em',
+      color: '#23263f',
+      fontSize: '13px',
+      fontWeight: '700',
     },
     '.Tab': {
-      backgroundColor: '#F8FAFC',
-      border: '1px solid rgba(194,65,12,0.15)',
-      color: '#64748b',
+      backgroundColor: '#FFFFFF',
+      border: '2px solid #efe7da',
+      color: '#565a78',
     },
     '.Tab:hover': {
       color: '#0f172a',
     },
     '.Tab--selected': {
-      backgroundColor: 'rgba(194,65,12,0.12)',
-      border: '1px solid #c2410c',
+      backgroundColor: '#FFF4E0',
+      border: '2px solid #c2410c',
       color: '#c2410c',
     },
     '.TabIcon--selected': { fill: '#c2410c' },
     '.TabLabel--selected': { color: '#c2410c' },
     '.Block': {
       backgroundColor: '#FFFFFF',
-      border: '1px solid rgba(194,65,12,0.12)',
+      border: '2px solid #efe7da',
     },
   },
 };
@@ -129,7 +126,7 @@ function SuccessScreen({ name, storeName }: { name: string; storeName: string })
             <div className="relative w-24 h-20 rounded-xl flex items-end justify-center pb-2"
               style={{ background:'linear-gradient(135deg,#9a3412,#047857)' }}>
               <div className="absolute -top-3 left-0 right-0 h-5 rounded-t-xl flex items-center justify-center"
-                style={{ background:'linear-gradient(135deg,#c2410c,#9a3412)' }}>
+                style={{ background:'#c2410c' }}>
                 <div className="w-8 h-0.5 rounded-full bg-orange-700" />
               </div>
               <span className="text-xs font-bold text-white/90 tracking-wider uppercase truncate max-w-[70px]">{storeName}</span>
@@ -189,15 +186,15 @@ function StepIndicator({ step }: { step: 1 | 2 }) {
       {[{ n:1, label:'Datos' },{ n:2, label:'Pago' }].map((s,i,arr) => (
         <div key={s.n} className={`flex items-center ${i<arr.length-1?'flex-1':''}`}>
           <div className="flex items-center gap-2 shrink-0">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-400"
-              style={{ background:step>=s.n?'#431407':'#F1F5F9', color:step>=s.n?'white':'#4b5563', boxShadow:step===s.n?'0 0 16px rgba(194,65,12,0.5)':'none' }}>
+            <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-extrabold transition-all duration-400"
+              style={{ background:step>=s.n?'#c2410c':'#FFFFFF', color:step>=s.n?'white':'#565a78', boxShadow:'none', border: step>=s.n ? 'none' : '2px solid #efe7da' }}>
               {step>s.n?'✓':s.n}
             </div>
-            <span className={`text-xs font-semibold hidden sm:block ${step>=s.n?'text-orange-600':'text-slate-500'}`}>{s.label}</span>
+            <span className={`font-kids text-lg font-bold hidden sm:block ${step>=s.n?'text-[#23263f]':'text-[#565a78]'}`}>{s.label}</span>
           </div>
           {i<arr.length-1 && (
-            <div className="flex-1 mx-3 h-px transition-all duration-500"
-              style={{ background:step>1?'#c2410c':'#E2E8F0' }} />
+            <div className="flex-1 mx-3 h-1 rounded-full transition-all duration-500"
+              style={{ background:step>1?'#c2410c':'#efe7da' }} />
           )}
         </div>
       ))}
@@ -210,7 +207,7 @@ function StepIndicator({ step }: { step: 1 | 2 }) {
 function Field({ label, error, children }: { label:string; error?:string; children:React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <label className="block text-[10px] font-semibold tracking-widest text-orange-600 uppercase">{label}</label>
+      <label className="block text-sm font-bold text-[#23263f]">{label}</label>
       {children}
       {error && <p className="text-red-600 text-xs">{error}</p>}
     </div>
@@ -218,10 +215,10 @@ function Field({ label, error, children }: { label:string; error?:string; childr
 }
 
 const inputCls = [
-  'w-full rounded-xl px-4 py-3 text-sm text-slate-900',
-  'placeholder:text-slate-500 outline-none transition-all',
-  'bg-white border border-orange-700/20',
-  'focus:border-orange-700 focus:ring-1 focus:ring-orange-700/30',
+  'w-full min-h-12 rounded-2xl px-4 py-3 text-base text-[#23263f]',
+  'placeholder:text-[#9a9db5] outline-none transition-all',
+  'bg-white border-2 border-[#efe7da]',
+  'focus:border-[#23263f]',
 ].join(' ');
 
 // ─── Order Summary ────────────────────────────────────────────────────────────
@@ -231,11 +228,11 @@ function OrderSummary({ items, totalPrice, shipping, total }: {
 }) {
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl p-5 space-y-4"
-        style={{ background:'#FFFFFF', border:'1px solid rgba(194,65,12,0.12)' }}>
+      <div className="rounded-[28px] p-5 space-y-4"
+        style={{ background:'#FFFFFF', border:'none', boxShadow:'0 6px 24px rgba(35,38,63,0.06)' }}>
         <div className="flex items-center justify-between">
-          <p className="text-[10px] font-semibold tracking-widest text-orange-600 uppercase">Resumen del Pedido</p>
-          <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold text-orange-600"
+          <p className="font-kids text-xl font-bold text-[#23263f]">Tu pedido</p>
+          <span className="px-2.5 py-1 rounded-full text-xs font-bold text-[#9a3412]"
             style={{ background:'rgba(194,65,12,0.12)' }}>
             {items.reduce((s:number,i:any)=>s+i.quantity,0)} item(s)
           </span>
@@ -250,7 +247,7 @@ function OrderSummary({ items, totalPrice, shipping, total }: {
                   : <span className="text-lg">{item.product.emoji||'📦'}</span>}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-slate-900 text-xs font-medium truncate">{item.product.name}</p>
+                <p className="text-[#23263f] text-sm font-bold truncate">{item.product.name}</p>
                 {(item.selectedColor || item.selectedSize) ? (
                   <p className="text-[10px] font-medium text-orange-700">
                     {[item.selectedColor && `Color: ${item.selectedColor}`, item.selectedSize && `Talla: ${item.selectedSize}`].filter(Boolean).join(' - ')}
@@ -260,7 +257,7 @@ function OrderSummary({ items, totalPrice, shipping, total }: {
                 )}
                 <p className="text-slate-500 text-xs">× {item.quantity}</p>
               </div>
-              <p className="text-orange-600 font-semibold text-xs shrink-0">
+              <p className="text-[#23263f] font-extrabold text-sm shrink-0">
                 €{(item.product.price*item.quantity).toFixed(2)}
               </p>
             </div>
@@ -280,13 +277,13 @@ function OrderSummary({ items, totalPrice, shipping, total }: {
           <div className="border-t pt-2.5" style={{ borderColor:'rgba(194,65,12,0.1)' }}>
             <div className="flex justify-between">
               <span className="font-bold text-slate-900 text-sm">Total</span>
-              <span className="text-lg font-bold text-orange-600">€{total.toFixed(2)}</span>
+              <span className="font-kids text-2xl font-bold text-[#23263f]">€{total.toFixed(2)}</span>
             </div>
           </div>
         </div>
       </div>
-      <div className="rounded-2xl p-4 grid grid-cols-2 gap-2"
-        style={{ background:'#FFFFFF', border:'1px solid rgba(194,65,12,0.08)' }}>
+      <div className="rounded-[28px] p-4 grid grid-cols-2 gap-2"
+        style={{ background:'#FFFFFF', border:'none', boxShadow:'0 6px 24px rgba(35,38,63,0.06)' }}>
         {[
           { icon:<Truck size={14} className="text-orange-700"/>, label:'Envío', sub:'Calculado al finalizar' },
           { icon:<RotateCcw size={14} className="text-orange-700"/>, label:'Devolución', sub:'14 días' },
@@ -427,10 +424,10 @@ function PaymentStepInner({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Payment Element */}
-      <div className="rounded-2xl p-5 sm:p-6 space-y-4"
-        style={{ background:'#FFFFFF', border:'1px solid rgba(194,65,12,0.12)' }}>
+      <div className="rounded-[28px] p-5 sm:p-6 space-y-4"
+        style={{ background:'#FFFFFF', border:'none', boxShadow:'0 6px 24px rgba(35,38,63,0.06)' }}>
         <div className="flex items-center justify-between mb-2">
-          <p className="text-[10px] font-semibold tracking-widest text-orange-600 uppercase">Datos de Pago</p>
+          <p className="font-kids text-xl font-bold text-[#23263f]">¿Cómo quieres pagar?</p>
           <div className="flex gap-1.5"><VisaLogo /><MastercardLogo /></div>
         </div>
 
@@ -478,8 +475,7 @@ function PaymentStepInner({
           <ChevronLeft size={16} /> Volver
         </button>
         <button type="submit" disabled={loading || !stripe || !elements}
-          className="flex-1 flex items-center justify-center gap-2 rounded-xl py-4 font-bold text-base text-white disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
-          style={{ background:'linear-gradient(135deg,#c2410c,#9a3412)', boxShadow:'0 8px 32px rgba(194,65,12,0.25)' }}>
+          className="flex-1 flex min-h-[56px] items-center justify-center gap-2 rounded-2xl font-extrabold text-base text-white disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors bg-[#c2410c] hover:bg-[#9a3412]">
           {loading
             ? <><Loader2 size={18} className="animate-spin" /> Procesando...</>
             : <><Lock size={16} /> Pagar €{total.toFixed(2)}</>}
@@ -498,11 +494,11 @@ function PaymentStepInner({
         </button>
         <div className="min-w-0 flex-1">
           <p className="text-[10px] text-slate-500">Total</p>
-          <p className="text-base font-bold text-orange-600 truncate">€{total.toFixed(2)}</p>
+          <p className="font-kids text-xl font-bold text-[#23263f] truncate">€{total.toFixed(2)}</p>
         </div>
         <button type="submit" disabled={loading || !stripe || !elements}
           className="flex shrink-0 items-center justify-center gap-1.5 rounded-xl px-5 py-3.5 font-bold text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
-          style={{ background:'linear-gradient(135deg,#c2410c,#9a3412)' }}>
+          style={{ background:'#c2410c' }}>
           {loading
             ? <Loader2 size={18} className="animate-spin" />
             : <><Lock size={14} /> Pagar</>}
@@ -660,18 +656,17 @@ function CheckoutFormInner() {
   // Empty cart
   if (items.length === 0 && !success) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-6 text-center px-4"
-        style={{ background:'#FAF8F5' }}>
+      <div className="kids min-h-screen flex flex-col items-center justify-center gap-6 text-center px-4"
+        style={{ background:'#FFF8EF' }}>
         <div className="w-20 h-20 rounded-full flex items-center justify-center"
           style={{ background:'rgba(194,65,12,0.1)', border:'1px solid rgba(194,65,12,0.2)' }}>
           <Package size={36} className="text-orange-700" />
         </div>
-        <h2 className="text-2xl font-bold text-slate-900">Carrito vacío</h2>
+        <h2 className="text-3xl font-bold text-[#23263f]">¡Tu carrito está vacío!</h2>
         <p className="text-slate-500 text-sm max-w-xs">Añade productos antes de finalizar la compra.</p>
-        <Link href="/#productos"
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm text-white"
-          style={{ background:'#c2410c' }}>
-          Ver Productos <ChevronRight size={16} />
+        <Link href="/#colecciones"
+          className="inline-flex min-h-12 items-center gap-2 px-7 rounded-2xl font-extrabold text-base text-white bg-[#c2410c] hover:bg-[#9a3412]">
+          Ver juguetes
         </Link>
       </div>
     );
@@ -682,11 +677,11 @@ function CheckoutFormInner() {
   // ── Step 1 ──────────────────────────────────────────────────
   const step1 = (
     <div className="space-y-4">
-      <div className="rounded-2xl p-5 sm:p-6 space-y-4"
-        style={{ background:'#FFFFFF', border:'1px solid rgba(194,65,12,0.12)' }}>
+      <div className="rounded-[28px] p-5 sm:p-6 space-y-4"
+        style={{ background:'#FFFFFF', border:'none', boxShadow:'0 6px 24px rgba(35,38,63,0.06)' }}>
         <div className="flex items-center gap-2">
-          <User size={13} className="text-orange-600" />
-          <p className="text-[10px] font-semibold tracking-widest text-orange-600 uppercase">Información Personal</p>
+          <User size={18} className="text-[#c2410c]" />
+          <p className="font-kids text-xl font-bold text-[#23263f]">¿Quién hace el pedido?</p>
         </div>
         <Field label="Nombre completo *" error={errors.name}>
           <input className={inputCls} placeholder="María Silva" value={name}
@@ -704,11 +699,11 @@ function CheckoutFormInner() {
         </div>
       </div>
 
-      <div className="rounded-2xl p-5 sm:p-6 space-y-4"
-        style={{ background:'#FFFFFF', border:'1px solid rgba(194,65,12,0.12)' }}>
+      <div className="rounded-[28px] p-5 sm:p-6 space-y-4"
+        style={{ background:'#FFFFFF', border:'none', boxShadow:'0 6px 24px rgba(35,38,63,0.06)' }}>
         <div className="flex items-center gap-2">
-          <MapPin size={13} className="text-orange-600" />
-          <p className="text-[10px] font-semibold tracking-widest text-orange-600 uppercase">Dirección de Entrega</p>
+          <MapPin size={18} className="text-[#c2410c]" />
+          <p className="font-kids text-xl font-bold text-[#23263f]">¿Dónde lo enviamos?</p>
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div className="col-span-2">
@@ -753,8 +748,7 @@ function CheckoutFormInner() {
       )}
 
       <button type="button" onClick={goToStep2} disabled={intentLoading}
-        className="hidden sm:flex w-full items-center justify-center gap-2 rounded-xl py-4 font-bold text-base text-white disabled:opacity-60 cursor-pointer transition-all"
-        style={{ background:'linear-gradient(135deg,#c2410c,#9a3412)', boxShadow:'0 8px 32px rgba(194,65,12,0.25)' }}>
+        className="hidden sm:flex w-full min-h-[56px] items-center justify-center gap-2 rounded-2xl font-extrabold text-base text-white disabled:opacity-60 cursor-pointer transition-colors bg-[#c2410c] hover:bg-[#9a3412]">
         {intentLoading
           ? <><Loader2 size={18} className="animate-spin" /> Preparando pago...</>
           : <>Continuar al Pago <ChevronRight size={18} /></>}
@@ -767,11 +761,10 @@ function CheckoutFormInner() {
         style={{ borderColor: 'rgba(194,65,12,0.12)', boxShadow: '0 -4px 20px rgba(0,0,0,0.06)' }}>
         <div className="min-w-0">
           <p className="text-[10px] text-slate-500">Total</p>
-          <p className="text-lg font-bold text-orange-600">€{total.toFixed(2)}</p>
+          <p className="font-kids text-2xl font-bold text-[#23263f]">€{total.toFixed(2)}</p>
         </div>
         <button type="button" onClick={goToStep2} disabled={intentLoading}
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl py-3.5 font-bold text-sm text-white disabled:opacity-60 cursor-pointer transition-all"
-          style={{ background:'linear-gradient(135deg,#c2410c,#9a3412)' }}>
+          className="flex flex-1 min-h-12 items-center justify-center gap-2 rounded-2xl font-extrabold text-sm text-white disabled:opacity-60 cursor-pointer transition-colors bg-[#c2410c] hover:bg-[#9a3412]">
           {intentLoading
             ? <Loader2 size={18} className="animate-spin" />
             : <>Continuar al Pago <ChevronRight size={16} /></>}
@@ -805,43 +798,22 @@ function CheckoutFormInner() {
 
   // ── Layout ──────────────────────────────────────────────────
   return (
-    <div className="min-h-screen py-8 pb-28 sm:pb-12 sm:py-12 px-4" style={{ background:'#FAF8F5' }}>
-      <Snowfall count={22} />
-
-      {/* Seasonal strip — festive touch through checkout, same red/green/gold
-         palette as the homepage Christmas promo. Purely decorative, doesn't
-         touch pricing or order logic. */}
-      <div className="max-w-5xl mx-auto mb-4">
-        <div className="flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs sm:text-sm font-semibold text-white"
-          style={{ background: 'linear-gradient(90deg, #7a1225, #0f5132)' }}>
-          🎄 Envolvemos tu pedido con cariño navideño — entrega cuidada para estas fiestas
-        </div>
-      </div>
+    <div className="kids min-h-screen py-6 pb-28 sm:pb-12 sm:py-10 px-4" style={{ background:'#FFF8EF' }}>
 
       <div className="max-w-5xl mx-auto">
         <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <Link href="/" className="flex items-center gap-2 text-orange-600 font-bold text-lg">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-black text-sm overflow-hidden"
-              style={{ background: themeColor }}>
-              {logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={logoUrl} alt="Logo" className="h-full w-full object-cover" />
-              ) : (
-                storeName.charAt(0).toUpperCase()
-              )}
-            </div>
-            {storeName}
+          <Link href="/" className="flex items-center" aria-label={storeName}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/images/logo-kitoys-3d.png" alt="Kitoys 3D" className="h-16 w-auto object-contain" />
           </Link>
-          <div className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold text-orange-600"
-            style={{ background:'rgba(194,65,12,0.08)', border:'1px solid rgba(194,65,12,0.2)' }}>
-            <ShieldCheck size={13} /> Transacción 100% protegida con SSL
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold text-[#15803d] bg-[#EAF6EF]">
+            <ShieldCheck size={16} /> Pago 100% seguro
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 lg:gap-10">
           <div>
-            <p className="text-[10px] font-semibold tracking-widest text-orange-600 uppercase mb-1">Pago Seguro</p>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-6">Finalizar Compra</h1>
+            <h1 className="text-4xl sm:text-5xl font-bold text-[#23263f] mb-6">¡Ya casi es tuyo!</h1>
             <StepIndicator step={step} />
             {step===1 ? step1 : step2}
           </div>

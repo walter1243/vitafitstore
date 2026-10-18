@@ -1,7 +1,7 @@
 'use client';
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Home, Printer } from 'lucide-react';
+import { Home, Printer } from 'lucide-react';
 import { COLLECTIONS, collectionForCategory } from '@/lib/collections';
 import { toStoreProduct } from '@/lib/store-product';
 import { KidsProductCard } from './kids-product-card';
@@ -125,7 +125,6 @@ export function CollectionCatalog({ slug }: { slug: string }) {
                 <span className="block text-sm font-semibold text-[var(--k-muted)]">Descubre también</span>
                 <span className="block font-kids text-2xl font-bold text-[var(--k-ink)]">{c.name}</span>
               </span>
-              <ArrowRight className="h-5 w-5 text-[var(--k-ink)] transition-transform group-hover:translate-x-1" aria-hidden="true" />
             </Link>
           );
         })}
@@ -140,7 +139,6 @@ export function CollectionCatalog({ slug }: { slug: string }) {
             <span className="block text-sm font-semibold text-[var(--k-muted)]">Volver</span>
             <span className="block font-kids text-2xl font-bold text-[var(--k-ink)]">Todas las colecciones</span>
           </span>
-          <ArrowRight className="h-5 w-5 text-[var(--k-ink)] transition-transform group-hover:translate-x-1" aria-hidden="true" />
         </Link>
       </div>
     </div>

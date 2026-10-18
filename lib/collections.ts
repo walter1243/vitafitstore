@@ -1,10 +1,11 @@
-import { Lamp, Puzzle, type LucideIcon } from 'lucide-react';
+import { Lamp, Palette, type LucideIcon } from 'lucide-react';
 import { slugifyCategory } from '@/lib/store-product';
 
-// As colecoes da vitrine infantil. Cada produto entra numa colecao pela
-// CATEGORIA cadastrada no admin: se o nome da categoria contem uma das
-// palavras de `match` (sem acento, minusculo), o produto aparece ali.
-// Ex: categorias "Juegos de mesa", "Puzzles 3D" → Juegos; "Lámparas luna" → Lámparas.
+// As colecoes da vitrine infantil — o visual e as animacoes de cada uma
+// ficam aqui no codigo; os PRODUTOS entram pelo admin. Um produto aparece
+// na colecao quando o nome da CATEGORIA dele (Admin → Categorias) contem
+// uma das palavras de `match` (sem acento, minusculo).
+// Ex: "Juguetes para pintar", "Puzzles 3D" → Para pintar; "Lámparas luna" → Lámparas.
 export type Collection = {
   slug: string;
   name: string;
@@ -13,6 +14,11 @@ export type Collection = {
   tagline: string;
   description: string;
   match: string[];
+  // Imagem da colecao (cards, circulos e banner da pagina).
+  image: string;
+  // Brincadeira da colecao: "colorear" abre o foguete para pintar;
+  // "encender" escurece o site e mostra o interruptor da lampada.
+  interactive: 'colorear' | 'encender';
   // Cor da colecao. main: texto/icone/botao (contraste AA com branco);
   // soft: fundo pastel dos blocos e fotos.
   color: { main: string; soft: string };
@@ -20,15 +26,17 @@ export type Collection = {
 
 export const COLLECTIONS: Collection[] = [
   {
-    slug: 'juegos-3d',
-    name: 'Juegos impresos en 3D',
-    shortName: 'Juegos 3D',
-    icon: Puzzle,
-    tagline: 'Para jugar, montar y compartir',
+    slug: 'para-pintar',
+    name: 'Juguetes para pintar',
+    shortName: 'Para pintar',
+    icon: Palette,
+    tagline: '¡Píntalos a tu manera!',
     description:
-      'Puzzles, juegos de mesa, figuras y retos de ingenio que salen de nuestra impresora 3D, capa a capa, listos para horas de diversión en familia.',
+      'Juguetes impresos en 3D que llegan en blanco para que los peques los pinten como quieran: osos, cohetes, trenes, castillos y mucho más.',
+    image: '/images/juguetes-para-pintar.png',
+    interactive: 'colorear',
     color: { main: '#C2410C', soft: '#FFEBD9' },
-    match: ['juego', 'jogo', 'juguete', 'brinquedo', 'puzzle', 'rompecabeza', 'game', 'figura', 'toy'],
+    match: ['pintar', 'colorear', 'colorir', 'juego', 'jogo', 'juguete', 'brinquedo', 'puzzle', 'rompecabeza', 'figura', 'toy'],
   },
   {
     slug: 'lamparas',
@@ -37,7 +45,9 @@ export const COLLECTIONS: Collection[] = [
     icon: Lamp,
     tagline: 'Luz suave para soñar',
     description:
-      'Lámparas impresas en 3D con formas divertidas para decorar la habitación de los peques y acompañarles a la hora de dormir.',
+      'Lámparas impresas en 3D con formas divertidas, como nuestro cohete, para decorar la habitación de los peques y acompañarles a la hora de dormir.',
+    image: '/images/lampara-cohete.png',
+    interactive: 'encender',
     color: { main: '#6D28D9', soft: '#F1E8FF' },
     match: ['lampara', 'luminaria', 'luz', 'luces', 'lamp', 'quitamiedo', 'nocturna'],
   },
