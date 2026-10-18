@@ -439,3 +439,19 @@ body:has(.lamp-dark) [data-slot="dialog-overlay"] {
 @media (prefers-reduced-motion: reduce) {
   .paint-reveal::after { animation: none; clip-path: circle(85% at 30% 70%); }
 }
+
+/* Formas projetadas pela lampada: aparecem com um "pop" e piscam devagar */
+.lamp-shape {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: opacity 600ms ease-out;
+  filter: drop-shadow(0 0 1.2px rgba(255, 200, 120, 0.9));
+  animation: lamp-twinkle 2.8s ease-in-out infinite;
+}
+@keyframes lamp-twinkle {
+  0%, 100% { fill-opacity: 1; }
+  50%      { fill-opacity: 0.55; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lamp-shape { animation: none; }
+}

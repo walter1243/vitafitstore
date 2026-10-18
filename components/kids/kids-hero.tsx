@@ -47,13 +47,13 @@ export function KidsHero() {
                 className="relative block aspect-[4/3] cursor-pointer overflow-hidden"
                 style={{ background: "#FFFFFF" }}
               >
-                <CollectionImage collection={c} sizes="(min-width: 640px) 30vw, 90vw" priority />
+                <CollectionImage slug={c.slug} sizes="(min-width: 640px) 30vw, 90vw" priority />
               </Link>
               <div className="flex flex-col gap-3 p-4">
                 <Link href={`/coleccion/${c.slug}`} className="font-kids text-2xl font-bold text-[var(--k-ink)] hover:underline">
                   {c.name}
                 </Link>
-                <CollectionPlayButton collection={c} />
+                <CollectionPlayButton slug={c.slug} />
               </div>
             </div>
           ))}

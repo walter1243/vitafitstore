@@ -4,6 +4,28 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 
+// Formas (centradas em 0,0, tamanho ~2) e onde aparecem na parede (em % da foto).
+const SHAPES = {
+  star: 'M0 -1 L0.29 -0.4 L0.95 -0.31 L0.47 0.15 L0.59 0.81 L0 0.5 L-0.59 0.81 L-0.47 0.15 L-0.95 -0.31 L-0.29 -0.4 Z',
+  moon: 'M0.2 -1 A1 1 0 1 0 0.2 1 A0.75 0.75 0 1 1 0.2 -1 Z',
+  planet: 'M0 -0.6 A0.6 0.6 0 1 1 0 0.6 A0.6 0.6 0 1 1 0 -0.6 Z M-1.3 0.15 Q0 -0.55 1.3 -0.15 Q0 0.3 -1.3 0.15 Z',
+  dot: 'M0 -0.5 A0.5 0.5 0 1 1 0 0.5 A0.5 0.5 0 1 1 0 -0.5 Z',
+} as const;
+const PROJECTIONS: { kind: keyof typeof SHAPES; x: number; y: number; s: number }[] = [
+  { kind: 'star', x: 12, y: 14, s: 3 },
+  { kind: 'moon', x: 24, y: 8, s: 3.4 },
+  { kind: 'dot', x: 33, y: 22, s: 1.4 },
+  { kind: 'star', x: 70, y: 10, s: 2.4 },
+  { kind: 'planet', x: 84, y: 18, s: 4 },
+  { kind: 'star', x: 90, y: 6, s: 1.8 },
+  { kind: 'dot', x: 64, y: 26, s: 1.2 },
+  { kind: 'star', x: 18, y: 34, s: 2 },
+  { kind: 'planet', x: 30, y: 46, s: 2.8 },
+  { kind: 'star', x: 76, y: 36, s: 2.2 },
+  { kind: 'dot', x: 8, y: 50, s: 1.3 },
+  { kind: 'star', x: 92, y: 44, s: 2.6 },
+];
+
 // "Enciende la lámpara" — o site escurece (fundo quase preto), a foto do
 // quarto aparece apagada e um interruptor de parede acende a lampada
 // foguete: a foto ganha luz e um brilho quente pulsa em volta.
@@ -49,6 +71,24 @@ export function LampSwitchModal({ open, onOpenChange, collectionHref }: {
                 animation: on ? 'lamp-glow 3.2s ease-in-out infinite' : undefined,
               }}
             />
+            {/* Formas projetadas na parede ao acender: estrelas, lua e
+                planetas surgem uma a uma e ficam piscando devagar. */}
+            <svg viewBox="0 0 100 75" preserveAspectRatio="none" className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true">
+              {PROJECTIONS.map((p, i) => (
+                <g
+                  key={i}
+                  transform={`translate(${p.x} ${p.y}) scale(${p.s})`}
+                  className="lamp-shape"
+                  style={{
+                    opacity: on ? 1 : 0,
+                    transitionDelay: on ? `${250 + i * 110}ms` : '0ms',
+                    animationDelay: `${i * 0.37}s`,
+                  }}
+                >
+                  <path d={SHAPES[p.kind]} fill="#FFD9A0" />
+                </g>
+              ))}
+            </svg>
           </div>
         </div>
 

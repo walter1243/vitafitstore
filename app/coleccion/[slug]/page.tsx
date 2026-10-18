@@ -58,9 +58,9 @@ export default async function CollectionPage({ params }: PageProps) {
             </div>
             <div className="flex flex-col gap-4">
               <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-white">
-                <CollectionImage collection={collection} sizes="(min-width: 1024px) 35vw, 90vw" priority />
+                <CollectionImage slug={collection.slug} sizes="(min-width: 1024px) 35vw, 90vw" priority />
               </div>
-              <CollectionPlayButton collection={collection} />
+              <CollectionPlayButton slug={collection.slug} />
             </div>
           </div>
         </section>
