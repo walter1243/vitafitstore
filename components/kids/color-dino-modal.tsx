@@ -23,57 +23,50 @@ const PALETTE = [
 ];
 const WHITE = '#FFFFFF';
 
-// Desenho de colorir (triceratops no ovo) — linhas pretas sobre branco.
-const DRAWING = '/images/dino-colorear.png';
-const SCALE = 2;          // canvas em 2x pra pintura ficar nitida
-const LINE_LUM = 160;     // mais escuro que isso = linha (borda das areas)
-const MIN_AREA = 60;      // areas menores (respingos do traco) nao contam
+// Desenho de colorir (triceratops no ovo) em 2x e o mapa das areas
+// pintaveis, gerado a partir dele: cada pixel do mapa guarda o numero da
+// area (0 = fundo). O traco original tem falhas, entao as areas foram
+// fechadas pela silhueta do desenho — sem isso a cabeca "vazava" pro fundo.
+const DRAWING = '/images/dino-colorear-2x.png';
+const AREAS = '/images/dino-colorear-areas.png';
 
 type Regions = {
   w: number;
   h: number;
-  lum: Uint8Array;        // luminosidade original (pra manter o traco ao pintar)
-  label: Int32Array;      // area de cada pixel (-1 = linha)
-  outside: number;        // area do fundo em volta do desenho
-  paintable: number[];    // areas "de verdade" pra pintar
+  lum: Uint8Array;        // luminosidade do desenho (mantem o traco ao pintar)
+  label: Uint8Array;      // area de cada pixel (0 = fundo)
+  paintable: number[];
 };
 
-// Divide o desenho nas areas fechadas pelas linhas (como o balde de tinta
-// dos livros de colorir digitais). Roda uma vez, quando o desenho carrega.
-function buildRegions(data: ImageData): Regions {
-  const { width: w, height: h } = data;
-  const lum = new Uint8Array(w * h);
+function loadImage(src: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new window.Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+function pixels(img: HTMLImageElement) {
+  const c = document.createElement('canvas');
+  c.width = img.naturalWidth; c.height = img.naturalHeight;
+  const ctx = c.getContext('2d')!;
+  ctx.drawImage(img, 0, 0);
+  return ctx.getImageData(0, 0, c.width, c.height);
+}
+
+async function loadRegions(): Promise<Regions> {
+  const [drawing, areas] = await Promise.all([loadImage(DRAWING), loadImage(AREAS)]);
+  const d = pixels(drawing), m = pixels(areas);
+  const w = d.width, h = d.height;
+  const lum = new Uint8Array(w * h), label = new Uint8Array(w * h);
+  const ids = new Set<number>();
   for (let i = 0; i < w * h; i++) {
-    const r = data.data[i * 4], g = data.data[i * 4 + 1], b = data.data[i * 4 + 2];
-    lum[i] = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+    lum[i] = d.data[i * 4];
+    label[i] = m.data[i * 4];
+    if (label[i]) ids.add(label[i]);
   }
-  const label = new Int32Array(w * h).fill(-2);
-  const sizes: number[] = [];
-  const stack: number[] = [];
-  for (let start = 0; start < w * h; start++) {
-    if (label[start] !== -2) continue;
-    if (lum[start] < LINE_LUM) { label[start] = -1; continue; }
-    const id = sizes.length;
-    let size = 0;
-    stack.push(start);
-    label[start] = id;
-    while (stack.length) {
-      const p = stack.pop()!;
-      size++;
-      const x = p % w, y = (p - x) / w;
-      const n = [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, y > 0 ? p - w : -1, y < h - 1 ? p + w : -1];
-      for (const q of n) {
-        if (q < 0 || label[q] !== -2) continue;
-        if (lum[q] < LINE_LUM) { label[q] = -1; continue; }
-        label[q] = id;
-        stack.push(q);
-      }
-    }
-    sizes.push(size);
-  }
-  const outside = label[0];
-  const paintable = sizes.map((s, id) => (id !== outside && s >= MIN_AREA ? id : -1)).filter((id) => id >= 0);
-  return { w, h, lum, label, outside, paintable };
+  return { w, h, lum, label, paintable: [...ids] };
 }
 
 function hexToRgb(hex: string) {
@@ -146,21 +139,14 @@ export function ColorDinoModal({ open, onOpenChange, collectionHref, slug }: {
     fillsRef.current = new Map();
     setPainted(0);
     if (regionsRef.current) { requestAnimationFrame(render); return; }
-    const img = new window.Image();
-    img.src = DRAWING;
-    img.onload = () => {
-      const w = img.naturalWidth * SCALE, h = img.naturalHeight * SCALE;
-      const off = document.createElement('canvas');
-      off.width = w; off.height = h;
-      const octx = off.getContext('2d')!;
-      octx.imageSmoothingQuality = 'high';
-      octx.drawImage(img, 0, 0, w, h);
-      regionsRef.current = buildRegions(octx.getImageData(0, 0, w, h));
-      const canvas = canvasRef.current;
-      if (canvas) { canvas.width = w; canvas.height = h; }
+    let cancelled = false;
+    loadRegions().then((reg) => {
+      if (cancelled) return;
+      regionsRef.current = reg;
       setReady(true);
       render();
-    };
+    }).catch(() => {});
+    return () => { cancelled = true; };
   }, [open, render]);
 
   const total = regionsRef.current?.paintable.length ?? 0;
@@ -175,15 +161,15 @@ export function ColorDinoModal({ open, onOpenChange, collectionHref, slug }: {
     const y = Math.floor(((clientY - rect.top) / rect.height) * reg.h);
     // Tocou bem em cima da linha: procura a area mais proxima.
     let id = -1;
-    for (let r = 0; r <= 8 && id < 0; r += 2) {
+    for (let r = 0; r <= 6 && id < 0; r += 2) {
       for (const [dx, dy] of [[0, 0], [r, 0], [-r, 0], [0, r], [0, -r]]) {
         const px = x + dx, py = y + dy;
         if (px < 0 || py < 0 || px >= reg.w || py >= reg.h) continue;
         const l = reg.label[py * reg.w + px];
-        if (l >= 0) { id = l; break; }
+        if (l > 0) { id = l; break; }
       }
     }
-    if (id < 0 || id === reg.outside) return;
+    if (id <= 0) return;
     if (color === WHITE) fillsRef.current.delete(id);
     else fillsRef.current.set(id, color);
     render();
@@ -228,7 +214,7 @@ export function ColorDinoModal({ open, onOpenChange, collectionHref, slug }: {
             aria-label="Dibujo de un triceratops saliendo del huevo para colorear"
             onPointerDown={(e) => paintAt(e.clientX, e.clientY)}
             className={`block h-auto w-full touch-manipulation ${finished ? '' : 'cursor-crosshair'}`}
-            style={{ aspectRatio: '298 / 357' }}
+            style={{ aspectRatio: '596 / 714' }}
           />
           {!ready && <p className="py-2 text-center text-sm text-[#565a78]">Cargando dibujo…</p>}
         </div>
