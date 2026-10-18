@@ -14,8 +14,8 @@ const navLinks = [
   { href: '/#como-se-hace', label: 'Nuestro taller' },
 ];
 
-// Logo padrao da marca — usado no modo "logo direto" enquanto o admin nao
-// tiver enviado uma logo.
+// Logo da marca (Kitoys 3D) mostrado inteiro no modo "logo direto". A logo
+// enviada no admin continua sendo usada no modo "icone + nome".
 const DEFAULT_LOGO = '/images/logo-kitoys-3d.png';
 
 const BRANDING_CACHE_KEY = 'store_branding_cache';
@@ -145,7 +145,7 @@ export function Header() {
           {logoStyle === 'logo_direto' ? (
             <Link href="/" className="flex shrink-0 items-center" aria-label={storeName}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={logoUrl || DEFAULT_LOGO} alt={storeName} className="h-16 w-auto object-contain" />
+              <img src={DEFAULT_LOGO} alt="Kitoys 3D" className="h-[58px] w-auto object-contain" />
             </Link>
           ) : (
             <Link href="/" className="flex shrink-0 items-center gap-2">

@@ -4356,7 +4356,7 @@ function SettingsSection({
         <div className="grid gap-2 sm:grid-cols-2">
           {([
             { key: 'icone_nome', title: 'Ícone + nome', desc: 'Logo pequena redonda com o nome da loja ao lado.' },
-            { key: 'logo_direto', title: 'Logo direto', desc: 'A imagem da logo sozinha, do jeito que ela é (já com o nome).' },
+            { key: 'logo_direto', title: 'Logo direto', desc: 'A logo Kitoys 3D inteira, do jeito que ela é (já com o nome).' },
           ] as const).map(opt => (
             <button
               key={opt.key}
@@ -4372,10 +4372,8 @@ function SettingsSection({
                     </span>
                     <span className="truncate text-sm font-bold text-slate-800">{storeName || 'Nome da loja'}</span>
                   </>
-                ) : logoUrl ? (
-                  <img src={logoUrl} alt="" className="h-10 w-auto object-contain" />
                 ) : (
-                  <span className="text-xs text-slate-400">Envie a logo acima</span>
+                  <img src="/images/logo-kitoys-3d.png" alt="" className="h-10 w-auto object-contain" />
                 )}
               </div>
               <p className="text-sm font-semibold text-white">{opt.title}</p>
