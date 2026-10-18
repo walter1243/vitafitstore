@@ -60,7 +60,7 @@ export function CollectionSpotlight({ slug, count, primaryHref, primaryLabel, he
   return (
     <section
       ref={ref}
-      className={`relative flex min-h-[88vh] w-full flex-col items-center overflow-hidden px-4 text-center ${first ? 'pt-36 sm:pt-40' : 'pt-20 sm:pt-24'}`}
+      className={`relative flex min-h-[88vh] w-full flex-col items-center justify-center overflow-hidden px-4 pb-16 text-center sm:pb-20 ${first ? 'pt-36 sm:pt-40' : 'pt-20 sm:pt-24'}`}
       style={{ background: scene.background }}
     >
       {scene.photo && (
@@ -90,7 +90,7 @@ export function CollectionSpotlight({ slug, count, primaryHref, primaryLabel, he
       </div>
 
       {scene.art && (
-        <div data-reveal className="relative z-10 mt-10 w-full max-w-3xl flex-1 sm:mt-12">
+        <div data-reveal className="relative z-10 mt-10 w-full max-w-3xl sm:mt-12">
           <div className="relative mx-auto w-full max-w-[560px]" style={{ aspectRatio: scene.artRatio }}>
             <Image src={scene.art} alt={collection.name} fill priority={priority} sizes="(min-width: 768px) 560px, 92vw" className="object-contain" />
             {collection.interactive === 'colorear' && <span className="paint-reveal" aria-hidden="true" />}
