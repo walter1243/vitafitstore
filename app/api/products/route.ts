@@ -55,6 +55,7 @@ function parseSizes(value: unknown): string[] {
 }
 
 const VALID_PRODUCT_TYPES = ['estandar', 'ropa', 'calzado'];
+const DEMO_TYPES = ['none', 'rompecabezas', 'colorear', 'encender'];
 
 // Frete do produto em euros; vazio/invalido = null (usa a tabela padrao).
 function parseShipping(value: unknown): number | null {
@@ -70,6 +71,10 @@ async function ensureVariantColumns() {
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS is_category_cover BOOLEAN DEFAULT FALSE`;
   // Frete proprio do produto (null = tabela padrao, ver lib/checkout-pricing.ts).
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS shipping_cost NUMERIC`;
+  // Amostra interativa do produto: 'none' | 'rompecabezas' | 'colorear' | 'encender'
+  // e a imagem dela (desenho de colorir / foto acesa; vazio = foto do produto).
+  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS demo_type TEXT`;
+  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS demo_image TEXT`;
 }
 
 function normalizeProduct(row: any) {
@@ -79,6 +84,8 @@ function normalizeProduct(row: any) {
     stock: row.stock != null ? Number(row.stock) : 0,
     costPrice: row.cost_price != null ? Number(row.cost_price) : null,
     shippingCost: row.shipping_cost != null ? Number(row.shipping_cost) : null,
+    demoType: DEMO_TYPES.includes(row.demo_type) ? row.demo_type : 'none',
+    demoImage: row.demo_image ?? '',
     additionalImages: parseAdditionalImages(row.additional_images ?? row.additionalImages),
     mainImage: row.image ?? row.mainImage ?? '',
     videoUrl: row.video ?? row.videoUrl ?? '',
@@ -97,7 +104,7 @@ export async function GET() {
     const rows = await sql`
       SELECT id, name, description, price, category, image, additional_images, video, stock, position,
              source_store_url, source_product_url, cost_price,
-             product_type, color_options, sizes, is_category_cover, shipping_cost,
+             product_type, color_options, sizes, is_category_cover, shipping_cost, demo_type, demo_image,
              created_at AS "createdAt"
       FROM products
       ORDER BY COALESCE(position, 999999), created_at DESC
@@ -123,6 +130,8 @@ export async function POST(req: NextRequest) {
       productType, colorOptions, sizes,
     } = body;
     const nextShippingCost = parseShipping(body.shippingCost);
+    const nextDemoType = DEMO_TYPES.includes(body.demoType) ? body.demoType : 'none';
+    const nextDemoImage = String(body.demoImage ?? '').trim();
 
     if (!name?.trim()) {
       return NextResponse.json({ error: 'O campo "nome" é obrigatório.' }, { status: 400 });
@@ -140,7 +149,7 @@ export async function POST(req: NextRequest) {
     const nextSizes = parseSizes(sizes);
 
     const [product] = await sql`
-      INSERT INTO products (name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost)
+      INSERT INTO products (name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost, demo_type, demo_image)
       VALUES (
         ${String(name).trim()},
         ${description ? String(description) : null},
@@ -156,9 +165,12 @@ export async function POST(req: NextRequest) {
         ${nextCostPrice},
         ${nextProductType},
         ${JSON.stringify(nextColorOptions)},
-        ${JSON.stringify(nextSizes)}
+        ${JSON.stringify(nextSizes)},
+        ${nextShippingCost},
+        ${nextDemoType},
+        ${nextDemoImage || null}
       )
-      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost
+      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost, demo_type, demo_image
     `;
 
     return NextResponse.json(normalizeProduct(product), { status: 201 });
@@ -267,6 +279,9 @@ export async function PATCH(req: NextRequest) {
     // So mexe no frete quando o formulario manda o campo (vazio = volta pra tabela padrao).
     const updateShipping = Object.prototype.hasOwnProperty.call(body, 'shippingCost');
     const shippingCost = parseShipping(body.shippingCost);
+    const updateDemo = Object.prototype.hasOwnProperty.call(body, 'demoType');
+    const demoType = DEMO_TYPES.includes(body.demoType) ? body.demoType : 'none';
+    const demoImage = String(body.demoImage ?? '').trim();
 
     if (!name) {
       return NextResponse.json({ error: 'O campo "nome" é obrigatório.' }, { status: 400 });
@@ -292,9 +307,11 @@ export async function PATCH(req: NextRequest) {
         product_type      = ${productType},
         color_options     = ${JSON.stringify(colorOptions)},
         sizes             = ${JSON.stringify(sizes)},
-        shipping_cost     = CASE WHEN ${updateShipping} THEN ${shippingCost}::numeric ELSE shipping_cost END
+        shipping_cost     = CASE WHEN ${updateShipping} THEN ${shippingCost}::numeric ELSE shipping_cost END,
+        demo_type         = CASE WHEN ${updateDemo} THEN ${demoType} ELSE demo_type END,
+        demo_image        = CASE WHEN ${updateDemo} THEN ${demoImage || null} ELSE demo_image END
       WHERE id = ${id}
-      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost
+      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost, demo_type, demo_image
     `;
 
     if (!product) {
