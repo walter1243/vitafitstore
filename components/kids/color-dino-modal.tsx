@@ -1,13 +1,11 @@
 'use client';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { Check, Eraser, RotateCcw, ShoppingCart, Sparkles } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Check, Eraser, RotateCcw, Sparkles } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import { useCart } from '@/lib/cart-context';
-import { useSectors } from './sectors-context';
-import { toStoreProduct } from '@/lib/store-product';
-import { useStoreProducts } from './use-store-products';
+import { OfferPrompt } from './offer-prompt';
+
+// Prefere oferecer um dinossauro da colecao.
+const DINO = /dino|tricer|estego|t-?rex|stego/i;
 
 const PALETTE = [
   { name: 'Verde', hex: '#22B14C' },
@@ -90,18 +88,7 @@ export function ColorDinoModal({ open, onOpenChange, collectionHref, slug }: {
   const [color, setColor] = useState(PALETTE[0].hex);
   const [painted, setPainted] = useState(0);
   const [finished, setFinished] = useState(false);
-  const { products } = useStoreProducts();
-  const { addItem, setIsCartOpen } = useCart();
-  const { collectionForCategory } = useSectors();
 
-  // Produto oferecido no fim: um "dino" da colecao de pintar, senao o
-  // primeiro da colecao. Sem produto cadastrado ainda, leva pra colecao.
-  const offer = useMemo(() => {
-    const items = products.filter((p) => collectionForCategory(p.category)?.slug === slug);
-    const dino = items.find((p) => /dino|tricer|estego|t-?rex|stego/i.test(p.name));
-    const chosen = dino ?? items[0];
-    return chosen ? toStoreProduct(chosen) : null;
-  }, [products, slug, collectionForCategory]);
 
   // Redesenha tudo: cor da area multiplicada pela luminosidade original,
   // assim o traco e o sombreado do desenho continuam por cima da tinta.
@@ -189,13 +176,6 @@ export function ColorDinoModal({ open, onOpenChange, collectionHref, slug }: {
     render();
   }
 
-  function addToCart() {
-    if (!offer) return;
-    addItem(offer);
-    onOpenChange(false);
-    setTimeout(() => setIsCartOpen(true), 250);
-  }
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="kids max-h-[95vh] w-full overflow-y-auto rounded-[32px] border-0 bg-[#F1FBEF] p-5 sm:max-w-[560px] sm:p-7">
@@ -221,38 +201,14 @@ export function ColorDinoModal({ open, onOpenChange, collectionHref, slug }: {
         </div>
 
         {finished ? (
-          <div className="flex flex-col gap-3 rounded-3xl bg-white p-4">
-            {offer ? (
-              <>
-                <div className="flex items-center gap-3">
-                  <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-[#FFEBD9]">
-                    <Image src={offer.image} alt={offer.name} fill sizes="64px" className="object-cover" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-kids text-xl font-bold text-[#23263f]">¿Lo añadimos al carrito?</p>
-                    <p className="truncate text-sm text-[#565a78]">{offer.name} · {offer.price.toFixed(2)}€</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={addToCart}
-                  className="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-[#c2410c] font-extrabold text-white transition-colors hover:bg-[#9a3412]"
-                >
-                  <ShoppingCart className="h-5 w-5" /> ¡Sí, añadir al carrito!
-                </button>
-              </>
-            ) : (
-              <>
-                <p className="text-center font-kids text-xl font-bold text-[#23263f]">¿Quieres uno para pintar en casa?</p>
-                <Link
-                  href={collectionHref}
-                  onClick={() => onOpenChange(false)}
-                  className="inline-flex min-h-12 cursor-pointer items-center justify-center rounded-2xl bg-[#c2410c] font-extrabold text-white transition-colors hover:bg-[#9a3412]"
-                >
-                  Ver juguetes para pintar
-                </Link>
-              </>
-            )}
+          <div className="flex flex-col gap-3">
+            <OfferPrompt
+              slug={slug}
+              question="¿Lo añadimos al carrito?"
+              prefer={DINO}
+              fallbackLabel="Ver juguetes para pintar"
+              onClose={() => onOpenChange(false)}
+            />
             <button
               type="button"
               onClick={restart}

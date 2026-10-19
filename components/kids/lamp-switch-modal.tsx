@@ -1,8 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { OfferPrompt } from './offer-prompt';
 
 // Formas (centradas em 0,0, tamanho ~2) e onde aparecem na parede (em % da foto).
 const SHAPES = {
@@ -29,10 +29,11 @@ const PROJECTIONS: { kind: keyof typeof SHAPES; x: number; y: number; s: number 
 // "Enciende la lámpara" — o site escurece (fundo quase preto), a foto do
 // quarto aparece apagada e um interruptor de parede acende a lampada
 // foguete: a foto ganha luz e um brilho quente pulsa em volta.
-export function LampSwitchModal({ open, onOpenChange, collectionHref }: {
+export function LampSwitchModal({ open, onOpenChange, collectionHref, slug }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   collectionHref: string;
+  slug: string;
 }) {
   const [on, setOn] = useState(false);
 
@@ -119,15 +120,18 @@ export function LampSwitchModal({ open, onOpenChange, collectionHref }: {
           <span className="text-center font-kids text-xl font-bold text-white">
             {on ? 'Apagar la lámpara' : 'Encender la lámpara'}
           </span>
-          <Link
-            href={collectionHref}
-            onClick={() => onOpenChange(false)}
-            className="inline-flex min-h-12 w-full cursor-pointer items-center justify-center rounded-2xl bg-[#FFC93C] px-4 font-extrabold text-[#23263f] transition-colors hover:bg-[#FFB800]"
-          >
-            Ver lámparas
-          </Link>
         </div>
         </div>
+        {/* Acendeu: pergunta se quer a lampada */}
+        {on && (
+          <OfferPrompt
+            slug={slug}
+            question="¿Quieres esta lámpara en tu habitación?"
+            fallbackLabel="Ver lámparas"
+            onClose={() => onOpenChange(false)}
+            dark
+          />
+        )}
       </DialogContent>
     </Dialog>
   );

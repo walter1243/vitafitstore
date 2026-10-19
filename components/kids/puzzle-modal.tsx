@@ -1,8 +1,8 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
-import { PartyPopper, RotateCcw } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
+import { OfferPrompt } from './offer-prompt';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 
 // Posicao do buraco na imagem do quebra-cabeca (473x303 px, ja recortada
@@ -22,10 +22,11 @@ type Pos = { x: number; y: number };
 // "¡Pon la pieza que falta!" — o quebra-cabeca vem montado faltando uma
 // peca; a crianca arrasta a peca solta ate o buraco (ou so toca nela, que
 // ela vai sozinha). Ao encaixar: mensagem de parabens e convite pra pedir.
-export function PuzzleModal({ open, onOpenChange, collectionHref }: {
+export function PuzzleModal({ open, onOpenChange, collectionHref, slug }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   collectionHref: string;
+  slug: string;
 }) {
   const areaRef = useRef<HTMLDivElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
@@ -152,23 +153,16 @@ export function PuzzleModal({ open, onOpenChange, collectionHref }: {
             </button>
           )}
 
-          {done && (
-            <div className="mt-4 flex items-center justify-center gap-3 rounded-3xl bg-white p-4 text-center" role="status">
-              <PartyPopper className="h-8 w-8 shrink-0 text-[#FF8A00]" aria-hidden="true" />
-              <p className="font-kids text-2xl font-bold text-[#23263f]">¿Pedimos el juego?</p>
-            </div>
-          )}
         </div>
 
         {done ? (
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Link
-              href={collectionHref}
-              onClick={() => onOpenChange(false)}
-              className="inline-flex min-h-12 flex-1 cursor-pointer items-center justify-center rounded-2xl bg-[#c2410c] font-extrabold text-white transition-colors hover:bg-[#9a3412]"
-            >
-              ¡Sí, quiero el rompecabezas!
-            </Link>
+          <div className="flex flex-col gap-3">
+            <OfferPrompt
+              slug={slug}
+              question="¿Pedimos el rompecabezas?"
+              fallbackLabel="Ver rompecabezas"
+              onClose={() => onOpenChange(false)}
+            />
             <button
               type="button"
               onClick={reset}

@@ -64,8 +64,8 @@ export function CollectionPlayButton({ slug, appearance = 'solid' }: { slug: str
         </button>
       )}
       {kind === 'colorear' && <ColorDinoModal open={open} onOpenChange={setOpen} collectionHref={href} slug={collection.slug} />}
-      {kind === 'encender' && <LampSwitchModal open={open} onOpenChange={setOpen} collectionHref={href} />}
-      {kind === 'rompecabezas' && <PuzzleModal open={open} onOpenChange={setOpen} collectionHref={href} />}
+      {kind === 'encender' && <LampSwitchModal open={open} onOpenChange={setOpen} collectionHref={href} slug={collection.slug} />}
+      {kind === 'rompecabezas' && <PuzzleModal open={open} onOpenChange={setOpen} collectionHref={href} slug={collection.slug} />}
     </>
   );
 }
