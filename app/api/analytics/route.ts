@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
       LEFT JOIN products p ON p.id = e.product_id
       WHERE e.created_at >= ${since} AND e.product_id IS NOT NULL
       GROUP BY e.product_id
-      ORDER BY views + clicks DESC
+      ORDER BY COUNT(*) FILTER (WHERE e.type IN ('page_view', 'product_click')) DESC
       LIMIT 10
     `;
     const pages = await sql`
