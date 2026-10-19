@@ -28,5 +28,7 @@ export async function GET() {
   } catch (err: any) {
     out.error = err?.message ?? 'No se pudo consultar Stripe.';
   }
-  return NextResponse.json(out, { headers: { 'Cache-Control': 'no-store' } });
+  // Cache de 10 min na CDN: o rodape usa isto pra mostrar so os logos dos
+  // metodos de pagamento ativos, sem chamar o Stripe a cada visita.
+  return NextResponse.json(out, { headers: { 'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=3600' } });
 }
