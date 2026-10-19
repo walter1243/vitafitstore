@@ -11,6 +11,7 @@ import { TrustpilotWidget } from '@/components/trustpilot-widget'
 import { SizeGuideModal } from '@/components/size-guide-modal'
 import { ProductReviews } from '@/components/product-reviews'
 import { useSectors } from '@/components/kids/sectors-context'
+import { ProductDemo } from '@/components/kids/product-demo'
 
 export function ProductPageView({ product }: { product: Product }) {
   const { addItem } = useCart()
@@ -298,6 +299,9 @@ export function ProductPageView({ product }: { product: Product }) {
                 {added ? '¡Añadido al carrito!' : 'Añadir al carrito'}
               </button>
             </div>
+
+            {/* Amostra gratis interativa (Admin → Produtos → Amostra interativa) */}
+            <ProductDemo product={product} />
           </div>
 
           {sizeGuideOpen && product.productType && (

@@ -39,6 +39,9 @@ export interface Product {
   sizes?: string[]
   // Frete proprio (Admin → Produtos); null = tabela padrao.
   shippingCost?: number | null
+  // Amostra interativa (Admin → Produtos): montar, pintar ou acender.
+  demoType?: 'none' | 'rompecabezas' | 'colorear' | 'encender'
+  demoImage?: string
   emoji: string
   gradient: string
 }

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ShoppingCart } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 import { toStoreProduct } from '@/lib/store-product';
+import { type Product } from '@/lib/products';
 import { useSectors } from './sectors-context';
 import { useStoreProducts } from './use-store-products';
 
@@ -24,15 +25,18 @@ export function useCollectionOffer(slug: string, prefer?: RegExp) {
 // Fim de toda brincadeira: "¿Lo añadimos al carrito?" com o produto da
 // colecao. "Sí" adiciona, fecha o popup e abre o carrinho. Sem produto
 // cadastrado, leva pra pagina da colecao.
-export function OfferPrompt({ slug, question, prefer, fallbackLabel, onClose, dark }: {
-  slug: string;
+export function OfferPrompt({ slug, product, question, prefer, fallbackLabel, onClose, dark }: {
+  slug?: string;
+  // Amostra de um produto especifico: oferece ESSE produto.
+  product?: Product;
   question: string;
   prefer?: RegExp;
   fallbackLabel: string;
   onClose: () => void;
   dark?: boolean;
 }) {
-  const offer = useCollectionOffer(slug, prefer);
+  const fromCollection = useCollectionOffer(slug ?? '', prefer);
+  const offer = product ?? fromCollection;
   const { addItem, setIsCartOpen, setShowUpsell } = useCart();
 
   function addToCart() {
@@ -73,7 +77,7 @@ export function OfferPrompt({ slug, question, prefer, fallbackLabel, onClose, da
         <>
           <p className="text-center font-kids text-xl font-bold">{question}</p>
           <Link
-            href={`/coleccion/${slug}`}
+            href={slug ? `/coleccion/${slug}` : '/#colecciones'}
             onClick={onClose}
             className="inline-flex min-h-12 cursor-pointer items-center justify-center rounded-2xl bg-[#c2410c] font-extrabold text-white transition-colors hover:bg-[#9a3412]"
           >

@@ -1,5 +1,6 @@
 'use client';
 import { AdminSectors } from '@/components/admin-sectors';
+import { MediaUploadField } from '@/components/configuracoes/content/shared';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { BlocosEditor, type BlocosEditorHandle } from '@/components/configuracoes/BlocosEditor';
 import { ContentEditor } from '@/components/configuracoes/ContentEditor';
@@ -35,6 +36,8 @@ type Product = {
   sourceProductUrl?: string;
   costPrice?: number;
   shippingCost?: number | null;
+  demoType?: string;
+  demoImage?: string;
   isCategoryCover?: boolean;
 };
 
@@ -108,7 +111,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   categories: Category[];
   showForm: boolean;
   saving: boolean;
-  form: { name: string; price: string; category: string; stock: string; videoUrl: string; shippingCost: string };
+  form: { name: string; price: string; category: string; stock: string; videoUrl: string; shippingCost: string; demoType: string; demoImage: string };
   image: string | null;
   additionalImages: string[];
   desc: string;
@@ -914,6 +917,44 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                       </div>
                     ))}
                   </div>
+                )}
+              </section>
+
+              {/* Amostra gratis interativa: brincadeira na pagina do produto que
+                  termina oferecendo o produto (ver components/kids/product-demo.tsx). */}
+              <section className="rounded-2xl border border-white/10 bg-[#0f1117] p-5 shadow-none">
+                <div className="mb-1 flex items-center gap-2">
+                  <Star size={16} className="text-green-500" />
+                  <h3 className="text-sm font-semibold text-white">Amostra grátis interativa</h3>
+                </div>
+                <p className="mb-4 text-xs text-white/50">A criança brinca com o produto na página dele e, no fim, o site pergunta se quer adicionar ao carrinho.</p>
+                <div className="mb-4 grid gap-2 sm:grid-cols-4">
+                  {([
+                    { key: 'none', label: 'Nenhuma' },
+                    { key: 'rompecabezas', label: 'Montar (quebra-cabeça)' },
+                    { key: 'colorear', label: 'Pintar' },
+                    { key: 'encender', label: 'Acender (luminária)' },
+                  ] as const).map(opt => (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => onFormChange('demoType', opt.key)}
+                      className={`rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${form.demoType === opt.key ? 'border-green-500/60 bg-green-500/10 text-white' : 'border-white/10 text-white/60 hover:bg-white/5'}`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+                {form.demoType !== 'none' && (
+                  <MediaUploadField
+                    label={form.demoType === 'colorear' ? 'Desenho para colorir (obrigatório)' : form.demoType === 'encender' ? 'Foto do produto aceso (opcional)' : 'Imagem do quebra-cabeça (opcional)'}
+                    hint={form.demoType === 'colorear'
+                      ? 'Traço preto sobre fundo branco ou transparente, como um desenho de livro de colorir. O site detecta as áreas sozinho.'
+                      : 'Vazio = usa a imagem principal do produto.'}
+                    value={form.demoImage}
+                    onChange={(url) => onFormChange('demoImage', url)}
+                    kind="image"
+                  />
                 )}
               </section>
 
@@ -1899,7 +1940,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
-  const [prodForm, setProdForm] = useState({ name: '', price: '', category: '', stock: '', videoUrl: '', shippingCost: '' });
+  const [prodForm, setProdForm] = useState({ name: '', price: '', category: '', stock: '', videoUrl: '', shippingCost: '', demoType: 'none', demoImage: '' });
   const [prodImage, setProdImage] = useState<string | null>(null);
   const [prodAdditionalImages, setProdAdditionalImages] = useState<string[]>([]);
   const [prodDesc, setProdDesc] = useState('');
@@ -2042,7 +2083,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
 
   function resetProductForm() {
     setEditingProductId(null);
-    setProdForm({ name: '', price: '', category: '', stock: '', videoUrl: '', shippingCost: '' });
+    setProdForm({ name: '', price: '', category: '', stock: '', videoUrl: '', shippingCost: '', demoType: 'none', demoImage: '' });
     setProdImage(null);
     setProdAdditionalImages([]);
     setProdDesc('');
@@ -2064,6 +2105,8 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
       stock: product.stock != null ? String(product.stock) : '',
       videoUrl: product.videoUrl ?? product.video ?? '',
       shippingCost: product.shippingCost != null ? String(product.shippingCost) : '',
+      demoType: product.demoType ?? 'none',
+      demoImage: product.demoImage ?? '',
     });
     setProdImage(product.mainImage ?? product.image ?? null);
     setProdAdditionalImages(Array.isArray(product.additionalImages) ? product.additionalImages : []);
@@ -2089,7 +2132,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
     costPrice: number;
   }) {
     setEditingProductId(null);
-    setProdForm({ name: data.name, price: String(data.price), category: '', stock: '99', videoUrl: '', shippingCost: '' });
+    setProdForm({ name: data.name, price: String(data.price), category: '', stock: '99', videoUrl: '', shippingCost: '', demoType: 'none', demoImage: '' });
     setProdImage(data.image || null);
     setProdAdditionalImages(data.additionalImages ?? []);
     setProdDesc(data.description || '');
@@ -2120,6 +2163,8 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
           stock: parseInt(prodForm.stock) || 0,
           videoUrl: prodForm.videoUrl.trim() || null,
           shippingCost: prodForm.shippingCost.trim() === '' ? null : prodForm.shippingCost.trim(),
+          demoType: prodForm.demoType,
+          demoImage: prodForm.demoImage.trim(),
           description: prodDesc || null,
           mainImage: prodImage,
           image: prodImage,

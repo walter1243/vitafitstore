@@ -3,6 +3,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Check, Eraser, RotateCcw, Sparkles } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { OfferPrompt } from './offer-prompt';
+import { loadColoringRegions } from '@/lib/coloring-regions';
+import { type Product } from '@/lib/products';
 
 // Prefere oferecer um dinossauro da colecao.
 const DINO = /dino|tricer|estego|t-?rex|stego/i;
@@ -32,7 +34,7 @@ type Regions = {
   w: number;
   h: number;
   lum: Uint8Array;        // luminosidade do desenho (mantem o traco ao pintar)
-  label: Uint8Array;      // area de cada pixel (0 = fundo)
+  label: Uint8Array | Int32Array; // area de cada pixel (0 = fundo)
   paintable: number[];
 };
 
@@ -72,14 +74,18 @@ function hexToRgb(hex: string) {
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
-// "¡Colorea a tu manera!" — a crianca toca nas areas do desenho do
-// dinossauro e elas se enchem de cor. Pintou tudo (ou "¡Terminé!") →
-// pergunta se quer levar: adiciona ao carrinho e abre o carrinho.
-export function ColorDinoModal({ open, onOpenChange, collectionHref, slug }: {
+// "¡Colorea a tu manera!" — a crianca toca nas areas do desenho e elas se
+// enchem de cor. Pintou tudo (ou "¡Terminé!") → pergunta se quer levar:
+// adiciona ao carrinho e abre o carrinho.
+// Sem `drawingUrl`: triceratops da colecao (mapa de areas pronto).
+// Com `drawingUrl` (amostra de um produto): detecta as areas na hora.
+export function ColorDinoModal({ open, onOpenChange, slug, drawingUrl, product }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  collectionHref: string;
-  slug: string;
+  collectionHref?: string;
+  slug?: string;
+  drawingUrl?: string;
+  product?: Product;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const regionsRef = useRef<Regions | null>(null);
@@ -88,6 +94,7 @@ export function ColorDinoModal({ open, onOpenChange, collectionHref, slug }: {
   const [color, setColor] = useState(PALETTE[0].hex);
   const [painted, setPainted] = useState(0);
   const [finished, setFinished] = useState(false);
+  const [failed, setFailed] = useState(false);
 
 
   // Redesenha tudo: cor da area multiplicada pela luminosidade original,
@@ -128,14 +135,14 @@ export function ColorDinoModal({ open, onOpenChange, collectionHref, slug }: {
     setPainted(0);
     if (regionsRef.current) { requestAnimationFrame(render); return; }
     let cancelled = false;
-    loadRegions().then((reg) => {
+    (drawingUrl ? loadColoringRegions(drawingUrl) : loadRegions()).then((reg) => {
       if (cancelled) return;
       regionsRef.current = reg;
       setReady(true);
       render();
-    }).catch(() => {});
+    }).catch(() => { if (!cancelled) setFailed(true); });
     return () => { cancelled = true; };
-  }, [open, render]);
+  }, [open, render, drawingUrl]);
 
   const total = regionsRef.current?.paintable.length ?? 0;
   useEffect(() => { if (total > 0 && painted === total) setFinished(true); }, [painted, total]);
@@ -180,30 +187,32 @@ export function ColorDinoModal({ open, onOpenChange, collectionHref, slug }: {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="kids max-h-[95vh] w-full overflow-y-auto rounded-[32px] border-0 bg-[#F1FBEF] p-5 sm:max-w-[560px] sm:p-7">
         <DialogTitle className="text-center font-kids text-3xl font-bold text-[#23263f] sm:text-4xl">
-          {finished ? '¡Qué dinosaurio tan bonito!' : '¡Colorea a tu manera!'}
+          {finished ? (drawingUrl ? '¡Qué dibujo tan bonito!' : '¡Qué dinosaurio tan bonito!') : '¡Colorea a tu manera!'}
         </DialogTitle>
         <DialogDescription className="text-center text-base text-[#565a78]">
           {finished
             ? 'Así de divertido es pintar nuestros juguetes impresos en 3D.'
-            : 'Elige un color y toca una parte del dinosaurio para pintarla.'}
+            : drawingUrl ? 'Elige un color y toca una parte del dibujo para pintarla.' : 'Elige un color y toca una parte del dinosaurio para pintarla.'}
         </DialogDescription>
 
         <div className="mx-auto w-full max-w-[300px] rounded-[28px] bg-white p-3">
           <canvas
             ref={canvasRef}
             role="img"
-            aria-label="Dibujo de un triceratops saliendo del huevo para colorear"
+            aria-label={drawingUrl ? `Dibujo para colorear de ${product?.name ?? 'nuestro juguete'}` : 'Dibujo de un triceratops saliendo del huevo para colorear'}
             onPointerDown={(e) => paintAt(e.clientX, e.clientY)}
             className={`block h-auto w-full touch-manipulation ${finished ? '' : 'cursor-crosshair'}`}
-            style={{ aspectRatio: '596 / 714' }}
+            style={{ aspectRatio: regionsRef.current ? `${regionsRef.current.w} / ${regionsRef.current.h}` : '596 / 714' }}
           />
-          {!ready && <p className="py-2 text-center text-sm text-[#565a78]">Cargando dibujo…</p>}
+          {!ready && !failed && <p className="py-2 text-center text-sm text-[#565a78]">Cargando dibujo…</p>}
+          {failed && <p className="py-2 text-center text-sm text-[#565a78]">No se pudo cargar el dibujo.</p>}
         </div>
 
         {finished ? (
           <div className="flex flex-col gap-3">
             <OfferPrompt
               slug={slug}
+              product={product}
               question="¿Lo añadimos al carrito?"
               prefer={DINO}
               fallbackLabel="Ver juguetes para pintar"

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { OfferPrompt } from './offer-prompt';
+import { type Product } from '@/lib/products';
 
 // Formas (centradas em 0,0, tamanho ~2) e onde aparecem na parede (em % da foto).
 const SHAPES = {
@@ -29,11 +30,14 @@ const PROJECTIONS: { kind: keyof typeof SHAPES; x: number; y: number; s: number 
 // "Enciende la lámpara" — o site escurece (fundo quase preto), a foto do
 // quarto aparece apagada e um interruptor de parede acende a lampada
 // foguete: a foto ganha luz e um brilho quente pulsa em volta.
-export function LampSwitchModal({ open, onOpenChange, collectionHref, slug }: {
+// `photo`/`product`: amostra de um produto (foto dele aceso; oferece ele).
+export function LampSwitchModal({ open, onOpenChange, slug, photo, product }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  collectionHref: string;
-  slug: string;
+  collectionHref?: string;
+  slug?: string;
+  photo?: string;
+  product?: Product;
 }) {
   const [on, setOn] = useState(false);
 
@@ -49,15 +53,15 @@ export function LampSwitchModal({ open, onOpenChange, collectionHref, slug }: {
           {on ? '¡Buenas noches!' : 'Shhh... es hora de dormir'}
         </DialogTitle>
         <DialogDescription className="text-center text-base text-white/75">
-          {on ? 'Así ilumina nuestra lámpara cohete la habitación.' : 'La habitación está a oscuras. Pulsa el interruptor.'}
+          {on ? (product ? `Así ilumina ${product.name} la habitación.` : 'Así ilumina nuestra lámpara cohete la habitación.') : 'La habitación está a oscuras. Pulsa el interruptor.'}
         </DialogDescription>
 
         <div className="mt-2 grid items-center gap-6 sm:grid-cols-[1fr_200px]">
         <div className="relative overflow-hidden rounded-[24px]">
           <div className="relative aspect-[4/3]">
             <Image
-              src="/images/lampara-cohete-habitacion.jpg"
-              alt="Lámpara cohete impresa en 3D iluminando una habitación infantil con estrellas proyectadas en la pared"
+              src={photo || '/images/lampara-cohete-habitacion.jpg'}
+              alt={product ? `${product.name} iluminando una habitación` : "Lámpara cohete impresa en 3D iluminando una habitación infantil con estrellas proyectadas en la pared"}
               fill
               sizes="(min-width: 768px) 700px, 100vw"
               className="object-cover transition-[filter] duration-700 ease-out"
@@ -126,6 +130,7 @@ export function LampSwitchModal({ open, onOpenChange, collectionHref, slug }: {
         {on && (
           <OfferPrompt
             slug={slug}
+            product={product}
             question="¿Quieres esta lámpara en tu habitación?"
             fallbackLabel="Ver lámparas"
             onClose={() => onOpenChange(false)}
