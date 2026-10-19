@@ -38,7 +38,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'Kitoys 3D' }],
   alternates: {
-    canonical: 'https://www.vitafitstore.es/',
+    canonical: 'https://www.kitoys3d.com/',
   },
   icons: {
     icon: [
@@ -51,13 +51,13 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Juegos y lámparas infantiles impresos en 3D | Kitoys 3D',
     description: 'Juegos, puzzles y lámparas para habitaciones infantiles impresos en 3D, capa a capa. Elige tu colección y recíbelo en casa en toda España.',
-    url: 'https://www.vitafitstore.es/',
+    url: 'https://www.kitoys3d.com/',
     siteName: 'Kitoys 3D',
     locale: 'es_ES',
     type: 'website',
     images: [
       {
-        url: 'https://www.vitafitstore.es/og-image.jpg',
+        url: 'https://www.kitoys3d.com/og-image.jpg',
         width: 1200,
         height: 630,
         alt: 'Juegos y lámparas infantiles impresos en 3D — Kitoys 3D',
@@ -68,8 +68,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Juegos y lámparas infantiles impresos en 3D | Kitoys 3D',
     description: 'Juegos, puzzles y lámparas para habitaciones infantiles impresos en 3D, capa a capa. Elige tu colección y recíbelo en casa en toda España.',
-    images: ['https://www.vitafitstore.es/og-image.jpg'],
-    creator: '@vitafitstore_es',
+    images: ['https://www.kitoys3d.com/og-image.jpg'],
   },
   robots: {
     index: true,

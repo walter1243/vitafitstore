@@ -7,7 +7,7 @@ import { enabledCollections } from '@/lib/sectors-shared';
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [products, sectors] = await Promise.all([getAllProductIds(), getSectors()]);
   const productEntries: MetadataRoute.Sitemap = products.map((p) => ({
-    url: `https://www.vitafitstore.es/producto/${p.id}-${slugifyCategory(p.name)}`,
+    url: `https://www.kitoys3d.com/producto/${p.id}-${slugifyCategory(p.name)}`,
     lastModified: new Date(),
     changeFrequency: 'weekly',
     priority: 0.7,
@@ -16,7 +16,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     ...productEntries,
     {
-      url: 'https://www.vitafitstore.es',
+      url: 'https://www.kitoys3d.com',
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 1,
@@ -28,19 +28,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     })),
     ...enabledCollections(sectors).map((c) => ({
-      url: `https://www.vitafitstore.es/coleccion/${c.slug}`,
+      url: `https://www.kitoys3d.com/coleccion/${c.slug}`,
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.9,
     })),
     {
-      url: 'https://www.vitafitstore.es/#productos',
+      url: 'https://www.kitoys3d.com/#productos',
       lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.9,
     },
     {
-      url: 'https://www.vitafitstore.es/#ayuda-soporte',
+      url: 'https://www.kitoys3d.com/#ayuda-soporte',
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.6,
