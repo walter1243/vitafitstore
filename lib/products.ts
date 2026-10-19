@@ -37,6 +37,8 @@ export interface Product {
   productType?: ProductType
   colorOptions?: ColorOption[]
   sizes?: string[]
+  // Frete proprio (Admin → Produtos); null = tabela padrao.
+  shippingCost?: number | null
   emoji: string
   gradient: string
 }

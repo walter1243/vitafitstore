@@ -34,6 +34,7 @@ type Product = {
   sourceStoreUrl?: string;
   sourceProductUrl?: string;
   costPrice?: number;
+  shippingCost?: number | null;
   isCategoryCover?: boolean;
 };
 
@@ -107,7 +108,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   categories: Category[];
   showForm: boolean;
   saving: boolean;
-  form: { name: string; price: string; category: string; stock: string; videoUrl: string };
+  form: { name: string; price: string; category: string; stock: string; videoUrl: string; shippingCost: string };
   image: string | null;
   additionalImages: string[];
   desc: string;
@@ -554,6 +555,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
     { k: 'name', label: 'Nome do produto *', ph: 'Ex: Cesta de Navidad Premium', type: 'text' },
     { k: 'price', label: 'Preço (€) *', ph: '29.99', type: 'number' },
     { k: 'stock', label: 'Estoque (un.)', ph: '100', type: 'number' },
+    { k: 'shippingCost', label: 'Frete (€)', ph: 'Vazio = tabela padrão', type: 'number' },
   ];
 
   const visibleAdditionalImages = additionalImages.slice(0, 10);
@@ -1897,7 +1899,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
-  const [prodForm, setProdForm] = useState({ name: '', price: '', category: '', stock: '', videoUrl: '' });
+  const [prodForm, setProdForm] = useState({ name: '', price: '', category: '', stock: '', videoUrl: '', shippingCost: '' });
   const [prodImage, setProdImage] = useState<string | null>(null);
   const [prodAdditionalImages, setProdAdditionalImages] = useState<string[]>([]);
   const [prodDesc, setProdDesc] = useState('');
@@ -2040,7 +2042,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
 
   function resetProductForm() {
     setEditingProductId(null);
-    setProdForm({ name: '', price: '', category: '', stock: '', videoUrl: '' });
+    setProdForm({ name: '', price: '', category: '', stock: '', videoUrl: '', shippingCost: '' });
     setProdImage(null);
     setProdAdditionalImages([]);
     setProdDesc('');
@@ -2061,6 +2063,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
       category: product.category ?? '',
       stock: product.stock != null ? String(product.stock) : '',
       videoUrl: product.videoUrl ?? product.video ?? '',
+      shippingCost: product.shippingCost != null ? String(product.shippingCost) : '',
     });
     setProdImage(product.mainImage ?? product.image ?? null);
     setProdAdditionalImages(Array.isArray(product.additionalImages) ? product.additionalImages : []);
@@ -2086,7 +2089,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
     costPrice: number;
   }) {
     setEditingProductId(null);
-    setProdForm({ name: data.name, price: String(data.price), category: '', stock: '99', videoUrl: '' });
+    setProdForm({ name: data.name, price: String(data.price), category: '', stock: '99', videoUrl: '', shippingCost: '' });
     setProdImage(data.image || null);
     setProdAdditionalImages(data.additionalImages ?? []);
     setProdDesc(data.description || '');
@@ -2116,6 +2119,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
           category: prodForm.category.trim(),
           stock: parseInt(prodForm.stock) || 0,
           videoUrl: prodForm.videoUrl.trim() || null,
+          shippingCost: prodForm.shippingCost.trim() === '' ? null : prodForm.shippingCost.trim(),
           description: prodDesc || null,
           mainImage: prodImage,
           image: prodImage,

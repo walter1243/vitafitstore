@@ -56,11 +56,20 @@ function parseSizes(value: unknown): string[] {
 
 const VALID_PRODUCT_TYPES = ['estandar', 'ropa', 'calzado'];
 
+// Frete do produto em euros; vazio/invalido = null (usa a tabela padrao).
+function parseShipping(value: unknown): number | null {
+  if (value === null || value === undefined || String(value).trim() === '') return null;
+  const n = Number(String(value).replace(',', '.'));
+  return Number.isFinite(n) && n >= 0 ? Number(n.toFixed(2)) : null;
+}
+
 async function ensureVariantColumns() {
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS product_type TEXT DEFAULT 'estandar'`;
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS color_options TEXT`;
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS sizes TEXT`;
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS is_category_cover BOOLEAN DEFAULT FALSE`;
+  // Frete proprio do produto (null = tabela padrao, ver lib/checkout-pricing.ts).
+  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS shipping_cost NUMERIC`;
 }
 
 function normalizeProduct(row: any) {
@@ -69,6 +78,7 @@ function normalizeProduct(row: any) {
     price: row.price != null ? Number(row.price) : 0,
     stock: row.stock != null ? Number(row.stock) : 0,
     costPrice: row.cost_price != null ? Number(row.cost_price) : null,
+    shippingCost: row.shipping_cost != null ? Number(row.shipping_cost) : null,
     additionalImages: parseAdditionalImages(row.additional_images ?? row.additionalImages),
     mainImage: row.image ?? row.mainImage ?? '',
     videoUrl: row.video ?? row.videoUrl ?? '',
@@ -87,7 +97,7 @@ export async function GET() {
     const rows = await sql`
       SELECT id, name, description, price, category, image, additional_images, video, stock, position,
              source_store_url, source_product_url, cost_price,
-             product_type, color_options, sizes, is_category_cover,
+             product_type, color_options, sizes, is_category_cover, shipping_cost,
              created_at AS "createdAt"
       FROM products
       ORDER BY COALESCE(position, 999999), created_at DESC
@@ -112,6 +122,7 @@ export async function POST(req: NextRequest) {
       sourceStoreUrl, sourceProductUrl, costPrice,
       productType, colorOptions, sizes,
     } = body;
+    const nextShippingCost = parseShipping(body.shippingCost);
 
     if (!name?.trim()) {
       return NextResponse.json({ error: 'O campo "nome" é obrigatório.' }, { status: 400 });
@@ -129,7 +140,7 @@ export async function POST(req: NextRequest) {
     const nextSizes = parseSizes(sizes);
 
     const [product] = await sql`
-      INSERT INTO products (name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes)
+      INSERT INTO products (name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost)
       VALUES (
         ${String(name).trim()},
         ${description ? String(description) : null},
@@ -147,7 +158,7 @@ export async function POST(req: NextRequest) {
         ${JSON.stringify(nextColorOptions)},
         ${JSON.stringify(nextSizes)}
       )
-      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes
+      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost
     `;
 
     return NextResponse.json(normalizeProduct(product), { status: 201 });
@@ -253,6 +264,9 @@ export async function PATCH(req: NextRequest) {
     const productType = VALID_PRODUCT_TYPES.includes(body.productType) ? body.productType : 'estandar';
     const colorOptions = parseColorOptions(body.colorOptions);
     const sizes = parseSizes(body.sizes);
+    // So mexe no frete quando o formulario manda o campo (vazio = volta pra tabela padrao).
+    const updateShipping = Object.prototype.hasOwnProperty.call(body, 'shippingCost');
+    const shippingCost = parseShipping(body.shippingCost);
 
     if (!name) {
       return NextResponse.json({ error: 'O campo "nome" é obrigatório.' }, { status: 400 });
@@ -277,9 +291,10 @@ export async function PATCH(req: NextRequest) {
         cost_price        = COALESCE(${costPrice}, cost_price),
         product_type      = ${productType},
         color_options     = ${JSON.stringify(colorOptions)},
-        sizes             = ${JSON.stringify(sizes)}
+        sizes             = ${JSON.stringify(sizes)},
+        shipping_cost     = CASE WHEN ${updateShipping} THEN ${shippingCost}::numeric ELSE shipping_cost END
       WHERE id = ${id}
-      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes
+      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost
     `;
 
     if (!product) {

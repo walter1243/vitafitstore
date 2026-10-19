@@ -20,6 +20,7 @@ export type DbProduct = {
   colorOptions?: ColorOption[];
   sizes?: string[];
   isCategoryCover?: boolean;
+  shippingCost?: number | null;
 };
 
 export function normalizeCategory(raw?: string) {
@@ -67,6 +68,7 @@ export function toStoreProduct(p: DbProduct): Product {
     productType: p.productType && p.productType !== 'estandar' ? p.productType : undefined,
     colorOptions: Array.isArray(p.colorOptions) ? p.colorOptions.filter(c => c?.label && (c?.image || c?.hex)) : [],
     sizes: Array.isArray(p.sizes) ? p.sizes.filter(Boolean) : [],
+    shippingCost: p.shippingCost != null ? Number(p.shippingCost) : null,
     emoji: '✨',
     gradient: category === 'fitness' ? 'from-blue-400 to-indigo-600' : 'from-emerald-400 to-green-600',
   };

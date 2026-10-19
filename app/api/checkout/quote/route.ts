@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     const productIds = [...new Set(items.map((item) => item.productId))];
 
     const rows = await sql`
-      SELECT id, price
+      SELECT *
       FROM products
       WHERE id = ANY(${productIds})
     `;
@@ -59,7 +59,8 @@ export async function POST(req: NextRequest) {
       return sum + unitPrice * item.quantity;
     }, 0);
 
-    const shipping = resolveShipping(subtotal, country);
+    const shippingById = new Map<number, number | null>((rows as any[]).map((r) => [Number(r.id), r.shipping_cost != null ? Number(r.shipping_cost) : null]));
+    const shipping = resolveShipping(subtotal, country, items.map((item: any) => shippingById.get(Number(item.productId))));
     const total = subtotal + shipping;
 
     return NextResponse.json({

@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
 
     const productIds = [...new Set(normalizedItems.map((item) => item.productId))];
     const productRows = await sql`
-      SELECT id, price
+      SELECT *
       FROM products
       WHERE id = ANY(${productIds})
     `;
@@ -77,7 +77,8 @@ export async function POST(req: NextRequest) {
       return sum + unitPrice * item.quantity;
     }, 0);
 
-    const shipping = resolveShipping(subtotal, String(country ?? 'ES'));
+    const shippingById = new Map<number, number | null>((productRows as any[]).map((r) => [Number(r.id), r.shipping_cost != null ? Number(r.shipping_cost) : null]));
+    const shipping = resolveShipping(subtotal, String(country ?? 'ES'), normalizedItems.map((item: any) => shippingById.get(Number(item.productId))));
     const amountNum = Number((subtotal + shipping).toFixed(2));
 
     if (!amountNum || amountNum <= 0) {
