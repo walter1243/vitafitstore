@@ -1,5 +1,7 @@
 'use client';
 import { AdminSectors } from '@/components/admin-sectors';
+import { TrackingSection, needsTracking, isNewAlert } from '@/components/admin-tracking';
+import { AnalyticsPanel } from '@/components/admin-analytics';
 import { MediaUploadField } from '@/components/configuracoes/content/shared';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { BlocosEditor, type BlocosEditorHandle } from '@/components/configuracoes/BlocosEditor';
@@ -68,6 +70,10 @@ type Order = {
   selectedSize?: string;
   status: 'pending' | 'shipped' | 'delivered';
   tracking: string;
+  trackingUrl?: string;
+  trackingSentAt?: string | null;
+  seen?: boolean;
+  dateTime?: string;
   total: number;
   date: string;
 };
@@ -1971,6 +1977,18 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
 
   useEffect(() => { void fetchData(); }, []);
 
+  // Avisos de compra nova (Rastreio): busca os pedidos de novo a cada 30 s.
+  const refreshOrders = useCallback(async () => {
+    try {
+      const res = await fetch('/api/orders', { cache: 'no-store' });
+      if (res.ok) setOrders(await res.json());
+    } catch {}
+  }, []);
+  useEffect(() => {
+    const id = setInterval(() => { if (document.visibilityState === 'visible') void refreshOrders(); }, 30000);
+    return () => clearInterval(id);
+  }, [refreshOrders]);
+
   useEffect(() => {
     (async () => {
       try {
@@ -2253,6 +2271,8 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
 
   const revenue = orders.reduce((s, o) => s + (o.total ?? 0), 0);
   const pendingCount = orders.filter(o => o.status === 'pending').length;
+  const trackingAlerts = orders.filter(isNewAlert).length;
+  const trackingPending = orders.filter(needsTracking).length;
 
   function navigate(s: Section) {
     setSection(s);
@@ -2304,7 +2324,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
       label: 'Vendas',
       items: [
         { key: 'orders', label: 'Pedidos', icon: <ShoppingCart size={18} />, badge: pendingCount || undefined },
-        { key: 'tracking', label: 'Rastreio', icon: <Truck size={18} /> },
+        { key: 'tracking', label: 'Rastreio', icon: <Truck size={18} />, badge: trackingPending || undefined },
         { key: 'reviews', label: 'Avaliações', icon: <Star size={18} /> },
       ],
     },
@@ -2435,7 +2455,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
                   >
                     <span className={section === item.key ? 'text-green-400' : 'text-white/40'}>{item.icon}</span>
                     <span className="flex-1 text-left">{item.label}</span>
-                    {item.badge ? <span className="min-w-[18px] rounded-full bg-green-600 px-1.5 py-0.5 text-center text-[10px] font-bold text-white">{item.badge}</span> : null}
+                    {item.badge ? <span className={`min-w-[18px] rounded-full px-1.5 py-0.5 text-center text-[10px] font-bold text-white ${item.key === 'tracking' ? (trackingAlerts ? 'admin-alert-blink bg-red-500' : 'bg-amber-500') : 'bg-green-600'}`}>{item.badge}</span> : null}
                   </button>
                 ))}
               </div>
@@ -2550,7 +2570,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
         )}
 
         <main className="flex-1 bg-[#0f1117] p-4 sm:p-6">
-          {section === 'dashboard' && <DashboardSection products={products} orders={orders} revenue={revenue} onNavigate={navigate} />}
+          {section === 'dashboard' && <DashboardSection products={products} orders={orders} revenue={revenue} onNavigate={navigate} trackingAlerts={trackingPending} />}
           {section === 'products' && (
             <ProductsSection
               products={products}
@@ -2595,7 +2615,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
           {section === 'import-supplier' && <ImportSupplierSection onImportToStore={preFillFromSupplier} />}
           {section === 'orders' && <OrdersSection orders={orders} onUpdateTracking={updateTracking} onRefresh={fetchData} />}
           {section === 'reviews' && <ReviewsSection />}
-          {section === 'tracking' && <TrackingSection />}
+          {section === 'tracking' && <TrackingSection orders={orders} onChanged={refreshOrders} notify={addToast} />}
           {section === 'automation' && <AutomationSection />}
           {section === 'settings' && (
             <SettingsSection
@@ -2613,7 +2633,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
   );
 }
 
-function DashboardSection({ products, orders, revenue, onNavigate }: { products: Product[]; orders: Order[]; revenue: number; onNavigate: (s: Section) => void; }) {
+function DashboardSection({ products, orders, revenue, onNavigate, trackingAlerts }: { products: Product[]; orders: Order[]; revenue: number; onNavigate: (s: Section) => void; trackingAlerts: number; }) {
   const stats = [
     { label: 'Produtos', value: products.length, sub: 'cadastrados', icon: <Package size={20} className="text-green-500" />, bg: 'bg-green-500/10' },
     { label: 'Pedidos', value: orders.length, sub: `${orders.filter(o => o.status === 'pending').length} aguardando`, icon: <ShoppingCart size={20} className="text-blue-400" />, bg: 'bg-blue-500/10' },
@@ -2623,6 +2643,20 @@ function DashboardSection({ products, orders, revenue, onNavigate }: { products:
 
   return (
     <div className="space-y-5 text-white">
+      {trackingAlerts > 0 && (
+        <button
+          type="button"
+          onClick={() => onNavigate('tracking')}
+          className="admin-alert-blink flex w-full items-center gap-3 rounded-2xl border border-red-400/50 bg-red-500/10 px-4 py-3 text-left text-sm"
+        >
+          <Truck size={18} className="shrink-0 text-red-300" />
+          <span className="flex-1"><strong>{trackingAlerts} pedido{trackingAlerts > 1 ? 's' : ''}</strong> esperando o link de rastreio para o cliente.</span>
+          <span className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-bold">Abrir Rastreio</span>
+        </button>
+      )}
+
+      <AnalyticsPanel />
+
       <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         {stats.map(s => (
           <div key={s.label} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-[#161b28] p-4 shadow-none sm:gap-4 sm:p-5">
@@ -2685,37 +2719,6 @@ function DashboardSection({ products, orders, revenue, onNavigate }: { products:
 // ─── Orders ───────────────────────────────────────────────────────────────────
 
 // ─── Tracking ─────────────────────────────────────────────────────────────────
-
-function TrackingSection() {
-  const [code, setCode] = useState('');
-
-  return (
-    <div className="max-w-lg rounded-2xl border border-white/10 bg-[#161b28] p-5 text-white shadow-none sm:p-6">
-      <h2 className="mb-1 flex items-center gap-2 font-semibold text-white">
-        <Truck size={16} className="text-green-500" />Rastrear Envio
-      </h2>
-      <p className="mb-4 text-sm text-white/60">Consulte o estado de qualquer envio pelo código de rastreio.</p>
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={code}
-          onChange={e => setCode(e.target.value.trim())}
-          placeholder="Ex: ES123456789ES"
-          onKeyDown={e => { if (e.key==='Enter' && code) window.open(`https://www.correos.es/es/es/herramientas/localizador/envios?numero=${code}`,'_blank'); }}
-          className="flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
-        />
-        <a
-          href={code ? `https://www.correos.es/es/es/herramientas/localizador/envios?numero=${code}` : undefined}
-          target="_blank" rel="noopener noreferrer"
-          className={`flex items-center gap-1.5 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors
-            ${code ? 'hover:bg-green-700 cursor-pointer' : 'opacity-40 pointer-events-none'}`}>
-          <ExternalLink size={14} />Rastrear
-        </a>
-      </div>
-      <p className="mt-3 text-xs text-white/40">Via Correos de España</p>
-    </div>
-  );
-}
 
 // ─── Automation ───────────────────────────────────────────────────────────────
 

@@ -5,6 +5,7 @@ import { CartProvider } from '@/lib/cart-context'
 import SchemaOrg from '@/components/SchemaOrg'
 import { CookieConsent } from '@/components/cookie-consent'
 import { AnalyticsLoader } from '@/components/analytics-loader'
+import { SiteTracker } from '@/components/site-tracker'
 import './globals.css'
 
 const geistSans = Geist({
@@ -116,6 +117,7 @@ export default function RootLayout({
            here again. */}
         <CookieConsent />
         <AnalyticsLoader />
+        <SiteTracker />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

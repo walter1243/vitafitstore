@@ -52,6 +52,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     })
 
     setLastAddedProduct(product)
+    // Estatistica "adicionado ao carrinho" (components/site-tracker.tsx).
+    window.dispatchEvent(new CustomEvent('kitoys:add-to-cart', { detail: { productId: product.id } }))
 
     // Show upsell popup when adding health products
     if (product.category === 'salud') {
