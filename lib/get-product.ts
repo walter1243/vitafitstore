@@ -17,8 +17,11 @@ function parseAdditionalImages(value: unknown): string[] {
 
 export async function getProductById(id: number): Promise<Product | null> {
   try {
+    // SELECT * de proposito: inclui shipping_cost (frete do produto) sem
+    // quebrar se a coluna ainda nao existir. Sem o frete aqui, o carrinho
+    // mostrava a tabela padrao enquanto o checkout cobrava o frete cadastrado.
     const rows = await sql`
-      SELECT id, name, description, price, category, image, additional_images, video, stock
+      SELECT *
       FROM products
       WHERE id = ${id}
       LIMIT 1
@@ -36,6 +39,7 @@ export async function getProductById(id: number): Promise<Product | null> {
       additionalImages: parseAdditionalImages(row.additional_images),
       video: row.video ?? '',
       stock: row.stock,
+      shippingCost: row.shipping_cost != null ? Number(row.shipping_cost) : null,
     };
 
     return toStoreProduct(dbProduct);
