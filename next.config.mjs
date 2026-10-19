@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Chave publica do Stripe usada no checkout: STRIPE_KEY_PUBLIC (conta
+  // Kitoys3D, Espanha) e, se nao existir, a antiga NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY.
+  // Embutida no build — mudou na Vercel, precisa de um deploy novo.
+  env: {
+    NEXT_PUBLIC_STRIPE_PK: process.env.STRIPE_KEY_PUBLIC || process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
+  },
   typescript: {
     ignoreBuildErrors: true,
   },
