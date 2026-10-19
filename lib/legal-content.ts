@@ -1,8 +1,12 @@
-// Standard EU/Spain e-commerce legal boilerplate. Clauses that depend on the
-// business's own identity (legal name, NIF/CIF, registered address, exact
-// support hours) are marked [COMPLETAR] — fill these in before relying on
-// these pages for real compliance. Nothing here should be treated as legal
-// advice; a lawyer should review before launch.
+// Paginas legais da Kitoys 3D (Espanha/UE). Titular, NIF e endereco
+// informados pela dona da loja. Nada aqui e assessoria juridica — revisar
+// com um gestor/advogado, principalmente o uso do NIF portugues.
+
+const TITULAR = 'Anna Livia Lima Esteves';
+const NIF = 'NIF (Portugal): 310208947';
+const DOMICILIO = 'Carrer Emilio Sala Hernández, nº 43, Elche (Alicante), España';
+const EMAIL = 'kitoys3d@gmail.com';
+const WHATSAPP = '+34 678 68 4704';
 
 export type LegalSection = { heading: string; body: string[] };
 
@@ -24,16 +28,18 @@ export const LEGAL_PAGES: Record<string, LegalPage> = {
       {
         heading: 'Titular del sitio',
         body: [
-          'Razón social: [COMPLETAR — razón social o nombre del titular]',
-          'NIF/CIF: [COMPLETAR]',
-          'Domicilio social: [COMPLETAR — dirección completa]',
-          'Correo electrónico de contacto: [COMPLETAR]',
+          `Titular: ${TITULAR}`,
+          'Nombre comercial: Kitoys 3D',
+          NIF,
+          `Domicilio: ${DOMICILIO}`,
+          `Correo electrónico: ${EMAIL}`,
+          `WhatsApp: ${WHATSAPP}`,
         ],
       },
       {
         heading: 'Objeto',
         body: [
-          'Este sitio web tiene como finalidad la venta online de cestas de regalo personalizadas y cestas de Navidad.',
+          'Este sitio web tiene como finalidad la venta online de productos impresos en 3D: juguetes, rompecabezas y lámparas infantiles, entre otros.',
         ],
       },
       {
@@ -69,6 +75,18 @@ export const LEGAL_PAGES: Record<string, LegalPage> = {
         ],
       },
       {
+        heading: 'Garantía legal',
+        body: [
+          'Conforme al Real Decreto Legislativo 1/2007 (TRLGDCU), todos los productos cuentan con una garantía legal de conformidad de 3 años desde la entrega. Si un producto presenta un defecto de fabricación, escríbenos y te ofreceremos la reparación, la sustitución o el reembolso según corresponda.',
+        ],
+      },
+      {
+        heading: 'Reclamaciones',
+        body: [
+          `Para cualquier incidencia o reclamación, escríbenos a ${EMAIL} o por WhatsApp al ${WHATSAPP}. También puedes acudir a los servicios de consumo de tu comunidad autónoma.`,
+        ],
+      },
+      {
         heading: 'Ley aplicable',
         body: ['Estas condiciones se rigen por la legislación española y europea de protección al consumidor.'],
       },
@@ -83,13 +101,13 @@ export const LEGAL_PAGES: Record<string, LegalPage> = {
       {
         heading: 'Plazos de entrega',
         body: [
-          'El plazo de entrega estimado se muestra en la ficha de cada producto y en el checkout. [COMPLETAR — confirmar plazo real según el almacén/proveedor: si el envío es desde un almacén en España/UE, 2-3 días laborables es razonable; si el proveedor envía desde fuera de la UE, el plazo real suele ser de 5 a 9+ días laborables y debe indicarse así para evitar reclamaciones y contracargos.]',
+          'Cada pedido se imprime y prepara en nuestro taller. El plazo de entrega estimado se indica en el checkout y te avisamos por email cuando el pedido sale.',
         ],
       },
       {
         heading: 'Transportistas',
         body: [
-          '[COMPLETAR — indicar el/los transportista(s) utilizados, por ejemplo Correos, Correos Express, SEUR o GLS]',
+          'Enviamos con operadores logísticos con seguimiento a toda España peninsular y Baleares.',
         ],
       },
       {
@@ -100,7 +118,7 @@ export const LEGAL_PAGES: Record<string, LegalPage> = {
       },
       {
         heading: 'Gastos de envío',
-        body: ['Envío gratuito en pedidos superiores a 50€. Por debajo de ese importe se aplican los gastos de envío indicados en el checkout.'],
+        body: ['Envío gratuito en pedidos a partir de 50 €. Por debajo de ese importe se aplican los gastos de envío de cada producto, indicados en el carrito y en el checkout.'],
       },
     ],
   },
@@ -119,7 +137,7 @@ export const LEGAL_PAGES: Record<string, LegalPage> = {
       {
         heading: 'Cómo solicitar una devolución',
         body: [
-          'Escríbenos por WhatsApp o al correo de soporte indicando el número de pedido. Te confirmaremos el proceso y la dirección de devolución.',
+          `Escríbenos por WhatsApp (${WHATSAPP}) o a ${EMAIL} indicando el número de pedido. Te confirmaremos el proceso y la dirección de devolución.`,
         ],
       },
       {
@@ -144,7 +162,7 @@ export const LEGAL_PAGES: Record<string, LegalPage> = {
     sections: [
       {
         heading: 'Responsable del tratamiento',
-        body: ['[COMPLETAR — razón social, NIF y dirección del responsable del tratamiento]'],
+        body: [`Responsable: ${TITULAR} (Kitoys 3D)`, NIF, `Domicilio: ${DOMICILIO}`, `Contacto: ${EMAIL}`],
       },
       {
         heading: 'Datos que recopilamos',
@@ -161,7 +179,7 @@ export const LEGAL_PAGES: Record<string, LegalPage> = {
       {
         heading: 'Derechos del usuario',
         body: [
-          'El usuario puede ejercer sus derechos de acceso, rectificación, supresión, oposición, limitación y portabilidad escribiendo a [COMPLETAR — email de contacto de privacidad].',
+          `El usuario puede ejercer sus derechos de acceso, rectificación, supresión, oposición, limitación y portabilidad escribiendo a ${EMAIL}. También puede presentar una reclamación ante la Agencia Española de Protección de Datos (www.aepd.es).`,
         ],
       },
     ],
