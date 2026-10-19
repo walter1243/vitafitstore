@@ -33,13 +33,16 @@ export function OfferPrompt({ slug, question, prefer, fallbackLabel, onClose, da
   dark?: boolean;
 }) {
   const offer = useCollectionOffer(slug, prefer);
-  const { addItem, setIsCartOpen } = useCart();
+  const { addItem, setIsCartOpen, setShowUpsell } = useCart();
 
   function addToCart() {
     if (!offer) return;
     addItem(offer);
     onClose();
-    setTimeout(() => setIsCartOpen(true), 250);
+    // Espera o popup da brincadeira terminar de fechar (senao o fechamento
+    // dele fecha o carrinho junto) e abre o carrinho direto, sem o aviso
+    // "¡Añadido al carrito!".
+    setTimeout(() => { setShowUpsell(false); setIsCartOpen(true); }, 450);
   }
 
   const box = dark ? 'bg-white/10 text-white' : 'bg-white text-[#23263f]';
