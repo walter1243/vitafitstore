@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-auth";
-import { sendEmail, trackingEmail } from "@/lib/email";
+import { sendEmail, senderDomainStatus, trackingEmail } from "@/lib/email";
 
 export const dynamic = 'force-dynamic';
 
@@ -65,6 +65,21 @@ export async function POST(req: NextRequest) {
     if (!auth.ok) return auth.response;
     await ensureOrderColumns();
     const body = await req.json().catch(() => ({}));
+
+    // Teste: manda o e-mail de rastreio de exemplo e informa o status do dominio.
+    if (body?.action === 'testEmail') {
+      const to = String(body.to ?? '').trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return NextResponse.json({ error: 'E-mail de teste inválido.' }, { status: 400 });
+      const domain = await senderDomainStatus();
+      const mail = trackingEmail({ name: 'Cliente de Prueba', orderId: 1234, productName: 'Lámpara Cohete', trackingUrl: 'https://www.correos.es/es/es/herramientas/localizador/envios' });
+      try {
+        const sent = await sendEmail({ to, ...mail, subject: `[PRUEBA] ${mail.subject}` });
+        return NextResponse.json({ ok: true, id: sent.id, to, domain });
+      } catch (e: any) {
+        return NextResponse.json({ error: e?.message ?? 'Falha ao enviar.', domain }, { status: 502 });
+      }
+    }
+
     const id = Number(body?.id);
     if (!id) return NextResponse.json({ error: 'id é obrigatório.' }, { status: 400 });
 

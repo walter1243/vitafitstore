@@ -9,6 +9,25 @@ const REPLY_TO = 'kitoys3d@gmail.com';
 
 export class EmailError extends Error {}
 
+const senderDomain = () => (process.env.RESEND_FROM || DEFAULT_FROM).match(/@([^>\s]+)/)?.[1]?.toLowerCase() ?? '';
+
+// Status do dominio do remetente na Resend. Chaves "so envio" nao podem ler
+// dominios — ai volta status 'unknown'.
+export async function senderDomainStatus() {
+  const key = process.env.RESEND_KEY || process.env.RESEND_API_KEY;
+  const name = senderDomain();
+  if (!key) return { name, status: 'no-key' };
+  try {
+    const res = await fetch('https://api.resend.com/domains', { headers: { Authorization: `Bearer ${key}` } });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return { name, status: 'unknown', note: String(data?.message ?? res.status) };
+    const d = (data?.data ?? []).find((x: any) => String(x?.name).toLowerCase() === name);
+    return d ? { name, status: String(d.status), region: d.region } : { name, status: 'not-added' };
+  } catch (e: any) {
+    return { name, status: 'unknown', note: e?.message };
+  }
+}
+
 export async function sendEmail({ to, subject, html, text }: { to: string; subject: string; html: string; text: string }) {
   const key = process.env.RESEND_KEY || process.env.RESEND_API_KEY;
   if (!key) throw new EmailError('RESEND_KEY não está configurada na Vercel.');
