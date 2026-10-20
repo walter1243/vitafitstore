@@ -168,12 +168,12 @@ export function WorldShowcase({ sector, products }: { sector?: WorldSector | nul
 
       {extraTiles.length > 0 && (
         <section className="px-4 py-10 sm:px-6 lg:px-8">
-          <ul className="mx-auto grid max-w-6xl gap-5 sm:grid-cols-3">
+          <ul className={`mx-auto grid gap-5 ${extraTiles.length === 1 ? 'max-w-md' : extraTiles.length === 2 ? 'max-w-3xl sm:grid-cols-2' : 'max-w-6xl sm:grid-cols-3'}`}>
             {extraTiles.map(({ icon, title, text }) => {
               const Icon = TILE_ICON[icon] ?? Sparkles;
               return (
-                <li key={title} className="p-7" style={{ borderRadius: t.radius, background: surface }}>
-                  <Icon className="h-8 w-8" style={{ color: t.accent }} aria-hidden="true" />
+                <li key={title} className="p-7 text-center" style={{ borderRadius: t.radius, background: surface }}>
+                  <Icon className="mx-auto h-8 w-8" style={{ color: t.accent }} aria-hidden="true" />
                   <p className="mt-4 text-xl font-semibold" style={{ fontFamily: t.heading }}>{title}</p>
                   {text && <p className="mt-2 text-base leading-relaxed" style={{ color: t.muted }}>{text}</p>}
                 </li>
