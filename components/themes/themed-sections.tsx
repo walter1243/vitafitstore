@@ -145,18 +145,29 @@ export function ThemedCollection({ collection, theme, products = [], showCarouse
   // ── Mascotas: mural de fotos ───────────────────────────────────────────
   if (theme.key === 'mascotas') {
     const photos = [collection.photoUrl || collection.imageUrl, ...products.map((p) => p.mainImage ?? p.image)].filter(Boolean).slice(0, 5) as string[];
+    // Ainda sem fotos nem produto: placa de exemplo com o nome, centralizada.
+    if (photos.length === 0 && !collection.videoUrl) {
+      return (
+        <section className={`px-4 pb-20 sm:px-6 lg:px-8 ${top}`} style={{ background: theme.bgAlt }}>
+          <div className="mx-auto max-w-6xl">
+            {titleBlock(true)}
+            <div className="mx-auto mt-10 max-w-sm text-center">
+              <NamePreview cfg={{ ...DEFAULT_PERSONALIZE, enabled: true, shape: 'chapa', color: '#78350F' }} text="" placeholder="Toby" swingKey={0} stage={theme.surface} />
+              <p className="mt-4 text-base font-semibold" style={{ color: theme.muted }}>Muy pronto: la placa de tu mascota con su nombre.</p>
+            </div>
+            <div className="mt-8 flex justify-center">
+              <Link href={href} className={solid.className} style={solid.style}>{label}</Link>
+            </div>
+          </div>
+        </section>
+      );
+    }
     return (
       <section className={`px-4 pb-20 sm:px-6 lg:px-8 ${top}`} style={{ background: theme.bgAlt }}>
         <div className="mx-auto max-w-6xl">
           <div className="grid gap-4 sm:grid-cols-4 sm:grid-rows-2" style={{ minHeight: 420 }}>
             <div className="relative overflow-hidden sm:col-span-2 sm:row-span-2" style={{ borderRadius: theme.radius, background: theme.surface, minHeight: 300 }}>
-              {photos[0] || collection.videoUrl ? (
-                <Media image={photos[0]} video={collection.videoUrl} alt={collection.name} priority={priority} sizes="(min-width: 640px) 50vw, 92vw" />
-              ) : (
-                <div className="absolute inset-0 p-8 pb-32">
-                  <NamePreview cfg={{ ...DEFAULT_PERSONALIZE, enabled: true, shape: 'chapa', color: '#78350F' }} text="" placeholder="Toby" swingKey={0} stage={theme.surface} />
-                </div>
-              )}
+              <Media image={photos[0]} video={collection.videoUrl} alt={collection.name} priority={priority} sizes="(min-width: 640px) 50vw, 92vw" />
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#2a1002]/85 to-transparent p-6 pt-20 text-white">
                 <p className="text-2xl text-[#FDE68A]" style={{ fontFamily: theme.kickerFont }}>{collection.shortName}</p>
                 <Heading className="text-3xl font-semibold sm:text-4xl" style={{ fontFamily: theme.heading }}>{collection.name}</Heading>
