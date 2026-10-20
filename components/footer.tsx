@@ -7,16 +7,17 @@ import { PAYMENT_LOGOS } from '@/components/payment-logos'
 import { useSectors } from '@/components/kids/sectors-context'
 import { type FooterContent } from '@/lib/site-content-defaults'
 
-// Contato oficial da Kitoys 3D (texto do rodape aprovado pelo dono da loja).
-const WHATSAPP_DISPLAY = '+34 678 68 4704'
-const WHATSAPP_HREF = 'https://wa.me/34678684704'
-const EMAIL = 'kitoys3d@gmail.com'
+// Contato: vem do Admin → Editar loja (WhatsApp, e-mail, Instagram); estes
+// valores so aparecem enquanto as configuracoes carregam ou se estiverem vazias.
+const DEFAULT_WHATSAPP = '+34 678 68 4704'
+const DEFAULT_EMAIL = 'kitoys3d@gmail.com'
+const waHref = (phone: string) => `https://wa.me/${phone.replace(/\D/g, '')}`
 const LOGO = '/images/logo-kitoys-3d.png'
 
 type FooterLink = { title: string; description: string; href: string; external?: boolean }
 
-const AYUDA: FooterLink[] = [
-  { title: 'Centro de ayuda y preguntas frecuentes', description: 'Montaje, uso de rotuladores lavables y mantenimiento.', href: WHATSAPP_HREF, external: true },
+const ayuda = (whatsappHref: string): FooterLink[] => [
+  { title: 'Centro de ayuda y preguntas frecuentes', description: 'Montaje, uso de rotuladores lavables y mantenimiento.', href: whatsappHref, external: true },
   { title: 'Seguimiento de envío', description: 'Localiza tu paquete con nuestros operadores logísticos.', href: '/legal/envios' },
   { title: 'Cambios y devoluciones', description: '14 días naturales conforme a la normativa europea.', href: '/legal/devoluciones' },
   { title: 'Garantía legal de 3 años', description: 'Cobertura ante cualquier defecto de fabricación.', href: '/legal/terminos' },
@@ -76,12 +77,18 @@ function LinkList({ items }: { items: FooterLink[] }) {
 export function Footer(_props: { content?: FooterContent }) {
   const { collections } = useSectors()
   const [instagram, setInstagram] = useState('')
+  const [whatsapp, setWhatsapp] = useState(DEFAULT_WHATSAPP)
+  const [EMAIL, setEmail] = useState(DEFAULT_EMAIL)
   const [payment, setPayment] = useState<{ methods: string[]; bizum: string } | null>(null)
 
   useEffect(() => {
     fetch('/api/store-settings', { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (d?.instagram) setInstagram(d.instagram) })
+      .then((d) => {
+        if (d?.instagram) setInstagram(d.instagram)
+        if (String(d?.whatsapp ?? '').replace(/\D/g, '')) setWhatsapp(String(d.whatsapp).replace(/\s+/g, ' ').trim())
+        if (d?.email) setEmail(String(d.email).trim())
+      })
       .catch(() => {})
     fetch('/api/checkout/stripe-status')
       .then((r) => (r.ok ? r.json() : null))
@@ -96,6 +103,8 @@ export function Footer(_props: { content?: FooterContent }) {
   }))
   const logos = PAYMENT_LOGOS.filter(({ key }) => (payment ? LOGO_NEEDS[key]?.(payment.methods, payment.bizum) : key === 'visa' || key === 'mastercard'))
   const instagramHref = normalizeInstagramHref(instagram)
+  const WHATSAPP_HREF = waHref(whatsapp)
+  const WHATSAPP_DISPLAY = whatsapp
 
   return (
     <footer className="kids border-t border-[#efe7da] bg-[#FAF8F5]">
@@ -136,7 +145,7 @@ export function Footer(_props: { content?: FooterContent }) {
           <div id="ayuda-soporte" className="scroll-mt-24">
             <h2 className="font-kids text-xl font-bold text-[#23263f]">Ayuda y atención al cliente</h2>
             <p className="mt-1 text-xs text-[#565a78]">Atención personalizada desde España.</p>
-            <LinkList items={AYUDA} />
+            <LinkList items={ayuda(WHATSAPP_HREF)} />
           </div>
           <div>
             <h2 className="font-kids text-xl font-bold text-[#23263f]">Legal y transparencia</h2>

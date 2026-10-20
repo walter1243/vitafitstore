@@ -49,7 +49,7 @@ async function sendEmail(sendgridKey: string, to: string, subject: string, body:
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${sendgridKey}` },
       body: JSON.stringify({
         personalizations: [{ to: [{ email: to }] }],
-        from: { email: 'noreply@vitafitstore.es', name: 'Nuestra Tienda' },
+        from: { email: 'pedidos@kitoys3d.com', name: 'Kitoys 3D' },
         subject,
         content: [{ type: 'text/plain', value: body }],
       }),

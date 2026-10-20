@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 const DEFAULT_SETTINGS = {
-  storeName: "Nuestra Tienda",
+  storeName: "Kitoys 3D",
   logoUrl: "",
   // "icone_nome": logo pequeno redondo + nome da loja ao lado (padrao).
   // "logo_direto": a imagem do logo sozinha, do jeito que ela e (ex: um
@@ -14,7 +14,7 @@ const DEFAULT_SETTINGS = {
   logoStyle: "logo_direto",
   themeColor: "#c2410c",
   instagram: "",
-  whatsapp: "+34 601 678 657",
+  whatsapp: "+34 678 68 4704",
   email: "",
   whatsappFloatingEnabled: true,
   whatsappGreeting: "Hola! Bienvenido. En que puedo ayudarte hoy?",

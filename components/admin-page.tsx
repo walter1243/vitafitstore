@@ -3054,7 +3054,7 @@ function AutomationSection() {
               <Globe size={14} className="text-amber-300" /> Webhook de rastreio do fornecedor
             </p>
             <p className="mt-2 break-all rounded border border-amber-500/20 bg-[#0f1117] px-3 py-2 font-mono text-xs text-amber-100/90">
-              POST https://vitafitstore.vercel.app/api/webhook/tracking
+              POST https://www.kitoys3d.com/api/webhook/tracking
             </p>
             <p className="mt-2 text-xs text-amber-200/80">
               Body: <code className="font-mono">{'{ "fornecedor_pedido_id": "ID", "codigo_rastreio": "AA000000000BR", "transportadora": "Correios" }'}</code>
@@ -4273,7 +4273,7 @@ function SettingsSection({
         setLogoUrl(data?.logoUrl ?? '');
         setLogoStyle(data?.logoStyle === 'icone_nome' ? 'icone_nome' : 'logo_direto');
         setIg(data?.instagram ?? '');
-        setWa(data?.whatsapp ?? '+34 601 678 657');
+        setWa(data?.whatsapp ?? '+34 678 68 4704');
         setEmail(data?.email ?? '');
         setWaFloatingEnabled(Boolean(data?.whatsappFloatingEnabled ?? true));
         setWaGreeting(data?.whatsappGreeting ?? 'Hola! Bienvenido. En que puedo ayudarte hoy?');
@@ -4488,7 +4488,7 @@ function SettingsSection({
         <div className="space-y-4">
           {[
             { label: 'Instagram', value: ig, setter: setIg, ph: '@cestayencanto' },
-            { label: 'WhatsApp', value: wa, setter: setWa, ph: '+34 601 678 657' },
+            { label: 'WhatsApp', value: wa, setter: setWa, ph: '+34 678 68 4704' },
             { label: 'E-mail', value: email, setter: setEmail, ph: 'contato@cestayencanto.com' },
           ].map(f => (
             <div key={f.label}>

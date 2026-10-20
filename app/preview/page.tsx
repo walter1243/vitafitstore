@@ -1,63 +1,26 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { Header } from '@/components/header'
-import HeroVideo from '@/components/hero-video'
-import { GiftBasketBanner } from '@/components/gift-basket-banner'
-import { DestacadosSection } from '@/components/destacados-section'
-import { AboutSection } from '@/components/about-section'
-import { TrustBadges } from '@/components/trust-badges'
-import ProductCarousels from '@/components/product-carousels'
-import { CategorySpotlight } from '@/components/category-spotlight'
-import { FeaturedProductsGrid } from '@/components/featured-products-grid'
 import { Footer } from '@/components/footer'
-import type { SiteContent } from '@/lib/site-content-defaults'
+import { KidsStorefront } from '@/components/kids/kids-storefront'
+import { KidsHowItsMade } from '@/components/kids/kids-how-its-made'
 
-// Preview-only surface: the admin panel posts unpublished draft content into
-// this window via postMessage so an editor can see changes before publishing.
-// Never linked publicly and excluded from robots — see app/robots.ts.
-
+// "Prévia da loja" do admin (iframe em components/configuracoes/ContentEditor):
+// mostra a mesma vitrine da pagina inicial (app/page.tsx). Setores, colecoes,
+// produtos e contatos vem do que esta salvo no admin.
+// Nunca linkada publicamente e fora do robots — ver app/robots.ts.
 export default function PreviewPage() {
-  const [content, setContent] = useState<SiteContent | null>(null)
-
-  useEffect(() => {
-    function onMessage(e: MessageEvent) {
-      if (e.data?.type !== 'STORE_PREVIEW_CONTENT') return
-      setContent(e.data.content as SiteContent)
-    }
-    window.addEventListener('message', onMessage)
-    // Tell the parent we're ready to receive content (in case it already loaded).
-    window.parent?.postMessage({ type: 'STORE_PREVIEW_READY' }, '*')
-    return () => window.removeEventListener('message', onMessage)
-  }, [])
-
-  if (!content) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#FAF8F5] text-sm text-slate-400">
-        Carregando prévia...
-      </div>
-    )
-  }
-
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-white">
       <div className="sticky top-0 z-[100] bg-amber-500 py-1.5 text-center text-xs font-semibold text-black">
-        Prévia — estas alterações ainda não foram publicadas
+        Prévia da loja
       </div>
       <Header />
-      <main className="flex-1">
-        <HeroVideo content={content.hero} />
-        <TrustBadges data={content.trustBadges} />
-        <section id="productos">
-          <ProductCarousels />
-        </section>
-        <DestacadosSection data={content.destaques} />
-        <CategorySpotlight />
-        <GiftBasketBanner data={content.giftBanner} />
-        <FeaturedProductsGrid />
-        <AboutSection data={content.about} />
+      <main className="kids flex-1">
+        <KidsStorefront />
+        <KidsHowItsMade />
       </main>
-      <Footer content={content.footer} />
+      <Footer />
     </div>
   )
 }
