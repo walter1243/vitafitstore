@@ -137,7 +137,7 @@ export function CollectionSpotlight({ slug, count, products, primaryHref, primar
 
       {products && products.length > 0 && (
         <div data-reveal className="relative z-10 mt-12 w-full max-w-6xl rounded-[32px] bg-white p-5 text-left shadow-[0_18px_50px_rgba(35,38,63,0.10)] sm:mt-14 sm:p-8">
-          <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+          <div className={`mb-6 flex flex-wrap items-end gap-3 ${products.length >= SHELF_COUNT ? 'justify-between' : 'justify-center text-center'}`}>
             <div>
               <h3 className="text-2xl font-bold text-[#23263f] sm:text-3xl">¡Llévatelo a casa!</h3>
               <p className="mt-1 text-sm text-[#565a78] sm:text-base">
@@ -150,7 +150,8 @@ export function CollectionSpotlight({ slug, count, products, primaryHref, primar
               </Link>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 lg:grid-cols-4">
+          {/* Poucos produtos: ficam centralizados, sem buraco do lado. */}
+          <div className={products.length >= SHELF_COUNT ? 'grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 lg:grid-cols-4' : 'flex flex-wrap justify-center gap-x-4 gap-y-8 sm:gap-x-6 [&>*]:w-[calc(50%-0.5rem)] sm:[&>*]:w-[240px]'}>
             {products.slice(0, SHELF_COUNT).map((p) => (
               <KidsProductCard key={p.id} product={p} soft={softOf(collection)} />
             ))}
