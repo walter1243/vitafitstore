@@ -32,7 +32,7 @@ export function KidsStorefront() {
   return (
     <>
       {/* Abertura: um card por setor (Infantil, Hogar...), cada um no seu visual. */}
-      <SectorCards sectors={visible} homeImages={loose.map((p) => p.image).filter(Boolean)} />
+      <SectorCards sectors={visible} homeImages={loose.map((p) => p.image).filter((s): s is string => Boolean(s))} />
 
       <div>
         {visible.map((sector, si) => (
