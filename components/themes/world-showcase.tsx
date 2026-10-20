@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -83,7 +83,7 @@ function Decor({ t, kids }: { t: SectorTheme; kids: boolean }) {
 type WorldSector = Pick<Sector, 'style' | 'content'> & { collections?: SiteCollection[] };
 
 export function WorldShowcase({ sector, products }: { sector?: WorldSector | null; products?: Product[] }) {
-  // Produtos do mundo (todas as colecoes dele), pra vender no meio da vitrine.
+  // Produtos do mundo (todas as colecoes dele), pra vender junto das fotos.
   const { products: all } = useStoreProducts();
   const { collectionForProduct } = useSectors();
   const list = useMemo(() => {
@@ -97,140 +97,178 @@ export function WorldShowcase({ sector, products }: { sector?: WorldSector | nul
   const t = themeFor(sector.style) ?? KIDS_THEME;
   const s = parseWorldContent(sector.content, sector.style).showcase;
   if (!s.enabled) return null;
-  const card = kids || t.key === 'llaveros' ? '#ffffff' : t.bg;
-  const [first, ...rest] = s.shots;
+  const surface = kids || t.key === 'llaveros' ? '#ffffff' : t.bg;
+  const collections = sector.collections ?? [];
+  // Beneficios que sobram (mais blocos do que fotos) viram selos.
+  const extraTiles = s.tiles.slice(s.shots.length);
 
   return (
-    <section className="relative overflow-hidden px-4 py-20 sm:px-6 sm:py-24 lg:px-8" style={{ background: t.bgAlt, color: t.ink }}>
-      <Decor t={t} kids={kids} />
-      <div className="relative mx-auto max-w-6xl">
-        <div className="mx-auto mb-12 max-w-2xl text-center">
+    <div style={{ background: t.bgAlt, color: t.ink }}>
+      {/* Abertura */}
+      <section className="relative overflow-hidden px-4 pb-8 pt-24 sm:px-6 sm:pt-32 lg:px-8">
+        <Decor t={t} kids={kids} />
+        <div className="relative mx-auto max-w-3xl text-center">
           {s.kicker && <p className="text-2xl sm:text-3xl" style={{ fontFamily: t.kickerFont, color: t.accent }}>{s.kicker}</p>}
-          {s.title && <h2 className="mt-1 text-4xl font-semibold sm:text-5xl" style={{ fontFamily: t.heading }}>{s.title}</h2>}
-          {s.intro && <p className="mt-4 text-lg leading-relaxed" style={{ color: t.muted }}>{s.intro}</p>}
+          {s.title && <h2 className="mt-2 text-4xl font-semibold leading-tight sm:text-6xl" style={{ fontFamily: t.heading }}>{s.title}</h2>}
+          {s.intro && <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed sm:text-xl" style={{ color: t.muted }}>{s.intro}</p>}
         </div>
+      </section>
 
-        {/* Bento: foto/video grande + as outras + blocos de beneficio */}
-        {(first || s.tiles.length > 0) && (
-          <div className={`grid gap-4 ${first ? 'md:grid-cols-6' : ''}`}>
-            {first && (
-              <figure className="relative aspect-[4/5] overflow-hidden md:col-span-3 md:aspect-auto" style={{ borderRadius: t.radius, background: t.surface, minHeight: 420 }}>
-                <MediaFill media={first} alt={first.alt || first.caption || 'Foto de uso'} sizes="(min-width: 768px) 50vw, 92vw" />
-                {first.caption && <figcaption className="absolute inset-x-3 bottom-3 rounded-2xl bg-white/90 px-4 py-2.5 text-sm font-semibold backdrop-blur" style={{ color: t.ink }}>{first.caption}</figcaption>}
-              </figure>
-            )}
-            <div className={`grid gap-4 ${first ? 'md:col-span-3' : ''}`}>
-              {rest.map((shot) => (
-                <figure key={shot.url} className="relative aspect-[4/3] overflow-hidden" style={{ borderRadius: t.radius, background: t.surface }}>
-                  <MediaFill media={shot} alt={shot.alt || shot.caption || 'Foto de uso'} sizes="(min-width: 768px) 50vw, 92vw" />
-                  {shot.caption && <figcaption className="absolute inset-x-3 bottom-3 rounded-2xl bg-white/90 px-4 py-2.5 text-sm font-semibold backdrop-blur" style={{ color: t.ink }}>{shot.caption}</figcaption>}
+      {/* Uma foto/video por vez, alternando os lados, com o texto dela e o produto */}
+      {s.shots.map((shot, i) => {
+        const tile = s.tiles[i];
+        const Icon = tile ? TILE_ICON[tile.icon] ?? Sparkles : Sparkles;
+        const product = list[i];
+        const flip = i % 2 === 1;
+        return (
+          <section key={shot.url + i} className="px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+            <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-12 lg:gap-16">
+              <div className={`relative lg:col-span-7 ${flip ? 'lg:order-2' : ''}`}>
+                {/* forma de fundo deslocada (profundidade) */}
+                <span
+                  className={`absolute -bottom-5 ${flip ? '-left-5' : '-right-5'} h-[85%] w-[85%]`}
+                  style={{ borderRadius: t.radius, background: kids ? '#FFD84D' : t.surface, opacity: kids ? 1 : 0.9 }}
+                  aria-hidden="true"
+                />
+                <figure className="relative aspect-[5/4] overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.12)]" style={{ borderRadius: t.radius, background: t.surface }}>
+                  <MediaFill media={shot} alt={shot.alt || shot.caption || 'Foto de uso'} sizes="(min-width: 1024px) 58vw, 92vw" priority={i === 0} />
                 </figure>
-              ))}
-              {s.tiles.length > 0 && (
-                <div className={`grid gap-4 ${s.tiles.length === 3 ? 'sm:grid-cols-3' : s.tiles.length === 2 ? 'sm:grid-cols-2' : ''}`}>
-                  {s.tiles.map(({ icon, title, text }) => {
-                    const Icon = TILE_ICON[icon] ?? Sparkles;
-                    return (
-                      <div key={title} className="flex flex-col p-5" style={{ borderRadius: t.radius, background: card, boxShadow: card === '#ffffff' ? '0 10px 28px rgba(30,27,75,0.08)' : undefined }}>
-                        <span className="flex h-11 w-11 items-center justify-center rounded-2xl" style={{ background: t.cta, color: t.ctaText }}>
-                          <Icon className="h-5 w-5" aria-hidden="true" />
-                        </span>
-                        <p className="mt-4 text-lg font-semibold leading-snug" style={{ fontFamily: t.heading }}>{title}</p>
-                        {text && <p className="mt-1 text-sm leading-relaxed" style={{ color: t.muted }}>{text}</p>}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+                {/* produto de verdade "pendurado" na foto */}
+                {product && <FloatingProduct product={product} t={t} side={flip ? 'right' : 'left'} />}
+              </div>
+
+              <div className={`lg:col-span-5 ${flip ? 'lg:order-1' : ''}`}>
+                <p className="text-sm font-bold uppercase tracking-[0.2em]" style={{ color: t.accent }}>{String(i + 1).padStart(2, '0')}</p>
+                {tile ? (
+                  <>
+                    <span className="mt-5 flex h-14 w-14 items-center justify-center rounded-2xl" style={{ background: t.cta, color: t.ctaText }}>
+                      <Icon className="h-7 w-7" aria-hidden="true" />
+                    </span>
+                    <h3 className="mt-6 text-3xl font-semibold leading-tight sm:text-4xl" style={{ fontFamily: t.heading }}>{tile.title}</h3>
+                    {tile.text && <p className="mt-4 text-lg leading-relaxed" style={{ color: t.muted }}>{tile.text}</p>}
+                    {shot.caption && <p className="mt-5 text-xl" style={{ fontFamily: t.kickerFont, color: t.accent }}>{shot.caption}</p>}
+                  </>
+                ) : (
+                  shot.caption && <h3 className="mt-4 text-3xl font-semibold leading-tight sm:text-4xl" style={{ fontFamily: t.heading }}>{shot.caption}</h3>
+                )}
+                {product && (
+                  <Link
+                    href={`/producto/${product.id}-${product.slug}`}
+                    className="mt-8 inline-flex min-h-12 items-center rounded-full px-7 text-[15px] font-bold transition-opacity hover:opacity-90"
+                    style={{ background: t.cta, color: t.ctaText }}
+                  >
+                    {product.personalize?.enabled ? 'Personalizar el mío' : 'Lo quiero'}
+                  </Link>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          </section>
+        );
+      })}
 
-        <ShopBlock t={t} kids={kids} products={list} collections={sector.collections ?? []} />
+      {extraTiles.length > 0 && (
+        <section className="px-4 py-10 sm:px-6 lg:px-8">
+          <ul className="mx-auto grid max-w-6xl gap-5 sm:grid-cols-3">
+            {extraTiles.map(({ icon, title, text }) => {
+              const Icon = TILE_ICON[icon] ?? Sparkles;
+              return (
+                <li key={title} className="p-7" style={{ borderRadius: t.radius, background: surface }}>
+                  <Icon className="h-8 w-8" style={{ color: t.accent }} aria-hidden="true" />
+                  <p className="mt-4 text-xl font-semibold" style={{ fontFamily: t.heading }}>{title}</p>
+                  {text && <p className="mt-2 text-base leading-relaxed" style={{ color: t.muted }}>{text}</p>}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
 
-        {s.steps.length > 0 && (
-          <div className="mt-16">
-            <h3 className="mb-8 text-center text-3xl font-semibold" style={{ fontFamily: t.heading }}>Así de fácil</h3>
-            <ol className={`grid gap-4 ${s.steps.length === 3 ? 'md:grid-cols-3' : s.steps.length === 2 ? 'md:grid-cols-2' : ''}`}>
+      {/* Comprar: so quando o mundo ja tem produto */}
+      {list.length > 0 && <ShopBlock t={t} kids={kids} products={list} collections={collections} />}
+
+      {s.steps.length > 0 && (
+        <section className="px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
+          <div className="mx-auto max-w-6xl">
+            <h3 className="mb-14 text-center text-3xl font-semibold sm:text-4xl" style={{ fontFamily: t.heading }}>Así de fácil</h3>
+            <ol className={`relative grid gap-10 ${s.steps.length === 3 ? 'md:grid-cols-3' : s.steps.length === 2 ? 'md:grid-cols-2' : ''}`}>
+              {/* linha ligando os passos */}
+              {s.steps.length > 1 && (
+                <span className="absolute left-[16%] right-[16%] top-8 hidden border-t-2 border-dashed md:block" style={{ borderColor: `${t.accent}55` }} aria-hidden="true" />
+              )}
               {s.steps.map((step, i) => (
-                <li key={step.title} className="relative p-6" style={{ borderRadius: t.radius, background: card }}>
-                  <span className="flex h-12 w-12 items-center justify-center rounded-full text-xl font-bold" style={{ background: t.accent, color: '#fff', fontFamily: t.heading }}>{i + 1}</span>
-                  <p className="mt-4 text-xl font-semibold" style={{ fontFamily: t.heading }}>{step.title}</p>
-                  {step.text && <p className="mt-1 text-base leading-relaxed" style={{ color: t.muted }}>{step.text}</p>}
+                <li key={step.title} className="relative text-center">
+                  <span className="relative mx-auto flex h-16 w-16 items-center justify-center rounded-full text-2xl font-bold shadow-[0_10px_24px_rgba(0,0,0,0.12)]" style={{ background: t.accent, color: '#fff', fontFamily: t.heading }}>{i + 1}</span>
+                  <p className="mt-6 text-2xl font-semibold" style={{ fontFamily: t.heading }}>{step.title}</p>
+                  {step.text && <p className="mx-auto mt-2 max-w-xs text-base leading-relaxed" style={{ color: t.muted }}>{step.text}</p>}
                 </li>
               ))}
             </ol>
           </div>
-        )}
+        </section>
+      )}
 
-        {s.trust && (
-          <ul className="mt-16 grid gap-3 rounded-[28px] p-5 sm:grid-cols-2 lg:grid-cols-4" style={{ background: t.ink, color: '#ffffff' }}>
+      {s.trust && (
+        <section className="px-4 pb-24 pt-4 sm:px-6 lg:px-8">
+          <ul className="mx-auto grid max-w-6xl gap-6 rounded-[32px] p-8 sm:grid-cols-2 lg:grid-cols-4" style={{ background: t.ink, color: '#ffffff' }}>
             {TRUST.map(({ Icon, title, text }) => (
-              <li key={title} className="flex items-start gap-3 p-2">
-                <Icon className="mt-0.5 h-6 w-6 shrink-0" style={{ color: t.key === 'mascotas' && !kids ? '#FDE68A' : kids || t.key === 'llaveros' ? '#FDBA74' : '#e8d3b0' }} aria-hidden="true" />
+              <li key={title} className="flex items-start gap-3">
+                <Icon className="mt-0.5 h-7 w-7 shrink-0" style={{ color: t.key === 'mascotas' && !kids ? '#FDE68A' : kids || t.key === 'llaveros' ? '#FDBA74' : '#e8d3b0' }} aria-hidden="true" />
                 <span>
-                  <span className="block font-semibold">{title}</span>
+                  <span className="block text-base font-semibold">{title}</span>
                   <span className="block text-sm text-white/75">{text}</span>
                 </span>
               </li>
             ))}
           </ul>
-        )}
-      </div>
-    </section>
+        </section>
+      )}
+    </div>
   );
 }
 
-// "Comprelo ya": os produtos do mundo no meio da vitrine (cards no visual do
-// mundo, com Anadir/Personalizar). Sem produto ainda: aviso honesto + WhatsApp.
+// Card pequeno de um produto real em cima da foto (liga a imagem a compra).
+function FloatingProduct({ product, t, side }: { product: Product; t: SectorTheme; side: 'left' | 'right' }) {
+  return (
+    <Link
+      href={`/producto/${product.id}-${product.slug}`}
+      className={`absolute -bottom-8 ${side === 'left' ? 'left-4 sm:-left-6' : 'right-4 sm:-right-6'} flex w-[250px] items-center gap-3 bg-white p-3 shadow-[0_18px_40px_rgba(0,0,0,0.18)] transition-transform duration-200 hover:-translate-y-1 motion-reduce:hover:translate-y-0`}
+      style={{ borderRadius: '20px' }}
+    >
+      <span className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl" style={{ background: t.surface }}>
+        <Image src={product.mainImage ?? product.image} alt="" fill sizes="64px" className="object-cover" />
+      </span>
+      <span className="min-w-0">
+        <span className="line-clamp-2 block text-sm font-semibold leading-snug" style={{ color: t.ink, fontFamily: t.heading }}>{product.name}</span>
+        <span className="mt-0.5 block text-base font-bold" style={{ color: t.accent }}>{product.price.toFixed(2)}€</span>
+      </span>
+    </Link>
+  );
+}
+
+// "Compralo ya": os produtos do mundo numa faixa propria, com espaco.
 function ShopBlock({ t, kids, products, collections }: { t: SectorTheme; kids: boolean; products: Product[]; collections: SiteCollection[] }) {
-  const [wa, setWa] = useState('34678684704');
-  useEffect(() => {
-    fetch('/api/store-settings').then((r) => (r.ok ? r.json() : null)).then((d) => {
-      const digits = String(d?.whatsapp ?? '').replace(/\D/g, '');
-      if (digits) setWa(digits);
-    }).catch(() => {});
-  }, []);
   const shown = products.slice(0, 8);
   const more = collections[0] ? `/coleccion/${collections[0].slug}` : '';
-
   return (
-    <div className="mt-16">
-      <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-2xl" style={{ fontFamily: t.kickerFont, color: t.accent }}>{products.length ? 'listo para pedir' : 'muy pronto'}</p>
-          <h3 className="text-3xl font-semibold sm:text-4xl" style={{ fontFamily: t.heading }}>Cómpralo ya</h3>
+    <section className="px-4 py-20 sm:px-6 sm:py-24 lg:px-8" style={{ background: kids ? '#FFE7A8' : t.bg }}>
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-12 flex flex-wrap items-end justify-between gap-6">
+          <div>
+            <p className="text-2xl" style={{ fontFamily: t.kickerFont, color: t.accent }}>listo para pedir</p>
+            <h3 className="mt-1 text-4xl font-semibold sm:text-5xl" style={{ fontFamily: t.heading }}>Cómpralo ya</h3>
+          </div>
+          {products.length > shown.length && more && (
+            <Link href={more} className="inline-flex min-h-12 items-center rounded-full px-6 text-sm font-bold" style={{ background: t.cta, color: t.ctaText }}>
+              Ver los {products.length}
+            </Link>
+          )}
         </div>
-        {products.length > shown.length && more && (
-          <Link href={more} className="inline-flex min-h-11 items-center rounded-full px-5 text-sm font-bold" style={{ background: t.cta, color: t.ctaText }}>
-            Ver los {products.length}
-          </Link>
-        )}
-      </div>
-
-      {shown.length > 0 ? (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 lg:grid-cols-4">
+        <div className={`grid gap-x-6 gap-y-10 ${shown.length === 1 ? 'mx-auto max-w-xs' : shown.length === 2 ? 'mx-auto max-w-2xl grid-cols-2' : 'grid-cols-2 lg:grid-cols-4'}`}>
           {shown.map((p) =>
             kids ? <KidsProductCard key={p.id} product={p} accent={accentFor(collections[0])} /> : <ThemedProductCard key={p.id} product={p} theme={t} />,
           )}
         </div>
-      ) : (
-        <div className="flex flex-col items-center gap-4 p-8 text-center sm:flex-row sm:text-left" style={{ borderRadius: t.radius, background: kids || t.key === 'llaveros' ? '#ffffff' : t.bg }}>
-          <div className="flex-1">
-            <p className="text-xl font-semibold" style={{ fontFamily: t.heading }}>Estamos preparando los primeros modelos</p>
-            <p className="mt-1 text-base" style={{ color: t.muted }}>¿Quieres uno ya? Escríbenos y te lo hacemos a medida.</p>
-          </div>
-          <a
-            href={`https://wa.me/${wa}?text=${encodeURIComponent('¡Hola! Me interesa un producto personalizado de Kitoys 3D.')}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex min-h-12 shrink-0 items-center rounded-full px-6 text-sm font-bold"
-            style={{ background: t.cta, color: t.ctaText }}
-          >
-            Pedir por WhatsApp
-          </a>
-        </div>
-      )}
-    </div>
+      </div>
+    </section>
   );
 }
