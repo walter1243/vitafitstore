@@ -173,7 +173,7 @@ export function ThemedCollection({ collection, theme, products = [], showCarouse
       <section className={`px-4 pb-20 sm:px-6 lg:px-8 ${top}`} style={{ background: theme.bgAlt }}>
         <div className="mx-auto max-w-6xl">
           <div className="grid gap-4 sm:grid-cols-4 sm:grid-rows-2" style={{ minHeight: 420 }}>
-            <div className="relative overflow-hidden sm:col-span-2 sm:row-span-2" style={{ borderRadius: theme.radius, background: theme.surface, minHeight: 300 }}>
+            <div className={`relative overflow-hidden ${photos.length > 1 ? 'sm:col-span-2' : 'sm:col-span-4'} sm:row-span-2`} style={{ borderRadius: theme.radius, background: theme.surface, minHeight: 300 }}>
               <Media image={photos[0]} video={collection.videoUrl} alt={collection.name} priority={priority} sizes="(min-width: 640px) 50vw, 92vw" />
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#2a1002]/85 to-transparent p-6 pt-20 text-white">
                 <p className="text-2xl text-[#FDE68A]" style={{ fontFamily: theme.kickerFont }}>{collection.shortName}</p>
