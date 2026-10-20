@@ -1,5 +1,5 @@
 'use client';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Home, Printer } from 'lucide-react';
 import { softOf } from '@/lib/sectors-shared';
@@ -29,6 +29,12 @@ export function CollectionCatalog({ slug }: { slug: string }) {
   const [group, setGroup] = useState<string>('todo');
   const [sort, setSort] = useState<Sort>('destacados');
 
+  // Veio do menu "Categorías" (?cat=Nome): ja abre filtrado nela.
+  useEffect(() => {
+    const cat = new URLSearchParams(window.location.search).get('cat');
+    if (cat) setGroup(cat);
+  }, []);
+
   const items = useMemo(
     () => products.filter((p) => collectionForCategory(p.category)?.slug === slug).map(toStoreProduct),
     [products, slug, collectionForCategory],
@@ -44,11 +50,13 @@ export function CollectionCatalog({ slug }: { slug: string }) {
   }, [items, collection.shortName]);
 
   const visible = useMemo(() => {
-    const list = group === 'todo' ? items : items.filter((p) => (p.categoryLabel || collection.shortName) === group);
+    // Categoria que nao existe mais nesta colecao (link antigo) = mostra tudo.
+    const known = groups.some(([name]) => name === group);
+    const list = group === 'todo' || !known ? items : items.filter((p) => (p.categoryLabel || collection.shortName) === group);
     if (sort === 'precio-asc') return [...list].sort((a, b) => a.price - b.price);
     if (sort === 'precio-desc') return [...list].sort((a, b) => b.price - a.price);
     return list;
-  }, [items, group, sort, collection.shortName]);
+  }, [items, groups, group, sort, collection.shortName]);
 
   // Outras colecoes do MESMO setor pra continuar navegando.
   const sector = getSector(collection.sectorId);

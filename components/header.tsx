@@ -5,6 +5,7 @@ import { ShoppingCart, Menu, X, Smile } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 import { useSectors } from '@/components/kids/sectors-context';
 import { softOf } from '@/lib/sectors-shared';
+import { CategoryChips, CollectionsMenuPanel, useMenuCategories } from '@/components/kids/menu-panel';
 
 
 // Logo da marca (Kitoys 3D) mostrado inteiro no modo "logo direto". A logo
@@ -53,6 +54,7 @@ export function Header() {
   }, [colOpen]);
   const { totalItems, setIsCartOpen } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const mobileCategories = useMenuCategories(mobileOpen);
   const [scrolled, setScrolled] = useState(false);
   const cachedBranding = readCachedBranding();
   const [storeName, setStoreName] = useState(cachedBranding?.storeName ?? 'Nuestra Tienda');
@@ -221,48 +223,17 @@ export function Header() {
           </div>
         </div>
 
-        {/* Painel "Colecciones": uma coluna por setor, com as colecoes dele */}
-        {colOpen && (
-          <div
-            id="menu-colecciones"
-            className="absolute inset-x-0 top-full hidden border-t border-[#efe7da] bg-white shadow-[0_24px_48px_rgba(35,38,63,0.12)] md:block"
-            onMouseEnter={openCols}
-            onMouseLeave={closeColsSoon}
-          >
-            <div className="mx-auto grid max-w-7xl gap-10 px-8 py-8" style={{ gridTemplateColumns: `repeat(${Math.min(Math.max(menuSectors.length, 1), 4)}, minmax(0, 1fr))` }}>
-              {menuSectors.map((sector) => (
-                <div key={sector.id || sector.slug}>
-                  <Link href={`/sector/${sector.slug}`} onClick={() => setColOpen(false)} className="font-kids text-2xl font-bold text-[#23263f] hover:text-[#c2410c]">
-                    {sector.name}
-                  </Link>
-                  {sector.tagline && <p className="mt-0.5 text-sm text-[#565a78]">{sector.tagline}</p>}
-                  <ul className="mt-4 space-y-1">
-                    {sector.collections.map((c) => (
-                      <li key={c.slug}>
-                        <Link
-                          href={`/coleccion/${c.slug}`}
-                          onClick={() => setColOpen(false)}
-                          className="flex items-center gap-3 rounded-2xl p-2 transition-colors hover:bg-[#FFF8EF]"
-                        >
-                          <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl" style={{ background: softOf(c) }}>
-                            {(c.imageUrl || c.photoUrl) && (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={c.imageUrl || c.photoUrl} alt="" className="h-full w-full object-contain p-1" />
-                            )}
-                          </span>
-                          <span className="min-w-0">
-                            <span className="block truncate font-bold text-[#23263f]">{c.name}</span>
-                            {c.tagline && <span className="block truncate text-sm text-[#565a78]">{c.tagline}</span>}
-                          </span>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Painel "Colecciones": todas as colecoes lado a lado + categorias.
+            Fica montado (so escondido) pra brincadeira aberta dali continuar
+            aberta quando o painel fecha. */}
+        <div
+          id="menu-colecciones"
+          className={`kids absolute inset-x-0 top-full max-h-[75vh] overflow-y-auto border-t border-[#efe7da] bg-white shadow-[0_24px_48px_rgba(35,38,63,0.12)] ${colOpen ? 'hidden md:block' : 'hidden'}`}
+          onMouseEnter={openCols}
+          onMouseLeave={closeColsSoon}
+        >
+          <CollectionsMenuPanel open={colOpen} onNavigate={() => setColOpen(false)} />
+        </div>
         </div>
       </header>
 
@@ -306,6 +277,9 @@ export function Header() {
                   ))}
                 </div>
               ))}
+              {mobileCategories.length > 0 && (
+                <CategoryChips categories={mobileCategories} onNavigate={() => setMobileOpen(false)} className="mt-4 border-t border-[#efe7da] px-3 pt-4" />
+              )}
               <Link href="/#como-se-hace" onClick={() => setMobileOpen(false)} className={`${MOBILE_ITEM} mt-2`}>Nuestro taller</Link>
             </nav>
           </div>

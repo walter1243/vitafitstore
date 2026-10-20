@@ -33,7 +33,7 @@ export function CollectionImage({ slug, sizes, priority }: { slug: string; sizes
 // cor da colecao; "pill"/"pill-dark": pilula contornada dos destaques
 // estilo Apple (mesmo tamanho da pilula cheia ao lado).
 
-export function CollectionPlayButton({ slug, appearance = 'solid' }: { slug: string; appearance?: 'solid' | 'pill' | 'pill-dark' }) {
+export function CollectionPlayButton({ slug, appearance = 'solid' }: { slug: string; appearance?: 'solid' | 'pill' | 'pill-dark' | 'chip' }) {
   const [open, setOpen] = useState(false);
   const { getCollection } = useSectors();
   const collection = getCollection(slug);
@@ -44,7 +44,16 @@ export function CollectionPlayButton({ slug, appearance = 'solid' }: { slug: str
   const label = kind === 'colorear' ? '¡Pinta el dinosaurio!' : kind === 'encender' ? 'Enciende la lámpara' : '¡Pon la pieza que falta!';
   return (
     <>
-      {appearance === 'solid' ? (
+      {appearance === 'chip' ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-1.5 rounded-full border-2 border-[#1E1B4B] bg-white px-3.5 text-sm font-extrabold text-[#1E1B4B] transition-colors duration-200 hover:bg-[#1E1B4B] hover:text-white"
+        >
+          <Icon className="h-4 w-4" aria-hidden="true" />
+          Jugar
+        </button>
+      ) : appearance === 'solid' ? (
         <button
           type="button"
           onClick={() => setOpen(true)}
