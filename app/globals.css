@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Raleway:wght@300;400;500;600;700&family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Raleway:wght@300;400;500;600;700&family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800;900&family=Caveat:wght@600;700&family=Quicksand:wght@400;500;600;700&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @plugin '@tailwindcss/typography';
@@ -463,3 +463,22 @@ body:has(.lamp-dark) [data-slot="dialog-overlay"] {
 }
 .admin-alert-blink { animation: admin-alert-blink 1.1s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .admin-alert-blink { animation: none; } }
+
+/* Visual "Casa / Hogar" (ui-ux-pro-max: minimalista quente, Caveat so como
+   acento manuscrito + Quicksand). Vem depois de .kids pra ganhar dentro dele. */
+.hogar {
+  --h-ink: #2b2620;
+  --h-muted: #5f574e;
+  --h-sand: #f3ece2;
+  --h-cream: #fbf8f3;
+  --h-gold: #8a6a3a;
+  font-family: 'Quicksand', 'Nunito', system-ui, sans-serif;
+  color: var(--h-ink);
+}
+.hogar h1, .hogar h2, .hogar h3 {
+  font-family: 'Quicksand', 'Nunito', system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.font-script { font-family: 'Caveat', cursive; letter-spacing: 0; }

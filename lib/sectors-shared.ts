@@ -30,11 +30,21 @@ export type SiteCollection = {
   enabled: boolean;
 };
 
+// Visual do setor (site "coringa": mudou o setor, muda o design).
+// infantil = colorido em blocos; hogar = casa, minimalista quente.
+export type SectorStyle = 'infantil' | 'hogar';
+export const SECTOR_STYLES: { key: SectorStyle; label: string; hint: string }[] = [
+  { key: 'infantil', label: 'Infantil', hint: 'Colorido, em blocos, com brincadeiras' },
+  { key: 'hogar', label: 'Casa / Hogar', hint: 'Minimalista e aconchegante, tons neutros' },
+];
+export const sectorStyleOf = (v: unknown): SectorStyle => (v === 'hogar' ? 'hogar' : 'infantil');
+
 export type Sector = {
   id: number;
   slug: string;
   name: string;
   tagline: string;
+  style: SectorStyle;
   position: number;
   enabled: boolean;
   collections: SiteCollection[];
@@ -87,6 +97,7 @@ export const DEFAULT_SECTORS: Sector[] = [
     slug: 'infantil',
     name: 'Infantil',
     tagline: 'Juguetes y lámparas impresos en 3D para los peques',
+    style: 'infantil',
     position: 1,
     enabled: true,
     collections: [

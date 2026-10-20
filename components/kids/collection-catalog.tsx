@@ -8,6 +8,7 @@ import { useSectors } from './sectors-context';
 import { toStoreProduct } from '@/lib/store-product';
 import { KidsProductCard } from './kids-product-card';
 import { accentFor } from './palette';
+import { HomeProductCard } from './home-product-card';
 import { useStoreProducts } from './use-store-products';
 
 type Sort = 'destacados' | 'precio-asc' | 'precio-desc';
@@ -93,7 +94,7 @@ export function CollectionCatalog({ slug }: { slug: string }) {
       {visible.length > 0 ? (
         <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 lg:grid-cols-4">
           {visible.map((p) => (
-            <KidsProductCard
+            getSector(collection.sectorId)?.style === 'hogar' ? <HomeProductCard key={p.id} product={p} /> : <KidsProductCard
               key={p.id}
               product={p}
               accent={accentFor(collection)}

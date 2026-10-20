@@ -8,6 +8,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { type Product } from '@/lib/products';
 import { CollectionPlayButton } from './collection-play';
 import { ProductCarousel } from './product-carousel';
+import { HomeCollection } from './hogar-sections';
 import { accentFor, dots } from './palette';
 import { PILL } from './pill';
 import { useSectors } from './sectors-context';
@@ -66,6 +67,10 @@ export function CollectionSpotlight({ slug, count, products, primaryHref, primar
   }, []);
 
   if (!collection) return null;
+  // Setor com visual Casa / Hogar: layout editorial em vez do destaque infantil.
+  if (getSector(collection.sectorId)?.style === 'hogar') {
+    return <HomeCollection collection={collection} products={products} primaryHref={primaryHref} primaryLabel={primaryLabel} headingLevel={headingLevel} priority={priority} first={first} />;
+  }
   const Heading = headingLevel;
   const dark = collection.theme === 'dark';
   const photo = dark ? collection.photoUrl : '';

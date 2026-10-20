@@ -2,10 +2,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowDown, ArrowUp, Eye, EyeOff, ExternalLink, Loader2, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { Field, inputCls, textareaCls, MediaUploadField } from '@/components/configuracoes/content/shared';
-import { INTERACTIVE_OPTIONS, slugify, type Interactive, type Sector, type SiteCollection, type Theme } from '@/lib/sectors-shared';
+import { INTERACTIVE_OPTIONS, SECTOR_STYLES, slugify, type Interactive, type SectorStyle, type Sector, type SiteCollection, type Theme } from '@/lib/sectors-shared';
 
 type CollectionDraft = Omit<SiteCollection, 'id' | 'position'> & { id?: number };
-type SectorDraft = { id?: number; name: string; slug: string; tagline: string; enabled: boolean };
+type SectorDraft = { id?: number; name: string; slug: string; tagline: string; style: SectorStyle; enabled: boolean };
 
 const emptyCollection = (sectorId: number): CollectionDraft => ({
   sectorId,
@@ -91,7 +91,7 @@ export function AdminSectors() {
         </div>
         <button
           type="button"
-          onClick={() => setSectorDraft({ name: '', slug: '', tagline: '', enabled: true })}
+          onClick={() => setSectorDraft({ name: '', slug: '', tagline: '', style: 'infantil', enabled: true })}
           className="inline-flex items-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-500"
         >
           <Plus size={16} /> Novo setor
@@ -108,7 +108,7 @@ export function AdminSectors() {
                 <h3 className="text-lg font-semibold text-white">{s.name}</h3>
                 {!s.enabled && <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-white/60">oculto</span>}
               </div>
-              {s.tagline && <p className="text-xs text-white/50">{s.tagline}</p>}
+              <p className="text-xs text-white/50">{s.style === 'hogar' ? 'Visual: Casa / Hogar' : 'Visual: Infantil'}{s.tagline ? ` · ${s.tagline}` : ''}</p>
               <p className="mt-1 text-[11px] text-white/35">/sector/{s.slug}</p>
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -117,7 +117,7 @@ export function AdminSectors() {
               <button className={btn} disabled={busy} onClick={() => run({ action: 'saveSector', ...s, enabled: !s.enabled })}>
                 {s.enabled ? <><EyeOff size={14} /> Ocultar</> : <><Eye size={14} /> Mostrar</>}
               </button>
-              <button className={btn} disabled={busy} onClick={() => setSectorDraft({ id: s.id, name: s.name, slug: s.slug, tagline: s.tagline, enabled: s.enabled })}><Pencil size={14} /> Editar</button>
+              <button className={btn} disabled={busy} onClick={() => setSectorDraft({ id: s.id, name: s.name, slug: s.slug, tagline: s.tagline, style: s.style, enabled: s.enabled })}><Pencil size={14} /> Editar</button>
               <button
                 className={`${btn} hover:border-red-500/40 hover:text-red-300`}
                 disabled={busy}
@@ -229,6 +229,21 @@ function SectorForm({ draft, busy, onCancel, onSave }: { draft: SectorDraft; bus
       </Field>
       <Field label="Frase do setor" hint="Uma linha que aparece embaixo do nome.">
         <input className={inputCls} value={d.tagline} onChange={(e) => setD({ ...d, tagline: e.target.value })} placeholder="Piezas impresas en 3D para tu casa" />
+      </Field>
+      <Field label="Visual do setor" hint="Muda o design de todo o setor no site (faixa, coleções, cards e páginas).">
+        <div className="grid gap-2 sm:grid-cols-2">
+          {SECTOR_STYLES.map((o) => (
+            <button
+              key={o.key}
+              type="button"
+              onClick={() => setD({ ...d, style: o.key })}
+              className={`rounded-xl border px-3 py-2.5 text-left transition ${d.style === o.key ? 'border-green-500/60 bg-green-500/10 text-white' : 'border-white/10 text-white/60 hover:bg-white/5'}`}
+            >
+              <span className="block text-sm font-semibold">{o.label}</span>
+              <span className="block text-xs text-white/50">{o.hint}</span>
+            </button>
+          ))}
+        </div>
       </Field>
       <Field label="Endereço da página" hint={`kitoys3d.com/sector/${slugify(d.slug || d.name) || '...'}`}>
         <input className={inputCls} value={d.slug} onChange={(e) => setD({ ...d, slug: e.target.value })} placeholder={slugify(d.name) || 'gerado do nome'} />

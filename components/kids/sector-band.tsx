@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import { PILL } from './pill';
 import { dots } from './palette';
+import { HomeSectorBand } from './hogar-sections';
 import { type Sector } from '@/lib/sectors-shared';
 
 // Abertura de um setor na home: nome grande, a frase do setor e uma pilula
 // pra pagina dele. Bloco amarelo-sol com confete (paleta infantil).
 export function SectorBand({ sector, first, asTitle }: { sector: Sector; first?: boolean; asTitle?: boolean }) {
+  if (sector.style === 'hogar') return <HomeSectorBand sector={sector} first={first} asTitle={asTitle} />;
   const Heading = asTitle ? 'h1' : 'h2';
   return (
     <section

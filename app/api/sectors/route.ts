@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin-auth';
 import { ensureSectorTables, getSectors } from '@/lib/sectors';
-import { slugify } from '@/lib/sectors-shared';
+import { sectorStyleOf, slugify } from '@/lib/sectors-shared';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -44,15 +44,16 @@ export async function POST(req: NextRequest) {
       if (!slug) return NextResponse.json({ error: 'Nome do setor inválido.' }, { status: 400 });
       const tagline = str(body.tagline, 200);
       const enabled = body.enabled !== false;
+      const style = sectorStyleOf(body.style);
       const id = Number(body.id) || 0;
       const [clash] = await sql`SELECT id FROM sectors WHERE slug = ${slug} AND id <> ${id} LIMIT 1`;
       if (clash) return NextResponse.json({ error: 'Já existe um setor com esse endereço (slug).' }, { status: 409 });
       if (id) {
-        await sql`UPDATE sectors SET name = ${name}, slug = ${slug}, tagline = ${tagline}, enabled = ${enabled} WHERE id = ${id}`;
+        await sql`UPDATE sectors SET name = ${name}, slug = ${slug}, tagline = ${tagline}, enabled = ${enabled}, style = ${style} WHERE id = ${id}`;
       } else {
         await sql`
-          INSERT INTO sectors (name, slug, tagline, enabled, position)
-          VALUES (${name}, ${slug}, ${tagline}, ${enabled}, COALESCE((SELECT MAX(position) + 1 FROM sectors), 1))
+          INSERT INTO sectors (name, slug, tagline, enabled, style, position)
+          VALUES (${name}, ${slug}, ${tagline}, ${enabled}, ${style}, COALESCE((SELECT MAX(position) + 1 FROM sectors), 1))
         `;
       }
       return NextResponse.json(await getSectors(true), { headers: noStore });

@@ -1,5 +1,5 @@
 import { sql } from '@/lib/db';
-import { DEFAULT_SECTORS, type Sector, type SiteCollection } from '@/lib/sectors-shared';
+import { DEFAULT_SECTORS, sectorStyleOf, type Sector, type SiteCollection } from '@/lib/sectors-shared';
 
 export async function ensureSectorTables() {
   await sql`
@@ -33,6 +33,8 @@ export async function ensureSectorTables() {
       created_at TIMESTAMP DEFAULT NOW()
     )
   `;
+
+  await sql`ALTER TABLE sectors ADD COLUMN IF NOT EXISTS style TEXT NOT NULL DEFAULT 'infantil'`;
 
   // Primeira vez: preenche com o setor Infantil e as colecoes que ja
   // existiam no codigo, pra vitrine continuar igual depois da migracao.
@@ -88,6 +90,7 @@ export async function getSectors(includeDisabled = false): Promise<Sector[]> {
       slug: String(s.slug),
       name: String(s.name),
       tagline: String(s.tagline || ''),
+      style: sectorStyleOf(s.style),
       position: Number(s.position),
       enabled: Boolean(s.enabled),
       collections: cols.filter((c: Record<string, any>) => Number(c.sector_id) === Number(s.id)).map(toCollection),
