@@ -50,6 +50,11 @@ export function selectHomeCategory(name: string) {
 }
 
 const CARD = 'w-[260px] shrink-0 snap-start';
+const WORLD_COVER: Record<SectorTheme['key'], string> = {
+  hogar: '/images/sectors/hogar.jpg',
+  llaveros: '/images/sectors/llaveros.jpg',
+  mascotas: '/images/sectors/mascotas.png',
+};
 const BTN_KIDS = 'inline-flex min-h-10 items-center justify-center rounded-full bg-[#1E1B4B] px-4 text-sm font-extrabold text-white transition-colors duration-200 hover:bg-[#363a5c]';
 
 function KidsCollectionCard({ c, onNavigate }: { c: SiteCollection; onNavigate: () => void }) {
@@ -117,29 +122,14 @@ const ROW = '-mx-2 flex snap-x gap-4 overflow-x-auto px-2 pb-3 pt-1 [scrollbar-w
 // setor: Infantil (cards coloridos com brincadeira), Casa, Chaveiros, Pet...
 // Setores novos so aparecem quando tiverem produto.
 export function CollectionsMenuPanel({ open, onNavigate }: { open: boolean; onNavigate: () => void }) {
-  const { sectors, collectionForProduct } = useSectors();
-  const { products } = useStoreProducts();
+  const { sectors } = useSectors();
   const [opened, setOpened] = useState(false);
   useEffect(() => { if (open) setOpened(true); }, [open]);
   const homeCats = useHomeCategories(opened);
 
-  const firstImage = useMemo(() => {
-    const map: Record<string, string> = {};
-    for (const p of products) {
-      const c = collectionForProduct(p);
-      if (c && !map[c.slug] && p.image) map[c.slug] = p.image;
-    }
-    return map;
-  }, [products, collectionForProduct]);
-  const count = useMemo(() => {
-    const map: Record<string, number> = {};
-    for (const p of products) { const c = collectionForProduct(p); if (c) map[c.slug] = (map[c.slug] ?? 0) + 1; }
-    return map;
-  }, [products, collectionForProduct]);
-
-  const groups = sectors
-    .map((s) => (s.style === 'infantil' ? s : { ...s, collections: s.collections.filter((c) => (count[c.slug] ?? 0) > 0) }))
-    .filter((s) => s.collections.length > 0);
+  // Todas as colecoes de todos os setores aparecem (as novas tambem), so com
+  // o nome — os produtos ficam pra pagina da colecao.
+  const groups = sectors.filter((s) => s.collections.length > 0);
 
   return (
     <div className="mx-auto max-w-7xl space-y-2 px-8 py-6">
@@ -155,7 +145,7 @@ export function CollectionsMenuPanel({ open, onNavigate }: { open: boolean; onNa
                     key={c.slug}
                     t={t}
                     href={`/coleccion/${c.slug}`}
-                    image={c.imageUrl || c.photoUrl || firstImage[c.slug] || ''}
+                    image={c.imageUrl || c.photoUrl || WORLD_COVER[t.key]}
                     name={c.name}
                     sub={c.tagline}
                     cta={c.interactive === 'nombre' ? 'Personalizar' : 'Ver'}

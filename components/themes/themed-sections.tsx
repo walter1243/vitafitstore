@@ -32,7 +32,7 @@ function Media({ image, video, alt, priority, sizes, className = '' }: { image?:
 const THEME_COVER: Record<SectorTheme['key'], string> = {
   hogar: '/images/sectors/hogar.jpg',
   llaveros: '/images/sectors/llaveros.jpg',
-  mascotas: '',
+  mascotas: '/images/sectors/mascotas.png',
 };
 
 const pill = (t: SectorTheme, solid: boolean) => ({
@@ -151,7 +151,7 @@ export function ThemedCollection({ collection, theme, products = [], showCarouse
 
   // ── Mascotas: mural de fotos ───────────────────────────────────────────
   if (theme.key === 'mascotas') {
-    const photos = [collection.photoUrl || collection.imageUrl, ...products.map((p) => p.mainImage ?? p.image)].filter(Boolean).slice(0, 5) as string[];
+    const photos = [image, ...products.map((p) => p.mainImage ?? p.image)].filter(Boolean).slice(0, 5) as string[];
     // Ainda sem fotos nem produto: placa de exemplo com o nome, centralizada.
     if (photos.length === 0 && !collection.videoUrl) {
       return (

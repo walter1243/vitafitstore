@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react'
 import { Instagram, Lock, Mail, MessageCircle, Truck } from 'lucide-react'
 import { PAYMENT_LOGOS } from '@/components/payment-logos'
 import { useSectors } from '@/components/kids/sectors-context'
-import { useStoreProducts } from '@/components/kids/use-store-products'
 import { type FooterContent } from '@/lib/site-content-defaults'
 
 // Contato: vem do Admin → Editar loja (WhatsApp, e-mail, Instagram); estes
@@ -76,13 +75,7 @@ function LinkList({ items }: { items: FooterLink[] }) {
 // Setores e coleções, ayuda e legal), seguranca/pagamentos e contato.
 // `content` (do editor de conteudo) fica aceito por compatibilidade.
 export function Footer(_props: { content?: FooterContent }) {
-  const { sectors, collectionForProduct } = useSectors()
-  const { products } = useStoreProducts()
-  // Colecoes de setores novos (Casa, Chaveiros, Pet...) so entram com produto.
-  const withProducts = new Set(products.map((p) => collectionForProduct(p)?.slug).filter(Boolean))
-  const collections = sectors
-    .filter((s) => s.enabled)
-    .flatMap((s) => s.collections.filter((c) => c.enabled && (s.style === 'infantil' || withProducts.has(c.slug))))
+  const { collections } = useSectors()
   const [instagram, setInstagram] = useState('')
   const [whatsapp, setWhatsapp] = useState(DEFAULT_WHATSAPP)
   const [EMAIL, setEmail] = useState(DEFAULT_EMAIL)

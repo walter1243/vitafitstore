@@ -7,6 +7,7 @@ import { UpsellPopup } from '@/components/upsell-popup'
 import { WhatsAppFloating } from '@/components/whatsapp-floating'
 import { CollectionSpotlight } from '@/components/kids/collection-spotlight'
 import { SectorBand } from '@/components/kids/sector-band'
+import { WorldShowcase } from '@/components/themes/world-showcase'
 import { SectorsProvider } from '@/components/kids/sectors-context'
 import { getSectors } from '@/lib/sectors'
 import { getSiteContent } from '@/lib/site-content'
@@ -43,6 +44,7 @@ export default async function SectorPage({ params }: PageProps) {
           {sector.collections.map((c, i) => (
             <CollectionSpotlight key={c.slug} slug={c.slug} priority={i === 0} />
           ))}
+          <WorldShowcase style={sector.style} />
           {sector.collections.length === 0 && (
             <p className="px-4 pb-24 text-center text-lg text-[#565a78]">Muy pronto habrá colecciones en esta sección.</p>
           )}
