@@ -107,7 +107,10 @@ export function Footer(_props: { content?: FooterContent }) {
   const WHATSAPP_DISPLAY = whatsapp
 
   return (
-    <footer className="kids border-t border-[#efe7da] bg-[#FAF8F5]">
+    <footer className="kids bg-[#F0EBFF]">
+      <div className="flex h-2" aria-hidden="true">
+        {['#FFD84D', '#FF8FB8', '#7CC4FF', '#7EE2B8', '#B9A4FF', '#FF9F43'].map((c) => <span key={c} className="flex-1" style={{ background: c }} />)}
+      </div>
       {/* Marca */}
       <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 pb-8 pt-12 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">

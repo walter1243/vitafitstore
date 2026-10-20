@@ -1,12 +1,12 @@
 'use client';
 import { useMemo } from 'react';
-import { softOf } from '@/lib/sectors-shared';
 import { toStoreProduct } from '@/lib/store-product';
 import { CollectionSpotlight } from './collection-spotlight';
 import { KidsProductCard } from './kids-product-card';
 import { SectorBand } from './sector-band';
 import { useSectors } from './sectors-context';
 import { useStoreProducts } from './use-store-products';
+import { dots } from './palette';
 
 // Home organizada por setores (Admin → Setores e coleções): cada setor abre
 // com a sua faixa e depois vem um destaque de tela cheia por colecao — a
@@ -43,15 +43,16 @@ export function KidsStorefront() {
       </div>
 
       {loose.length > 0 && (
-        <section id="productos" className="scroll-mt-24 bg-white px-4 py-20 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-7xl">
+        <section id="productos" className="relative scroll-mt-24 bg-[#BFF0DA] px-4 py-20 sm:px-6 lg:px-8">
+          <div className="pointer-events-none absolute inset-0 opacity-60" style={dots('#6EE7B7')} aria-hidden="true" />
+          <div className="relative mx-auto max-w-7xl">
             <div className="mb-10 text-center">
               <h2 className="text-4xl font-bold text-[var(--k-ink)] sm:text-5xl">Más juguetes</h2>
               <p className="mt-2 text-lg text-[var(--k-muted)]">Recién salidos de nuestra impresora</p>
             </div>
             <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 lg:grid-cols-4">
               {loose.map((p) => (
-                <KidsProductCard key={p.id} product={toStoreProduct(p)} soft={softOf()} />
+                <KidsProductCard key={p.id} product={toStoreProduct(p)} />
               ))}
             </div>
           </div>

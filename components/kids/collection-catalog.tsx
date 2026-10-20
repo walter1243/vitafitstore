@@ -7,6 +7,7 @@ import { iconFor } from './collection-play';
 import { useSectors } from './sectors-context';
 import { toStoreProduct } from '@/lib/store-product';
 import { KidsProductCard } from './kids-product-card';
+import { accentFor } from './palette';
 import { useStoreProducts } from './use-store-products';
 
 type Sort = 'destacados' | 'precio-asc' | 'precio-desc';
@@ -95,7 +96,7 @@ export function CollectionCatalog({ slug }: { slug: string }) {
             <KidsProductCard
               key={p.id}
               product={p}
-              soft={soft}
+              accent={accentFor(collection)}
               tag={groups.length > 1 && group === 'todo' ? p.categoryLabel : undefined}
             />
           ))}

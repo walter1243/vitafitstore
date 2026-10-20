@@ -2,12 +2,13 @@
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { ShoppingBag } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { type Product } from '@/lib/products';
-import { softOf } from '@/lib/sectors-shared';
 import { CollectionPlayButton } from './collection-play';
 import { KidsProductCard } from './kids-product-card';
+import { accentFor, dots } from './palette';
 import { PILL } from './pill';
 import { useSectors } from './sectors-context';
 
@@ -135,29 +136,47 @@ export function CollectionSpotlight({ slug, count, products, primaryHref, primar
         </div>
       )}
 
-      {products && products.length > 0 && (
-        <div data-reveal className="relative z-10 mt-12 w-full max-w-6xl rounded-[32px] bg-white p-5 text-left shadow-[0_18px_50px_rgba(35,38,63,0.10)] sm:mt-14 sm:p-8">
-          <div className={`mb-6 flex flex-wrap items-end gap-3 ${products.length >= SHELF_COUNT ? 'justify-between' : 'justify-center text-center'}`}>
-            <div>
-              <h3 className="text-2xl font-bold text-[#23263f] sm:text-3xl">¡Llévatelo a casa!</h3>
-              <p className="mt-1 text-sm text-[#565a78] sm:text-base">
-                {products.length} {products.length === 1 ? 'producto' : 'productos'} de {collection.name.toLowerCase()} · impresos en 3D en nuestro taller
-              </p>
+      {products && products.length > 0 && (() => {
+        const accent = accentFor(collection);
+        const few = products.length < SHELF_COUNT;
+        return (
+          <div
+            data-reveal
+            className="relative z-10 mt-12 w-full max-w-6xl overflow-hidden rounded-[36px] border-[3px] border-[#1E1B4B] p-5 text-left sm:mt-14 sm:p-8"
+            style={{ background: accent.block, boxShadow: `8px 8px 0 #1E1B4B` }}
+          >
+            {/* confete de fundo */}
+            <div className="pointer-events-none absolute inset-0 opacity-60" style={dots(accent.dot)} aria-hidden="true" />
+            <div className="relative">
+              <div className={`mb-7 flex flex-wrap items-end gap-3 ${few ? 'flex-col items-center text-center' : 'justify-between'}`}>
+                <div className={few ? 'flex flex-col items-center' : ''}>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-[#1E1B4B] bg-white px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-[#1E1B4B]">
+                    <ShoppingBag className="h-3.5 w-3.5" aria-hidden="true" /> {collection.shortName}
+                  </span>
+                  <h3 className="mt-3 text-3xl font-bold text-[#1E1B4B] sm:text-4xl">¡Llévatelo a casa!</h3>
+                  <p className="mt-1 text-sm font-semibold text-[#1E1B4B]/80 sm:text-base">
+                    {products.length} {products.length === 1 ? 'producto' : 'productos'} · impresos en 3D en nuestro taller
+                  </p>
+                </div>
+                {products.length > SHELF_COUNT && (
+                  <Link
+                    href={`/coleccion/${collection.slug}`}
+                    className="inline-flex min-h-11 cursor-pointer items-center rounded-full border-[3px] border-[#1E1B4B] bg-white px-5 text-sm font-extrabold text-[#1E1B4B] transition-colors duration-200 hover:bg-[#1E1B4B] hover:text-white"
+                  >
+                    Ver los {products.length}
+                  </Link>
+                )}
+              </div>
+              {/* Poucos produtos: centralizados, sem buraco do lado. */}
+              <div className={few ? 'flex flex-wrap justify-center gap-x-4 gap-y-8 sm:gap-x-7 [&>*]:w-[calc(50%-0.5rem)] sm:[&>*]:w-[250px]' : 'grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 lg:grid-cols-4'}>
+                {products.slice(0, SHELF_COUNT).map((p) => (
+                  <KidsProductCard key={p.id} product={p} accent={accent} />
+                ))}
+              </div>
             </div>
-            {products.length > SHELF_COUNT && (
-              <Link href={`/coleccion/${collection.slug}`} className="text-sm font-extrabold text-[#c2410c] underline-offset-4 hover:underline">
-                Ver los {products.length}
-              </Link>
-            )}
           </div>
-          {/* Poucos produtos: ficam centralizados, sem buraco do lado. */}
-          <div className={products.length >= SHELF_COUNT ? 'grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 lg:grid-cols-4' : 'flex flex-wrap justify-center gap-x-4 gap-y-8 sm:gap-x-6 [&>*]:w-[calc(50%-0.5rem)] sm:[&>*]:w-[240px]'}>
-            {products.slice(0, SHELF_COUNT).map((p) => (
-              <KidsProductCard key={p.id} product={p} soft={softOf(collection)} />
-            ))}
-          </div>
-        </div>
-      )}
+        );
+      })()}
     </section>
   );
 }
