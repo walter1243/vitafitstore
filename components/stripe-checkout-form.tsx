@@ -382,15 +382,20 @@ function PaymentStepInner({
         confirmParams: {
           return_url: `${window.location.origin}/checkout?confirmed=1`,
           payment_method_data: {
+            // O Payment Element nao coleta esses dados (fields: 'never'), entao
+            // a Stripe exige TODOS os campos aqui — vazio ('') e aceito,
+            // undefined nao (some do envio e a Stripe recusa o pagamento).
             billing_details: {
-              name:  name.trim()  || undefined,
-              email: email.trim() || undefined,
-              phone: phone.trim() || undefined,
+              name:  name.trim(),
+              email: email.trim(),
+              phone: phone.trim(),
               address: {
-                line1:       `${street.trim()} ${streetN.trim()}`.trim() || undefined,
-                postal_code: postal.trim() || undefined,
-                city:        city.trim()   || undefined,
-                country:     country       || undefined,
+                line1:       `${street.trim()} ${streetN.trim()}`.trim(),
+                line2:       '',
+                postal_code: postal.trim(),
+                city:        city.trim(),
+                state:       '',
+                country:     country || 'ES',
               },
             },
           },
