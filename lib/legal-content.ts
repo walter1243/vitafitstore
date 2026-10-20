@@ -101,7 +101,8 @@ export const LEGAL_PAGES: Record<string, LegalPage> = {
       {
         heading: 'Plazos de entrega',
         body: [
-          'Cada pedido se imprime y prepara en nuestro taller. El plazo de entrega estimado se indica en el checkout y te avisamos por email cuando el pedido sale.',
+          'Cada pedido se imprime y prepara por encargo en nuestro taller. Te avisamos por email con el código de seguimiento cuando el pedido sale.',
+          'Salvo que se indique otro plazo en el producto, la entrega se realizará en un plazo máximo de 30 días naturales desde la confirmación del pedido, conforme al artículo 66 bis del Real Decreto Legislativo 1/2007 (TRLGDCU).',
         ],
       },
       {

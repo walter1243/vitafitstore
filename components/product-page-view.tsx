@@ -188,7 +188,7 @@ export function ProductPageView({ product }: { product: Product }) {
               )}
             </div>
             <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
-              <Truck size={13} /> Envío gratis en pedidos +50€ · Entrega en 2-3 días laborables
+              <Truck size={13} /> Envío gratis en pedidos +50€ · Envío con seguimiento
             </p>
           </div>
 

@@ -106,7 +106,7 @@ export const DEFAULT_DESTAQUES: DestaquesContent = {
     {
       icon: 'truck',
       title: 'Envío Rápido y Seguro',
-      desc: 'Entregas garantizadas en toda España para que tus regalos lleguen justo a tiempo.',
+      desc: 'Envíos con seguimiento a toda España.',
     },
     {
       icon: 'gift',
@@ -139,7 +139,7 @@ export const DEFAULT_TRUST_BADGES: TrustBadgesContent = {
     { icon: 'truck', title: 'Envío gratis +50€', desc: 'En todos los pedidos' },
     { icon: 'rotate', title: 'Devolución 14 días', desc: 'Derecho de desistimiento UE' },
     { icon: 'shield', title: 'Pago seguro SSL', desc: '100% protegido' },
-    { icon: 'clock', title: 'Entrega 2-3 días', desc: 'En toda España' },
+    { icon: 'clock', title: 'Envío con seguimiento', desc: 'En toda España' },
   ],
 };
 

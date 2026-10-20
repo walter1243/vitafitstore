@@ -290,7 +290,7 @@ function OrderSummary({ items, totalPrice, shipping, total }: {
           { icon:<Truck size={14} className="text-orange-700"/>, label:'Envío', sub:'Calculado al finalizar' },
           { icon:<RotateCcw size={14} className="text-orange-700"/>, label:'Devolución', sub:'14 días' },
           { icon:<Lock size={14} className="text-orange-700"/>, label:'SSL 256-bit', sub:'Seguro' },
-          { icon:<Package size={14} className="text-orange-700"/>, label:'Entrega', sub:'2–3 días' },
+          { icon:<Package size={14} className="text-orange-700"/>, label:'Pago', sub:'Tarjeta y Bizum' },
         ].map(b => (
           <div key={b.label} className="flex items-center gap-2 p-2 rounded-xl"
             style={{ background:'rgba(194,65,12,0.04)' }}>
@@ -377,6 +377,7 @@ function PaymentStepInner({
         return;
       }
 
+      try { sessionStorage.setItem('kitoys_checkout_name', name.trim()); } catch {}
       const result = await stripe.confirmPayment({
         elements,
         confirmParams: {
@@ -575,6 +576,40 @@ function CheckoutFormInner() {
 
   const [errors,  setErrors]  = useState<Record<string,string>>({});
   const [success, setSuccess] = useState(false);
+  const [returnMsg, setReturnMsg] = useState('');
+
+  // Volta do Bizum, Klarna, banco... (pagamentos que saem do site): a Stripe
+  // devolve pra /checkout?payment_intent=...&redirect_status=... e o pedido
+  // so era salvo quando o pagamento terminava sem sair da pagina.
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const pi = q.get('payment_intent');
+    const status = q.get('redirect_status');
+    if (!pi || !status) return;
+    window.history.replaceState(null, '', '/checkout');
+    if (status === 'succeeded' || status === 'processing') {
+      try { const saved = sessionStorage.getItem('kitoys_checkout_name'); if (saved) setName(saved); } catch {}
+      // Bizum pode levar uns segundos pra confirmar: tenta de novo ate ~30 s.
+      (async () => {
+        for (let i = 0; i < 10; i++) {
+          try {
+            const r = await fetch('/api/checkout/save-order', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ paymentIntentId: pi }),
+            });
+            if (r.ok || r.status !== 402) return;
+          } catch {}
+          await new Promise((res) => setTimeout(res, 3000));
+        }
+      })();
+      clearCart();
+      setSuccess(true);
+    } else {
+      setReturnMsg('El pago no se completó. Puedes intentarlo de nuevo con otro método.');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const checkoutItems = items.map(item => ({
     productId: item.product.id,
@@ -670,6 +705,7 @@ function CheckoutFormInner() {
           style={{ background:'rgba(194,65,12,0.1)', border:'1px solid rgba(194,65,12,0.2)' }}>
           <Package size={36} className="text-orange-700" />
         </div>
+        {returnMsg && <p className="max-w-sm rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{returnMsg}</p>}
         <h2 className="text-3xl font-bold text-[#23263f]">¡Tu carrito está vacío!</h2>
         <p className="text-slate-500 text-sm max-w-xs">Añade productos antes de finalizar la compra.</p>
         <Link href="/#colecciones"
