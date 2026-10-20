@@ -279,7 +279,7 @@ export function Header() {
               {/* Hogar: categorias de casa (sem colecao) — mesmo jeito das colecoes */}
               {mobileHomeCats.length > 0 && !menuSectors.some((s) => s.style === 'hogar') && (
                 <div className="mt-2">
-                  <Link href="/#productos" onClick={() => setMobileOpen(false)} className={MOBILE_ITEM}>Hogar</Link>
+                  <Link href="/hogar" onClick={() => setMobileOpen(false)} className={MOBILE_ITEM}>Hogar</Link>
                   {mobileHomeCats.map((cat) => (
                     <Link
                       key={cat.name}

@@ -21,6 +21,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'daily',
       priority: 1,
     },
+    {
+      url: 'https://www.kitoys3d.com/hogar',
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
     ...sectors.map((s) => ({
       url: `https://www.kitoys3d.com/sector/${s.slug}`,
       lastModified: new Date(),

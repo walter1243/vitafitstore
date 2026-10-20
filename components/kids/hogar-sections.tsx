@@ -120,6 +120,9 @@ export function HomeExtras({ products }: { products: Product[] }) {
           </div>
         )}
         <ProductCarousel key={cat} products={visible} accent={ACCENTS.mint} variant="hogar" />
+        <div className="mt-10 flex justify-center">
+          <Link href="/hogar" className={PILL_DARK}>Abrir el catálogo Hogar</Link>
+        </div>
       </div>
     </section>
   );

@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { type Sector, type SiteCollection } from '@/lib/sectors-shared';
+import { slugify, type Sector, type SiteCollection } from '@/lib/sectors-shared';
 import { CollectionPlayButton } from './collection-play';
 import { accentFor } from './palette';
 import { useSectors } from './sectors-context';
@@ -44,7 +44,8 @@ export function useHomeCategories(enabled: boolean) {
 
 // Link de uma categoria de casa: a secao "Tambien para tu hogar" da home,
 // ja filtrada nela.
-export const homeCategoryHref = (name: string) => `/?cat=${encodeURIComponent(name)}#productos`;
+// Abre o catalogo /hogar ja na pagina dessa categoria (vira a folha).
+export const homeCategoryHref = (name: string) => `/hogar#cap-${slugify(name)}`;
 export function selectHomeCategory(name: string) {
   window.dispatchEvent(new CustomEvent(HOGAR_CAT_EVENT, { detail: name }));
 }
@@ -147,12 +148,12 @@ export function CollectionsMenuPanel({ open, onNavigate }: { open: boolean; onNa
             title={homeSectors[0]?.name ?? 'Hogar'}
             hint="para tu casa"
             hogar
-            href={homeSectors[0] ? `/sector/${homeSectors[0].slug}` : '/#productos'}
+            href="/hogar"
             onNavigate={onNavigate}
           />
           <ul className={ROW}>
             {homeCollections.map((c) => (
-              <HogarCard key={c.slug} href={`/coleccion/${c.slug}`} image={c.photoUrl || c.imageUrl} name={c.name} sub={c.tagline} onClick={onNavigate} />
+              <HogarCard key={c.slug} href={homeCategoryHref(c.name)} image={c.photoUrl || c.imageUrl} name={c.name} sub={c.tagline} onClick={onNavigate} />
             ))}
             {homeCats.map((cat) => (
               <HogarCard
