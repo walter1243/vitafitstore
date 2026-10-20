@@ -12,11 +12,16 @@ import { SizeGuideModal } from '@/components/size-guide-modal'
 import { ProductReviews } from '@/components/product-reviews'
 import { useSectors } from '@/components/kids/sectors-context'
 import { ProductDemo } from '@/components/kids/product-demo'
+import { NamePersonalizer, type PersonalizerLook } from '@/components/personalize/name-personalizer'
 
 export function ProductPageView({ product }: { product: Product }) {
   const { addItem } = useCart()
-  const { collectionForCategory } = useSectors()
-  const collection = collectionForCategory(product.categoryLabel)
+  const { collectionForProduct, getSector } = useSectors()
+  const collection = collectionForProduct(product)
+  // Produto com nome personalizado (chaveiro, placa de pet): o personalizador
+  // ocupa o lugar do "Anadir" comum, no visual do setor dele.
+  const personalized = Boolean(product.personalize?.enabled)
+  const look = (collection ? getSector(collection.sectorId)?.style : undefined) as PersonalizerLook | undefined
   const router = useRouter()
   const galleryImages = [product.mainImage ?? product.image, ...(product.additionalImages ?? [])].filter(Boolean) as string[]
   const [activeIndex, setActiveIndex] = useState(0)
@@ -254,8 +259,15 @@ export function ProductPageView({ product }: { product: Product }) {
             </div>
           )}
 
+          {personalized && (
+            <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="mb-4 text-lg font-bold text-slate-900">Personalízalo con el nombre</p>
+              <NamePersonalizer product={product} look={look ?? 'llaveros'} compact />
+            </div>
+          )}
+
           {/* Buy box */}
-          <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4">
+          <div className={`mt-6 rounded-2xl border border-slate-200 bg-white p-4 ${personalized ? 'hidden' : ''}`}>
             <div className="flex items-center gap-4">
               <span className="text-sm font-medium text-slate-500">Cantidad</span>
               <div className="flex items-center rounded-xl border border-slate-200 bg-white">

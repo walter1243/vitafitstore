@@ -1,5 +1,6 @@
 'use client';
 import { AdminSectors } from '@/components/admin-sectors';
+import { PersonalizeEditor, ProductPlacement } from '@/components/admin-product-extras';
 import { TrackingSection, needsTracking, isNewAlert } from '@/components/admin-tracking';
 import { AnalyticsPanel } from '@/components/admin-analytics';
 import { MediaUploadField } from '@/components/configuracoes/content/shared';
@@ -40,6 +41,8 @@ type Product = {
   shippingCost?: number | null;
   demoType?: string;
   demoImage?: string;
+  collectionSlug?: string;
+  personalize?: unknown;
   isCategoryCover?: boolean;
 };
 
@@ -68,6 +71,8 @@ type Order = {
   sourceProductUrl?: string;
   selectedColor?: string;
   selectedSize?: string;
+  customText?: string;
+  itemsJson?: string | null;
   status: 'pending' | 'shipped' | 'delivered';
   tracking: string;
   trackingUrl?: string;
@@ -101,6 +106,7 @@ const SECTION_LABELS: Record<Section, string> = {
   products: 'Produtos',
   orders: 'Pedidos',
   tracking: 'Rastreio',
+  sectors: 'Setores e coleções',
   automation: 'Automação',
   settings: 'Editar loja',
   'import-supplier': 'Importar Produtos',
@@ -117,7 +123,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   categories: Category[];
   showForm: boolean;
   saving: boolean;
-  form: { name: string; price: string; category: string; stock: string; videoUrl: string; shippingCost: string; demoType: string; demoImage: string };
+  form: { name: string; price: string; category: string; stock: string; videoUrl: string; shippingCost: string; demoType: string; demoImage: string; collectionSlug: string; personalize: string };
   image: string | null;
   additionalImages: string[];
   desc: string;
@@ -926,6 +932,10 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                 )}
               </section>
 
+              {/* Onde o produto aparece (setor → colecao) e personalizacao com nome. */}
+              <ProductPlacement value={form.collectionSlug} onChange={(slug) => onFormChange('collectionSlug', slug)} />
+              <PersonalizeEditor value={form.personalize} onChange={(json) => onFormChange('personalize', json)} productImage={image} />
+
               {/* Amostra gratis interativa: brincadeira na pagina do produto que
                   termina oferecendo o produto (ver components/kids/product-demo.tsx). */}
               <section className="rounded-2xl border border-white/10 bg-[#0f1117] p-5 shadow-none">
@@ -1629,8 +1639,8 @@ function OrdersSection({ orders, onUpdateTracking, onRefresh }: {
             <div><div className="mb-1 text-xs font-semibold uppercase tracking-wide text-white/40">Cliente</div><div className="font-medium text-white">{o.customer}</div></div>
             <div>
               <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-white/40">Produto</div>
-              <div className="text-white/70">{o.product}</div>
-              {(o.selectedColor || o.selectedSize) && (
+              <OrderItemsList order={o} />
+              {!o.itemsJson && (o.selectedColor || o.selectedSize) && (
                 <div className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[11px] font-semibold text-amber-300">
                   {[o.selectedColor && `Color: ${o.selectedColor}`, o.selectedSize && `Talla: ${o.selectedSize}`].filter(Boolean).join(' · ')}
                 </div>
@@ -1714,6 +1724,12 @@ function OrdersSection({ orders, onUpdateTracking, onRefresh }: {
 
           {supplierPanelOpen[o.id] && (
             <div className="mt-3 space-y-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+              {o.customText && (
+                <div className="rounded-lg border-2 border-fuchsia-500/40 bg-fuchsia-500/10 p-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-fuchsia-300">Nome(s) personalizado(s) — imprimir exatamente assim</p>
+                  <p className="mt-1 text-base font-bold text-white">{o.customText}</p>
+                </div>
+              )}
               {(o.selectedColor || o.selectedSize) && (
                 <div className="rounded-lg border-2 border-amber-500/40 bg-amber-500/15 p-3">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-300">⚠ Variante pedida pelo cliente — selecione exatamente isso no fornecedor</p>
@@ -1946,7 +1962,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
-  const [prodForm, setProdForm] = useState({ name: '', price: '', category: '', stock: '', videoUrl: '', shippingCost: '', demoType: 'none', demoImage: '' });
+  const [prodForm, setProdForm] = useState({ name: '', price: '', category: '', stock: '', videoUrl: '', shippingCost: '', demoType: 'none', demoImage: '', collectionSlug: '', personalize: '' });
   const [prodImage, setProdImage] = useState<string | null>(null);
   const [prodAdditionalImages, setProdAdditionalImages] = useState<string[]>([]);
   const [prodDesc, setProdDesc] = useState('');
@@ -2101,7 +2117,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
 
   function resetProductForm() {
     setEditingProductId(null);
-    setProdForm({ name: '', price: '', category: '', stock: '', videoUrl: '', shippingCost: '', demoType: 'none', demoImage: '' });
+    setProdForm({ name: '', price: '', category: '', stock: '', videoUrl: '', shippingCost: '', demoType: 'none', demoImage: '', collectionSlug: '', personalize: '' });
     setProdImage(null);
     setProdAdditionalImages([]);
     setProdDesc('');
@@ -2125,6 +2141,8 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
       shippingCost: product.shippingCost != null ? String(product.shippingCost) : '',
       demoType: product.demoType ?? 'none',
       demoImage: product.demoImage ?? '',
+      collectionSlug: product.collectionSlug ?? '',
+      personalize: product.personalize ? JSON.stringify(product.personalize) : '',
     });
     setProdImage(product.mainImage ?? product.image ?? null);
     setProdAdditionalImages(Array.isArray(product.additionalImages) ? product.additionalImages : []);
@@ -2150,7 +2168,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
     costPrice: number;
   }) {
     setEditingProductId(null);
-    setProdForm({ name: data.name, price: String(data.price), category: '', stock: '99', videoUrl: '', shippingCost: '', demoType: 'none', demoImage: '' });
+    setProdForm({ name: data.name, price: String(data.price), category: '', stock: '99', videoUrl: '', shippingCost: '', demoType: 'none', demoImage: '', collectionSlug: '', personalize: '' });
     setProdImage(data.image || null);
     setProdAdditionalImages(data.additionalImages ?? []);
     setProdDesc(data.description || '');
@@ -2183,6 +2201,8 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
           shippingCost: prodForm.shippingCost.trim() === '' ? null : prodForm.shippingCost.trim(),
           demoType: prodForm.demoType,
           demoImage: prodForm.demoImage.trim(),
+          collectionSlug: prodForm.collectionSlug,
+          personalize: prodForm.personalize ? JSON.parse(prodForm.personalize) : { enabled: false },
           description: prodDesc || null,
           mainImage: prodImage,
           image: prodImage,
@@ -2717,6 +2737,29 @@ function DashboardSection({ products, orders, revenue, onNavigate, trackingAlert
 }
 
 // ─── Orders ───────────────────────────────────────────────────────────────────
+
+// Itens do pedido: todos os produtos, quantidade, variante e o nome
+// personalizado (chaveiro / pet) em destaque. Pedidos antigos so tinham o 1o.
+function OrderItemsList({ order }: { order: Order }) {
+  let items: { name?: string; quantity?: number; color?: string; size?: string; text?: string }[] = [];
+  try { items = order.itemsJson ? JSON.parse(order.itemsJson) : []; } catch { items = []; }
+  if (items.length === 0) return <div className="text-white/70">{order.product}</div>;
+  return (
+    <ul className="space-y-1.5">
+      {items.map((it, i) => (
+        <li key={i} className="text-white/80">
+          <span className="font-semibold text-white">{it.quantity ?? 1}×</span> {it.name}
+          {(it.color || it.size) && <span className="text-white/50"> · {[it.color, it.size].filter(Boolean).join(' · ')}</span>}
+          {it.text && (
+            <span className="ml-1.5 inline-flex rounded-full border border-fuchsia-500/40 bg-fuchsia-500/10 px-2 py-0.5 text-[11px] font-bold text-fuchsia-200">
+              Nome: «{it.text}»
+            </span>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 // ─── Tracking ─────────────────────────────────────────────────────────────────
 

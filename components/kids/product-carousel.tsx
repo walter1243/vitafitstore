@@ -1,15 +1,17 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { type Product } from '@/lib/products';
-import { HomeProductCard } from './home-product-card';
+import { ThemedProductCard } from '@/components/themes/themed-product-card';
+import { type SectorTheme } from '@/components/themes/sector-themes';
 import { KidsProductCard } from './kids-product-card';
 import { type Accent } from './palette';
 
 // Carrossel horizontal de produtos (sem setas): desliza com o dedo, com o
 // trackpad/roda do mouse ou arrastando com o mouse; as bolinhas embaixo
 // mostram a posicao e levam pra cada parte. Poucos produtos = centralizados.
-export function ProductCarousel({ products, accent, variant = 'infantil' }: { products: Product[]; accent: Accent; variant?: 'infantil' | 'hogar' }) {
-  const hogar = variant === 'hogar';
+// `theme` = visual do setor (Casa, Chaveiros, Pet...); sem theme = Infantil.
+export function ProductCarousel({ products, accent, theme }: { products: Product[]; accent: Accent; theme?: SectorTheme | null }) {
+  const hogar = Boolean(theme);
   const trackRef = useRef<HTMLDivElement>(null);
   const drag = useRef<{ x: number; left: number; moved: boolean } | null>(null);
   const [pages, setPages] = useState(1);
@@ -75,7 +77,7 @@ export function ProductCarousel({ products, accent, variant = 'infantil' }: { pr
         <ul className="mx-auto flex w-max gap-4 sm:gap-6">
           {products.map((p) => (
             <li key={p.id} className={`shrink-0 snap-start ${hogar ? 'w-[220px] sm:w-[270px]' : 'w-[200px] sm:w-[250px]'}`}>
-              {hogar ? <HomeProductCard product={p} /> : <KidsProductCard product={p} accent={accent} />}
+              {theme ? <ThemedProductCard product={p} theme={theme} /> : <KidsProductCard product={p} accent={accent} />}
             </li>
           ))}
         </ul>
@@ -93,7 +95,7 @@ export function ProductCarousel({ products, accent, variant = 'infantil' }: { pr
               className="flex h-11 w-7 cursor-pointer items-center justify-center"
             >
               {hogar ? (
-                <span className={`block h-1.5 rounded-full transition-all duration-300 ${i === page ? 'w-8 bg-[#2b2620]' : 'w-4 bg-[#2b2620]/25'}`} />
+                <span className="block h-1.5 rounded-full transition-all duration-300" style={{ width: i === page ? 32 : 16, background: theme!.ink, opacity: i === page ? 1 : 0.25 }} />
               ) : (
                 <span
                   className={`block h-3 rounded-full border-2 border-[#1E1B4B] transition-all duration-200 ${i === page ? 'w-7' : 'w-3 bg-white'}`}

@@ -1,33 +1,38 @@
 'use client';
 import Link from 'next/link';
 import { type Sector } from '@/lib/sectors-shared';
+import { SECTOR_THEMES, themeFor, type SectorTheme } from '@/components/themes/sector-themes';
 import { dots } from './palette';
 
-type Card = { key: string; name: string; tagline: string; href: string; images: string[]; count: string; hogar: boolean };
+type Card = { key: string; name: string; tagline: string; href: string; images: string[]; count: string; theme: SectorTheme | null };
 
-// Abertura da home: um card por setor (Infantil, Hogar e os proximos criados
-// no Admin → Setores e coleções), cada um no visual do proprio setor. Clicar
-// leva pra parte daquele setor na pagina. Os produtos de casa sem setor
-// proprio entram como o card "Hogar".
-export function SectorCards({ sectors, homeImages }: { sectors: Sector[]; homeImages: string[] }) {
-  const cards: Card[] = sectors.map((s) => ({
-    key: s.slug,
-    name: s.name,
-    tagline: s.tagline,
-    href: s.style === 'hogar' ? '/hogar' : `#setor-${s.slug}`,
-    images: s.collections.map((c) => c.imageUrl || c.photoUrl).filter(Boolean).slice(0, 3),
-    count: `${s.collections.length} ${s.collections.length === 1 ? 'colección' : 'colecciones'}`,
-    hogar: s.style === 'hogar',
-  }));
+// Abertura da home: um card por setor (Infantil, Hogar, Llaveros, Mascotas e
+// os proximos criados no Admin → Setores e coleções), cada um no visual do
+// proprio setor. Clicar leva pra parte daquele setor na pagina. Produtos de
+// casa sem setor proprio entram como o card "Hogar".
+export function SectorCards({ sectors, homeImages, sectorImages }: { sectors: Sector[]; homeImages: string[]; sectorImages: Record<string, string[]> }) {
+  const cards: Card[] = sectors.map((s) => {
+    const fromCollections = s.collections.map((c) => c.imageUrl || c.photoUrl).filter(Boolean);
+    const images = [s.imageUrl, ...fromCollections, ...(sectorImages[s.slug] ?? [])].filter(Boolean).slice(0, 3);
+    return {
+      key: s.slug,
+      name: s.name,
+      tagline: s.tagline,
+      href: `#setor-${s.slug}`,
+      images,
+      count: `${s.collections.length} ${s.collections.length === 1 ? 'colección' : 'colecciones'}`,
+      theme: themeFor(s.style),
+    };
+  });
   if (homeImages.length > 0 && !sectors.some((s) => s.style === 'hogar')) {
     cards.push({
-      key: 'hogar',
+      key: 'mas',
       name: 'Hogar',
       tagline: 'Decoración y detalles para tu casa',
-      href: '/hogar',
+      href: '#productos',
       images: homeImages.slice(0, 3),
       count: `${homeImages.length} ${homeImages.length === 1 ? 'producto' : 'productos'}`,
-      hogar: true,
+      theme: SECTOR_THEMES.hogar,
     });
   }
   if (cards.length === 0) return null;
@@ -38,11 +43,11 @@ export function SectorCards({ sectors, homeImages }: { sectors: Sector[]; homeIm
       <div className="relative mx-auto max-w-6xl">
         <div className="mb-10 text-center">
           <h1 className="text-4xl font-bold text-[#1E1B4B] sm:text-6xl">Elige tu mundo</h1>
-          <p className="mx-auto mt-3 max-w-2xl text-lg text-[#1E1B4B]/80 sm:text-xl">Juguetes, lámparas y detalles para casa impresos en 3D en nuestro taller.</p>
+          <p className="mx-auto mt-3 max-w-2xl text-lg text-[#1E1B4B]/80 sm:text-xl">Juguetes, llaveros, cosas para tu mascota y para casa, impresos en 3D en nuestro taller.</p>
         </div>
-        <ul className={`grid gap-6 ${cards.length === 1 ? 'mx-auto max-w-md' : cards.length === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-3'}`}>
+        <ul className={`grid gap-6 ${cards.length === 1 ? 'mx-auto max-w-md' : cards.length === 2 ? 'sm:grid-cols-2' : cards.length === 4 ? 'sm:grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-3'}`}>
           {cards.map((c) => (
-            <li key={c.key}>{c.hogar ? <HogarCard c={c} /> : <KidsCard c={c} />}</li>
+            <li key={c.key}>{c.theme ? <ThemedCard c={c} t={c.theme} /> : <KidsCard c={c} />}</li>
           ))}
         </ul>
       </div>
@@ -77,26 +82,33 @@ function KidsCard({ c }: { c: Card }) {
   );
 }
 
-function HogarCard({ c }: { c: Card }) {
+// Card de setor no visual dele (Casa, Chaveiros, Pet...).
+function ThemedCard({ c, t }: { c: Card; t: SectorTheme }) {
+  const pet = t.key === 'mascotas';
   return (
     <Link
       href={c.href}
-      className="hogar group flex h-full cursor-pointer flex-col rounded-[32px] bg-[#f3ece2] p-5 transition-colors duration-300 hover:bg-[#ece3d6] sm:p-6"
+      className="group flex h-full cursor-pointer flex-col p-5 transition-shadow duration-300 sm:p-6"
+      style={{
+        background: t.key === 'llaveros' ? `linear-gradient(160deg, #ffffff 0%, ${t.bg} 100%)` : t.bg,
+        borderRadius: '32px',
+        boxShadow: t.key === 'llaveros' ? '0 14px 36px rgba(79,70,229,0.16)' : undefined,
+      }}
     >
-      <span className="grid grid-cols-3 gap-2">
-        {c.images.map((src) => (
-          <span key={src} className="aspect-square overflow-hidden rounded-2xl bg-[#e2d6c4]">
+      <span className={`grid gap-2 ${pet && c.images.length > 0 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+        {c.images.slice(0, pet ? 2 : 3).map((src) => (
+          <span key={src} className={`${pet ? 'aspect-[4/5]' : 'aspect-square'} overflow-hidden`} style={{ borderRadius: t.radius, background: t.surface }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={src} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none" />
+            <img src={src} alt="" className={`h-full w-full ${t.key === 'llaveros' ? 'object-contain p-2' : 'object-cover'} transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none`} />
           </span>
         ))}
       </span>
-      <span className="mt-5 font-script text-2xl text-[#8a6a3a]">para tu casa</span>
-      <span className="text-4xl font-semibold text-[#2b2620]">{c.name}</span>
-      {c.tagline && <span className="mt-1 text-base text-[#5f574e]">{c.tagline}</span>}
+      <span className="mt-5 text-2xl" style={{ fontFamily: t.kickerFont, color: t.accent }}>{t.kicker}</span>
+      <span className="text-4xl font-semibold" style={{ fontFamily: t.heading, color: t.ink }}>{c.name}</span>
+      {c.tagline && <span className="mt-1 text-base" style={{ color: t.muted }}>{c.tagline}</span>}
       <span className="mt-auto flex items-center justify-between gap-3 pt-5">
-        <span className="text-sm font-semibold text-[#5f574e]">{c.count}</span>
-        <span className="inline-flex min-h-11 items-center rounded-full bg-[#2b2620] px-5 text-sm font-semibold text-white transition-colors duration-200 group-hover:bg-[#4a4238]">
+        <span className="text-sm font-semibold" style={{ color: t.muted }}>{c.count}</span>
+        <span className="inline-flex min-h-11 items-center rounded-full px-5 text-sm font-bold" style={{ background: t.cta, color: t.ctaText }}>
           Ver {c.name.toLowerCase()}
         </span>
       </span>

@@ -6,6 +6,7 @@ import SchemaOrg from '@/components/SchemaOrg'
 import { CookieConsent } from '@/components/cookie-consent'
 import { AnalyticsLoader } from '@/components/analytics-loader'
 import { SiteTracker } from '@/components/site-tracker'
+import { PageTurn } from '@/components/page-turn'
 import './globals.css'
 
 const geistSans = Geist({
@@ -118,6 +119,7 @@ export default function RootLayout({
         <CookieConsent />
         <AnalyticsLoader />
         <SiteTracker />
+        <PageTurn />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

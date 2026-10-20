@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cleanItems, packItems } from '@/lib/order-items';
 import Stripe from 'stripe';
 import { sql } from '@/lib/db';
 import { resolveShipping } from '@/lib/checkout-pricing';
@@ -54,7 +55,7 @@ export async function POST(req: NextRequest) {
         postalCode:    postalCode    ?? '',
         city:          city          ?? '',
         country:       country       ?? 'ES',
-        items:         JSON.stringify(items),
+        ...packItems(cleanItems(items)),
         subtotal:      subtotal.toFixed(2),
         shipping:      shipping.toFixed(2),
       },

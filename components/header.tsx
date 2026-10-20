@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { ShoppingCart, Menu, X, Smile } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 import { useSectors } from '@/components/kids/sectors-context';
+import { useStoreProducts } from '@/components/kids/use-store-products';
 import { softOf } from '@/lib/sectors-shared';
 import { CollectionsMenuPanel, homeCategoryHref, selectHomeCategory, useHomeCategories } from '@/components/kids/menu-panel';
 
@@ -35,8 +36,13 @@ function readCachedBranding() {
 
 // Menu: um link por setor (Admin → Setores e coleções) + Nuestro taller.
 export function Header() {
-  const { sectors } = useSectors();
-  const menuSectors = sectors.filter((s) => s.collections.length > 0);
+  const { sectors, collectionForProduct } = useSectors();
+  const { products: menuProducts } = useStoreProducts();
+  // Setores novos (Casa, Chaveiros, Pet...) so entram no menu com produto.
+  const withProducts = new Set(menuProducts.map((p) => collectionForProduct(p)?.slug).filter(Boolean));
+  const menuSectors = sectors
+    .map((s) => (s.style === 'infantil' ? s : { ...s, collections: s.collections.filter((c) => withProducts.has(c.slug)) }))
+    .filter((s) => s.collections.length > 0);
   // Painel "Colecciones": abre no hover (desktop) ou clique; fecha com Esc,
   // clique fora ou ao escolher um link.
   const [colOpen, setColOpen] = useState(false);

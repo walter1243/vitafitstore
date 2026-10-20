@@ -9,7 +9,7 @@ export const revalidate = 0;
 
 const noStore = { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' };
 const HEX = /^#[0-9a-fA-F]{6}$/;
-const INTERACTIVE = ['none', 'rompecabezas', 'colorear', 'encender'];
+const INTERACTIVE = ['none', 'rompecabezas', 'colorear', 'encender', 'nombre'];
 
 // GET: setores ativos com as colecoes ativas (vitrine). ?all=1 (admin): tudo.
 export async function GET(req: NextRequest) {
@@ -45,15 +45,18 @@ export async function POST(req: NextRequest) {
       const tagline = str(body.tagline, 200);
       const enabled = body.enabled !== false;
       const style = sectorStyleOf(body.style);
+      const description = str(body.description, 600);
+      const imageUrl = str(body.imageUrl, 1000);
+      const videoUrl = str(body.videoUrl, 1000);
       const id = Number(body.id) || 0;
       const [clash] = await sql`SELECT id FROM sectors WHERE slug = ${slug} AND id <> ${id} LIMIT 1`;
       if (clash) return NextResponse.json({ error: 'Já existe um setor com esse endereço (slug).' }, { status: 409 });
       if (id) {
-        await sql`UPDATE sectors SET name = ${name}, slug = ${slug}, tagline = ${tagline}, enabled = ${enabled}, style = ${style} WHERE id = ${id}`;
+        await sql`UPDATE sectors SET name = ${name}, slug = ${slug}, tagline = ${tagline}, enabled = ${enabled}, style = ${style}, description = ${description}, image_url = ${imageUrl}, video_url = ${videoUrl} WHERE id = ${id}`;
       } else {
         await sql`
-          INSERT INTO sectors (name, slug, tagline, enabled, style, position)
-          VALUES (${name}, ${slug}, ${tagline}, ${enabled}, ${style}, COALESCE((SELECT MAX(position) + 1 FROM sectors), 1))
+          INSERT INTO sectors (name, slug, tagline, enabled, style, description, image_url, video_url, position)
+          VALUES (${name}, ${slug}, ${tagline}, ${enabled}, ${style}, ${description}, ${imageUrl}, ${videoUrl}, COALESCE((SELECT MAX(position) + 1 FROM sectors), 1))
         `;
       }
       return NextResponse.json(await getSectors(true), { headers: noStore });
@@ -74,6 +77,7 @@ export async function POST(req: NextRequest) {
         description: str(body.description, 600),
         imageUrl: str(body.imageUrl, 1000),
         photoUrl: str(body.photoUrl, 1000),
+        videoUrl: str(body.videoUrl, 1000),
         theme: body.theme === 'dark' ? 'dark' : 'light',
         bgColor: HEX.test(str(body.bgColor, 7)) ? str(body.bgColor, 7) : (body.theme === 'dark' ? '#07080F' : '#F5F5F7'),
         interactive: INTERACTIVE.includes(body.interactive) ? body.interactive : 'none',
@@ -85,13 +89,13 @@ export async function POST(req: NextRequest) {
           UPDATE site_collections SET
             sector_id = ${sectorId}, slug = ${slug}, name = ${name}, short_name = ${v.shortName}, tagline = ${v.tagline},
             description = ${v.description}, image_url = ${v.imageUrl}, photo_url = ${v.photoUrl}, theme = ${v.theme},
-            bg_color = ${v.bgColor}, interactive = ${v.interactive}, match = ${v.match}, enabled = ${v.enabled}
+            bg_color = ${v.bgColor}, interactive = ${v.interactive}, match = ${v.match}, enabled = ${v.enabled}, video_url = ${v.videoUrl}
           WHERE id = ${id}
         `;
       } else {
         await sql`
-          INSERT INTO site_collections (sector_id, slug, name, short_name, tagline, description, image_url, photo_url, theme, bg_color, interactive, match, enabled, position)
-          VALUES (${sectorId}, ${slug}, ${name}, ${v.shortName}, ${v.tagline}, ${v.description}, ${v.imageUrl}, ${v.photoUrl}, ${v.theme}, ${v.bgColor}, ${v.interactive}, ${v.match}, ${v.enabled},
+          INSERT INTO site_collections (sector_id, slug, name, short_name, tagline, description, image_url, photo_url, video_url, theme, bg_color, interactive, match, enabled, position)
+          VALUES (${sectorId}, ${slug}, ${name}, ${v.shortName}, ${v.tagline}, ${v.description}, ${v.imageUrl}, ${v.photoUrl}, ${v.videoUrl}, ${v.theme}, ${v.bgColor}, ${v.interactive}, ${v.match}, ${v.enabled},
                   COALESCE((SELECT MAX(position) + 1 FROM site_collections WHERE sector_id = ${sectorId}), 1))
         `;
       }

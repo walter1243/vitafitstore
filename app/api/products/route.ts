@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
+import { parsePersonalize } from '@/lib/personalize';
 import { requireAdmin } from "@/lib/admin-auth";
 
 export const dynamic = 'force-dynamic';
@@ -75,6 +76,10 @@ async function ensureVariantColumns() {
   // e a imagem dela (desenho de colorir / foto acesa; vazio = foto do produto).
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS demo_type TEXT`;
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS demo_image TEXT`;
+  // Onde o produto aparece (slug da colecao, escolhida no cadastro) e a
+  // personalizacao com nome (JSON, ver lib/personalize.ts).
+  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS collection_slug TEXT`;
+  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS personalize TEXT`;
 }
 
 function normalizeProduct(row: any) {
@@ -86,6 +91,8 @@ function normalizeProduct(row: any) {
     shippingCost: row.shipping_cost != null ? Number(row.shipping_cost) : null,
     demoType: DEMO_TYPES.includes(row.demo_type) ? row.demo_type : 'none',
     demoImage: row.demo_image ?? '',
+    collectionSlug: row.collection_slug ?? '',
+    personalize: parsePersonalize(row.personalize),
     additionalImages: parseAdditionalImages(row.additional_images ?? row.additionalImages),
     mainImage: row.image ?? row.mainImage ?? '',
     videoUrl: row.video ?? row.videoUrl ?? '',
@@ -104,7 +111,7 @@ export async function GET() {
     const rows = await sql`
       SELECT id, name, description, price, category, image, additional_images, video, stock, position,
              source_store_url, source_product_url, cost_price,
-             product_type, color_options, sizes, is_category_cover, shipping_cost, demo_type, demo_image,
+             product_type, color_options, sizes, is_category_cover, shipping_cost, demo_type, demo_image, collection_slug, personalize,
              created_at AS "createdAt"
       FROM products
       ORDER BY COALESCE(position, 999999), created_at DESC
@@ -132,6 +139,8 @@ export async function POST(req: NextRequest) {
     const nextShippingCost = parseShipping(body.shippingCost);
     const nextDemoType = DEMO_TYPES.includes(body.demoType) ? body.demoType : 'none';
     const nextDemoImage = String(body.demoImage ?? '').trim();
+    const nextCollectionSlug = String(body.collectionSlug ?? '').trim().slice(0, 120);
+    const nextPersonalize = JSON.stringify(parsePersonalize(body.personalize));
 
     if (!name?.trim()) {
       return NextResponse.json({ error: 'O campo "nome" é obrigatório.' }, { status: 400 });
@@ -149,7 +158,7 @@ export async function POST(req: NextRequest) {
     const nextSizes = parseSizes(sizes);
 
     const [product] = await sql`
-      INSERT INTO products (name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost, demo_type, demo_image)
+      INSERT INTO products (name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost, demo_type, demo_image, collection_slug, personalize)
       VALUES (
         ${String(name).trim()},
         ${description ? String(description) : null},
@@ -168,9 +177,11 @@ export async function POST(req: NextRequest) {
         ${JSON.stringify(nextSizes)},
         ${nextShippingCost},
         ${nextDemoType},
-        ${nextDemoImage || null}
+        ${nextDemoImage || null},
+        ${nextCollectionSlug || null},
+        ${nextPersonalize}
       )
-      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost, demo_type, demo_image
+      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost, demo_type, demo_image, collection_slug, personalize
     `;
 
     return NextResponse.json(normalizeProduct(product), { status: 201 });
@@ -282,6 +293,10 @@ export async function PATCH(req: NextRequest) {
     const updateDemo = Object.prototype.hasOwnProperty.call(body, 'demoType');
     const demoType = DEMO_TYPES.includes(body.demoType) ? body.demoType : 'none';
     const demoImage = String(body.demoImage ?? '').trim();
+    const updateCollection = Object.prototype.hasOwnProperty.call(body, 'collectionSlug');
+    const collectionSlug = String(body.collectionSlug ?? '').trim().slice(0, 120);
+    const updatePersonalize = Object.prototype.hasOwnProperty.call(body, 'personalize');
+    const personalize = JSON.stringify(parsePersonalize(body.personalize));
 
     if (!name) {
       return NextResponse.json({ error: 'O campo "nome" é obrigatório.' }, { status: 400 });
@@ -309,9 +324,11 @@ export async function PATCH(req: NextRequest) {
         sizes             = ${JSON.stringify(sizes)},
         shipping_cost     = CASE WHEN ${updateShipping} THEN ${shippingCost}::numeric ELSE shipping_cost END,
         demo_type         = CASE WHEN ${updateDemo} THEN ${demoType} ELSE demo_type END,
-        demo_image        = CASE WHEN ${updateDemo} THEN ${demoImage || null} ELSE demo_image END
+        demo_image        = CASE WHEN ${updateDemo} THEN ${demoImage || null} ELSE demo_image END,
+        collection_slug   = CASE WHEN ${updateCollection} THEN ${collectionSlug || null} ELSE collection_slug END,
+        personalize       = CASE WHEN ${updatePersonalize} THEN ${personalize} ELSE personalize END
       WHERE id = ${id}
-      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost, demo_type, demo_image
+      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost, demo_type, demo_image, collection_slug, personalize
     `;
 
     if (!product) {

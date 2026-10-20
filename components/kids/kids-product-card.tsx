@@ -20,7 +20,8 @@ export function KidsProductCard({ product, accent = ACCENTS.mint, tag, soft }: P
   const secondary = product.additionalImages?.[0];
   // Produto com cor/tamanho precisa escolher na pagina dele — adicionar
   // direto daqui iria pro carrinho sem a opcao.
-  const needsChoice = Boolean(product.colorOptions?.length || product.sizes?.length);
+  const personalized = Boolean(product.personalize?.enabled);
+  const needsChoice = personalized || Boolean(product.colorOptions?.length || product.sizes?.length);
 
   function handleAdd(e: React.MouseEvent) {
     e.preventDefault();
@@ -63,7 +64,7 @@ export function KidsProductCard({ product, accent = ACCENTS.mint, tag, soft }: P
           </span>
           {needsChoice ? (
             <span className="inline-flex min-h-11 items-center rounded-2xl border-[3px] border-[#1E1B4B] px-3 text-sm font-extrabold text-[#1E1B4B] transition-colors duration-200 group-hover:bg-[#1E1B4B] group-hover:text-white">
-              Elegir
+              {personalized ? 'Personalizar' : 'Elegir'}
             </span>
           ) : (
             <button

@@ -1,4 +1,5 @@
 import { type Product, type ProductType, type ColorOption } from '@/lib/products';
+import { parsePersonalize } from '@/lib/personalize';
 
 // Neutral inline placeholder for a product with no image set — the old
 // fallback pointed at a leftover supplement product photo, which is wrong
@@ -23,6 +24,8 @@ export type DbProduct = {
   shippingCost?: number | null;
   demoType?: 'none' | 'rompecabezas' | 'colorear' | 'encender';
   demoImage?: string;
+  collectionSlug?: string;
+  personalize?: unknown;
 };
 
 export function normalizeCategory(raw?: string) {
@@ -73,6 +76,8 @@ export function toStoreProduct(p: DbProduct): Product {
     shippingCost: p.shippingCost != null ? Number(p.shippingCost) : null,
     demoType: p.demoType && p.demoType !== 'none' ? p.demoType : 'none',
     demoImage: p.demoImage || '',
+    collectionSlug: p.collectionSlug || '',
+    personalize: parsePersonalize(p.personalize),
     emoji: '✨',
     gradient: category === 'fitness' ? 'from-blue-400 to-indigo-600' : 'from-emerald-400 to-green-600',
   };

@@ -4,7 +4,7 @@
 // `site_collections` (Admin → Setores e coleções); DEFAULT_SECTORS so
 // preenche o banco na primeira vez e cobre o site se o banco cair.
 
-export type Interactive = 'none' | 'rompecabezas' | 'colorear' | 'encender';
+export type Interactive = 'none' | 'rompecabezas' | 'colorear' | 'encender' | 'nombre';
 export type Theme = 'light' | 'dark';
 
 export type SiteCollection = {
@@ -23,6 +23,8 @@ export type SiteCollection = {
   // Cor de fundo do destaque (no tema claro vira um degrade suave).
   bgColor: string;
   interactive: Interactive;
+  // Video curto opcional da colecao (toca sem som no destaque).
+  videoUrl: string;
   // Categorias de produto (nomes do Admin → Categorias) ou palavras-chave,
   // separadas por virgula. Produto entra se a categoria dele contem uma delas.
   match: string;
@@ -32,12 +34,15 @@ export type SiteCollection = {
 
 // Visual do setor (site "coringa": mudou o setor, muda o design).
 // infantil = colorido em blocos; hogar = casa, minimalista quente.
-export type SectorStyle = 'infantil' | 'hogar';
+export type SectorStyle = 'infantil' | 'hogar' | 'llaveros' | 'mascotas';
 export const SECTOR_STYLES: { key: SectorStyle; label: string; hint: string }[] = [
   { key: 'infantil', label: 'Infantil', hint: 'Cores fortes, cards com contorno e brincadeiras. Para brinquedos, lâmparas infantis, kits de pintar.' },
   { key: 'hogar', label: 'Casa / Hogar', hint: 'Tons areia e creme, letras elegantes, fotos grandes. Para decoração, vasos, móveis e organização.' },
+  { key: 'llaveros', label: 'Chaveiros personalizados', hint: 'Índigo e laranja, moderno e divertido, com o nome do cliente ao vivo no chaveiro.' },
+  { key: 'mascotas', label: 'Mascotas / Pet', hint: 'Tons quentes (marrom e dourado), fotos grandes dos pets em destaque e nome do pet personalizado.' },
 ];
-export const sectorStyleOf = (v: unknown): SectorStyle => (v === 'hogar' ? 'hogar' : 'infantil');
+export const sectorStyleOf = (v: unknown): SectorStyle =>
+  v === 'hogar' || v === 'llaveros' || v === 'mascotas' ? v : 'infantil';
 
 export type Sector = {
   id: number;
@@ -45,6 +50,10 @@ export type Sector = {
   name: string;
   tagline: string;
   style: SectorStyle;
+  // Texto, imagem e video de abertura do setor (Admin → Setores e coleções).
+  description: string;
+  imageUrl: string;
+  videoUrl: string;
   position: number;
   enabled: boolean;
   collections: SiteCollection[];
@@ -55,6 +64,7 @@ export const INTERACTIVE_OPTIONS: { key: Interactive; label: string }[] = [
   { key: 'rompecabezas', label: 'Quebra-cabeça (pôr a peça que falta)' },
   { key: 'colorear', label: 'Pintar o dinossauro' },
   { key: 'encender', label: 'Acender a luminária (site escuro + interruptor)' },
+  { key: 'nombre', label: 'Personalizar com nome (chaveiro / pet: o cliente escreve e vê ao vivo)' },
 ];
 
 export function slugify(raw: string) {
@@ -71,6 +81,16 @@ export function matchTerms(c: Pick<SiteCollection, 'match'>) {
   return c.match.split(',').map((t) => slugify(t)).filter(Boolean);
 }
 
+// Colecao de um produto: a escolhida no cadastro (Admin → Produtos → "Onde
+// aparece no site") e, se nao tiver, a que bate com a categoria dele.
+export function collectionForProduct(collections: SiteCollection[], p: { collectionSlug?: string; category?: string; categoryLabel?: string }) {
+  if (p.collectionSlug) {
+    const chosen = collections.find((c) => c.slug === p.collectionSlug);
+    if (chosen) return chosen;
+  }
+  return collectionForCategory(collections, p.categoryLabel ?? p.category);
+}
+
 // Colecao de um produto pela categoria dele — vale a primeira colecao (na
 // ordem dos setores/colecoes) cujas palavras aparecem no nome da categoria.
 export function collectionForCategory(collections: SiteCollection[], category?: string) {
@@ -83,11 +103,12 @@ export function enabledCollections(sectors: Sector[]) {
   return sectors.filter((s) => s.enabled).flatMap((s) => s.collections.filter((c) => c.enabled));
 }
 
-const col = (c: Omit<SiteCollection, 'id' | 'sectorId' | 'enabled' | 'photoUrl'> & { photoUrl?: string }): SiteCollection => ({
+const col = (c: Omit<SiteCollection, 'id' | 'sectorId' | 'enabled' | 'photoUrl' | 'videoUrl'> & { photoUrl?: string; videoUrl?: string }): SiteCollection => ({
   id: 0,
   sectorId: 0,
   enabled: true,
   photoUrl: '',
+  videoUrl: '',
   ...c,
 });
 
@@ -98,6 +119,9 @@ export const DEFAULT_SECTORS: Sector[] = [
     name: 'Infantil',
     tagline: 'Juguetes y lámparas impresos en 3D para los peques',
     style: 'infantil',
+    description: '',
+    imageUrl: '',
+    videoUrl: '',
     position: 1,
     enabled: true,
     collections: [

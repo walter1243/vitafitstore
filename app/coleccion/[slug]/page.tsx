@@ -40,7 +40,7 @@ export default async function CollectionPage({ params }: PageProps) {
       <div className="flex min-h-screen flex-col bg-white">
         <Header />
         <main className="kids flex-1">
-          <CollectionSpotlight slug={collection.slug} first priority headingLevel="h1" primaryHref="#productos" primaryLabel="Ver productos" />
+          <CollectionSpotlight slug={collection.slug} first priority hideProducts headingLevel="h1" primaryHref="#productos" primaryLabel="Ver productos" />
           <div id="productos" className="scroll-mt-24">
             <CollectionCatalog slug={collection.slug} />
           </div>

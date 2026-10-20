@@ -8,7 +8,8 @@ import { useSectors } from './sectors-context';
 import { toStoreProduct } from '@/lib/store-product';
 import { KidsProductCard } from './kids-product-card';
 import { accentFor } from './palette';
-import { HomeProductCard } from './home-product-card';
+import { ThemedProductCard } from '@/components/themes/themed-product-card';
+import { themeFor } from '@/components/themes/sector-themes';
 import { useStoreProducts } from './use-store-products';
 
 type Sort = 'destacados' | 'precio-asc' | 'precio-desc';
@@ -23,7 +24,7 @@ const SORTS: { key: Sort; label: string }[] = [
 // (ex: "Puzzles", "Juegos de mesa" — vem do admin), ordenacao e grade de
 // cards. Embaixo, atalhos pra outra colecao e pra home.
 export function CollectionCatalog({ slug }: { slug: string }) {
-  const { getCollection, getSector, collectionForCategory } = useSectors();
+  const { getCollection, getSector, collectionForProduct } = useSectors();
   const collection = getCollection(slug)!;
   const { products, loaded } = useStoreProducts();
   const [group, setGroup] = useState<string>('todo');
@@ -36,8 +37,8 @@ export function CollectionCatalog({ slug }: { slug: string }) {
   }, []);
 
   const items = useMemo(
-    () => products.filter((p) => collectionForCategory(p.category)?.slug === slug).map(toStoreProduct),
-    [products, slug, collectionForCategory],
+    () => products.filter((p) => collectionForProduct(p)?.slug === slug).map(toStoreProduct),
+    [products, slug, collectionForProduct],
   );
 
   const groups = useMemo(() => {
@@ -60,6 +61,7 @@ export function CollectionCatalog({ slug }: { slug: string }) {
 
   // Outras colecoes do MESMO setor pra continuar navegando.
   const sector = getSector(collection.sectorId);
+  const sectorTheme = themeFor(sector?.style);
   const others = (sector?.collections ?? []).filter((c) => c.slug !== slug && c.enabled);
   const soft = softOf(collection);
   const chip = (active: boolean) =>
@@ -102,7 +104,7 @@ export function CollectionCatalog({ slug }: { slug: string }) {
       {visible.length > 0 ? (
         <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 lg:grid-cols-4">
           {visible.map((p) => (
-            getSector(collection.sectorId)?.style === 'hogar' ? <HomeProductCard key={p.id} product={p} /> : <KidsProductCard
+            sectorTheme ? <ThemedProductCard key={p.id} product={p} theme={sectorTheme} /> : <KidsProductCard
               key={p.id}
               product={p}
               accent={accentFor(collection)}

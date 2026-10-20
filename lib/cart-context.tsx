@@ -3,11 +3,12 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
 import { type Product, type CartItem } from './products'
 
-type Variant = { color?: string; size?: string }
+// text = nome personalizado (chaveiro / pet): cada nome e uma linha propria.
+type Variant = { color?: string; size?: string; text?: string }
 
 interface CartContextType {
   items: CartItem[]
-  addItem: (product: Product, variant?: Variant) => void
+  addItem: (product: Product, variant?: Variant, quantity?: number) => void
   removeItem: (productId: number, variant?: Variant) => void
   updateQuantity: (productId: number, quantity: number, variant?: Variant) => void
   clearCart: () => void
@@ -36,19 +37,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const sameLine = (item: CartItem, productId: number, variant?: Variant) =>
     item.product.id === productId &&
     (item.selectedColor ?? '') === (variant?.color ?? '') &&
-    (item.selectedSize ?? '') === (variant?.size ?? '')
+    (item.selectedSize ?? '') === (variant?.size ?? '') &&
+    (item.customText ?? '') === (variant?.text ?? '')
 
-  const addItem = useCallback((product: Product, variant?: Variant) => {
+  const addItem = useCallback((product: Product, variant?: Variant, quantity = 1) => {
+    const qty = Math.max(1, Math.floor(quantity))
     setItems(prev => {
       const existing = prev.find(item => sameLine(item, product.id, variant))
       if (existing) {
         return prev.map(item =>
           sameLine(item, product.id, variant)
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: item.quantity + qty }
             : item
         )
       }
-      return [...prev, { product, quantity: 1, selectedColor: variant?.color, selectedSize: variant?.size }]
+      return [...prev, { product, quantity: qty, selectedColor: variant?.color, selectedSize: variant?.size, customText: variant?.text || undefined }]
     })
 
     setLastAddedProduct(product)

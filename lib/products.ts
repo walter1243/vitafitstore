@@ -42,6 +42,9 @@ export interface Product {
   // Amostra interativa (Admin → Produtos): montar, pintar ou acender.
   demoType?: 'none' | 'rompecabezas' | 'colorear' | 'encender'
   demoImage?: string
+  // Colecao escolhida no cadastro (vazio = pela categoria) e personalizacao com nome.
+  collectionSlug?: string
+  personalize?: import('./personalize').Personalize
   emoji: string
   gradient: string
 }
@@ -52,6 +55,8 @@ export interface CartItem {
   selectedVariant?: ProductVariant
   selectedColor?: string
   selectedSize?: string
+  // Nome personalizado (chaveiro / placa de pet).
+  customText?: string
 }
 
 export interface Review {

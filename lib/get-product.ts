@@ -42,6 +42,11 @@ export async function getProductById(id: number): Promise<Product | null> {
       shippingCost: row.shipping_cost != null ? Number(row.shipping_cost) : null,
       demoType: ['rompecabezas', 'colorear', 'encender'].includes(row.demo_type) ? row.demo_type : 'none',
       demoImage: row.demo_image ?? '',
+      collectionSlug: row.collection_slug ?? '',
+      personalize: row.personalize ?? null,
+      productType: row.product_type ?? undefined,
+      colorOptions: (() => { try { return JSON.parse(row.color_options || '[]'); } catch { return []; } })(),
+      sizes: (() => { try { return JSON.parse(row.sizes || '[]'); } catch { return []; } })(),
     };
 
     return toStoreProduct(dbProduct);

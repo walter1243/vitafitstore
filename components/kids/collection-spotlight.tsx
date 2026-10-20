@@ -8,7 +8,10 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { type Product } from '@/lib/products';
 import { CollectionPlayButton } from './collection-play';
 import { ProductCarousel } from './product-carousel';
-import { HomeCollection } from './hogar-sections';
+import { ThemedCollection } from '@/components/themes/themed-sections';
+import { themeFor } from '@/components/themes/sector-themes';
+import { toStoreProduct } from '@/lib/store-product';
+import { useStoreProducts } from './use-store-products';
 import { accentFor, dots } from './palette';
 import { PILL } from './pill';
 import { useSectors } from './sectors-context';
@@ -30,12 +33,14 @@ function lighten(hex: string, amount = 0.6) {
 // tamanho — ver a colecao (cheia) e a brincadeira dela (contornada), ou o
 // setor quando a colecao nao tem brincadeira. Tema, cor, imagem e foto vem
 // do Admin → Setores e coleções.
-export function CollectionSpotlight({ slug, count, products, primaryHref, primaryLabel, headingLevel = 'h2', priority, first }: {
+export function CollectionSpotlight({ slug, count, products, hideProducts, primaryHref, primaryLabel, headingLevel = 'h2', priority, first }: {
   slug: string;
   count?: number;
   // Produtos da colecao (Admin → Produtos, pela categoria): cartao embaixo
   // da brincadeira, pra ir direto da brincadeira pra compra.
   products?: Product[];
+  // Pagina da colecao: os produtos ja aparecem embaixo (catalogo).
+  hideProducts?: boolean;
   primaryHref?: string;
   primaryLabel?: string;
   headingLevel?: 'h1' | 'h2';
@@ -44,7 +49,8 @@ export function CollectionSpotlight({ slug, count, products, primaryHref, primar
   first?: boolean;
 }) {
   const ref = useRef<HTMLElement>(null);
-  const { getCollection, getSector } = useSectors();
+  const { getCollection, getSector, collectionForProduct } = useSectors();
+  const { products: allProducts } = useStoreProducts();
   const collection = getCollection(slug);
   const [ratio, setRatio] = useState('4 / 3');
 
@@ -68,8 +74,12 @@ export function CollectionSpotlight({ slug, count, products, primaryHref, primar
 
   if (!collection) return null;
   // Setor com visual Casa / Hogar: layout editorial em vez do destaque infantil.
-  if (getSector(collection.sectorId)?.style === 'hogar') {
-    return <HomeCollection collection={collection} products={products} primaryHref={primaryHref} primaryLabel={primaryLabel} headingLevel={headingLevel} priority={priority} first={first} />;
+  // Sem lista vinda da home (pagina do setor/colecao): pega os produtos dela.
+  const list = products ?? allProducts.filter((p) => collectionForProduct(p)?.slug === slug).map(toStoreProduct);
+  // Setor com visual proprio (Casa, Chaveiros, Pet): layout do tema.
+  const theme = themeFor(getSector(collection.sectorId)?.style);
+  if (theme) {
+    return <ThemedCollection collection={collection} theme={theme} products={list} showCarousel={!hideProducts} primaryHref={primaryHref} primaryLabel={primaryLabel} headingLevel={headingLevel} priority={priority} first={first} />;
   }
   const Heading = headingLevel;
   const dark = collection.theme === 'dark';
@@ -142,9 +152,9 @@ export function CollectionSpotlight({ slug, count, products, primaryHref, primar
         </div>
       )}
 
-      {products && products.length > 0 && (() => {
+      {!hideProducts && list.length > 0 && (() => {
         const accent = accentFor(collection);
-        const few = products.length < SHELF_COUNT;
+        const few = list.length < SHELF_COUNT;
         return (
           <div
             data-reveal
@@ -161,19 +171,19 @@ export function CollectionSpotlight({ slug, count, products, primaryHref, primar
                   </span>
                   <h3 className="mt-3 text-3xl font-bold text-[#1E1B4B] sm:text-4xl">¡Llévatelo a casa!</h3>
                   <p className="mt-1 text-sm font-semibold text-[#1E1B4B]/80 sm:text-base">
-                    {products.length} {products.length === 1 ? 'producto' : 'productos'} · impresos en 3D en nuestro taller
+                    {list.length} {list.length === 1 ? 'producto' : 'productos'} · impresos en 3D en nuestro taller
                   </p>
                 </div>
-                {products.length > SHELF_COUNT && (
+                {list.length > SHELF_COUNT && (
                   <Link
                     href={`/coleccion/${collection.slug}`}
                     className="inline-flex min-h-11 cursor-pointer items-center rounded-full border-[3px] border-[#1E1B4B] bg-white px-5 text-sm font-extrabold text-[#1E1B4B] transition-colors duration-200 hover:bg-[#1E1B4B] hover:text-white"
                   >
-                    Ver los {products.length}
+                    Ver los {list.length}
                   </Link>
                 )}
               </div>
-              <ProductCarousel products={products} accent={accent} />
+              <ProductCarousel products={list} accent={accent} />
             </div>
           </div>
         );

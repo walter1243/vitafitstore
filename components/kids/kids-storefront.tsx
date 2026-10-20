@@ -2,7 +2,7 @@
 import { useMemo } from 'react';
 import { toStoreProduct } from '@/lib/store-product';
 import { CollectionSpotlight } from './collection-spotlight';
-import { HomeExtras } from './hogar-sections';
+import { ThemedExtras } from '@/components/themes/themed-sections';
 import { SectorBand } from './sector-band';
 import { SectorCards } from './sector-cards';
 import { useSectors } from './sectors-context';
@@ -14,25 +14,33 @@ import { useStoreProducts } from './use-store-products';
 // categoria cadastrada em Admin → Produtos). Produtos sem colecao vao pro fim.
 export function KidsStorefront() {
   const { products } = useStoreProducts();
-  const { sectors, collectionForCategory } = useSectors();
+  const { sectors, collectionForProduct } = useSectors();
 
   const { bySlug, loose } = useMemo(() => {
     const bySlug: Record<string, ReturnType<typeof toStoreProduct>[]> = {};
     const loose: typeof products = [];
     for (const p of products) {
-      const c = collectionForCategory(p.category);
+      const c = collectionForProduct(p);
       if (c) (bySlug[c.slug] ??= []).push(toStoreProduct(p));
       else loose.push(p);
     }
     return { bySlug, loose };
-  }, [products, collectionForCategory]);
+  }, [products, collectionForProduct]);
 
-  const visible = sectors.filter((s) => s.collections.length > 0);
+  // Setores novos (Casa, Chaveiros, Pet...) so aparecem quando tiverem produto;
+  // o Infantil aparece sempre (as brincadeiras funcionam sem produto).
+  const visible = sectors
+    .map((s) => (s.style === 'infantil' ? s : { ...s, collections: s.collections.filter((c) => (bySlug[c.slug]?.length ?? 0) > 0) }))
+    .filter((s) => s.collections.length > 0);
 
   return (
     <>
       {/* Abertura: um card por setor (Infantil, Hogar...), cada um no seu visual. */}
-      <SectorCards sectors={visible} homeImages={loose.map((p) => p.image).filter((s): s is string => Boolean(s))} />
+      <SectorCards
+        sectors={visible}
+        homeImages={loose.map((p) => p.image).filter((s): s is string => Boolean(s))}
+        sectorImages={Object.fromEntries(visible.map((s) => [s.slug, s.collections.flatMap((c) => (bySlug[c.slug] ?? []).map((p) => p.mainImage ?? p.image))]))}
+      />
 
       <div>
         {visible.map((sector, si) => (
@@ -48,7 +56,7 @@ export function KidsStorefront() {
 
       {/* Produtos fora das colecoes (decoracao, casa...): vitrine pros pais,
           que sao quem compra — aumenta o ticket e baixa o CAC. */}
-      {loose.length > 0 && <HomeExtras products={loose.map(toStoreProduct)} />}
+      {loose.length > 0 && <ThemedExtras products={loose.map(toStoreProduct)} />}
     </>
   );
 }

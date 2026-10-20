@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import {
   DEFAULT_SECTORS,
   collectionForCategory as matchCollection,
+  collectionForProduct as matchProduct,
   enabledCollections,
   type Sector,
   type SiteCollection,
@@ -14,6 +15,7 @@ type Ctx = {
   getCollection: (slug: string) => SiteCollection | undefined;
   getSector: (id: number) => Sector | undefined;
   collectionForCategory: (category?: string) => SiteCollection | undefined;
+  collectionForProduct: (p: { collectionSlug?: string; category?: string; categoryLabel?: string }) => SiteCollection | undefined;
 };
 
 const SectorsContext = createContext<Sector[] | null>(null);
@@ -57,6 +59,7 @@ export function useSectors(): Ctx {
       getCollection: (slug: string) => collections.find((c) => c.slug === slug),
       getSector: (id: number) => sectors.find((s) => s.id === id),
       collectionForCategory: (category?: string) => matchCollection(collections, category),
+      collectionForProduct: (p: { collectionSlug?: string; category?: string; categoryLabel?: string }) => matchProduct(collections, p),
     };
   }, [sectors]);
 }

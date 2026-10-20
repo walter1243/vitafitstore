@@ -5,7 +5,8 @@ import { Field, inputCls, textareaCls, MediaUploadField } from '@/components/con
 import { INTERACTIVE_OPTIONS, SECTOR_STYLES, slugify, type Interactive, type SectorStyle, type Sector, type SiteCollection, type Theme } from '@/lib/sectors-shared';
 
 type CollectionDraft = Omit<SiteCollection, 'id' | 'position'> & { id?: number };
-type SectorDraft = { id?: number; name: string; slug: string; tagline: string; style: SectorStyle; enabled: boolean };
+type SectorDraft = { id?: number; name: string; slug: string; tagline: string; style: SectorStyle; description: string; imageUrl: string; videoUrl: string; enabled: boolean };
+const STYLE_LABEL: Record<SectorStyle, string> = { infantil: 'Infantil', hogar: 'Casa / Hogar', llaveros: 'Chaveiros', mascotas: 'Mascotas / Pet' };
 
 const emptyCollection = (sectorId: number): CollectionDraft => ({
   sectorId,
@@ -16,6 +17,7 @@ const emptyCollection = (sectorId: number): CollectionDraft => ({
   description: '',
   imageUrl: '',
   photoUrl: '',
+  videoUrl: '',
   theme: 'light',
   bgColor: '#F5F5F7',
   interactive: 'none',
@@ -91,7 +93,7 @@ export function AdminSectors() {
         </div>
         <button
           type="button"
-          onClick={() => setSectorDraft({ name: '', slug: '', tagline: '', style: 'infantil', enabled: true })}
+          onClick={() => setSectorDraft({ name: '', slug: '', tagline: '', style: 'infantil', description: '', imageUrl: '', videoUrl: '', enabled: true })}
           className="inline-flex items-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-500"
         >
           <Plus size={16} /> Novo setor
@@ -108,7 +110,7 @@ export function AdminSectors() {
                 <h3 className="text-lg font-semibold text-white">{s.name}</h3>
                 {!s.enabled && <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-white/60">oculto</span>}
               </div>
-              <p className="text-xs text-white/50">{s.style === 'hogar' ? 'Visual: Casa / Hogar' : 'Visual: Infantil'}{s.tagline ? ` · ${s.tagline}` : ''}</p>
+              <p className="text-xs text-white/50">Visual: {STYLE_LABEL[s.style]}{s.tagline ? ` · ${s.tagline}` : ''}</p>
               <p className="mt-1 text-[11px] text-white/35">/sector/{s.slug}</p>
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -117,7 +119,7 @@ export function AdminSectors() {
               <button className={btn} disabled={busy} onClick={() => run({ action: 'saveSector', ...s, enabled: !s.enabled })}>
                 {s.enabled ? <><EyeOff size={14} /> Ocultar</> : <><Eye size={14} /> Mostrar</>}
               </button>
-              <button className={btn} disabled={busy} onClick={() => setSectorDraft({ id: s.id, name: s.name, slug: s.slug, tagline: s.tagline, style: s.style, enabled: s.enabled })}><Pencil size={14} /> Editar</button>
+              <button className={btn} disabled={busy} onClick={() => setSectorDraft({ id: s.id, name: s.name, slug: s.slug, tagline: s.tagline, style: s.style, description: s.description, imageUrl: s.imageUrl, videoUrl: s.videoUrl, enabled: s.enabled })}><Pencil size={14} /> Editar</button>
               <button
                 className={`${btn} hover:border-red-500/40 hover:text-red-300`}
                 disabled={busy}
@@ -244,26 +246,18 @@ function SectorForm({ draft, busy, onCancel, onSave }: { draft: SectorDraft; bus
               className={`rounded-xl border p-3 text-left transition ${d.style === o.key ? 'border-green-500/60 bg-green-500/10 text-white' : 'border-white/10 text-white/60 hover:bg-white/5'}`}
             >
               {/* mini previa do visual */}
-              {o.key === 'infantil' ? (
-                <span className="mb-2 flex h-14 items-center justify-center gap-1.5 rounded-lg bg-[#FFD84D]">
-                  {['#BFE0FF', '#DCD2FF', '#FFD1E6'].map((c) => (
-                    <span key={c} className="h-9 w-7 rounded-md border-2 border-[#1E1B4B] shadow-[2px_2px_0_#1E1B4B]" style={{ background: c }} />
-                  ))}
-                </span>
-              ) : (
-                <span className="mb-2 flex h-14 items-center justify-center gap-2 rounded-lg bg-[#f3ece2]">
-                  <span className="font-script text-lg text-[#8a6a3a]">hogar</span>
-                  {['#ece3d6', '#e2d6c4'].map((c) => (
-                    <span key={c} className="h-10 w-7 rounded-md" style={{ background: c }} />
-                  ))}
-                </span>
-              )}
+              <StylePreview style={o.key} />
               <span className="block text-sm font-semibold">{o.label}{d.style === o.key ? ' ✓' : ''}</span>
               <span className="mt-0.5 block text-xs leading-relaxed text-white/55">{o.hint}</span>
             </button>
           ))}
         </div>
       </Field>
+      <Field label="Texto de apresentação" hint="Um parágrafo curto que aparece na faixa do setor (opcional).">
+        <textarea rows={2} className={textareaCls} value={d.description} onChange={(e) => setD({ ...d, description: e.target.value })} placeholder="Elige el modelo, escribe el nombre y míralo al momento." />
+      </Field>
+      <MediaUploadField label="Imagem do setor (opcional)" hint="Aparece ao lado do texto na faixa do setor e no card dele no início do site." value={d.imageUrl} onChange={(url) => setD({ ...d, imageUrl: url })} kind="image" />
+      <MediaUploadField label="Vídeo do setor (opcional)" hint="Toca sem som no lugar da imagem (MP4 curto, até ~15 s)." value={d.videoUrl} onChange={(url) => setD({ ...d, videoUrl: url })} kind="video" />
       <Field label="Endereço da página" hint={`kitoys3d.com/sector/${slugify(d.slug || d.name) || '...'}`}>
         <input className={inputCls} value={d.slug} onChange={(e) => setD({ ...d, slug: e.target.value })} placeholder={slugify(d.name) || 'gerado do nome'} />
       </Field>
@@ -357,7 +351,15 @@ function CollectionForm({ draft, sectors, categories, busy, onCancel, onSave }: 
         />
       )}
 
-      <Field label="Brincadeira da faixa" hint="Botão interativo ao lado de “Ver”. Sem brincadeira, o segundo botão leva ao setor.">
+      <MediaUploadField
+        label="Vídeo da coleção (opcional)"
+        hint="Nos setores Casa, Chaveiros e Pet toca sem som no lugar da foto (MP4 curto)."
+        value={d.videoUrl}
+        onChange={(url) => set('videoUrl', url)}
+        kind="video"
+      />
+
+      <Field label="Brincadeira da faixa" hint="Botão interativo ao lado de “Ver”. “Personalizar com nome” abre o chaveiro/placa com o nome ao vivo (o produto precisa ter a personalização ligada em Produtos).">
         <select className={inputCls} value={d.interactive} onChange={(e) => set('interactive', e.target.value as Interactive)}>
           {INTERACTIVE_OPTIONS.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
         </select>
@@ -389,6 +391,41 @@ function CollectionForm({ draft, sectors, categories, busy, onCancel, onSave }: 
       </label>
       <FormActions busy={busy} disabled={!d.name.trim() || !d.sectorId} onCancel={onCancel} onSave={() => onSave(d)} />
     </Modal>
+  );
+}
+
+// Mini previa de cada visual de setor (cores e cara dos cards).
+function StylePreview({ style }: { style: SectorStyle }) {
+  if (style === 'infantil') {
+    return (
+      <span className="mb-2 flex h-14 items-center justify-center gap-1.5 rounded-lg bg-[#FFD84D]">
+        {['#BFE0FF', '#DCD2FF', '#FFD1E6'].map((c) => (
+          <span key={c} className="h-9 w-7 rounded-md border-2 border-[#1E1B4B] shadow-[2px_2px_0_#1E1B4B]" style={{ background: c }} />
+        ))}
+      </span>
+    );
+  }
+  if (style === 'hogar') {
+    return (
+      <span className="mb-2 flex h-14 items-center justify-center gap-2 rounded-lg bg-[#f3ece2]">
+        <span className="font-script text-lg text-[#8a6a3a]">hogar</span>
+        {['#ece3d6', '#e2d6c4'].map((c) => <span key={c} className="h-10 w-7 rounded-md" style={{ background: c }} />)}
+      </span>
+    );
+  }
+  if (style === 'llaveros') {
+    return (
+      <span className="mb-2 flex h-14 items-center justify-center gap-2 rounded-lg" style={{ background: 'linear-gradient(160deg,#EEF2FF,#E0E7FF)' }}>
+        <span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-[#1E1B4B] shadow" style={{ fontFamily: "'Fredoka', sans-serif" }}>Lucía</span>
+        <span className="h-6 w-14 rounded-full bg-[#EA580C]" />
+      </span>
+    );
+  }
+  return (
+    <span className="mb-2 flex h-14 items-center justify-center gap-1.5 rounded-lg bg-[#FEF3C7]">
+      {['#B45309', '#78350F', '#FDE68A'].map((c) => <span key={c} className="h-10 w-8 rounded-lg" style={{ background: c }} />)}
+      <span className="font-script text-lg text-[#78350F]">Toby</span>
+    </span>
   );
 }
 

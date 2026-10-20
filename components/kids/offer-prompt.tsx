@@ -14,12 +14,12 @@ import { useStoreProducts } from './use-store-products';
 // ainda sem produto cadastrado.
 export function useCollectionOffer(slug: string, prefer?: RegExp) {
   const { products } = useStoreProducts();
-  const { collectionForCategory } = useSectors();
+  const { collectionForProduct } = useSectors();
   return useMemo(() => {
-    const items = products.filter((p) => collectionForCategory(p.category)?.slug === slug);
+    const items = products.filter((p) => collectionForProduct(p)?.slug === slug);
     const chosen = (prefer && items.find((p) => prefer.test(p.name))) || items[0];
     return chosen ? toStoreProduct(chosen) : null;
-  }, [products, slug, prefer, collectionForCategory]);
+  }, [products, slug, prefer, collectionForProduct]);
 }
 
 // Fim de toda brincadeira: "¿Lo añadimos al carrito?" com o produto da

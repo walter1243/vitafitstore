@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { unpackItems } from '@/lib/order-items';
 import Stripe from 'stripe';
 import { sql } from '@/lib/db';
 import { processOrder } from '@/lib/order-orchestrator';
@@ -32,17 +33,24 @@ export async function POST(req: NextRequest) {
 
     const meta = pi.metadata ?? {};
     const amount = pi.amount / 100;
-    const items: Array<{ productId: number; quantity: number; color?: string; size?: string }> = JSON.parse(meta.items ?? '[]');
+    const items = unpackItems(meta);
 
     try {
       await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS selected_color TEXT`;
       await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS selected_size TEXT`;
+      // Todos os itens do pedido (antes so o 1o era salvo) + o nome personalizado.
+      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS items_json TEXT`;
+      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS custom_text TEXT`;
+      const ids = [...new Set(items.map((i) => i.productId))];
+      const names = ids.length ? await sql`SELECT id, name FROM products WHERE id = ANY(${ids})` : [];
+      const nameById = new Map((names as any[]).map((r) => [Number(r.id), String(r.name)]));
+      const itemsJson = JSON.stringify(items.map((i) => ({ ...i, name: nameById.get(i.productId) ?? `Produto #${i.productId}` })));
       await sql`
         INSERT INTO orders (
           customer_name, customer_email, customer_phone,
           address_line, postal_code, city, country,
           product_id, total_amount, status, stripe_payment_id,
-          selected_color, selected_size
+          selected_color, selected_size, items_json, custom_text
         ) VALUES (
           ${meta.customerName  || 'Anônimo'},
           ${meta.customerEmail || null},
@@ -56,7 +64,9 @@ export async function POST(req: NextRequest) {
           'pending',
           ${pi.id},
           ${items[0]?.color || null},
-          ${items[0]?.size || null}
+          ${items[0]?.size || null},
+          ${itemsJson},
+          ${items.map((i) => i.text).filter(Boolean).join(' | ') || null}
         )
       `;
     } catch (dbErr) {
