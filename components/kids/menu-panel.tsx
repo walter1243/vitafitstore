@@ -44,7 +44,7 @@ export function useHomeCategories(enabled: boolean) {
 
 // Link de uma categoria sem colecao: a secao "Mas para tu casa" da home, ja
 // filtrada nela.
-export const homeCategoryHref = (name: string) => `/?cat=${encodeURIComponent(name)}#productos`;
+export const homeCategoryHref = (name: string) => `/?cat=${encodeURIComponent(name)}#mundo-hogar`;
 export function selectHomeCategory(name: string) {
   window.dispatchEvent(new CustomEvent(HOGAR_CAT_EVENT, { detail: name }));
 }
@@ -172,7 +172,7 @@ export function CollectionsMenuPanel({ open, onNavigate }: { open: boolean; onNa
 
       {homeCats.length > 0 && (
         <div className="-mx-8 px-8 py-5" style={{ background: SECTOR_THEMES.hogar.bgAlt }}>
-          <GroupTitle title="Más para tu casa" hint="para papás y mamás" t={SECTOR_THEMES.hogar} href="/#productos" onNavigate={onNavigate} />
+          <GroupTitle title="Más para tu casa" hint="para papás y mamás" t={SECTOR_THEMES.hogar} href="/#mundo-hogar" onNavigate={onNavigate} />
           <ul className={ROW}>
             {homeCats.map((cat) => (
               <ThemedMenuCard

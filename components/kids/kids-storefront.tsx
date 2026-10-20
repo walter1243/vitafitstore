@@ -1,20 +1,22 @@
 'use client';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { toStoreProduct } from '@/lib/store-product';
 import { CollectionSpotlight } from './collection-spotlight';
 import { ThemedExtras } from '@/components/themes/themed-sections';
-import { SectorBand } from './sector-band';
 import { SectorCards } from './sector-cards';
 import { useSectors } from './sectors-context';
 import { useStoreProducts } from './use-store-products';
 
-// Home organizada por setores (Admin → Setores e coleções): cada setor abre
-// com a sua faixa e depois vem um destaque de tela cheia por colecao — a
-// brincadeira em cima e, embaixo, o cartao com os produtos dela (pela
-// categoria cadastrada em Admin → Produtos). Produtos sem colecao vao pro fim.
+// Home em "mundos" (Admin → Setores e coleções): os cards de cima funcionam
+// como abas — o mundo escolhido (Infantil, Hogar, Llaveros, Mascotas...)
+// e o unico que aparece embaixo, com as colecoes e os produtos dele.
+// O endereco guarda a escolha (#mundo-hogar), pra dar pra compartilhar.
+export const EXTRA = 'mas';
+
 export function KidsStorefront() {
   const { products } = useStoreProducts();
   const { sectors, collectionForProduct } = useSectors();
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const { bySlug, loose } = useMemo(() => {
     const bySlug: Record<string, ReturnType<typeof toStoreProduct>[]> = {};
@@ -27,37 +29,45 @@ export function KidsStorefront() {
     return { bySlug, loose };
   }, [products, collectionForProduct]);
 
-  // Setores novos (Casa, Chaveiros, Pet...) so aparecem quando tiverem produto;
-  // o Infantil aparece sempre (as brincadeiras funcionam sem produto).
-  const visible = sectors
-    .map((s) => (s.style === 'infantil' ? s : { ...s, collections: s.collections.filter((c) => (bySlug[c.slug]?.length ?? 0) > 0) }))
-    .filter((s) => s.collections.length > 0);
+  const worlds = sectors.filter((s) => s.collections.length > 0);
+  const [selected, setSelected] = useState('');
+
+  // Mundo vindo do endereco (#mundo-hogar) ou do menu.
+  useEffect(() => {
+    const read = () => {
+      const m = window.location.hash.match(/^#mundo-(.+)$/);
+      if (m) setSelected(decodeURIComponent(m[1]));
+    };
+    read();
+    window.addEventListener('hashchange', read);
+    return () => window.removeEventListener('hashchange', read);
+  }, []);
+
+  const current = worlds.find((s) => s.slug === selected) ?? (selected === EXTRA ? null : worlds[0]);
+  const active = current?.slug ?? (selected === EXTRA ? EXTRA : '');
+
+  function choose(slug: string) {
+    setSelected(slug);
+    history.replaceState(null, '', `#mundo-${slug}`);
+    // Desce ate o conteudo do mundo escolhido.
+    requestAnimationFrame(() => contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  }
+
+  // Produtos sem colecao entram no mundo de casa (ou no card "Hogar" extra).
+  const showExtras = loose.length > 0 && (active === EXTRA || current?.style === 'hogar');
 
   return (
     <>
-      {/* Abertura: um card por mundo (todos os setores com colecao), com a
-          imagem de capa; os que ainda nao tem produto abrem a pagina do setor. */}
-      <SectorCards
-        sectors={sectors.filter((s) => s.collections.length > 0)}
-        onPage={new Set(visible.map((s) => s.slug))}
-        extraHome={loose.length > 0}
-      />
+      <SectorCards sectors={worlds} active={active} onSelect={choose} extraHome={loose.length > 0} />
 
-      <div>
-        {visible.map((sector, si) => (
-          // O 1o setor ja e apresentado pelos cards — entra direto nas colecoes.
-          <div key={sector.id || sector.slug} id={si === 0 ? `setor-${sector.slug}` : undefined} className="scroll-mt-24">
-            {si > 0 && <SectorBand sector={sector} />}
-            {sector.collections.map((c, ci) => (
-              <CollectionSpotlight key={c.slug} slug={c.slug} products={bySlug[c.slug]} priority={si === 0 && ci === 0} />
-            ))}
-          </div>
-        ))}
+      <div ref={contentRef} id="mundo" className="scroll-mt-24">
+        <div key={active} className="world-in">
+          {current?.collections.map((c, ci) => (
+            <CollectionSpotlight key={c.slug} slug={c.slug} products={bySlug[c.slug] ?? []} priority={ci === 0} />
+          ))}
+          {showExtras && <ThemedExtras products={loose.map(toStoreProduct)} />}
+        </div>
       </div>
-
-      {/* Produtos fora das colecoes (decoracao, casa...): vitrine pros pais,
-          que sao quem compra — aumenta o ticket e baixa o CAC. */}
-      {loose.length > 0 && <ThemedExtras products={loose.map(toStoreProduct)} />}
     </>
   );
 }

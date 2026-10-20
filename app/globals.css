@@ -493,3 +493,8 @@ body:has(.lamp-dark) [data-slot="dialog-overlay"] {
 .np-swing { animation: np-swing 0.9s cubic-bezier(.34,1.56,.64,1); transform-origin: 50% 12%; }
 .np-pop { animation: np-pop 0.35s ease-out; transform-box: fill-box; transform-origin: center; }
 @media (prefers-reduced-motion: reduce) { .np-swing, .np-pop { animation: none; } }
+
+/* Troca de mundo na home (abas): o conteudo novo entra subindo. */
+@keyframes world-in { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+.world-in { animation: world-in 0.5s cubic-bezier(.22,1,.36,1); }
+@media (prefers-reduced-motion: reduce) { .world-in { animation: none; } }
