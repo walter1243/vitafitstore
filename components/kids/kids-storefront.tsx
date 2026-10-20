@@ -35,11 +35,12 @@ export function KidsStorefront() {
 
   return (
     <>
-      {/* Abertura: um card por setor (Infantil, Hogar...), cada um no seu visual. */}
+      {/* Abertura: um card por mundo (todos os setores com colecao), com a
+          imagem de capa; os que ainda nao tem produto abrem a pagina do setor. */}
       <SectorCards
-        sectors={visible}
-        homeImages={loose.map((p) => p.image).filter((s): s is string => Boolean(s))}
-        sectorImages={Object.fromEntries(visible.map((s) => [s.slug, s.collections.flatMap((c) => (bySlug[c.slug] ?? []).map((p) => p.mainImage ?? p.image))]))}
+        sectors={sectors.filter((s) => s.collections.length > 0)}
+        onPage={new Set(visible.map((s) => s.slug))}
+        extraHome={loose.length > 0}
       />
 
       <div>

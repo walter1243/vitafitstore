@@ -1,39 +1,37 @@
 'use client';
+import Image from 'next/image';
 import Link from 'next/link';
-import { type Sector } from '@/lib/sectors-shared';
+import { type Sector, type SectorStyle } from '@/lib/sectors-shared';
 import { SECTOR_THEMES, themeFor, type SectorTheme } from '@/components/themes/sector-themes';
 import { dots } from './palette';
 
-type Card = { key: string; name: string; tagline: string; href: string; images: string[]; count: string; theme: SectorTheme | null };
+// Imagem de capa de cada mundo. A "Imagem do setor" do Admin → Setores e
+// coleções tem prioridade; sem ela, usa a arte padrao do visual.
+const COVER: Record<SectorStyle, string> = {
+  infantil: '/images/sectors/infantil.jpg',
+  hogar: '/images/sectors/hogar.jpg',
+  llaveros: '/images/sectors/llaveros.jpg',
+  mascotas: '/images/sectors/mascotas.png',
+};
 
-// Abertura da home: um card por setor (Infantil, Hogar, Llaveros, Mascotas e
-// os proximos criados no Admin → Setores e coleções), cada um no visual do
-// proprio setor. Clicar leva pra parte daquele setor na pagina. Produtos de
-// casa sem setor proprio entram como o card "Hogar".
-export function SectorCards({ sectors, homeImages, sectorImages }: { sectors: Sector[]; homeImages: string[]; sectorImages: Record<string, string[]> }) {
-  const cards: Card[] = sectors.map((s) => {
-    const fromCollections = s.collections.map((c) => c.imageUrl || c.photoUrl).filter(Boolean);
-    const images = [s.imageUrl, ...fromCollections, ...(sectorImages[s.slug] ?? [])].filter(Boolean).slice(0, 3);
-    return {
-      key: s.slug,
-      name: s.name,
-      tagline: s.tagline,
-      href: `#setor-${s.slug}`,
-      images,
-      count: `${s.collections.length} ${s.collections.length === 1 ? 'colección' : 'colecciones'}`,
-      theme: themeFor(s.style),
-    };
-  });
-  if (homeImages.length > 0 && !sectors.some((s) => s.style === 'hogar')) {
-    cards.push({
-      key: 'mas',
-      name: 'Hogar',
-      tagline: 'Decoración y detalles para tu casa',
-      href: '#productos',
-      images: homeImages.slice(0, 3),
-      count: `${homeImages.length} ${homeImages.length === 1 ? 'producto' : 'productos'}`,
-      theme: SECTOR_THEMES.hogar,
-    });
+type Card = { key: string; name: string; tagline: string; href: string; image: string; contain: boolean; theme: SectorTheme | null };
+
+// Abertura da home: um card por mundo (Infantil, Hogar, Llaveros, Mascotas e
+// os proximos setores do admin) com a imagem de capa, o nome e a frase —
+// cada um no visual do proprio setor. Setor que ja aparece na home rola ate
+// ele; os outros abrem a pagina do setor.
+export function SectorCards({ sectors, onPage, extraHome }: { sectors: Sector[]; onPage: Set<string>; extraHome: boolean }) {
+  const cards: Card[] = sectors.map((s) => ({
+    key: s.slug,
+    name: s.name,
+    tagline: s.tagline,
+    href: onPage.has(s.slug) ? `#setor-${s.slug}` : `/sector/${s.slug}`,
+    image: s.imageUrl || COVER[s.style],
+    contain: !s.imageUrl && s.style === 'mascotas',
+    theme: themeFor(s.style),
+  }));
+  if (extraHome && !sectors.some((s) => s.style === 'hogar')) {
+    cards.push({ key: 'mas', name: 'Hogar', tagline: 'Decoración y detalles para tu casa', href: '#productos', image: COVER.hogar, contain: false, theme: SECTOR_THEMES.hogar });
   }
   if (cards.length === 0) return null;
 
@@ -45,9 +43,9 @@ export function SectorCards({ sectors, homeImages, sectorImages }: { sectors: Se
           <h1 className="text-4xl font-bold text-[#1E1B4B] sm:text-6xl">Elige tu mundo</h1>
           <p className="mx-auto mt-3 max-w-2xl text-lg text-[#1E1B4B]/80 sm:text-xl">Juguetes, llaveros, cosas para tu mascota y para casa, impresos en 3D en nuestro taller.</p>
         </div>
-        <ul className={`grid gap-6 ${cards.length === 1 ? 'mx-auto max-w-md' : cards.length === 2 ? 'sm:grid-cols-2' : cards.length === 4 ? 'sm:grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-3'}`}>
-          {cards.map((c) => (
-            <li key={c.key}>{c.theme ? <ThemedCard c={c} t={c.theme} /> : <KidsCard c={c} />}</li>
+        <ul className={`grid gap-6 ${cards.length === 1 ? 'mx-auto max-w-md' : cards.length === 3 ? 'sm:grid-cols-2 lg:grid-cols-3' : 'sm:grid-cols-2'}`}>
+          {cards.map((c, i) => (
+            <li key={c.key}>{c.theme ? <ThemedCard c={c} t={c.theme} priority={i < 2} /> : <KidsCard c={c} priority={i < 2} />}</li>
           ))}
         </ul>
       </div>
@@ -55,25 +53,18 @@ export function SectorCards({ sectors, homeImages, sectorImages }: { sectors: Se
   );
 }
 
-function KidsCard({ c }: { c: Card }) {
+function KidsCard({ c, priority }: { c: Card; priority: boolean }) {
   return (
     <Link
       href={c.href}
-      className="group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-[32px] border-[3px] border-[#1E1B4B] bg-[#FFD84D] p-5 shadow-[6px_6px_0_#1E1B4B] transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:shadow-[9px_9px_0_#1E1B4B] motion-reduce:hover:translate-y-0 sm:p-6"
+      className="group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-[32px] border-[3px] border-[#1E1B4B] bg-[#FFD84D] p-4 shadow-[6px_6px_0_#1E1B4B] transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:shadow-[9px_9px_0_#1E1B4B] motion-reduce:hover:translate-y-0 sm:p-5"
     >
-      <span className="pointer-events-none absolute inset-0 opacity-50" style={dots('#FFB800')} aria-hidden="true" />
-      <span className="relative grid grid-cols-3 gap-2">
-        {c.images.map((src) => (
-          <span key={src} className="aspect-square overflow-hidden rounded-2xl border-2 border-[#1E1B4B] bg-white">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={src} alt="" className="h-full w-full object-contain p-1.5" />
-          </span>
-        ))}
+      <span className="relative block aspect-[16/10] overflow-hidden rounded-[22px] border-[3px] border-[#1E1B4B] bg-white">
+        <Image src={c.image} alt={`Mundo ${c.name}`} fill priority={priority} sizes="(min-width: 640px) 50vw, 92vw" className="object-cover transition-transform duration-500 group-hover:scale-[1.04] motion-reduce:transition-none" />
       </span>
-      <span className="relative mt-5 font-kids text-4xl font-bold text-[#1E1B4B]">{c.name}</span>
-      {c.tagline && <span className="relative mt-1 text-base font-semibold text-[#1E1B4B]/80">{c.tagline}</span>}
-      <span className="relative mt-auto flex items-center justify-between gap-3 pt-5">
-        <span className="text-sm font-bold text-[#1E1B4B]/70">{c.count}</span>
+      <span className="mt-5 font-kids text-4xl font-bold text-[#1E1B4B]">{c.name}</span>
+      {c.tagline && <span className="mt-1 text-base font-semibold text-[#1E1B4B]/80">{c.tagline}</span>}
+      <span className="mt-auto flex justify-end pt-5">
         <span className="inline-flex min-h-11 items-center rounded-full bg-[#1E1B4B] px-5 text-sm font-extrabold text-white transition-colors duration-200 group-hover:bg-[#363a5c]">
           Ver {c.name.toLowerCase()}
         </span>
@@ -82,32 +73,32 @@ function KidsCard({ c }: { c: Card }) {
   );
 }
 
-// Card de setor no visual dele (Casa, Chaveiros, Pet...).
-function ThemedCard({ c, t }: { c: Card; t: SectorTheme }) {
-  const pet = t.key === 'mascotas';
+// Card do mundo no visual dele (Casa, Chaveiros, Pet...).
+function ThemedCard({ c, t, priority }: { c: Card; t: SectorTheme; priority: boolean }) {
   return (
     <Link
       href={c.href}
-      className="group flex h-full cursor-pointer flex-col p-5 transition-shadow duration-300 sm:p-6"
+      className="group flex h-full cursor-pointer flex-col p-4 transition-shadow duration-300 sm:p-5"
       style={{
         background: t.key === 'llaveros' ? `linear-gradient(160deg, #ffffff 0%, ${t.bg} 100%)` : t.bg,
         borderRadius: '32px',
         boxShadow: t.key === 'llaveros' ? '0 14px 36px rgba(79,70,229,0.16)' : undefined,
       }}
     >
-      <span className={`grid gap-2 ${pet && c.images.length > 0 ? 'grid-cols-2' : 'grid-cols-3'}`}>
-        {c.images.slice(0, pet ? 2 : 3).map((src) => (
-          <span key={src} className={`${pet ? 'aspect-[4/5]' : 'aspect-square'} overflow-hidden`} style={{ borderRadius: t.radius, background: t.surface }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={src} alt="" className={`h-full w-full ${t.key === 'llaveros' ? 'object-contain p-2' : 'object-cover'} transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none`} />
-          </span>
-        ))}
+      <span className="relative block aspect-[16/10] overflow-hidden" style={{ borderRadius: t.radius, background: c.contain ? t.surface : t.bgAlt }}>
+        <Image
+          src={c.image}
+          alt={`Mundo ${c.name}`}
+          fill
+          priority={priority}
+          sizes="(min-width: 640px) 50vw, 92vw"
+          className={`${c.contain ? 'object-contain p-4' : 'object-cover'} transition-transform duration-500 group-hover:scale-[1.04] motion-reduce:transition-none`}
+        />
       </span>
       <span className="mt-5 text-2xl" style={{ fontFamily: t.kickerFont, color: t.accent }}>{t.kicker}</span>
       <span className="text-4xl font-semibold" style={{ fontFamily: t.heading, color: t.ink }}>{c.name}</span>
       {c.tagline && <span className="mt-1 text-base" style={{ color: t.muted }}>{c.tagline}</span>}
-      <span className="mt-auto flex items-center justify-between gap-3 pt-5">
-        <span className="text-sm font-semibold" style={{ color: t.muted }}>{c.count}</span>
+      <span className="mt-auto flex justify-end pt-5">
         <span className="inline-flex min-h-11 items-center rounded-full px-5 text-sm font-bold" style={{ background: t.cta, color: t.ctaText }}>
           Ver {c.name.toLowerCase()}
         </span>
