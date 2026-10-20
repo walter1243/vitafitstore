@@ -240,18 +240,17 @@ export function Header() {
       {/* Mobile drawer: Inicio, setores com as colecoes e Nuestro taller */}
       {mobileOpen && (
         <>
-          <div className="fixed inset-0 z-40 bg-[#23263f]/40 md:hidden" onClick={() => setMobileOpen(false)} />
-          <div className="kids fixed bottom-0 right-0 top-0 z-50 flex w-[300px] flex-col bg-white md:hidden">
-            <div className="flex items-center justify-between border-b border-[#efe7da] p-5">
-              <span className="font-kids text-2xl font-bold text-[#23263f]">Menú</span>
-              <button
-                onClick={() => setMobileOpen(false)}
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F2F4FA] text-[#23263f]"
-                aria-label="Cerrar menú"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+          {/* Abre ABAIXO da faixa do cabecalho (logo, carrinho e o X de
+              fechar continuam visiveis na mesma faixa). */}
+          <div
+            className="fixed inset-x-0 bottom-0 z-40 bg-[#23263f]/40 md:hidden"
+            style={{ top: topBarHeight + 73 }}
+            onClick={() => setMobileOpen(false)}
+          />
+          <div
+            className="kids fixed bottom-0 right-0 z-40 flex w-full max-w-[320px] flex-col border-l border-[#efe7da] bg-white shadow-[-12px_0_32px_rgba(35,38,63,0.12)] md:hidden"
+            style={{ top: topBarHeight + 73 }}
+          >
             <nav className="flex flex-1 flex-col overflow-y-auto p-3" aria-label="Principal">
               <Link href="/" onClick={() => setMobileOpen(false)} className={MOBILE_ITEM}>Inicio</Link>
               {menuSectors.map((sector) => (
