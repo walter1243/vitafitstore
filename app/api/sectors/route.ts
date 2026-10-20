@@ -27,6 +27,12 @@ export async function GET(req: NextRequest) {
 }
 
 const str = (v: unknown, max = 500) => String(v ?? '').trim().slice(0, max);
+// Endereco: se colarem um link inteiro (https://.../sector/hogar), fica so a ultima parte.
+const cleanSlug = (v: unknown) => {
+  const raw = str(v, 300);
+  if (!/[/:]/.test(raw)) return raw.slice(0, 80);
+  return (raw.replace(/[?#].*$/, '').replace(/\/+$/, '').split('/').pop() || '').slice(0, 80);
+};
 
 // POST { action, ... } — criar/editar/apagar/reordenar setores e colecoes.
 export async function POST(req: NextRequest) {
@@ -40,7 +46,7 @@ export async function POST(req: NextRequest) {
     if (action === 'saveSector') {
       const name = str(body.name, 80);
       if (!name) return NextResponse.json({ error: 'Nome do setor é obrigatório.' }, { status: 400 });
-      const slug = slugify(str(body.slug, 80) || name);
+      const slug = slugify(cleanSlug(body.slug) || name);
       if (!slug) return NextResponse.json({ error: 'Nome do setor inválido.' }, { status: 400 });
       const tagline = str(body.tagline, 200);
       const enabled = body.enabled !== false;
@@ -66,7 +72,7 @@ export async function POST(req: NextRequest) {
       const name = str(body.name, 80);
       const sectorId = Number(body.sectorId) || 0;
       if (!name || !sectorId) return NextResponse.json({ error: 'Nome e setor são obrigatórios.' }, { status: 400 });
-      const slug = slugify(str(body.slug, 80) || name);
+      const slug = slugify(cleanSlug(body.slug) || name);
       if (!slug) return NextResponse.json({ error: 'Nome da coleção inválido.' }, { status: 400 });
       const id = Number(body.id) || 0;
       const [clash] = await sql`SELECT id FROM site_collections WHERE slug = ${slug} AND id <> ${id} LIMIT 1`;

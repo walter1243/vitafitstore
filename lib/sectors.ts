@@ -63,6 +63,7 @@ export async function ensureSectorTables() {
     }
   }
   await seedNewSectors();
+  await mergeHogarOnce();
 }
 
 // Setores novos da Kitoys 3D (casa, chaveiros e pets), criados uma unica
@@ -90,6 +91,22 @@ const NEW_SECTORS = [
     ],
   },
 ] as const;
+
+// Correcao unica: ja existia um setor "Hogar" criado no admin (com um link
+// colado no endereco). Fica o do dono (texto dele), recebe a colecao
+// Decoracion, ganha o endereco /sector/hogar e o duplicado sai.
+async function mergeHogarOnce() {
+  const [done] = await sql`SELECT key FROM site_flags WHERE key = 'merge_hogar_v1'`;
+  if (done) return;
+  const [owner] = await sql`SELECT id, slug FROM sectors WHERE style = 'hogar' AND slug <> 'hogar' ORDER BY id LIMIT 1`;
+  const [seeded] = await sql`SELECT id FROM sectors WHERE slug = 'hogar'`;
+  if (owner && seeded) {
+    await sql`UPDATE site_collections SET sector_id = ${owner.id} WHERE sector_id = ${seeded.id}`;
+    await sql`DELETE FROM sectors WHERE id = ${seeded.id}`;
+    if (/http|kitoys3d-com/.test(String(owner.slug))) await sql`UPDATE sectors SET slug = 'hogar' WHERE id = ${owner.id}`;
+  }
+  await sql`INSERT INTO site_flags (key) VALUES ('merge_hogar_v1') ON CONFLICT DO NOTHING`;
+}
 
 async function seedNewSectors() {
   const [done] = await sql`SELECT key FROM site_flags WHERE key = 'seed_sectors_v2'`;
