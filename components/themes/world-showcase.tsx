@@ -1,5 +1,5 @@
 'use client';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -8,6 +8,7 @@ import {
 import { type Sector, type SiteCollection } from '@/lib/sectors-shared';
 import { type Product } from '@/lib/products';
 import { toStoreProduct } from '@/lib/store-product';
+import { useCart } from '@/lib/cart-context';
 import { KidsProductCard } from '@/components/kids/kids-product-card';
 import { accentFor } from '@/components/kids/palette';
 import { useSectors } from '@/components/kids/sectors-context';
@@ -118,7 +119,9 @@ export function WorldShowcase({ sector, products }: { sector?: WorldSector | nul
       {s.shots.map((shot, i) => {
         const tile = s.tiles[i];
         const Icon = tile ? TILE_ICON[tile.icon] ?? Sparkles : Sparkles;
-        const product = list[i];
+        // Produto da foto: o escolhido em Editar mundos ou, sem escolha, o do mundo na ordem.
+        const chosen = shot.productId ? all.find((p) => Number(p.id) === shot.productId) : undefined;
+        const product = chosen ? toStoreProduct(chosen) : list[i];
         const flip = i % 2 === 1;
         return (
           <section key={shot.url + i} className="px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
@@ -133,13 +136,17 @@ export function WorldShowcase({ sector, products }: { sector?: WorldSector | nul
                 <figure className="relative aspect-[5/4] overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.12)]" style={{ borderRadius: t.radius, background: t.surface }}>
                   <MediaFill media={shot} alt={shot.alt || shot.caption || 'Foto de uso'} sizes="(min-width: 1024px) 58vw, 92vw" priority={i === 0} />
                 </figure>
-                {/* produto de verdade "pendurado" na foto */}
-                {product && <FloatingProduct product={product} t={t} side={flip ? 'right' : 'left'} />}
               </div>
 
               <div className={`lg:col-span-5 ${flip ? 'lg:order-1' : ''}`}>
-                <p className="text-sm font-bold uppercase tracking-[0.2em]" style={{ color: t.accent }}>{String(i + 1).padStart(2, '0')}</p>
-                {tile ? (
+                <p className="flex items-center gap-3 text-sm font-bold uppercase tracking-[0.2em]" style={{ color: t.accent }}>
+                  {String(i + 1).padStart(2, '0')}
+                  {tile && <span className="normal-case tracking-normal" style={{ fontFamily: t.kickerFont }}>· {tile.title}</span>}
+                </p>
+                {product ? (
+                  // Card do produto que aparece na foto: foto, nome, preco e compra.
+                  <ProductPanel product={product} t={t} note={tile?.text || shot.caption} />
+                ) : tile ? (
                   <>
                     <span className="mt-5 flex h-14 w-14 items-center justify-center rounded-2xl" style={{ background: t.cta, color: t.ctaText }}>
                       <Icon className="h-7 w-7" aria-hidden="true" />
@@ -150,15 +157,6 @@ export function WorldShowcase({ sector, products }: { sector?: WorldSector | nul
                   </>
                 ) : (
                   shot.caption && <h3 className="mt-4 text-3xl font-semibold leading-tight sm:text-4xl" style={{ fontFamily: t.heading }}>{shot.caption}</h3>
-                )}
-                {product && (
-                  <Link
-                    href={`/producto/${product.id}-${product.slug}`}
-                    className="mt-8 inline-flex min-h-12 items-center rounded-full px-7 text-[15px] font-bold transition-opacity hover:opacity-90"
-                    style={{ background: t.cta, color: t.ctaText }}
-                  >
-                    {product.personalize?.enabled ? 'Personalizar el mío' : 'Lo quiero'}
-                  </Link>
                 )}
               </div>
             </div>
@@ -226,22 +224,40 @@ export function WorldShowcase({ sector, products }: { sector?: WorldSector | nul
   );
 }
 
-// Card pequeno de um produto real em cima da foto (liga a imagem a compra).
-function FloatingProduct({ product, t, side }: { product: Product; t: SectorTheme; side: 'left' | 'right' }) {
+// Card de compra do produto da foto (no lugar do texto ao lado da imagem).
+function ProductPanel({ product, t, note }: { product: Product; t: SectorTheme; note?: string }) {
+  const { addItem } = useCart();
+  const [added, setAdded] = useState(false);
+  const personalized = Boolean(product.personalize?.enabled);
+  const needsPage = personalized || Boolean(product.colorOptions?.length || product.sizes?.length);
+  const href = `/producto/${product.id}-${product.slug}`;
   return (
-    <Link
-      href={`/producto/${product.id}-${product.slug}`}
-      className={`absolute -bottom-8 ${side === 'left' ? 'left-4 sm:-left-6' : 'right-4 sm:-right-6'} flex w-[250px] items-center gap-3 bg-white p-3 shadow-[0_18px_40px_rgba(0,0,0,0.18)] transition-transform duration-200 hover:-translate-y-1 motion-reduce:hover:translate-y-0`}
-      style={{ borderRadius: '20px' }}
-    >
-      <span className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl" style={{ background: t.surface }}>
-        <Image src={product.mainImage ?? product.image} alt="" fill sizes="64px" className="object-cover" />
-      </span>
-      <span className="min-w-0">
-        <span className="line-clamp-2 block text-sm font-semibold leading-snug" style={{ color: t.ink, fontFamily: t.heading }}>{product.name}</span>
-        <span className="mt-0.5 block text-base font-bold" style={{ color: t.accent }}>{product.price.toFixed(2)}€</span>
-      </span>
-    </Link>
+    <div className="mt-5 overflow-hidden bg-white shadow-[0_20px_50px_rgba(0,0,0,0.10)]" style={{ borderRadius: t.radius }}>
+      <Link href={href} className="relative block aspect-[4/3]" style={{ background: t.surface }}>
+        <Image src={product.mainImage ?? product.image} alt={product.name} fill sizes="(min-width: 1024px) 34vw, 92vw" className="object-cover" />
+      </Link>
+      <div className="p-6">
+        <Link href={href} className="block text-2xl font-semibold leading-snug hover:underline" style={{ fontFamily: t.heading, color: t.ink }}>{product.name}</Link>
+        {note && <p className="mt-2 text-base leading-relaxed" style={{ color: t.muted }}>{note}</p>}
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+          <span className="text-2xl font-bold" style={{ color: t.ink }}>{product.price.toFixed(2)}€</span>
+          {needsPage ? (
+            <Link href={href} className="inline-flex min-h-12 items-center gap-2 rounded-full px-6 text-[15px] font-bold" style={{ background: t.cta, color: t.ctaText }}>
+              {personalized ? 'Personalizar el mío' : 'Elegir opciones'}
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={() => { addItem(product); setAdded(true); setTimeout(() => setAdded(false), 1800); }}
+              className="inline-flex min-h-12 cursor-pointer items-center gap-2 rounded-full px-6 text-[15px] font-bold"
+              style={{ background: added ? '#15803d' : t.cta, color: t.ctaText }}
+            >
+              {added ? 'Añadido' : 'Añadir al carrito'}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 

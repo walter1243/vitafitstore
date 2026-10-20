@@ -6,7 +6,8 @@ import { type SectorStyle } from '@/lib/sectors-shared';
 
 export type MediaKind = 'image' | 'video';
 export type Media = { url: string; kind: MediaKind };
-export type Shot = Media & { caption: string; alt: string };
+// productId: produto que aparece na foto (card de compra ao lado). 0 = automatico.
+export type Shot = Media & { caption: string; alt: string; productId: number };
 export type Tile = { icon: TileIcon; title: string; text: string };
 export type Step = { title: string; text: string };
 
@@ -27,7 +28,7 @@ export type WorldContent = {
   };
 };
 
-const img = (url: string, caption = '', alt = ''): Shot => ({ url, kind: 'image', caption, alt });
+const img = (url: string, caption = '', alt = ''): Shot => ({ url, kind: 'image', caption, alt, productId: 0 });
 
 export const DEFAULT_WORLD: Record<SectorStyle, WorldContent> = {
   infantil: {
@@ -136,7 +137,7 @@ export function parseWorldContent(raw: unknown, style: SectorStyle): WorldConten
       title: str(sc.title, 120, d.showcase.title),
       intro: str(sc.intro, 400, d.showcase.intro),
       shots: Array.isArray(sc.shots)
-        ? sc.shots.slice(0, 4).map((s: any) => { const url = str(s?.url, 1000); return { url, kind: kind(s?.kind, url), caption: str(s?.caption, 120), alt: str(s?.alt, 160) }; }).filter((s: Shot) => s.url)
+        ? sc.shots.slice(0, 4).map((s: any) => { const url = str(s?.url, 1000); return { url, kind: kind(s?.kind, url), caption: str(s?.caption, 120), alt: str(s?.alt, 160), productId: Math.max(0, Math.floor(Number(s?.productId) || 0)) }; }).filter((s: Shot) => s.url)
         : d.showcase.shots,
       tiles: Array.isArray(sc.tiles)
         ? sc.tiles.slice(0, 3).map((t: any) => ({ icon: (TILE_ICONS as readonly string[]).includes(t?.icon) ? t.icon : 'sparkles', title: str(t?.title, 60), text: str(t?.text, 200) })).filter((t: Tile) => t.title)

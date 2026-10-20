@@ -49,6 +49,11 @@ export function AdminWorlds() {
   const [activeId, setActiveId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [products, setProducts] = useState<{ id: number; name: string; price: number }[]>([]);
+
+  useEffect(() => {
+    fetch('/api/products', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : [])).then((p) => { if (Array.isArray(p)) setProducts(p); }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch('/api/sectors?all=1', { cache: 'no-store' })
@@ -94,6 +99,7 @@ export function AdminWorlds() {
         <WorldEditor
           key={sector.id}
           sector={sector}
+          products={products}
           onSaved={(list, text) => { setSectors(list); setMsg({ ok: true, text }); }}
           onError={(text) => setMsg({ ok: false, text })}
         />
@@ -102,7 +108,7 @@ export function AdminWorlds() {
   );
 }
 
-function WorldEditor({ sector, onSaved, onError }: { sector: Sector; onSaved: (s: Sector[], text: string) => void; onError: (t: string) => void }) {
+function WorldEditor({ sector, products, onSaved, onError }: { sector: Sector; products: { id: number; name: string; price: number }[]; onSaved: (s: Sector[], text: string) => void; onError: (t: string) => void }) {
   const [name, setName] = useState(sector.name);
   const [tagline, setTagline] = useState(sector.tagline);
   const [description, setDescription] = useState(sector.description);
@@ -208,10 +214,16 @@ function WorldEditor({ sector, onSaved, onError }: { sector: Sector; onSaved: (s
                 <Field label="Legenda (aparece na foto)"><input className={inputCls} value={shot.caption} onChange={(e) => setSc({ shots: sc.shots.map((x, j) => (j === i ? { ...x, caption: e.target.value } : x)) })} /></Field>
                 <Field label="Descrição p/ Google e acessibilidade"><input className={inputCls} value={shot.alt} onChange={(e) => setSc({ shots: sc.shots.map((x, j) => (j === i ? { ...x, alt: e.target.value } : x)) })} /></Field>
               </div>
+              <Field label="Produto desta foto" hint="O card de compra que aparece ao lado da foto. Automático = os produtos do mundo, na ordem.">
+                <select className={inputCls} value={shot.productId} onChange={(e) => setSc({ shots: sc.shots.map((x, j) => (j === i ? { ...x, productId: Number(e.target.value) } : x)) })}>
+                  <option value={0}>Automático</option>
+                  {products.map((p) => <option key={p.id} value={p.id}>{p.name} — {Number(p.price).toFixed(2)} €</option>)}
+                </select>
+              </Field>
             </div>
           ))}
           {sc.shots.length < 4 && (
-            <button type="button" className="inline-flex items-center gap-2 rounded-xl border border-dashed border-white/15 px-4 py-2.5 text-sm font-semibold text-white/70 hover:border-green-500/40" onClick={() => setSc({ shots: [...sc.shots, { url: '', kind: 'image', caption: '', alt: '' }] })}>
+            <button type="button" className="inline-flex items-center gap-2 rounded-xl border border-dashed border-white/15 px-4 py-2.5 text-sm font-semibold text-white/70 hover:border-green-500/40" onClick={() => setSc({ shots: [...sc.shots, { url: '', kind: 'image', caption: '', alt: '', productId: 0 }] })}>
               <Plus size={15} /> Adicionar foto ou vídeo
             </button>
           )}
