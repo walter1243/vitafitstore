@@ -4,11 +4,17 @@ import Image from 'next/image';
 import Link from 'next/link';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { type Product } from '@/lib/products';
+import { softOf } from '@/lib/sectors-shared';
 import { CollectionPlayButton } from './collection-play';
+import { KidsProductCard } from './kids-product-card';
 import { PILL } from './pill';
 import { useSectors } from './sectors-context';
 
 gsap.registerPlugin(ScrollTrigger);
+
+// Quantos produtos aparecem no cartao embaixo da brincadeira.
+const SHELF_COUNT = 4;
 
 // Clareia uma cor (#RRGGBB) misturando com branco — fim do degrade claro.
 function lighten(hex: string, amount = 0.6) {
@@ -22,9 +28,12 @@ function lighten(hex: string, amount = 0.6) {
 // tamanho — ver a colecao (cheia) e a brincadeira dela (contornada), ou o
 // setor quando a colecao nao tem brincadeira. Tema, cor, imagem e foto vem
 // do Admin → Setores e coleções.
-export function CollectionSpotlight({ slug, count, primaryHref, primaryLabel, headingLevel = 'h2', priority, first }: {
+export function CollectionSpotlight({ slug, count, products, primaryHref, primaryLabel, headingLevel = 'h2', priority, first }: {
   slug: string;
   count?: number;
+  // Produtos da colecao (Admin → Produtos, pela categoria): cartao embaixo
+  // da brincadeira, pra ir direto da brincadeira pra compra.
+  products?: Product[];
   primaryHref?: string;
   primaryLabel?: string;
   headingLevel?: 'h1' | 'h2';
@@ -122,6 +131,29 @@ export function CollectionSpotlight({ slug, count, primaryHref, primaryLabel, he
               }}
             />
             {collection.interactive === 'colorear' && <span className="paint-reveal" aria-hidden="true" />}
+          </div>
+        </div>
+      )}
+
+      {products && products.length > 0 && (
+        <div data-reveal className="relative z-10 mt-12 w-full max-w-6xl rounded-[32px] bg-white p-5 text-left shadow-[0_18px_50px_rgba(35,38,63,0.10)] sm:mt-14 sm:p-8">
+          <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h3 className="text-2xl font-bold text-[#23263f] sm:text-3xl">{collection.name} para llevar a casa</h3>
+              <p className="mt-1 text-sm text-[#565a78] sm:text-base">
+                {products.length} {products.length === 1 ? 'producto' : 'productos'} · impresos en 3D en nuestro taller
+              </p>
+            </div>
+            {products.length > SHELF_COUNT && (
+              <Link href={`/coleccion/${collection.slug}`} className="text-sm font-extrabold text-[#c2410c] underline-offset-4 hover:underline">
+                Ver los {products.length}
+              </Link>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 lg:grid-cols-4">
+            {products.slice(0, SHELF_COUNT).map((p) => (
+              <KidsProductCard key={p.id} product={p} soft={softOf(collection)} />
+            ))}
           </div>
         </div>
       )}
