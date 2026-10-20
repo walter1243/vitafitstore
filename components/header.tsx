@@ -5,7 +5,7 @@ import { ShoppingCart, Menu, X, Smile } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 import { useSectors } from '@/components/kids/sectors-context';
 import { softOf } from '@/lib/sectors-shared';
-import { CategoryChips, CollectionsMenuPanel, useMenuCategories } from '@/components/kids/menu-panel';
+import { CollectionsMenuPanel, homeCategoryHref, selectHomeCategory, useHomeCategories } from '@/components/kids/menu-panel';
 
 
 // Logo da marca (Kitoys 3D) mostrado inteiro no modo "logo direto". A logo
@@ -54,7 +54,7 @@ export function Header() {
   }, [colOpen]);
   const { totalItems, setIsCartOpen } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const mobileCategories = useMenuCategories(mobileOpen);
+  const mobileHomeCats = useHomeCategories(mobileOpen);
   const [scrolled, setScrolled] = useState(false);
   const cachedBranding = readCachedBranding();
   const [storeName, setStoreName] = useState(cachedBranding?.storeName ?? 'Nuestra Tienda');
@@ -276,8 +276,27 @@ export function Header() {
                   ))}
                 </div>
               ))}
-              {mobileCategories.length > 0 && (
-                <CategoryChips categories={mobileCategories} onNavigate={() => setMobileOpen(false)} className="mt-4 border-t border-[#efe7da] px-3 pt-4" />
+              {/* Hogar: categorias de casa (sem colecao) — mesmo jeito das colecoes */}
+              {mobileHomeCats.length > 0 && !menuSectors.some((s) => s.style === 'hogar') && (
+                <div className="mt-2">
+                  <Link href="/#productos" onClick={() => setMobileOpen(false)} className={MOBILE_ITEM}>Hogar</Link>
+                  {mobileHomeCats.map((cat) => (
+                    <Link
+                      key={cat.name}
+                      href={homeCategoryHref(cat.name)}
+                      onClick={() => { selectHomeCategory(cat.name); setMobileOpen(false); }}
+                      className="ml-3 flex items-center gap-3 rounded-xl px-3 py-2 text-base font-semibold text-[#565a78] transition-colors hover:bg-[#f3ece2] hover:text-[#2b2620]"
+                    >
+                      <span className="h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-[#ece3d6]">
+                        {cat.image && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={cat.image} alt="" className="h-full w-full object-cover" />
+                        )}
+                      </span>
+                      {cat.name}
+                    </Link>
+                  ))}
+                </div>
               )}
               <Link href="/#como-se-hace" onClick={() => setMobileOpen(false)} className={`${MOBILE_ITEM} mt-2`}>Nuestro taller</Link>
             </nav>

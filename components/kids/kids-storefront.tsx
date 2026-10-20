@@ -4,6 +4,7 @@ import { toStoreProduct } from '@/lib/store-product';
 import { CollectionSpotlight } from './collection-spotlight';
 import { HomeExtras } from './hogar-sections';
 import { SectorBand } from './sector-band';
+import { SectorCards } from './sector-cards';
 import { useSectors } from './sectors-context';
 import { useStoreProducts } from './use-store-products';
 
@@ -30,10 +31,14 @@ export function KidsStorefront() {
 
   return (
     <>
-      <div id="colecciones" className="scroll-mt-24">
+      {/* Abertura: um card por setor (Infantil, Hogar...), cada um no seu visual. */}
+      <SectorCards sectors={visible} homeImages={loose.map((p) => p.image).filter(Boolean)} />
+
+      <div>
         {visible.map((sector, si) => (
-          <div key={sector.id || sector.slug}>
-            <SectorBand sector={sector} first={si === 0} />
+          // O 1o setor ja e apresentado pelos cards — entra direto nas colecoes.
+          <div key={sector.id || sector.slug} id={si === 0 ? `setor-${sector.slug}` : undefined} className="scroll-mt-24">
+            {si > 0 && <SectorBand sector={sector} />}
             {sector.collections.map((c, ci) => (
               <CollectionSpotlight key={c.slug} slug={c.slug} products={bySlug[c.slug]} priority={si === 0 && ci === 0} />
             ))}

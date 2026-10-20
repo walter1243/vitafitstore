@@ -1,10 +1,12 @@
 'use client';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { type Product } from '@/lib/products';
 import { type Sector, type SiteCollection } from '@/lib/sectors-shared';
 import { CollectionPlayButton } from './collection-play';
 import { ACCENTS } from './palette';
+import { HOGAR_CAT_EVENT } from './menu-panel';
 import { ProductCarousel } from './product-carousel';
 
 // Visual "Casa / Hogar" (ui-ux-pro-max: minimalista quente — areia, creme,
@@ -84,6 +86,21 @@ export function HomeCollection({ collection, products, primaryHref, primaryLabel
 // Produtos que nao estao em nenhuma colecao (decoracao, casa...): vitrine
 // pros pais, no mesmo visual Casa / Hogar.
 export function HomeExtras({ products }: { products: Product[] }) {
+  // Abas por categoria; o menu (Hogar → categoria) abre ja filtrado.
+  const cats = [...new Set(products.map((p) => p.categoryLabel).filter(Boolean))] as string[];
+  const [cat, setCat] = useState('todo');
+  useEffect(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get('cat');
+    if (fromUrl) setCat(fromUrl);
+    const onPick = (e: Event) => setCat(String((e as CustomEvent).detail ?? 'todo'));
+    window.addEventListener(HOGAR_CAT_EVENT, onPick);
+    return () => window.removeEventListener(HOGAR_CAT_EVENT, onPick);
+  }, []);
+  const known = cats.includes(cat);
+  const visible = cat === 'todo' || !known ? products : products.filter((p) => p.categoryLabel === cat);
+  const tab = (active: boolean) =>
+    `min-h-11 cursor-pointer rounded-full px-5 text-sm font-semibold transition-colors duration-200 ${active ? 'bg-[#2b2620] text-white' : 'border border-[#2b2620]/25 text-[#2b2620] hover:border-[#2b2620]'}`;
+
   return (
     <section id="productos" className="hogar scroll-mt-24 bg-[#f3ece2] px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
       <div className="mx-auto max-w-6xl">
@@ -94,7 +111,15 @@ export function HomeExtras({ products }: { products: Product[] }) {
             Mientras los peques juegan, date un capricho: decoración y detalles para casa impresos en 3D en nuestro taller.
           </p>
         </div>
-        <ProductCarousel products={products} accent={ACCENTS.mint} variant="hogar" />
+        {cats.length > 1 && (
+          <div className="mb-8 flex flex-wrap justify-center gap-2" role="tablist" aria-label="Categorías">
+            <button type="button" role="tab" aria-selected={cat === 'todo' || !known} onClick={() => setCat('todo')} className={tab(cat === 'todo' || !known)}>Todo</button>
+            {cats.map((c) => (
+              <button key={c} type="button" role="tab" aria-selected={cat === c} onClick={() => setCat(c)} className={tab(cat === c)}>{c}</button>
+            ))}
+          </div>
+        )}
+        <ProductCarousel key={cat} products={visible} accent={ACCENTS.mint} variant="hogar" />
       </div>
     </section>
   );
