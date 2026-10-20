@@ -7,14 +7,14 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { type Product } from '@/lib/products';
 import { CollectionPlayButton } from './collection-play';
-import { KidsProductCard } from './kids-product-card';
+import { ProductCarousel } from './product-carousel';
 import { accentFor, dots } from './palette';
 import { PILL } from './pill';
 import { useSectors } from './sectors-context';
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Quantos produtos aparecem no cartao embaixo da brincadeira.
+// A partir de quantos produtos aparece o atalho "Ver los N".
 const SHELF_COUNT = 4;
 
 // Clareia uma cor (#RRGGBB) misturando com branco — fim do degrade claro.
@@ -168,12 +168,7 @@ export function CollectionSpotlight({ slug, count, products, primaryHref, primar
                   </Link>
                 )}
               </div>
-              {/* Poucos produtos: centralizados, sem buraco do lado. */}
-              <div className={few ? 'flex flex-wrap justify-center gap-x-4 gap-y-8 sm:gap-x-7 [&>*]:w-[calc(50%-0.5rem)] sm:[&>*]:w-[250px]' : 'grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 lg:grid-cols-4'}>
-                {products.slice(0, SHELF_COUNT).map((p) => (
-                  <KidsProductCard key={p.id} product={p} accent={accent} />
-                ))}
-              </div>
+              <ProductCarousel products={products} accent={accent} />
             </div>
           </div>
         );
