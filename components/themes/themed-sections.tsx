@@ -29,6 +29,12 @@ function Media({ image, video, alt, priority, sizes, className = '' }: { image?:
   return <Image src={image} alt={alt} fill priority={priority} sizes={sizes} className={`object-cover ${className}`} />;
 }
 
+const THEME_COVER: Record<SectorTheme['key'], string> = {
+  hogar: '/images/sectors/hogar.jpg',
+  llaveros: '/images/sectors/llaveros.jpg',
+  mascotas: '',
+};
+
 const pill = (t: SectorTheme, solid: boolean) => ({
   className: 'inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full px-7 text-[15px] font-bold transition-colors duration-200',
   style: solid ? { background: t.cta, color: t.ctaText } : { border: `2px solid ${t.ink}`, color: t.ink },
@@ -82,7 +88,8 @@ export function ThemedCollection({ collection, theme, products = [], showCarouse
   const custom = products.find((p) => p.personalize?.enabled);
   const href = primaryHref ?? `/coleccion/${collection.slug}`;
   const label = primaryLabel ?? 'Ver colección';
-  const image = collection.photoUrl || collection.imageUrl || products[0]?.mainImage || products[0]?.image || '';
+  // Sem foto propria da colecao: a capa do mundo (public/images/sectors), depois a foto do produto.
+  const image = collection.photoUrl || collection.imageUrl || THEME_COVER[theme.key] || products[0]?.mainImage || products[0]?.image || '';
   const top = first ? 'pt-36 sm:pt-40' : 'pt-20 sm:pt-24';
 
   const titleBlock = (center: boolean) => (
