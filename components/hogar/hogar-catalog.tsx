@@ -66,7 +66,7 @@ export function HogarCatalog() {
     if (!page || reduced()) { setView(target); bookRef.current?.scrollIntoView({ block: 'start' }); return; }
     busy.current = true;
     gsap.set(page, { transformOrigin: dir === 'fwd' ? 'left center' : 'right center' });
-    gsap.to(shadeRef.current, { opacity: 0.35, duration: 0.5, ease: 'power2.in' });
+    gsap.to(shadeRef.current, { opacity: 0.12, duration: 0.5, ease: 'power2.in' });
     gsap.to(page, {
       rotateY: dir === 'fwd' ? -100 : 100,
       duration: 0.55,
@@ -125,7 +125,7 @@ export function HogarCatalog() {
     <div className="text-[#2b2620]">
       {/* Livro: perspectiva 3D pra pagina girar presa na lombada */}
       <div ref={bookRef} className="relative" style={{ perspective: '2200px' }}>
-        <div ref={shadeRef} className="pointer-events-none absolute inset-0 z-10 bg-[#2b2620] opacity-0" aria-hidden="true" />
+        <div ref={shadeRef} className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-r from-[#2b2620] via-transparent to-[#2b2620] opacity-0" aria-hidden="true" />
         <div ref={pageRef} className="relative bg-[#fbf8f3] will-change-transform" style={{ backfaceVisibility: 'hidden' }}>
           {current ? (
             <ChapterPage
