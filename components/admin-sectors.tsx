@@ -230,17 +230,36 @@ function SectorForm({ draft, busy, onCancel, onSave }: { draft: SectorDraft; bus
       <Field label="Frase do setor" hint="Uma linha que aparece embaixo do nome.">
         <input className={inputCls} value={d.tagline} onChange={(e) => setD({ ...d, tagline: e.target.value })} placeholder="Piezas impresas en 3D para tu casa" />
       </Field>
-      <Field label="Visual do setor" hint="Muda o design de todo o setor no site (faixa, coleções, cards e páginas).">
+      <Field
+        label="Visual do setor (aparência no site)"
+        hint="Escolhe COMO esse setor aparece para o cliente: as cores, as letras e o estilo dos cards de produto. Todas as coleções e páginas desse setor seguem o visual escolhido. Os produtos e preços não mudam — só a aparência."
+      >
         <div className="grid gap-2 sm:grid-cols-2">
           {SECTOR_STYLES.map((o) => (
             <button
               key={o.key}
               type="button"
               onClick={() => setD({ ...d, style: o.key })}
-              className={`rounded-xl border px-3 py-2.5 text-left transition ${d.style === o.key ? 'border-green-500/60 bg-green-500/10 text-white' : 'border-white/10 text-white/60 hover:bg-white/5'}`}
+              aria-pressed={d.style === o.key}
+              className={`rounded-xl border p-3 text-left transition ${d.style === o.key ? 'border-green-500/60 bg-green-500/10 text-white' : 'border-white/10 text-white/60 hover:bg-white/5'}`}
             >
-              <span className="block text-sm font-semibold">{o.label}</span>
-              <span className="block text-xs text-white/50">{o.hint}</span>
+              {/* mini previa do visual */}
+              {o.key === 'infantil' ? (
+                <span className="mb-2 flex h-14 items-center justify-center gap-1.5 rounded-lg bg-[#FFD84D]">
+                  {['#BFE0FF', '#DCD2FF', '#FFD1E6'].map((c) => (
+                    <span key={c} className="h-9 w-7 rounded-md border-2 border-[#1E1B4B] shadow-[2px_2px_0_#1E1B4B]" style={{ background: c }} />
+                  ))}
+                </span>
+              ) : (
+                <span className="mb-2 flex h-14 items-center justify-center gap-2 rounded-lg bg-[#f3ece2]">
+                  <span className="font-script text-lg text-[#8a6a3a]">hogar</span>
+                  {['#ece3d6', '#e2d6c4'].map((c) => (
+                    <span key={c} className="h-10 w-7 rounded-md" style={{ background: c }} />
+                  ))}
+                </span>
+              )}
+              <span className="block text-sm font-semibold">{o.label}{d.style === o.key ? ' ✓' : ''}</span>
+              <span className="mt-0.5 block text-xs leading-relaxed text-white/55">{o.hint}</span>
             </button>
           ))}
         </div>

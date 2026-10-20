@@ -34,8 +34,8 @@ export type SiteCollection = {
 // infantil = colorido em blocos; hogar = casa, minimalista quente.
 export type SectorStyle = 'infantil' | 'hogar';
 export const SECTOR_STYLES: { key: SectorStyle; label: string; hint: string }[] = [
-  { key: 'infantil', label: 'Infantil', hint: 'Colorido, em blocos, com brincadeiras' },
-  { key: 'hogar', label: 'Casa / Hogar', hint: 'Minimalista e aconchegante, tons neutros' },
+  { key: 'infantil', label: 'Infantil', hint: 'Cores fortes, cards com contorno e brincadeiras. Para brinquedos, lâmparas infantis, kits de pintar.' },
+  { key: 'hogar', label: 'Casa / Hogar', hint: 'Tons areia e creme, letras elegantes, fotos grandes. Para decoração, vasos, móveis e organização.' },
 ];
 export const sectorStyleOf = (v: unknown): SectorStyle => (v === 'hogar' ? 'hogar' : 'infantil');
 
