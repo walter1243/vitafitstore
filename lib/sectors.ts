@@ -38,6 +38,7 @@ export async function ensureSectorTables() {
   await sql`ALTER TABLE sectors ADD COLUMN IF NOT EXISTS description TEXT NOT NULL DEFAULT ''`;
   await sql`ALTER TABLE sectors ADD COLUMN IF NOT EXISTS image_url TEXT NOT NULL DEFAULT ''`;
   await sql`ALTER TABLE sectors ADD COLUMN IF NOT EXISTS video_url TEXT NOT NULL DEFAULT ''`;
+  await sql`ALTER TABLE sectors ADD COLUMN IF NOT EXISTS content TEXT`;
   await sql`ALTER TABLE site_collections ADD COLUMN IF NOT EXISTS video_url TEXT NOT NULL DEFAULT ''`;
   await sql`CREATE TABLE IF NOT EXISTS site_flags (key TEXT PRIMARY KEY, created_at TIMESTAMP DEFAULT NOW())`;
 
@@ -166,6 +167,7 @@ export async function getSectors(includeDisabled = false): Promise<Sector[]> {
       description: String(s.description || ''),
       imageUrl: String(s.image_url || ''),
       videoUrl: String(s.video_url || ''),
+      content: s.content ?? null,
       position: Number(s.position),
       enabled: Boolean(s.enabled),
       collections: cols.filter((c: Record<string, any>) => Number(c.sector_id) === Number(s.id)).map(toCollection),

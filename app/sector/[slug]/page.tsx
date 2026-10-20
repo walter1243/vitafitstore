@@ -44,7 +44,7 @@ export default async function SectorPage({ params }: PageProps) {
           {sector.collections.map((c, i) => (
             <CollectionSpotlight key={c.slug} slug={c.slug} priority={i === 0} />
           ))}
-          <WorldShowcase style={sector.style} />
+          <WorldShowcase sector={sector} />
           {sector.collections.length === 0 && (
             <p className="px-4 pb-24 text-center text-lg text-[#565a78]">Muy pronto habrá colecciones en esta sección.</p>
           )}

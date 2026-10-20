@@ -68,7 +68,10 @@ export function KidsStorefront() {
           ))}
           {showExtras && <ThemedExtras products={loose.map(toStoreProduct)} />}
           {/* Fotos de uso, beneficios, passos e confianca do mundo (Casa, Chaveiros, Pet). */}
-          <WorldShowcase style={active === EXTRA ? 'hogar' : current?.style} />
+          <WorldShowcase
+            sector={active === EXTRA ? { style: 'hogar', content: null } : current}
+            products={[...(current?.collections.flatMap((c) => bySlug[c.slug] ?? []) ?? []), ...(showExtras ? loose.map(toStoreProduct) : [])]}
+          />
         </div>
       </div>
     </>

@@ -3,6 +3,7 @@ import { sql } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin-auth';
 import { ensureSectorTables, getSectors } from '@/lib/sectors';
 import { sectorStyleOf, slugify } from '@/lib/sectors-shared';
+import { parseWorldContent } from '@/lib/world-content';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -54,15 +55,18 @@ export async function POST(req: NextRequest) {
       const description = str(body.description, 600);
       const imageUrl = str(body.imageUrl, 1000);
       const videoUrl = str(body.videoUrl, 1000);
+      // Conteudo do mundo (Admin → Mundos): so troca quando vem no pedido.
+      const hasContent = Object.prototype.hasOwnProperty.call(body, 'content');
+      const content = hasContent ? JSON.stringify(parseWorldContent(body.content, style)) : null;
       const id = Number(body.id) || 0;
       const [clash] = await sql`SELECT id FROM sectors WHERE slug = ${slug} AND id <> ${id} LIMIT 1`;
       if (clash) return NextResponse.json({ error: 'Já existe um setor com esse endereço (slug).' }, { status: 409 });
       if (id) {
-        await sql`UPDATE sectors SET name = ${name}, slug = ${slug}, tagline = ${tagline}, enabled = ${enabled}, style = ${style}, description = ${description}, image_url = ${imageUrl}, video_url = ${videoUrl} WHERE id = ${id}`;
+        await sql`UPDATE sectors SET name = ${name}, slug = ${slug}, tagline = ${tagline}, enabled = ${enabled}, style = ${style}, description = ${description}, image_url = ${imageUrl}, video_url = ${videoUrl}, content = CASE WHEN ${hasContent} THEN ${content} ELSE content END WHERE id = ${id}`;
       } else {
         await sql`
-          INSERT INTO sectors (name, slug, tagline, enabled, style, description, image_url, video_url, position)
-          VALUES (${name}, ${slug}, ${tagline}, ${enabled}, ${style}, ${description}, ${imageUrl}, ${videoUrl}, COALESCE((SELECT MAX(position) + 1 FROM sectors), 1))
+          INSERT INTO sectors (name, slug, tagline, enabled, style, description, image_url, video_url, content, position)
+          VALUES (${name}, ${slug}, ${tagline}, ${enabled}, ${style}, ${description}, ${imageUrl}, ${videoUrl}, ${content}, COALESCE((SELECT MAX(position) + 1 FROM sectors), 1))
         `;
       }
       return NextResponse.json(await getSectors(true), { headers: noStore });

@@ -1,5 +1,6 @@
 'use client';
 import { AdminSectors } from '@/components/admin-sectors';
+import { AdminWorlds } from '@/components/admin-worlds';
 import { PersonalizeEditor, ProductPlacement } from '@/components/admin-product-extras';
 import { TrackingSection, needsTracking, isNewAlert } from '@/components/admin-tracking';
 import { AnalyticsPanel } from '@/components/admin-analytics';
@@ -21,7 +22,7 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Section = 'dashboard' | 'products' | 'sectors' | 'orders' | 'tracking' | 'settings' | 'automation' | 'import-supplier' | 'reviews';
+type Section = 'dashboard' | 'products' | 'sectors' | 'worlds' | 'orders' | 'tracking' | 'settings' | 'automation' | 'import-supplier' | 'reviews';
 
 type Product = {
   id: number;
@@ -107,6 +108,7 @@ const SECTION_LABELS: Record<Section, string> = {
   orders: 'Pedidos',
   tracking: 'Rastreio',
   sectors: 'Setores e coleções',
+  worlds: 'Editar mundos',
   automation: 'Automação',
   settings: 'Editar loja',
   'import-supplier': 'Importar Produtos',
@@ -2361,6 +2363,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
       items: [
         { key: 'automation', label: 'Automação', icon: <Zap size={18} /> },
         { key: 'settings', label: 'Editar loja', icon: <Settings size={18} /> },
+        { key: 'worlds', label: 'Editar mundos', icon: <LayoutGrid size={18} /> },
       ],
     },
   ];
@@ -2369,6 +2372,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
     dashboard: 'Visão geral de vendas, pedidos e produtos.',
     products: 'Cadastre, edite e organize os produtos da vitrine.',
     sectors: 'Organize a vitrine em setores e coleções (as faixas de tela cheia da home).',
+    worlds: 'Capa, textos, fotos ou vídeos e coleções de cada mundo (Infantil, Hogar, Llaveros, Mascotas…).',
     'import-supplier': 'Importe produtos de fornecedores direto para o catálogo.',
     orders: 'Acompanhe e gerencie os pedidos recebidos.',
     tracking: 'Atualize o status e o código de rastreio dos envios.',
@@ -2632,6 +2636,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
             />
           )}
           {section === 'sectors' && <AdminSectors />}
+          {section === 'worlds' && <AdminWorlds />}
           {section === 'import-supplier' && <ImportSupplierSection onImportToStore={preFillFromSupplier} />}
           {section === 'orders' && <OrdersSection orders={orders} onUpdateTracking={updateTracking} onRefresh={fetchData} />}
           {section === 'reviews' && <ReviewsSection />}

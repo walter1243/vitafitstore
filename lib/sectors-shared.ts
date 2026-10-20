@@ -54,6 +54,8 @@ export type Sector = {
   description: string;
   imageUrl: string;
   videoUrl: string;
+  // Capa e vitrine do mundo (JSON livre; ver lib/world-content.ts).
+  content?: unknown;
   position: number;
   enabled: boolean;
   collections: SiteCollection[];
