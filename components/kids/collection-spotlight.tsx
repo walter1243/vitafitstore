@@ -139,9 +139,9 @@ export function CollectionSpotlight({ slug, count, products, primaryHref, primar
         <div data-reveal className="relative z-10 mt-12 w-full max-w-6xl rounded-[32px] bg-white p-5 text-left shadow-[0_18px_50px_rgba(35,38,63,0.10)] sm:mt-14 sm:p-8">
           <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h3 className="text-2xl font-bold text-[#23263f] sm:text-3xl">{collection.name} para llevar a casa</h3>
+              <h3 className="text-2xl font-bold text-[#23263f] sm:text-3xl">¡Llévatelo a casa!</h3>
               <p className="mt-1 text-sm text-[#565a78] sm:text-base">
-                {products.length} {products.length === 1 ? 'producto' : 'productos'} · impresos en 3D en nuestro taller
+                {products.length} {products.length === 1 ? 'producto' : 'productos'} de {collection.name.toLowerCase()} · impresos en 3D en nuestro taller
               </p>
             </div>
             {products.length > SHELF_COUNT && (
