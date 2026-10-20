@@ -71,7 +71,8 @@ export function CollectionSpotlight({ slug, count, products, primaryHref, primar
   const photo = dark ? collection.photoUrl : '';
   const art = !photo ? collection.imageUrl : '';
   const sector = getSector(collection.sectorId);
-  const background = dark ? collection.bgColor : `linear-gradient(180deg, ${collection.bgColor} 0%, ${lighten(collection.bgColor)} 100%)`;
+  // Claro: da cor da colecao (Admin) ate o tom do acento — sem terminar em branco.
+  const background = dark ? collection.bgColor : `linear-gradient(180deg, ${collection.bgColor} 0%, ${lighten(collection.bgColor, 0.15)} 45%, ${accentFor(collection).tint} 100%)`;
 
   return (
     <section
@@ -148,7 +149,7 @@ export function CollectionSpotlight({ slug, count, products, primaryHref, primar
             {/* confete de fundo */}
             <div className="pointer-events-none absolute inset-0 opacity-60" style={dots(accent.dot)} aria-hidden="true" />
             <div className="relative">
-              <div className={`mb-7 flex flex-wrap items-end gap-3 ${few ? 'flex-col items-center text-center' : 'justify-between'}`}>
+              <div className={`mb-7 flex gap-3 ${few ? 'flex-col items-center text-center' : 'flex-wrap items-end justify-between'}`}>
                 <div className={few ? 'flex flex-col items-center' : ''}>
                   <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-[#1E1B4B] bg-white px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-[#1E1B4B]">
                     <ShoppingBag className="h-3.5 w-3.5" aria-hidden="true" /> {collection.shortName}

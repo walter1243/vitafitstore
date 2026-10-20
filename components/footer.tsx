@@ -138,7 +138,7 @@ export function Footer(_props: { content?: FooterContent }) {
       </div>
 
       {/* Colunas */}
-      <div className="border-y border-[#efe7da] bg-white">
+      <div className="border-y-[3px] border-[#1E1B4B]/10 bg-[#FFF4D6]">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 py-10 sm:px-6 md:grid-cols-3 lg:px-8">
           <div>
             <h2 className="font-kids text-xl font-bold text-[#23263f]">Productos</h2>
