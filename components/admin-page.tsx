@@ -710,30 +710,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                     </div>
                   ))}
 
-                  {/* Com coleção escolhida em "Onde aparece no site", a categoria vem dela. */}
-                  {form.collectionSlug ? (
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-white/50">Categoria</label>
-                      <p className="rounded-xl border border-green-500/25 bg-green-500/5 px-3 py-2.5 text-sm text-white/80">
-                        {form.category || 'Da coleção'} <span className="text-white/45">· escolha/troque no passo 3 de “Onde aparece no site”</span>
-                      </p>
-                    </div>
-                  ) : (
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-white/50">Categoria da loja (modo Automático)</label>
-                      <select
-                        value={form.category}
-                        onChange={e => onFormChange('category', e.target.value)}
-                        className="w-full rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
-                      >
-                        <option value="">Selecione uma categoria</option>
-                        {categories.filter(c => c.enabled).map(c => (
-                          <option key={c.id} value={c.name}>{c.name}</option>
-                        ))}
-                      </select>
-                      <p className="mt-1 text-[11px] text-white/40">Ou escolha a coleção em “Onde aparece no site”, logo abaixo.</p>
-                    </div>
-                  )}
+                  {/* Categoria/coleção: escolhidas no bloco "Onde aparece no site" (abaixo). */}
 
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-white/50">Tipo de produto</label>
@@ -971,8 +948,8 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                 )}
               </section>
 
-              {/* Onde o produto aparece (setor → colecao) e personalizacao com nome. */}
-              <ProductPlacement value={form.collectionSlug} onChange={(slug, name) => { onFormChange('collectionSlug', slug); if (slug && name) onFormChange('category', name); }} category={form.category} onCategory={(name) => onFormChange('category', name)} />
+              {/* Onde o produto aparece (setor → colecao → categoria) e personalizacao com nome. */}
+              <ProductPlacement value={form.collectionSlug} onChange={(slug, name) => { onFormChange('collectionSlug', slug); onFormChange('category', slug && name ? name : form.category); }} category={form.category} onCategory={(name) => onFormChange('category', name)} />
               <PersonalizeEditor value={form.personalize} onChange={(json) => onFormChange('personalize', json)} productImage={image} />
 
               {/* Amostra gratis interativa: brincadeira na pagina do produto que
@@ -2226,7 +2203,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
     const isEditing = editingProductId !== null;
     if (!prodForm.name.trim()) { addToast('error', 'Nome do produto é obrigatório.'); return; }
     if (!prodForm.price) { addToast('error', 'Preço é obrigatório.'); return; }
-    if (!prodForm.category.trim() && !prodForm.collectionSlug) { addToast('error', 'Escolha onde o produto aparece (setor e coleção) ou uma categoria.'); return; }
+    if (!prodForm.collectionSlug && !prodForm.category.trim()) { addToast('error', 'Escolha em “Onde aparece no site” o setor e a coleção do produto.'); return; }
 
     setSaving(true);
     try {
