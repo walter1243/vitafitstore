@@ -142,7 +142,7 @@ export function ThemedExtras({ products }: { products: Product[] }) {
   const known = cats.includes(cat);
   const visible = cat === 'todo' || !known ? products : products.filter((p) => p.categoryLabel === cat);
   const tab = (active: boolean) => ({
-    className: 'min-h-11 cursor-pointer rounded-full px-5 text-sm font-semibold transition-colors duration-200',
+    className: 'min-h-10 cursor-pointer whitespace-nowrap rounded-full px-4 text-sm font-semibold transition-colors duration-200',
     style: active ? { background: theme.ink, color: '#fff' } : { border: `1px solid ${theme.ink}40`, color: theme.ink },
   });
 
@@ -154,7 +154,7 @@ export function ThemedExtras({ products }: { products: Product[] }) {
           <h2 className="mt-1 text-4xl font-semibold sm:text-5xl" style={{ fontFamily: theme.heading, color: theme.ink }}>Más para tu casa</h2>
         </div>
         {cats.length > 1 && (
-          <div className="mb-8 flex flex-wrap justify-center gap-2" role="tablist" aria-label="Categorías">
+          <div className="swipe-row mb-8 py-1 sm:justify-center" role="tablist" aria-label="Categorías">
             <button type="button" role="tab" aria-selected={cat === 'todo' || !known} onClick={() => setCat('todo')} {...tab(cat === 'todo' || !known)}>Todo</button>
             {cats.map((c) => (
               <button key={c} type="button" role="tab" aria-selected={cat === c} onClick={() => setCat(c)} {...tab(cat === c)}>{c}</button>

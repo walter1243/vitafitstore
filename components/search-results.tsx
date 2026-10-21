@@ -35,7 +35,7 @@ export function SearchResults({ query }: { query: string }) {
             <Link href="/#colecciones" className="mt-6 inline-flex min-h-12 items-center rounded-full bg-[#1E1B4B] px-6 font-bold text-white">Ver los mundos</Link>
           </div>
         ) : (
-          <div className="mt-12 grid grid-cols-2 gap-x-5 gap-y-10 lg:grid-cols-4">
+          <div className="swipe-products mt-10">
             {results.map(({ product }) => {
               const col = collectionForProduct(product);
               const theme = themeFor(col ? getSector(col.sectorId)?.style : undefined);

@@ -536,3 +536,16 @@ body:has(.lamp-dark) [data-slot="dialog-overlay"] {
   .wa-paint, .wa-glow, .wa-flowers, .wa-photo, .wa-food, .wa-float { transition-duration: .01s !important; transition-delay: 0s !important; }
   .wa-go, .wa-kibble { animation: none !important; }
 }
+
+/* Linha que desliza pro lado no celular (filtros e produtos); grade no desktop. */
+.swipe-row { display: flex; gap: .5rem; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.swipe-row::-webkit-scrollbar { display: none; }
+.swipe-row > * { flex-shrink: 0; scroll-snap-align: start; }
+.swipe-products { display: flex; gap: 1rem; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin-inline: -1rem; padding-inline: 1rem; padding-bottom: .75rem; scroll-padding-inline: 1rem; }
+.swipe-products::-webkit-scrollbar { display: none; }
+.swipe-products > * { flex: 0 0 68%; scroll-snap-align: start; }
+@media (min-width: 640px) {
+  .swipe-products { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2rem 1.5rem; overflow: visible; margin-inline: 0; padding: 0; }
+  .swipe-products > * { flex: none; }
+}
+@media (min-width: 1024px) { .swipe-products { grid-template-columns: repeat(4, minmax(0, 1fr)); } }

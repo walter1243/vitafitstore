@@ -65,15 +65,15 @@ export function CollectionCatalog({ slug }: { slug: string }) {
   const others = (sector?.collections ?? []).filter((c) => c.slug !== slug && c.enabled);
   const soft = softOf(collection);
   const chip = (active: boolean) =>
-    `min-h-11 cursor-pointer rounded-full px-5 text-base font-bold transition-colors duration-200 ${
+    `min-h-10 shrink-0 cursor-pointer whitespace-nowrap rounded-full px-4 text-sm font-bold transition-colors duration-200 sm:min-h-11 sm:px-5 sm:text-base ${
       active ? 'bg-[var(--k-ink)] text-white' : 'bg-[#F2F4FA] text-[var(--k-ink)] hover:bg-[#E6E9F3]'
     }`;
 
   return (
     <div className="mx-auto max-w-7xl px-4 pb-20 pt-10 sm:px-6 lg:px-8">
-      <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="mb-6 flex items-center gap-3">
         {groups.length > 1 ? (
-          <div className="flex flex-wrap gap-2" aria-label="Tipos dentro de la colección">
+          <div className="swipe-row -ml-1 min-w-0 flex-1 py-1 pl-1" aria-label="Tipos dentro de la colección">
             <button type="button" onClick={() => setGroup('todo')} className={chip(group === 'todo')}>
               Todo ({items.length})
             </button>
@@ -84,17 +84,18 @@ export function CollectionCatalog({ slug }: { slug: string }) {
             ))}
           </div>
         ) : (
-          <p className="text-base font-semibold text-[var(--k-muted)]">
+          <p className="min-w-0 flex-1 text-base font-semibold text-[var(--k-muted)]">
             {loaded ? `${items.length} ${items.length === 1 ? 'creación' : 'creaciones'}` : 'Cargando…'}
           </p>
         )}
 
-        <label className="flex items-center gap-2 text-base font-semibold text-[var(--k-muted)]">
-          Ordenar por
+        <label className="flex shrink-0 items-center gap-2 text-base font-semibold text-[var(--k-muted)]">
+          <span className="hidden sm:inline">Ordenar por</span>
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value as Sort)}
-            className="min-h-11 cursor-pointer rounded-full border border-[var(--k-line)] bg-white px-4 text-base font-bold text-[var(--k-ink)] outline-none focus:border-[var(--k-ink)]"
+            aria-label="Ordenar por"
+            className="min-h-11 cursor-pointer rounded-full border border-[var(--k-line)] bg-white px-3 text-sm font-bold sm:px-4 sm:text-base text-[var(--k-ink)] outline-none focus:border-[var(--k-ink)]"
           >
             {SORTS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
           </select>
@@ -102,7 +103,7 @@ export function CollectionCatalog({ slug }: { slug: string }) {
       </div>
 
       {visible.length > 0 ? (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 lg:grid-cols-4">
+        <div className="swipe-products">
           {visible.map((p) => (
             sectorTheme ? <ThemedProductCard key={p.id} product={p} theme={sectorTheme} /> : <KidsProductCard
               key={p.id}
