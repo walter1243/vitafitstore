@@ -17,16 +17,23 @@ const LOOK: Record<PersonalizerLook, { ink: string; muted: string; field: string
 // "Ponle su nombre": o cliente escreve e ve o nome no MESMO modelo do
 // produto na hora (o chaveiro balanca, as letras "pulam"), escolhe a
 // quantidade e adiciona. Cada nome vira uma linha no carrinho/pedido.
-export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded }: {
+export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded, name: nameProp, onName, showPreview = true }: {
   product: Product;
   look?: PersonalizerLook;
   compact?: boolean;
   onAdded?: () => void;
+  // Pagina do produto: o nome e controlado por ela (aparece na propria foto
+  // do produto) e o personalizador fica so com o campo + quantidade.
+  name?: string;
+  onName?: (v: string) => void;
+  showPreview?: boolean;
 }) {
   const cfg = parsePersonalize(product.personalize);
   const L = LOOK[look];
   const { addItem } = useCart();
-  const [name, setName] = useState('');
+  const [ownName, setOwnName] = useState('');
+  const name = nameProp ?? ownName;
+  const setName = (v: string) => { if (onName) onName(v); else setOwnName(v); };
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const [swing, setSwing] = useState(0);
@@ -44,8 +51,8 @@ export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded 
   }
 
   return (
-    <div className={`grid gap-5 ${compact ? '' : 'lg:grid-cols-2 lg:items-center lg:gap-8'}`}>
-      <NamePreview cfg={cfg} product={product} text={text} placeholder={L.sample} swingKey={swing} stage={L.stage} />
+    <div className={`grid gap-5 ${compact || !showPreview ? '' : 'lg:grid-cols-2 lg:items-center lg:gap-8'}`}>
+      {showPreview && <NamePreview cfg={cfg} product={product} text={text} placeholder={L.sample} swingKey={swing} stage={L.stage} />}
 
       <div>
         <label className="block">

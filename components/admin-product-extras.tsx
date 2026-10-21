@@ -191,11 +191,11 @@ export function PersonalizeEditor({ value, onChange, productImage }: { value: st
         <div className="space-y-5">
           {/* 1. Foto + marcar o lugar */}
           <div>
-            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-white/40">1. Clique na foto onde o nome deve ficar</p>
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-white/40">1. Arraste o nome na foto até o lugar certo (ou clique onde ele deve ficar)</p>
             {cfg.previewImage ? (
               <div
                 ref={stageRef}
-                className="relative cursor-crosshair touch-none select-none overflow-hidden rounded-2xl border border-white/10"
+                className="relative cursor-grab touch-none select-none overflow-hidden rounded-2xl border border-white/10 active:cursor-grabbing"
                 onPointerDown={(e) => { dragging.current = true; (e.target as HTMLElement).setPointerCapture?.(e.pointerId); place(e); }}
                 onPointerMove={(e) => { if (dragging.current) place(e); }}
                 onPointerUp={() => { dragging.current = false; }}

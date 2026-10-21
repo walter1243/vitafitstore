@@ -12,7 +12,8 @@ import { SizeGuideModal } from '@/components/size-guide-modal'
 import { ProductReviews } from '@/components/product-reviews'
 import { useSectors } from '@/components/kids/sectors-context'
 import { ProductDemo } from '@/components/kids/product-demo'
-import { NamePersonalizer, type PersonalizerLook } from '@/components/personalize/name-personalizer'
+import { NamePersonalizer, NamePreview, type PersonalizerLook } from '@/components/personalize/name-personalizer'
+import { cleanCustomText, parsePersonalize } from '@/lib/personalize'
 
 export function ProductPageView({ product }: { product: Product }) {
   const { addItem } = useCart()
@@ -22,8 +23,13 @@ export function ProductPageView({ product }: { product: Product }) {
   // ocupa o lugar do "Anadir" comum, no visual do setor dele.
   const personalized = Boolean(product.personalize?.enabled)
   const look = (collection ? getSector(collection.sectorId)?.style : undefined) as PersonalizerLook | undefined
+  const pcfg = parsePersonalize(product.personalize)
+  const [customName, setCustomName] = useState('')
+  const sample = look === 'mascotas' ? 'Toby' : 'Lucía'
+  const personalizeTitle = look === 'mascotas' ? 'Personaliza el nombre de tu mascota' : look === 'llaveros' ? 'Personaliza tu llavero' : 'Personalízalo con un nombre'
   const router = useRouter()
-  const galleryImages = [product.mainImage ?? product.image, ...(product.additionalImages ?? [])].filter(Boolean) as string[]
+  const pBase = product.personalize?.enabled ? (product.personalize.previewImage || '') : ''
+  const galleryImages = [pBase || product.mainImage || product.image, ...(product.additionalImages ?? [])].filter(Boolean) as string[]
   const [activeIndex, setActiveIndex] = useState(0)
   const [slideDir, setSlideDir] = useState<'left' | 'right'>('right')
   const activeImage = galleryImages[activeIndex] ?? galleryImages[0]
@@ -135,14 +141,21 @@ export function ProductPageView({ product }: { product: Product }) {
               onTouchStart={handleTouchStart}
               onTouchEnd={handleTouchEnd}
             >
-              <Image
-                key={activeIndex}
-                src={activeImage}
-                alt={product.name}
-                fill
-                className={`object-cover ${slideDir === 'right' ? 'slide-from-right' : 'slide-from-left'}`}
-                priority
-              />
+              {personalized && activeIndex === 0 ? (
+                // O nome do cliente aparece na propria foto do produto.
+                <div className="absolute inset-0">
+                  <NamePreview cfg={{ ...pcfg, previewImage: activeImage }} product={product} text={cleanCustomText(customName, pcfg.maxLength)} placeholder={sample} swingKey={0} stage="#ffffff" />
+                </div>
+              ) : (
+                <Image
+                  key={activeIndex}
+                  src={activeImage}
+                  alt={product.name}
+                  fill
+                  className={`object-cover ${slideDir === 'right' ? 'slide-from-right' : 'slide-from-left'}`}
+                  priority
+                />
+              )}
             </div>
             {/* Horizontal thumbnails on mobile only */}
             {galleryImages.length > 1 && (
@@ -261,8 +274,15 @@ export function ProductPageView({ product }: { product: Product }) {
 
           {personalized && (
             <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4">
-              <p className="mb-4 text-lg font-bold text-slate-900">Personalízalo con el nombre</p>
-              <NamePersonalizer product={product} look={look ?? 'llaveros'} compact />
+              <p className="mb-3 text-base font-bold text-slate-900">{personalizeTitle}</p>
+              <NamePersonalizer
+                product={product}
+                look={look ?? 'llaveros'}
+                compact
+                showPreview={false}
+                name={customName}
+                onName={(v) => { setCustomName(v); if (activeIndex !== 0) goToIndex(0) }}
+              />
             </div>
           )}
 
