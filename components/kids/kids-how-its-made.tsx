@@ -5,7 +5,7 @@ import Image from 'next/image';
 export function KidsHowItsMade() {
   return (
     <section id="como-se-hace" className="scroll-mt-24 bg-[#23263f]">
-      <div className="relative mx-auto aspect-[1024/434] w-full max-w-[1600px]">
+      <div className="relative aspect-[1024/434] w-full">
         <Image
           src="/images/taller-adornos.jpg"
           alt="Adornos y regalos personalizados impresos en 3D en nuestro taller: llaveros, árbol, muñeco de nieve y jarrón"
