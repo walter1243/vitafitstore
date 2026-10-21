@@ -2203,7 +2203,8 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
     const isEditing = editingProductId !== null;
     if (!prodForm.name.trim()) { addToast('error', 'Nome do produto é obrigatório.'); return; }
     if (!prodForm.price) { addToast('error', 'Preço é obrigatório.'); return; }
-    if (!prodForm.collectionSlug && !prodForm.category.trim()) { addToast('error', 'Escolha em “Onde aparece no site” o setor e a coleção do produto.'); return; }
+    // Todo produto novo precisa de setor + colecao; produtos antigos (so com categoria) continuam salvando.
+    if (!prodForm.collectionSlug && (!editingProductId || !prodForm.category.trim())) { addToast('error', 'Escolha em “Onde aparece no site” o setor e a coleção do produto.'); return; }
 
     setSaving(true);
     try {

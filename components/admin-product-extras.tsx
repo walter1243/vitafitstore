@@ -53,7 +53,7 @@ export function ProductPlacement({ value, onChange, category, onCategory }: {
     <section className={card}>
       <div className="mb-1 flex items-center gap-2">
         <LayoutGrid size={16} className="text-green-500" />
-        <h3 className="text-sm font-semibold text-white">Onde aparece no site</h3>
+        <h3 className="text-sm font-semibold text-white">Onde aparece no site *</h3>
       </div>
       <p className="mb-4 text-xs text-white/50">
         Escolha o setor (Infantil, Casa, Chaveiros, Pet…) e a coleção. O produto aparece nessa coleção, no visual daquele setor. Setores e coleções novos são criados em “Setores e coleções”.
@@ -61,10 +61,6 @@ export function ProductPlacement({ value, onChange, category, onCategory }: {
 
       <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/40">1. Setor</p>
       <div className="mb-4 grid gap-2 sm:grid-cols-3">
-        <button type="button" onClick={() => { setSectorId(null); onChange(''); }} className={chip(!value && sectorId === null)}>
-          Automático
-          <span className="block text-[11px] font-normal text-white/45">pela categoria</span>
-        </button>
         {sectors.map((s) => (
           <button key={s.id} type="button" onClick={() => setSectorId(s.id)} className={chip(sectorId === s.id)}>
             {s.name}
@@ -138,7 +134,7 @@ export function ProductPlacement({ value, onChange, category, onCategory }: {
       <p className="mt-5 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/70">
         {chosen
           ? <>Vai aparecer em <strong className="text-white">{chosen.s.name} → {chosen.c.name}{category ? ` → ${category}` : ''}</strong>.</>
-          : 'Automático: entra na coleção cuja categoria bate com a do produto.'}
+          : 'Escolha o setor e a coleção — obrigatório para cadastrar o produto.'}
       </p>
     </section>
   );
