@@ -11,6 +11,7 @@ import { SectorsProvider } from '@/components/kids/sectors-context'
 import { getSectors } from '@/lib/sectors'
 import { enabledCollections } from '@/lib/sectors-shared'
 import { getSiteContent } from '@/lib/site-content'
+import { KidsHowItsMade } from '@/components/kids/kids-how-its-made'
 
 export const dynamic = 'force-dynamic'
 
@@ -44,6 +45,7 @@ export default async function CollectionPage({ params }: PageProps) {
           <div id="productos" className="scroll-mt-24">
             <CollectionCatalog slug={collection.slug} />
           </div>
+          <KidsHowItsMade />
         </main>
         <Footer content={content.footer} />
         <WhatsAppFloating />

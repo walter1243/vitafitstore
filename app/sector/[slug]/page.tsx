@@ -10,6 +10,7 @@ import { SectorBand } from '@/components/kids/sector-band'
 import { SectorsProvider } from '@/components/kids/sectors-context'
 import { getSectors } from '@/lib/sectors'
 import { getSiteContent } from '@/lib/site-content'
+import { KidsHowItsMade } from '@/components/kids/kids-how-its-made'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,6 +47,7 @@ export default async function SectorPage({ params }: PageProps) {
           {sector.collections.length === 0 && (
             <p className="px-4 pb-24 text-center text-lg text-[#565a78]">Muy pronto habrá colecciones en esta sección.</p>
           )}
+          <KidsHowItsMade />
         </main>
         <Footer content={content.footer} />
         <WhatsAppFloating />
