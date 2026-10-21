@@ -253,7 +253,7 @@ function OrderSummary({ items, totalPrice, shipping, total }: {
                 <p className="text-[#23263f] text-sm font-bold truncate">{item.product.name}</p>
                 {(item.selectedColor || item.selectedSize || item.customText) ? (
                   <p className="text-[10px] font-medium text-orange-700">
-                    {[item.customText && `Nombre: «${item.customText}»`, item.selectedColor && `Color: ${item.selectedColor}`, item.selectedSize && `Talla: ${item.selectedSize}`].filter(Boolean).join(' - ')}
+                    {[item.customText && `Nombre: «${item.customText}»`, item.customNote, item.selectedColor && `Color: ${item.selectedColor}`, item.selectedSize && `Talla: ${item.selectedSize}`].filter(Boolean).join(' - ')}
                   </p>
                 ) : item.product.shortDescription && (
                   <p className="text-[10px] text-slate-500 line-clamp-2">{item.product.shortDescription}</p>
@@ -618,6 +618,7 @@ function CheckoutFormInner() {
     color: item.selectedColor,
     size: item.selectedSize,
     text: item.customText,
+    note: item.customNote,
   }));
 
   // Quote (for sidebar display)

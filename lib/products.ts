@@ -57,6 +57,8 @@ export interface CartItem {
   selectedSize?: string
   // Nome personalizado (chaveiro / placa de pet).
   customText?: string
+  // Telefone / links pedidos ao cliente (chaveiro NFC etc.)
+  customNote?: string
 }
 
 export interface Review {

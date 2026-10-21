@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Check, Minus, Plus, ShoppingCart } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 import { type Product } from '@/lib/products';
-import { DEFAULT_NAME_COLORS, cleanCustomText, fontCss, parsePersonalize, unitPriceFor, type Personalize } from '@/lib/personalize';
+import { DEFAULT_NAME_COLORS, LINK_TYPES, cleanCustomText, fontCss, parsePersonalize, unitPriceFor, type Personalize } from '@/lib/personalize';
 
 // Visual de cada setor pro personalizador (botao, destaques).
 export type PersonalizerLook = 'llaveros' | 'mascotas' | 'infantil' | 'hogar';
@@ -43,6 +43,14 @@ export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded,
   const name = nameProp ?? ownName;
   const setName = (v: string) => { if (onName) onName(v); else setOwnName(v); };
   const [qty, setQty] = useState(minQty);
+  // Dados extras (chaveiro NFC etc.): telefone e links que o cliente quer.
+  const [wantPhone, setWantPhone] = useState(false);
+  const [phone, setPhone] = useState('');
+  const [links, setLinks] = useState<{ type: string; value: string }[]>([{ type: 'WhatsApp', value: '' }]);
+  const note = [
+    base.askPhone && wantPhone && phone.trim() ? `Tel: ${phone.trim()}` : '',
+    ...(base.askLinks ? links.filter((l) => l.value.trim()).map((l) => `${l.type}: ${l.value.trim()}`) : []),
+  ].filter(Boolean).join(' · ');
   const [added, setAdded] = useState(false);
   const [swing, setSwing] = useState(0);
   const text = cleanCustomText(name, cfg.maxLength);
@@ -57,7 +65,7 @@ export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded,
   function add() {
     if (!text) return;
     // A cor escolhida vai junto (carrinho, checkout e pedido: "Color: Negro").
-    addItem(product, { text, color: chosen?.name }, qty);
+    addItem(product, { text, color: chosen?.name, note: note || undefined }, qty);
     setAdded(true);
     onAdded?.();
     setTimeout(() => { setAdded(false); setName(''); setQty(minQty); }, 1600);
@@ -105,6 +113,67 @@ export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded,
                 />
               ))}
             </div>
+          </div>
+        )}
+
+        {(base.askPhone || base.askLinks) && (
+          <div className="mt-4 space-y-3 rounded-2xl border-2 p-4" style={{ borderColor: L.field }}>
+            {base.askPhone && (
+              <div>
+                <label className="flex cursor-pointer items-center gap-2 text-sm font-extrabold" style={{ color: L.ink }}>
+                  <input type="checkbox" checked={wantPhone} onChange={(e) => setWantPhone(e.target.checked)} className="h-4 w-4" />
+                  Añadir número de teléfono
+                </label>
+                {wantPhone && (
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.slice(0, 30))}
+                    placeholder="+34 600 000 000"
+                    className="mt-2 h-12 w-full rounded-xl px-4 text-base font-semibold outline-none"
+                    style={{ background: L.field, color: L.ink }}
+                  />
+                )}
+              </div>
+            )}
+            {base.askLinks && (
+              <div>
+                <span className="mb-2 block text-sm font-extrabold" style={{ color: L.ink }}>¿Qué enlace quieres en tu llavero?</span>
+                <div className="space-y-2">
+                  {links.map((l, i) => (
+                    <div key={i} className="flex gap-2">
+                      <select
+                        value={l.type}
+                        onChange={(e) => setLinks(links.map((x, j) => (j === i ? { ...x, type: e.target.value } : x)))}
+                        className="h-12 shrink-0 rounded-xl px-2 text-sm font-bold outline-none"
+                        style={{ background: L.field, color: L.ink }}
+                        aria-label="Tipo de enlace"
+                      >
+                        {LINK_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                      <input
+                        value={l.value}
+                        onChange={(e) => setLinks(links.map((x, j) => (j === i ? { ...x, value: e.target.value.slice(0, 120) } : x)))}
+                        placeholder={l.type === 'Instagram' ? '@tuusuario' : l.type === 'Bizum' || l.type === 'WhatsApp' ? 'Número' : l.type === 'Ubicación' ? 'Dirección o enlace de Maps' : 'Enlace o dato'}
+                        className="h-12 min-w-0 flex-1 rounded-xl px-3 text-sm font-semibold outline-none"
+                        style={{ background: L.field, color: L.ink }}
+                      />
+                      {links.length > 1 && (
+                        <button type="button" aria-label="Quitar enlace" onClick={() => setLinks(links.filter((_, j) => j !== i))} className="h-12 w-10 shrink-0 cursor-pointer rounded-xl text-lg font-bold" style={{ color: L.muted }}>×</button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {links.length < 5 && (
+                  <button type="button" onClick={() => setLinks([...links, { type: 'Instagram', value: '' }])} className="mt-2 cursor-pointer text-sm font-extrabold underline" style={{ color: L.ink }}>
+                    + Añadir otro enlace
+                  </button>
+                )}
+                <p className="mt-3 rounded-xl px-3 py-2 text-xs font-semibold" style={{ background: L.field, color: L.muted }}>
+                  Después de la compra, nuestro equipo de soporte se pondrá en contacto contigo para configurar todos los enlaces.
+                </p>
+              </div>
+            )}
           </div>
         )}
 

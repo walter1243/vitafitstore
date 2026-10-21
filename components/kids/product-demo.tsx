@@ -31,8 +31,8 @@ export function ProductDemo({ product }: { product: Product }) {
   const image = product.demoImage || product.mainImage || product.image;
 
   return (
-    <div className="kids mt-4 flex flex-col items-start gap-3 rounded-3xl bg-[#FFF4E0] p-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-center gap-3">
+    <div className="kids mt-4 flex flex-col items-center gap-4 rounded-3xl bg-[#FFF4E0] p-5 text-center">
+      <div className="flex flex-col items-center gap-2">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-[#c2410c]">
           <Icon className="h-6 w-6" aria-hidden="true" />
         </span>
@@ -44,7 +44,7 @@ export function ProductDemo({ product }: { product: Product }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex min-h-12 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#23263f] px-6 font-bold text-white transition-colors hover:bg-[#363a5c]"
+        className="inline-flex min-h-12 w-full max-w-xs cursor-pointer items-center justify-center rounded-full bg-[#23263f] px-6 font-bold text-white transition-colors hover:bg-[#363a5c]"
       >
         {copy.button}
       </button>

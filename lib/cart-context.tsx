@@ -5,7 +5,7 @@ import { type Product, type CartItem } from './products'
 import { minQtyFor, unitPriceFor } from './personalize'
 
 // text = nome personalizado (chaveiro / pet): cada nome e uma linha propria.
-type Variant = { color?: string; size?: string; text?: string }
+type Variant = { color?: string; size?: string; text?: string; note?: string }
 
 interface CartContextType {
   items: CartItem[]
@@ -40,7 +40,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     item.product.id === productId &&
     (item.selectedColor ?? '') === (variant?.color ?? '') &&
     (item.selectedSize ?? '') === (variant?.size ?? '') &&
-    (item.customText ?? '') === (variant?.text ?? '')
+    (item.customText ?? '') === (variant?.text ?? '') &&
+    (item.customNote ?? '') === (variant?.note ?? '')
 
   const addItem = useCallback((product: Product, variant?: Variant, quantity = 1) => {
     const qty = Math.max(1, Math.floor(quantity))
@@ -53,7 +54,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             : item
         )
       }
-      return [...prev, { product, quantity: qty, selectedColor: variant?.color, selectedSize: variant?.size, customText: variant?.text || undefined }]
+      return [...prev, { product, quantity: qty, selectedColor: variant?.color, selectedSize: variant?.size, customText: variant?.text || undefined, customNote: variant?.note || undefined }]
     })
 
     setLastAddedProduct(product)

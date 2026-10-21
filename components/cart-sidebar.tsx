@@ -142,7 +142,7 @@ export function CartSidebar() {
                         </h4>
                         {(item.selectedColor || item.selectedSize || item.customText) ? (
                           <p className="mt-0.5 text-xs font-semibold text-[#565a78]">
-                            {[item.customText && `Nombre: «${item.customText}»`, item.selectedColor && `Color: ${item.selectedColor}`, item.selectedSize && `Talla: ${item.selectedSize}`].filter(Boolean).join(' · ')}
+                            {[item.customText && `Nombre: «${item.customText}»`, item.customNote, item.selectedColor && `Color: ${item.selectedColor}`, item.selectedSize && `Talla: ${item.selectedSize}`].filter(Boolean).join(' · ')}
                           </p>
                         ) : null}
                         {isKitProduct && (
@@ -152,7 +152,7 @@ export function CartSidebar() {
                         )}
                       </div>
                       <button
-                        onClick={() => removeItem(item.product.id, { color: item.selectedColor, size: item.selectedSize, text: item.customText })}
+                        onClick={() => removeItem(item.product.id, { color: item.selectedColor, size: item.selectedSize, text: item.customText, note: item.customNote })}
                         aria-label={`Quitar ${item.product.name}`}
                         className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full bg-white text-[#565a78] transition-colors hover:text-red-500"
                       >
@@ -167,7 +167,7 @@ export function CartSidebar() {
                         title={isKitProduct ? 'Quantidade de kits' : 'Quantidade de unidades'}
                       >
                         <button
-                          onClick={() => updateQuantity(item.product.id, item.quantity - 1, { color: item.selectedColor, size: item.selectedSize, text: item.customText })}
+                          onClick={() => updateQuantity(item.product.id, item.quantity - 1, { color: item.selectedColor, size: item.selectedSize, text: item.customText, note: item.customNote })}
                           aria-label="Quitar uno"
                           className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-[#F2F4FA] text-[#23263f] transition-colors hover:bg-[#E6E9F3]"
                         >
@@ -177,7 +177,7 @@ export function CartSidebar() {
                           {item.quantity}
                         </span>
                         <button
-                          onClick={() => updateQuantity(item.product.id, item.quantity + 1, { color: item.selectedColor, size: item.selectedSize, text: item.customText })}
+                          onClick={() => updateQuantity(item.product.id, item.quantity + 1, { color: item.selectedColor, size: item.selectedSize, text: item.customText, note: item.customNote })}
                           aria-label="Añadir uno"
                           className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-[#FFC93C] text-[#23263f] transition-colors hover:bg-[#FFB800]"
                         >

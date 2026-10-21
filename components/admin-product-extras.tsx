@@ -378,6 +378,14 @@ export function PersonalizeEditor({ value, onChange, productImage }: { value: st
                 <input type="number" min={2} max={30} className="mt-1 w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white" value={cfg.maxLength} onChange={(e) => set('maxLength', Number(e.target.value))} />
               </label>
             </div>
+            <p className="mb-1.5 mt-4 text-xs font-semibold uppercase tracking-wide text-white/40">Dados extras do cliente</p>
+            <label className="flex items-center gap-2 text-sm text-white/80">
+              <input type="checkbox" checked={cfg.askPhone} onChange={(e) => set('askPhone', e.target.checked)} /> Pedir telefone (opcional para o cliente)
+            </label>
+            <label className="mt-1 flex items-center gap-2 text-sm text-white/80">
+              <input type="checkbox" checked={cfg.askLinks} onChange={(e) => set('askLinks', e.target.checked)} /> Pedir links (WhatsApp, Instagram, Bizum, Ubicación…) — ex: chaveiro NFC
+            </label>
+            <p className="mt-1 text-[11px] text-white/45">Aparece no pedido junto com o nome. O cliente vê a mensagem de que o suporte vai entrar em contato para configurar os links.</p>
             <p className="mb-1.5 mt-4 text-xs font-semibold uppercase tracking-wide text-white/40">Pedido mínimo e promoção</p>
             <div className="grid grid-cols-2 gap-3">
               <label className="block text-xs text-white/60">
@@ -390,7 +398,7 @@ export function PersonalizeEditor({ value, onChange, productImage }: { value: st
               </label>
             </div>
             <p className="mt-1 text-[11px] text-white/45">Ex: mínimo 5 e 20% → o cliente vê “Pack de 5: -20%” e paga cada um com desconto. O checkout confere o mínimo e o preço.</p>
-            <p className="mt-2 text-[11px] text-white/45">Sem “Cores que o cliente pode escolher”, o site oferece as cores padrão (Negro, Blanco, Rojo, Azul, Verde, Amarillo, Naranja, Rosa).</p>
+            <p className="mt-2 text-[11px] text-white/45">Sem “Cores que o cliente pode escolher”, o site oferece as cores padrão (Negro, Blanco, Rojo, Azul, Verde, Amarillo, Naranja).</p>
           </div>
 
           {/* Outra foto (opcional) */}

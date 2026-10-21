@@ -2769,7 +2769,7 @@ function DashboardSection({ products, orders, revenue, onNavigate, trackingAlert
 // Itens do pedido: todos os produtos, quantidade, variante e o nome
 // personalizado (chaveiro / pet) em destaque. Pedidos antigos so tinham o 1o.
 function OrderItemsList({ order }: { order: Order }) {
-  let items: { name?: string; quantity?: number; color?: string; size?: string; text?: string }[] = [];
+  let items: { name?: string; quantity?: number; color?: string; size?: string; text?: string; note?: string }[] = [];
   try { items = order.itemsJson ? JSON.parse(order.itemsJson) : []; } catch { items = []; }
   if (items.length === 0) return <div className="text-white/70">{order.product}</div>;
   return (
@@ -2783,6 +2783,7 @@ function OrderItemsList({ order }: { order: Order }) {
               Nome: «{it.text}»
             </span>
           )}
+          {it.note && <span className="mt-1 block rounded-lg bg-white/5 px-2 py-1 text-[12px] text-white/75">{it.note}</span>}
         </li>
       ))}
     </ul>

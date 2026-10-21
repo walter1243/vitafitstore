@@ -4,7 +4,7 @@ import { cleanCustomText } from '@/lib/personalize';
 // aceita no maximo 500 caracteres — com os nomes personalizados a lista pode
 // passar disso, entao ela vai dividida em items_0, items_1, ...
 
-export type OrderItem = { productId: number; quantity: number; color?: string; size?: string; text?: string };
+export type OrderItem = { productId: number; quantity: number; color?: string; size?: string; text?: string; note?: string };
 
 const CHUNK = 490;
 
@@ -17,6 +17,7 @@ export function cleanItems(raw: unknown): OrderItem[] {
       color: i?.color ? String(i.color).slice(0, 60) : undefined,
       size: i?.size ? String(i.size).slice(0, 20) : undefined,
       text: i?.text ? cleanCustomText(i.text) || undefined : undefined,
+      note: i?.note ? String(i.note).replace(/[<>]/g, '').slice(0, 300) || undefined : undefined,
     }))
     .filter((i) => Number.isFinite(i.productId) && i.productId > 0);
 }

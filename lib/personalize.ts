@@ -40,6 +40,9 @@ export type Personalize = {
   // Pedido minimo (ex: 5 chaveiros) e desconto da promocao (%) ao comprar o minimo ou mais.
   minQty: number;
   packPercent: number;
+  // Dados extras pedidos ao cliente (ex: chaveiro NFC): telefone e links.
+  askPhone: boolean;
+  askLinks: boolean;
 };
 
 export const PERSONALIZE_FONTS: { key: PersonalizeFont; label: string; css: string }[] = [
@@ -72,6 +75,8 @@ export const DEFAULT_PERSONALIZE: Personalize = {
   fitW: 60,
   minQty: 1,
   packPercent: 0,
+  askPhone: false,
+  askLinks: false,
 };
 
 const clamp = (n: unknown, min: number, max: number, def: number) => {
@@ -109,6 +114,8 @@ export function parsePersonalize(raw: unknown): Personalize {
     fitW: clamp(o.fitW, 10, 100, d.fitW),
     minQty: Math.round(clamp(o.minQty, 1, 100, 1)),
     packPercent: clamp(o.packPercent, 0, 90, 0),
+    askPhone: o.askPhone === true,
+    askLinks: o.askLinks === true,
     colors: Array.isArray(o.colors)
       ? (o.colors as { name?: unknown; hex?: unknown }[])
           .filter((c) => /^#[0-9a-fA-F]{6}$/.test(String(c?.hex)))
@@ -140,7 +147,6 @@ export const DEFAULT_NAME_COLORS = [
   { name: 'Verde', hex: '#16a34a' },
   { name: 'Amarillo', hex: '#facc15' },
   { name: 'Naranja', hex: '#f97316' },
-  { name: 'Rosa', hex: '#ec4899' },
 ];
 
 // Preco unitario com a promocao (servidor e navegador usam a mesma conta).
@@ -155,3 +161,5 @@ export function minQtyFor(personalizeRaw: unknown) {
   const p = parsePersonalize(personalizeRaw);
   return p.enabled ? Math.max(1, p.minQty) : 1;
 }
+
+export const LINK_TYPES = ['WhatsApp', 'Instagram', 'Bizum', 'Ubicación', 'Web', 'Facebook', 'TikTok', 'Email', 'Otro'] as const;

@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
           ${items[0]?.color || null},
           ${items[0]?.size || null},
           ${itemsJson},
-          ${items.map((i) => i.text).filter(Boolean).join(' | ') || null}
+          ${items.map((i) => [i.text, i.note].filter(Boolean).join(' — ')).filter(Boolean).join(' | ') || null}
         )
       `;
     } catch (dbErr) {

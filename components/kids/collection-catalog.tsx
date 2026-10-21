@@ -117,39 +117,6 @@ export function CollectionCatalog({ slug }: { slug: string }) {
         </div>
       )}
 
-      <div className="mt-16 grid gap-4 md:grid-cols-2">
-        {others.map((c) => {
-          const Icon = iconFor(c.interactive);
-          return (
-            <Link
-              key={c.slug}
-              href={`/coleccion/${c.slug}`}
-              className="group flex cursor-pointer items-center gap-5 rounded-3xl p-5 transition-transform duration-200 hover:-translate-y-0.5"
-              style={{ background: softOf(c) }}
-            >
-              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white">
-                <Icon className="h-7 w-7 text-[#23263f]" strokeWidth={1.75} aria-hidden="true" />
-              </span>
-              <span className="flex-1">
-                <span className="block text-sm font-semibold text-[var(--k-muted)]">Descubre también</span>
-                <span className="block font-kids text-2xl font-bold text-[var(--k-ink)]">{c.name}</span>
-              </span>
-            </Link>
-          );
-        })}
-        <Link
-          href={sector ? `/sector/${sector.slug}` : '/#colecciones'}
-          className="group flex cursor-pointer items-center gap-5 rounded-3xl bg-[#F2F4FA] p-5 transition-transform duration-200 hover:-translate-y-0.5"
-        >
-          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white">
-            <Home className="h-7 w-7 text-[var(--k-ink)]" strokeWidth={1.75} aria-hidden="true" />
-          </span>
-          <span className="flex-1">
-            <span className="block text-sm font-semibold text-[var(--k-muted)]">Volver</span>
-            <span className="block font-kids text-2xl font-bold text-[var(--k-ink)]">{sector ? `Todo ${sector.name.toLowerCase()}` : 'Todas las colecciones'}</span>
-          </span>
-        </Link>
-      </div>
     </div>
   );
 }
