@@ -5,7 +5,7 @@ import { Field, inputCls, textareaCls, MediaUploadField } from '@/components/con
 import { type Sector, type SiteCollection } from '@/lib/sectors-shared';
 import { DEFAULT_WORLD, TILE_ICONS, parseWorldContent, type Media, type MediaKind, type WorldContent } from '@/lib/world-content';
 
-const STYLE_LABEL: Record<string, string> = { infantil: 'Infantil', hogar: 'Casa / Hogar', llaveros: 'Chaveiros', mascotas: 'Mascotas / Pet' };
+const STYLE_LABEL: Record<string, string> = { infantil: 'Infantil', hogar: 'Casa / Hogar', llaveros: 'Chaveiros', navidad: 'Navidad', mascotas: 'Mascotas / Pet' };
 const ICON_LABEL: Record<string, string> = {
   sparkles: 'Brilho', heart: 'Coração', gift: 'Presente', sun: 'Sol', leaf: 'Folha', paw: 'Patinha', pen: 'Caneta',
   star: 'Estrela', shield: 'Escudo', truck: 'Caminhão', printer: 'Impressora', smile: 'Sorriso',

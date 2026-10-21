@@ -38,7 +38,7 @@ export function SectorCards({ sectors, active, onSelect, extraHome }: { sectors:
           <h1 className="text-4xl font-bold text-[#1E1B4B] sm:text-6xl">Elige tu mundo</h1>
           <p className="mx-auto mt-3 max-w-2xl text-lg text-[#1E1B4B]/80 sm:text-xl">Juguetes, llaveros, cosas para tu mascota y para casa, impresos en 3D en nuestro taller.</p>
         </div>
-        <ul role="tablist" aria-label="Mundos" className={`grid gap-x-4 gap-y-8 ${worlds.length <= 2 ? 'mx-auto max-w-xl grid-cols-2' : worlds.length === 3 ? 'grid-cols-3' : 'grid-cols-2 lg:grid-cols-4'}`}>
+        <ul role="tablist" aria-label="Mundos" className={`grid gap-x-4 gap-y-8 ${worlds.length <= 2 ? 'mx-auto max-w-xl grid-cols-2' : worlds.length === 3 ? 'grid-cols-3' : worlds.length >= 5 ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5' : 'grid-cols-2 lg:grid-cols-4'}`}>
           {worlds.map((w) => (
             <li key={w.key} role="presentation">
               <WorldItem w={w} selected={active === w.key} onSelect={onSelect} />
@@ -56,8 +56,9 @@ function WorldItem({ w, selected, onSelect }: { w: World; selected: boolean; onS
   const hold = useRef<ReturnType<typeof setTimeout> | null>(null);
   const start = () => { setHover((h) => { if (!h) setGo((n) => n + 1); return true; }); };
   const stop = () => setHover(false);
-  const ink = w.theme?.ink ?? KIDS_INK;
-  const accent = w.theme?.accent ?? '#c2410c';
+  // Navidad tem texto claro no tema (fundo verde); na home (fundo creme) usa verde escuro.
+  const ink = w.style === 'navidad' ? '#14532D' : w.theme?.ink ?? KIDS_INK;
+  const accent = w.style === 'navidad' ? '#DC2626' : w.theme?.accent ?? '#c2410c';
   const art = HAS_WORLD_ART(w.style);
 
   return (
@@ -93,7 +94,7 @@ function WorldItem({ w, selected, onSelect }: { w: World; selected: boolean; onS
       <span className="mt-1 text-2xl font-bold sm:text-3xl" style={{ color: ink, fontFamily: w.theme?.heading ?? "'Baloo 2', 'Nunito', sans-serif" }}>
         {w.name}
       </span>
-      {w.tagline && <span className="mt-0.5 max-w-[240px] text-sm leading-snug" style={{ color: w.theme?.muted ?? '#3F3D6B' }}>{w.tagline}</span>}
+      {w.tagline && <span className="mt-0.5 max-w-[240px] text-sm leading-snug" style={{ color: w.style === 'navidad' ? '#166534' : w.theme?.muted ?? '#3F3D6B' }}>{w.tagline}</span>}
       {/* marca do mundo aberto */}
       <span className="mt-3 h-1.5 rounded-full transition-all duration-300" style={{ width: selected ? 48 : 0, background: accent }} aria-hidden="true" />
     </button>

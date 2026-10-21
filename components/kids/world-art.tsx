@@ -56,6 +56,18 @@ export function WorldArt({ style, on, go = 0, alt }: { style: SectorStyle; on: b
         </>
       )}
 
+      {style === 'navidad' && (
+        <>
+          {/* jarron e boneco atras, arvore na frente; estrela acende */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={P + 'navidad-jarron.png'} alt="" draggable={false} className="pointer-events-none absolute bottom-[8%] left-[-6%] h-[62%] w-auto select-none object-contain" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img key={`m${go}`} src={P + 'navidad-muneco.png'} alt="" draggable={false} className={`pointer-events-none absolute bottom-[8%] right-[-6%] h-[58%] w-auto select-none object-contain ${on && go ? 'nv-wiggle' : ''}`} />
+          <Layer src="navidad-arbol.png" />
+          <span className={`nv-star pointer-events-none absolute ${c}`} style={{ left: '50%', top: '18.5%' }} aria-hidden="true" />
+        </>
+      )}
+
       {style === 'mascotas' && (
         <>
           <Layer src="pet-bol.png" />
@@ -74,4 +86,4 @@ export function WorldArt({ style, on, go = 0, alt }: { style: SectorStyle; on: b
   );
 }
 
-export const HAS_WORLD_ART = (s: SectorStyle) => s === 'infantil' || s === 'hogar' || s === 'llaveros' || s === 'mascotas';
+export const HAS_WORLD_ART = (s: SectorStyle) => s === 'infantil' || s === 'hogar' || s === 'llaveros' || s === 'mascotas' || s === 'navidad';

@@ -34,7 +34,7 @@ export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded,
   const base = parsePersonalize(product.personalize);
   // Sem cores cadastradas: oferece as cores padrao de filamento.
   const cfg = base.colors.length ? base : { ...base, colors: DEFAULT_NAME_COLORS };
-  const L = LOOK[look];
+  const L = LOOK[look] ?? LOOK.llaveros;
   const minQty = Math.max(1, base.minQty);
   const promo = base.packPercent > 0;
 

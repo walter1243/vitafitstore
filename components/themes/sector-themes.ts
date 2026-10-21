@@ -44,6 +44,16 @@ export const SECTOR_THEMES: Record<SectorTheme['key'], SectorTheme> = {
     kicker: 'con tu nombre',
     radius: '28px',
   },
+  navidad: {
+    key: 'navidad',
+    bg: '#14532D', bgAlt: '#166534', surface: '#F0FDF4',
+    ink: '#FFFBEB', muted: '#D1FAE5', accent: '#FCA5A5',
+    cta: '#DC2626', ctaHover: '#B91C1C', ctaText: '#ffffff',
+    heading: "'Quicksand', 'Nunito', system-ui, sans-serif",
+    kickerFont: "'Caveat', cursive",
+    kicker: 'feliz navidad',
+    radius: '24px',
+  },
   mascotas: {
     key: 'mascotas',
     bg: '#FEF3C7', bgAlt: '#FFF7ED', surface: '#FDE68A',

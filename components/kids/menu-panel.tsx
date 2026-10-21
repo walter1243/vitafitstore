@@ -54,6 +54,7 @@ const WORLD_COVER: Record<SectorTheme['key'], string> = {
   hogar: '/images/sectors/hogar.jpg',
   llaveros: '/images/sectors/llaveros.jpg',
   mascotas: '/images/sectors/mascotas.png',
+  navidad: '/images/worlds/navidad-arbol.png',
 };
 const BTN_KIDS = 'inline-flex min-h-10 items-center justify-center rounded-full bg-[#1E1B4B] px-4 text-sm font-extrabold text-white transition-colors duration-200 hover:bg-[#363a5c]';
 

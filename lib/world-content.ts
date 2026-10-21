@@ -31,6 +31,10 @@ export type WorldContent = {
 const img = (url: string, caption = '', alt = ''): Shot => ({ url, kind: 'image', caption, alt, productId: 0 });
 
 export const DEFAULT_WORLD: Record<SectorStyle, WorldContent> = {
+  navidad: {
+    cover: { url: '/images/worlds/navidad-arbol.png', kind: 'image' },
+    showcase: { enabled: false, kicker: '', title: '', intro: '', shots: [], tiles: [], steps: [], trust: true },
+  },
   infantil: {
     cover: { url: '/images/sectors/infantil.jpg', kind: 'image' },
     showcase: {

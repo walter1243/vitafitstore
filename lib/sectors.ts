@@ -64,6 +64,7 @@ export async function ensureSectorTables() {
     }
   }
   await seedNewSectors();
+  await seedNavidadOnce();
   await mergeHogarOnce();
 }
 
@@ -107,6 +108,28 @@ async function mergeHogarOnce() {
     if (/http|kitoys3d-com/.test(String(owner.slug))) await sql`UPDATE sectors SET slug = 'hogar' WHERE id = ${owner.id}`;
   }
   await sql`INSERT INTO site_flags (key) VALUES ('merge_hogar_v1') ON CONFLICT DO NOTHING`;
+}
+
+async function seedNavidadOnce() {
+  const [done] = await sql`SELECT key FROM site_flags WHERE key = 'seed_navidad_v1'`;
+  if (done) return;
+  const [row] = await sql`
+    INSERT INTO sectors (slug, name, tagline, style, description, position, enabled)
+    VALUES ('navidad', 'Navidad', 'Detalles impresos en 3D para estas fiestas', 'navidad',
+            'Decoración y regalos navideños impresos en 3D en nuestro taller.',
+            COALESCE((SELECT MAX(position) + 1 FROM sectors), 1), TRUE)
+    ON CONFLICT (slug) DO NOTHING
+    RETURNING id
+  `;
+  if (row) {
+    await sql`
+      INSERT INTO site_collections (sector_id, slug, name, short_name, tagline, description, interactive, match, position, enabled, bg_color)
+      VALUES (${row.id}, 'navidad', 'Navidad', 'Navidad', 'Decora y regala estas fiestas',
+              'Decoración y regalos navideños impresos en 3D.', 'none', 'navidad, navideño, navideno, christmas, natal', 1, TRUE, '#166534')
+      ON CONFLICT (slug) DO NOTHING
+    `;
+  }
+  await sql`INSERT INTO site_flags (key) VALUES ('seed_navidad_v1') ON CONFLICT DO NOTHING`;
 }
 
 async function seedNewSectors() {

@@ -10,6 +10,7 @@ import { ACCENTS } from '@/components/kids/palette';
 import { ProductCarousel } from '@/components/kids/product-carousel';
 import { NamePersonalizer } from '@/components/personalize/name-personalizer';
 import { SECTOR_THEMES, type SectorTheme } from './sector-themes';
+import { NavidadObjects, NavidadSleigh, NavidadSnow } from './navidad-decor';
 
 // Faixas dos setores com visual proprio (Casa, Chaveiros, Pet). Cada visual
 // tem cores/fontes (sector-themes.ts) e um layout de colecao diferente:
@@ -39,10 +40,11 @@ export function ThemedSectorBand({ sector, theme, first, asTitle }: { sector: Se
   return (
     <section
       id={`setor-${sector.slug}`}
-      className={`scroll-mt-24 px-4 sm:px-6 lg:px-8 ${first ? 'pb-16 pt-36 sm:pt-40' : 'py-20 sm:py-24'}`}
+      className={`relative scroll-mt-24 overflow-hidden px-4 sm:px-6 lg:px-8 ${first ? 'pb-16 pt-36 sm:pt-40' : 'py-20 sm:py-24'}`}
       style={{ background: theme.bg, color: theme.ink }}
     >
-      <div className={`mx-auto max-w-6xl ${media ? 'grid items-center gap-10 lg:grid-cols-2' : 'text-center'}`}>
+      {theme.key === 'navidad' && <><NavidadSnow /><NavidadSleigh /></>}
+      <div className={`relative mx-auto max-w-6xl ${media ? 'grid items-center gap-10 lg:grid-cols-2' : 'text-center'}`}>
         <div>
           <p className="text-2xl sm:text-3xl" style={{ fontFamily: theme.kickerFont, color: theme.accent }}>{theme.kicker}</p>
           <Heading className="mt-1 text-4xl font-semibold sm:text-6xl" style={{ fontFamily: theme.heading }}>{sector.name}</Heading>
@@ -85,8 +87,9 @@ export function ThemedCollection({ collection, theme, products = [], showCarouse
   const label = primaryLabel ?? `Ver ${products.length ? `los ${products.length}` : 'colección'}`;
 
   return (
-    <section className={`px-4 sm:px-6 lg:px-8 ${first ? 'pb-10 pt-32 sm:pt-36' : 'py-12 sm:py-16'}`} style={{ background: theme.bgAlt }}>
-      <div className="mx-auto max-w-6xl">
+    <section className={`relative overflow-hidden px-4 sm:px-6 lg:px-8 ${first ? 'pb-10 pt-32 sm:pt-36' : 'py-12 sm:py-16'}`} style={{ background: theme.bgAlt }}>
+      {theme.key === 'navidad' && <><NavidadSnow /><NavidadSleigh /></>}
+      <div className="relative mx-auto max-w-6xl">
         <div className="flex flex-wrap items-end justify-between gap-4 pb-6" style={{ borderBottom: `1px solid ${theme.ink}1a` }}>
           <div>
             {collection.shortName.trim().toLowerCase() !== collection.name.trim().toLowerCase() && (
@@ -95,6 +98,7 @@ export function ThemedCollection({ collection, theme, products = [], showCarouse
             <Heading className="text-3xl font-semibold sm:text-4xl" style={{ fontFamily: theme.heading, color: theme.ink }}>{collection.name}</Heading>
             {collection.tagline && <p className="mt-1 text-base" style={{ color: theme.muted }}>{collection.tagline}</p>}
           </div>
+          {theme.key === 'navidad' && <NavidadObjects className="order-last sm:order-none" />}
           {!first && products.length > 0 && (
             <Link href={href} className={solid.className} style={solid.style}>{label}</Link>
           )}

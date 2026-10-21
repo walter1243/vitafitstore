@@ -6,7 +6,7 @@ import { INTERACTIVE_OPTIONS, SECTOR_STYLES, slugify, type Interactive, type Sec
 
 type CollectionDraft = Omit<SiteCollection, 'id' | 'position'> & { id?: number };
 type SectorDraft = { id?: number; name: string; slug: string; tagline: string; style: SectorStyle; description: string; imageUrl: string; videoUrl: string; enabled: boolean };
-const STYLE_LABEL: Record<SectorStyle, string> = { infantil: 'Infantil', hogar: 'Casa / Hogar', llaveros: 'Chaveiros', mascotas: 'Mascotas / Pet' };
+const STYLE_LABEL: Record<SectorStyle, string> = { infantil: 'Infantil', hogar: 'Casa / Hogar', llaveros: 'Chaveiros', navidad: 'Navidad', mascotas: 'Mascotas / Pet' };
 
 const emptyCollection = (sectorId: number): CollectionDraft => ({
   sectorId,
@@ -418,6 +418,15 @@ function StylePreview({ style }: { style: SectorStyle }) {
       <span className="mb-2 flex h-14 items-center justify-center gap-2 rounded-lg" style={{ background: 'linear-gradient(160deg,#EEF2FF,#E0E7FF)' }}>
         <span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-[#1E1B4B] shadow" style={{ fontFamily: "'Fredoka', sans-serif" }}>Lucía</span>
         <span className="h-6 w-14 rounded-full bg-[#EA580C]" />
+      </span>
+    );
+  }
+  if (style === 'navidad') {
+    return (
+      <span className="mb-2 flex h-14 items-center justify-center gap-2 rounded-lg bg-[#166534]">
+        <span className="h-9 w-7 rounded-md border-2 border-[#DC2626] bg-white" />
+        <span className="text-lg text-white">❄</span>
+        <span className="h-9 w-7 rounded-md border-2 border-[#DC2626] bg-white" />
       </span>
     );
   }

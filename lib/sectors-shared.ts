@@ -34,15 +34,16 @@ export type SiteCollection = {
 
 // Visual do setor (site "coringa": mudou o setor, muda o design).
 // infantil = colorido em blocos; hogar = casa, minimalista quente.
-export type SectorStyle = 'infantil' | 'hogar' | 'llaveros' | 'mascotas';
+export type SectorStyle = 'infantil' | 'hogar' | 'llaveros' | 'mascotas' | 'navidad';
 export const SECTOR_STYLES: { key: SectorStyle; label: string; hint: string }[] = [
   { key: 'infantil', label: 'Infantil', hint: 'Cores fortes, cards com contorno e brincadeiras. Para brinquedos, lâmparas infantis, kits de pintar.' },
   { key: 'hogar', label: 'Casa / Hogar', hint: 'Tons areia e creme, letras elegantes, fotos grandes. Para decoração, vasos, móveis e organização.' },
   { key: 'llaveros', label: 'Chaveiros personalizados', hint: 'Índigo e laranja, moderno e divertido, com o nome do cliente ao vivo no chaveiro.' },
+  { key: 'navidad', label: 'Navidad', hint: 'Verde com detalhes vermelhos, neve caindo e o trenó do Papai Noel. Para a coleção de Natal.' },
   { key: 'mascotas', label: 'Mascotas / Pet', hint: 'Tons quentes (marrom e dourado), fotos grandes dos pets em destaque e nome do pet personalizado.' },
 ];
 export const sectorStyleOf = (v: unknown): SectorStyle =>
-  v === 'hogar' || v === 'llaveros' || v === 'mascotas' ? v : 'infantil';
+  v === 'hogar' || v === 'llaveros' || v === 'mascotas' || v === 'navidad' ? v : 'infantil';
 
 export type Sector = {
   id: number;

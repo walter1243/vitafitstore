@@ -6,7 +6,7 @@ import { NamePreview } from '@/components/personalize/name-personalizer';
 import { PERSONALIZE_FONTS, parsePersonalize, type Personalize } from '@/lib/personalize';
 import { slugify, type Sector } from '@/lib/sectors-shared';
 
-const STYLE_LABEL: Record<string, string> = { infantil: 'Infantil', hogar: 'Casa / Hogar', llaveros: 'Chaveiros', mascotas: 'Mascotas / Pet' };
+const STYLE_LABEL: Record<string, string> = { infantil: 'Infantil', hogar: 'Casa / Hogar', llaveros: 'Chaveiros', navidad: 'Navidad', mascotas: 'Mascotas / Pet' };
 const card = 'rounded-2xl border border-white/10 bg-[#0f1117] p-5 shadow-none';
 const chip = (on: boolean) =>
   `rounded-xl border px-3 py-2 text-left text-sm font-semibold transition ${on ? 'border-green-500/60 bg-green-500/10 text-white' : 'border-white/10 text-white/60 hover:bg-white/5'}`;

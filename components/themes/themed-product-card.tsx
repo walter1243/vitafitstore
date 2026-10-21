@@ -53,6 +53,34 @@ export function ThemedProductCard({ product, theme }: { product: Product; theme:
     </button>
   );
 
+  // Navidad: card branco com borda e laco vermelhos (detalhe minimalista).
+  if (theme.key === 'navidad') {
+    return (
+      <Link
+        href={href}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        className="group relative flex h-full cursor-pointer flex-col rounded-[22px] border-2 border-[#DC2626] bg-white p-2.5 shadow-[0_14px_32px_rgba(0,0,0,0.22)] transition-transform duration-300 hover:-translate-y-1 motion-reduce:hover:translate-y-0"
+      >
+        {/* laco */}
+        <svg className="absolute -top-3 left-1/2 z-10 h-7 w-12 -translate-x-1/2" viewBox="0 0 48 28" aria-hidden="true">
+          <path d="M24 14C16 2 4 4 6 14c2 9 12 6 18 0zM24 14c8-12 20-10 18 0-2 9-12 6-18 0z" fill="#DC2626" />
+          <circle cx="24" cy="14" r="4" fill="#B91C1C" />
+        </svg>
+        <div className="relative aspect-square overflow-hidden rounded-[16px] bg-[#F0FDF4]">
+          <Image src={img} alt={product.name} fill sizes="(min-width: 1024px) 25vw, 60vw" className="object-cover transition-transform duration-500 group-hover:scale-[1.04] motion-reduce:transition-none" />
+        </div>
+        <div className="flex flex-1 flex-col px-1 pt-3">
+          <h3 className="line-clamp-2 text-base font-semibold leading-snug text-[#14532D]" style={{ fontFamily: theme.heading }}>{product.name}</h3>
+          <div className="mt-auto flex items-center justify-between gap-2 pt-3">
+            <span className="text-base font-bold text-[#14532D]">{product.price.toFixed(2)}€</span>
+            {action}
+          </div>
+        </div>
+      </Link>
+    );
+  }
+
   // Mascotas: a foto ocupa o card inteiro.
   if (theme.key === 'mascotas') {
     return (
