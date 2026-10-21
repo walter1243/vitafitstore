@@ -1,5 +1,6 @@
 'use client';
 import { AdminSectors } from '@/components/admin-sectors';
+import { dataUrlToBlobUrl, uploadInlineImages } from '@/lib/upload-data-url';
 import { clipboardFiles, isEditableTarget, useHoverPaste } from '@/lib/use-hover-paste';
 import { AdminWorlds } from '@/components/admin-worlds';
 import { PersonalizeEditor, ProductPlacement } from '@/components/admin-product-extras';
@@ -2208,6 +2209,25 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
 
     setSaving(true);
     try {
+      // Fotos coladas/escolhidas (data:) sobem pro armazenamento antes, pra o
+      // pedido nao passar do limite da Vercel ("Request Entity Too Large").
+      let mainImage = prodImage;
+      let additionalImages = prodAdditionalImages;
+      let description = prodDesc;
+      let colorOptions = prodColorOptions;
+      try {
+        if (mainImage) mainImage = await dataUrlToBlobUrl(mainImage);
+        additionalImages = await Promise.all(additionalImages.map((u) => dataUrlToBlobUrl(u)));
+        description = await uploadInlineImages(description);
+        colorOptions = await Promise.all(colorOptions.map(async (c) => (c.image ? { ...c, image: await dataUrlToBlobUrl(c.image) } : c)));
+      } catch (upErr: any) {
+        addToast('error', `Não foi possível enviar as fotos: ${upErr?.message ?? 'erro desconhecido'}`);
+        return;
+      }
+      if (mainImage !== prodImage) setProdImage(mainImage);
+      if (additionalImages.some((u, i) => u !== prodAdditionalImages[i])) setProdAdditionalImages(additionalImages);
+      if (description !== prodDesc) setProdDesc(description);
+
       const res = await fetch('/api/products', {
         method: isEditing ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2223,21 +2243,24 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
           demoImage: prodForm.demoImage.trim(),
           collectionSlug: prodForm.collectionSlug,
           personalize: prodForm.personalize ? JSON.parse(prodForm.personalize) : { enabled: false },
-          description: prodDesc || null,
-          mainImage: prodImage,
-          image: prodImage,
-          additionalImages: prodAdditionalImages,
+          description: description || null,
+          mainImage,
+          image: mainImage,
+          additionalImages,
           upsellIds: prodUpsellIds,
           sourceStoreUrl: prodSourceStoreUrl || null,
           sourceProductUrl: prodSourceProductUrl || null,
           costPrice: prodImportCostPrice ? parseFloat(prodImportCostPrice) : null,
           productType: prodProductType,
           sizes: prodSizes,
-          colorOptions: prodColorOptions,
+          colorOptions,
         }),
       });
 
-      const data = await res.json();
+      // Resposta que nao e JSON (ex: erro da Vercel) vira mensagem legivel.
+      const text = await res.text();
+      let data: any = {};
+      try { data = JSON.parse(text); } catch { data = { error: res.status === 413 ? 'Os arquivos ficaram grandes demais para enviar. Tente imagens menores.' : text.slice(0, 160) }; }
 
       if (res.ok) {
         if (isEditing) {
