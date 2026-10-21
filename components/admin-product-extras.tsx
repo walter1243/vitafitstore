@@ -13,9 +13,24 @@ const chip = (on: boolean) =>
 
 // Admin → Produtos: em que setor/colecao o produto aparece no site.
 // "Automático" = pela categoria (regra antiga, palavras da colecao).
-export function ProductPlacement({ value, onChange }: { value: string; onChange: (slug: string, name?: string) => void }) {
+export function ProductPlacement({ value, onChange, category, onCategory }: {
+  value: string;
+  onChange: (slug: string, name?: string) => void;
+  // 3o passo: categoria dentro da colecao escolhida.
+  category: string;
+  onCategory: (name: string) => void;
+}) {
   const [sectors, setSectors] = useState<Sector[]>([]);
   const [sectorId, setSectorId] = useState<number | null>(null);
+  const [products, setProducts] = useState<{ category?: string; collectionSlug?: string }[]>([]);
+  const [newCat, setNewCat] = useState('');
+
+  useEffect(() => {
+    fetch('/api/products', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((p) => { if (Array.isArray(p)) setProducts(p); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch('/api/sectors?all=1', { cache: 'no-store' })
@@ -84,8 +99,46 @@ export function ProductPlacement({ value, onChange }: { value: string; onChange:
         </>
       )}
 
-      <p className="mt-4 text-xs text-white/55">
-        {chosen ? <>Vai aparecer em <strong className="text-white">{chosen.s.name} → {chosen.c.name}</strong>.</> : 'Automático: entra na coleção cuja categoria bate com a do produto.'}
+      {chosen && (() => {
+        // Categorias ja usadas nessa colecao + o nome da propria colecao.
+        const used = [...new Set([chosen.c.name, ...products.filter((p) => p.collectionSlug === chosen.c.slug && p.category).map((p) => String(p.category).trim())])];
+        const all = category && !used.includes(category) ? [...used, category] : used;
+        return (
+          <div className="mt-5">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/40">3. Categoria em {chosen.c.name}</p>
+            <div className="flex flex-wrap gap-2">
+              {all.map((name) => (
+                <button key={name} type="button" onClick={() => onCategory(name)} className={chip(category === name)}>
+                  {name}
+                </button>
+              ))}
+            </div>
+            <div className="mt-3 flex gap-2">
+              <input
+                value={newCat}
+                onChange={(e) => setNewCat(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && newCat.trim()) { e.preventDefault(); onCategory(newCat.trim()); setNewCat(''); } }}
+                placeholder="Nova categoria (ex: Jarrones, Comederos, Llaveros de letras)"
+                className="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30"
+              />
+              <button
+                type="button"
+                disabled={!newCat.trim()}
+                onClick={() => { onCategory(newCat.trim()); setNewCat(''); }}
+                className="rounded-xl bg-green-600 px-4 py-2 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-40"
+              >
+                Usar
+              </button>
+            </div>
+            <p className="mt-1 text-[11px] text-white/40">A categoria vira um filtro dentro da coleção (ex: em Decoración: Jarrones, Macetas…).</p>
+          </div>
+        );
+      })()}
+
+      <p className="mt-5 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/70">
+        {chosen
+          ? <>Vai aparecer em <strong className="text-white">{chosen.s.name} → {chosen.c.name}{category ? ` → ${category}` : ''}</strong>.</>
+          : 'Automático: entra na coleção cuja categoria bate com a do produto.'}
       </p>
     </section>
   );

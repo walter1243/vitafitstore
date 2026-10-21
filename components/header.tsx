@@ -1,7 +1,8 @@
 'use client';
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
-import { ShoppingCart, Menu, X, Smile } from 'lucide-react';
+import { ShoppingCart, Menu, X, Smile, Search } from 'lucide-react';
+import { ProductSearch } from '@/components/product-search';
 import { useCart } from '@/lib/cart-context';
 import { useSectors } from '@/components/kids/sectors-context';
 import { softOf } from '@/lib/sectors-shared';
@@ -12,7 +13,7 @@ import { CollectionsMenuPanel, homeCategoryHref, selectHomeCategory, useHomeCate
 // enviada no admin continua sendo usada no modo "icone + nome".
 const DEFAULT_LOGO = '/images/logo-kitoys-3d.png';
 
-const NAV_ITEM = 'rounded-full px-4 py-2 font-kids text-lg font-semibold text-[#23263f] transition-colors duration-200 hover:bg-[#FFF4E0] cursor-pointer';
+const NAV_ITEM = 'whitespace-nowrap rounded-full px-3 py-2 font-kids text-base font-semibold text-[#23263f] transition-colors duration-200 hover:bg-[#FFF4E0] cursor-pointer lg:px-4 lg:text-lg';
 const MOBILE_ITEM = 'block rounded-xl px-4 py-3 font-kids text-xl font-bold text-[#23263f] transition-colors hover:bg-[#FFF4E0]';
 
 const BRANDING_CACHE_KEY = 'store_branding_cache';
@@ -54,6 +55,7 @@ export function Header() {
   }, [colOpen]);
   const { totalItems, setIsCartOpen } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const mobileHomeCats = useHomeCategories(mobileOpen);
   const [scrolled, setScrolled] = useState(false);
   const cachedBranding = readCachedBranding();
@@ -156,8 +158,9 @@ export function Header() {
         style={{ top: topBarHeight }}
       >
         <div ref={colRef} className="relative">
-        <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-10">
+        {/* Logo · busca · menu · carrinho (no celular a busca abre por baixo) */}
+        <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:gap-6 lg:px-8">
+          <div className="flex shrink-0 items-center">
             {/* Logo — "logo_direto" (padrao; Admin → Informações da Loja)
                 mostra a imagem do logo sozinha, do jeito que ela e. */}
             {logoStyle === 'logo_direto' ? (
@@ -179,6 +182,13 @@ export function Header() {
               </Link>
             )}
 
+          </div>
+
+          {/* Busca (desktop) */}
+          <ProductSearch className="hidden max-w-xl flex-1 md:block" />
+
+          {/* Right side: menu + carrinho */}
+          <div className="flex shrink-0 items-center gap-2">
             {/* Menu: Inicio · Colecciones (painel com setores) · Nuestro taller */}
             <nav className="hidden items-center gap-1 md:flex" aria-label="Principal">
               <Link href="/" className={NAV_ITEM}>Inicio</Link>
@@ -195,10 +205,15 @@ export function Header() {
               </button>
               <Link href="/#como-se-hace" className={NAV_ITEM}>Nuestro taller</Link>
             </nav>
-          </div>
-
-          {/* Right side */}
-          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSearchOpen((v) => !v)}
+              className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-[#F2F4FA] transition-colors hover:bg-[#E6E9F3] md:hidden"
+              aria-label="Buscar productos"
+              aria-expanded={searchOpen}
+            >
+              {searchOpen ? <X className="h-5 w-5 text-[#23263f]" /> : <Search className="h-5 w-5 text-[#23263f]" />}
+            </button>
             <button
               onClick={() => setIsCartOpen(true)}
               className="relative flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-[#FFF4E0] transition-colors duration-200 hover:bg-[#FFE8C2]"
@@ -222,6 +237,12 @@ export function Header() {
             </button>
           </div>
         </div>
+
+        {searchOpen && (
+          <div className="kids absolute inset-x-0 top-full border-t border-[#efe7da] bg-white px-4 py-3 shadow-[0_16px_32px_rgba(35,38,63,0.12)] md:hidden">
+            <ProductSearch autoFocus onDone={() => setSearchOpen(false)} />
+          </div>
+        )}
 
         {/* Painel "Colecciones": todas as colecoes lado a lado + categorias.
             Fica montado (so escondido) pra brincadeira aberta dali continuar

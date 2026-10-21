@@ -715,7 +715,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                     <div>
                       <label className="mb-1.5 block text-xs font-medium text-white/50">Categoria</label>
                       <p className="rounded-xl border border-green-500/25 bg-green-500/5 px-3 py-2.5 text-sm text-white/80">
-                        {form.category || 'Da coleção'} <span className="text-white/45">· definida em “Onde aparece no site”</span>
+                        {form.category || 'Da coleção'} <span className="text-white/45">· escolha/troque no passo 3 de “Onde aparece no site”</span>
                       </p>
                     </div>
                   ) : (
@@ -972,7 +972,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
               </section>
 
               {/* Onde o produto aparece (setor → colecao) e personalizacao com nome. */}
-              <ProductPlacement value={form.collectionSlug} onChange={(slug, name) => { onFormChange('collectionSlug', slug); if (slug && name) onFormChange('category', name); }} />
+              <ProductPlacement value={form.collectionSlug} onChange={(slug, name) => { onFormChange('collectionSlug', slug); if (slug && name) onFormChange('category', name); }} category={form.category} onCategory={(name) => onFormChange('category', name)} />
               <PersonalizeEditor value={form.personalize} onChange={(json) => onFormChange('personalize', json)} productImage={image} />
 
               {/* Amostra gratis interativa: brincadeira na pagina do produto que
