@@ -71,6 +71,31 @@ export function CollectionCatalog({ slug }: { slug: string }) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 pb-20 pt-10 sm:px-6 lg:px-8">
+      {/* Topo: atalhos pras outras colecoes do mundo (desliza no celular). */}
+      {(others.length > 0 || sector) && (
+        <nav aria-label="Otras colecciones" className="swipe-row -mx-1 mb-4 px-1 py-1">
+          <Link
+            href={sector ? `/sector/${sector.slug}` : '/#colecciones'}
+            className="inline-flex min-h-10 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#F2F4FA] px-4 text-sm font-bold text-[var(--k-ink)] transition-colors hover:bg-[#E6E9F3]"
+          >
+            <Home className="h-4 w-4" aria-hidden="true" /> {sector ? `Todo ${sector.name.toLowerCase()}` : 'Colecciones'}
+          </Link>
+          {others.map((c) => {
+            const Icon = iconFor(c.interactive);
+            return (
+              <Link
+                key={c.slug}
+                href={`/coleccion/${c.slug}`}
+                className="inline-flex min-h-10 items-center gap-1.5 whitespace-nowrap rounded-full px-4 text-sm font-bold text-[var(--k-ink)] transition-opacity hover:opacity-80"
+                style={{ background: softOf(c) }}
+              >
+                <Icon className="h-4 w-4" aria-hidden="true" /> {c.name}
+              </Link>
+            );
+          })}
+        </nav>
+      )}
+
       {/* Um seletor de categoria (sem chips nem "ordenar por"). */}
       <div className="mb-6 flex items-center justify-between gap-3">
         <p className="text-base font-semibold text-[var(--k-muted)]">
