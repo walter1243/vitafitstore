@@ -398,6 +398,11 @@ export function PersonalizeEditor({ value, onChange, productImage }: { value: st
               </label>
             </div>
             <p className="mt-1 text-[11px] text-white/45">Ex: mínimo 5 e 20% → o cliente vê “Pack de 5: -20%” e paga cada um com desconto. O checkout confere o mínimo e o preço.</p>
+            <label className="mt-3 block text-xs text-white/60">
+              Frete grátis a partir de (unidades) — 0 = desligado
+              <input type="number" min={0} max={1000} className="mt-1 w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white sm:w-40" value={cfg.freeShipQty} onChange={(e) => set('freeShipQty', Number(e.target.value))} />
+            </label>
+            <p className="mt-1 text-[11px] text-white/45">Ex: 15 → aparece “Envío gratis desde 15 uds” no catálogo e o frete sai grátis no carrinho e no checkout.</p>
             <p className="mt-2 text-[11px] text-white/45">Sem “Cores que o cliente pode escolher”, o site oferece as cores padrão (Negro, Blanco, Rojo, Azul, Verde, Amarillo, Naranja).</p>
           </div>
 

@@ -86,3 +86,47 @@ export function NavidadObjects({ className = '' }: { className?: string }) {
     </div>
   );
 }
+
+// Enfeites grandes espalhados nas laterais (so em telas largas, nas margens,
+// sem cobrir os produtos). Interativos como os do cabecalho.
+export function NavidadSides() {
+  const [star, setStar] = useState(false);
+  const [snow, setSnow] = useState(0);
+  return (
+    <div className="pointer-events-none absolute inset-0 hidden xl:block" aria-hidden="false">
+      {/* esquerda: jarron em baixo */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={`${P}navidad-jarron.png`} alt="" aria-hidden="true" draggable={false} className="nv-float absolute bottom-8 left-[max(8px,calc(50%-46rem))] h-56 w-auto object-contain opacity-95" />
+      {/* direita: arvore no alto (estrela acende) */}
+      <button
+        type="button"
+        aria-label="Encender la estrella"
+        onMouseEnter={() => setStar(true)}
+        onMouseLeave={() => setStar(false)}
+        onClick={() => setStar((v) => !v)}
+        className="pointer-events-auto absolute right-[max(8px,calc(50%-46rem))] top-24 h-64 w-52 cursor-pointer"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={`${P}navidad-arbol.png`} alt="" className="h-full w-full object-contain" draggable={false} />
+        <span className={`nv-star pointer-events-none absolute ${star ? 'nv-on' : ''}`} style={{ left: '50%', top: '18.5%' }} />
+      </button>
+      {/* direita, embaixo: boneco (clique = neve) */}
+      <button
+        type="button"
+        aria-label="Hacer nevar"
+        onClick={() => setSnow((n) => n + 1)}
+        className="pointer-events-auto absolute bottom-10 right-[max(8px,calc(50%-44rem))] h-44 w-36 cursor-pointer"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img key={snow} src={`${P}navidad-muneco.png`} alt="" className={`h-full w-full object-contain ${snow ? 'nv-wiggle' : ''}`} draggable={false} />
+        {snow > 0 && (
+          <span key={`s${snow}`} className="pointer-events-none absolute -inset-x-8 -top-6 bottom-0" aria-hidden="true">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <span key={i} className="nv-flake absolute text-white" style={{ left: `${4 + i * 8}%`, animationDelay: `${(i % 4) * 0.12}s`, fontSize: `${12 + (i % 3) * 5}px` }}>❄</span>
+            ))}
+          </span>
+        )}
+      </button>
+    </div>
+  );
+}

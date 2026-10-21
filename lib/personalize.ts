@@ -43,6 +43,8 @@ export type Personalize = {
   // Dados extras pedidos ao cliente (ex: chaveiro NFC): telefone e links.
   askPhone: boolean;
   askLinks: boolean;
+  // Frete gratis a partir de N unidades deste produto (0 = sem).
+  freeShipQty: number;
 };
 
 export const PERSONALIZE_FONTS: { key: PersonalizeFont; label: string; css: string }[] = [
@@ -77,6 +79,7 @@ export const DEFAULT_PERSONALIZE: Personalize = {
   packPercent: 0,
   askPhone: false,
   askLinks: false,
+  freeShipQty: 0,
 };
 
 const clamp = (n: unknown, min: number, max: number, def: number) => {
@@ -116,6 +119,7 @@ export function parsePersonalize(raw: unknown): Personalize {
     packPercent: clamp(o.packPercent, 0, 90, 0),
     askPhone: o.askPhone === true,
     askLinks: o.askLinks === true,
+    freeShipQty: Math.round(clamp(o.freeShipQty, 0, 1000, 0)),
     colors: Array.isArray(o.colors)
       ? (o.colors as { name?: unknown; hex?: unknown }[])
           .filter((c) => /^#[0-9a-fA-F]{6}$/.test(String(c?.hex)))
@@ -163,3 +167,9 @@ export function minQtyFor(personalizeRaw: unknown) {
 }
 
 export const LINK_TYPES = ['WhatsApp', 'Instagram', 'Bizum', 'Ubicación', 'Web', 'Facebook', 'TikTok', 'Email', 'Otro'] as const;
+
+// Frete do item: 0 quando a quantidade atinge o "frete gratis a partir de".
+export function itemShipping(shipping: number | null | undefined, personalizeRaw: unknown, qty: number) {
+  const n = parsePersonalize(personalizeRaw).freeShipQty;
+  return n > 0 && qty >= n ? 0 : shipping;
+}

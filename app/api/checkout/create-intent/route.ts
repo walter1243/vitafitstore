@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { minQtyFor, unitPriceFor } from '@/lib/personalize';
+import { itemShipping, minQtyFor, unitPriceFor } from '@/lib/personalize';
 import { cleanItems, packItems } from '@/lib/order-items';
 import Stripe from 'stripe';
 import { sql } from '@/lib/db';
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     }, 0);
 
     const shippingById = new Map<number, number | null>((productRows as any[]).map((r) => [Number(r.id), r.shipping_cost != null ? Number(r.shipping_cost) : null]));
-    const shipping = resolveShipping(subtotal, String(country ?? 'ES'), items.map((item: any) => shippingById.get(Number(item.productId))));
+    const shipping = resolveShipping(subtotal, String(country ?? 'ES'), items.map((item: any) => itemShipping(shippingById.get(Number(item.productId)), persById.get(Number(item.productId)), qtyById.get(Number(item.productId)) ?? 0)));
     const amount = Math.round((subtotal + shipping) * 100);
 
     if (!amount || amount <= 0) {

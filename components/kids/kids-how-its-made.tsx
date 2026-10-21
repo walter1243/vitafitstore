@@ -1,21 +1,21 @@
 import Image from 'next/image';
 
-// "Nuestro taller" no padrao dos destaques (tela cheia, foto real com
-// degrade por cima, titulo grande e uma linha) — escuro, logo depois do
-// destaque claro de "Para pintar".
+// "Nuestro taller": a arte dos adornos e presentes personalizados inteira
+// (sem cortar o texto dela) e, embaixo, o titulo.
 export function KidsHowItsMade() {
   return (
-    <section id="como-se-hace" className="relative flex min-h-[80vh] scroll-mt-24 items-end justify-center overflow-hidden px-4 pb-16 text-center sm:pb-24">
-      <Image
-        src="/images/taller-nina-impresora-3d.jpg"
-        alt="Niña sonriendo mientras juega con un estegosaurio impreso en 3D, junto a nuestra impresora 3D"
-        fill
-        sizes="100vw"
-        className="object-cover object-[30%_center]"
-      />
-      <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(7,8,15,0.05) 0%, rgba(7,8,15,0.25) 45%, rgba(7,8,15,0.85) 100%)' }} />
-      <div className="relative z-10 max-w-3xl">
-        <h2 className="text-5xl font-bold text-white sm:text-6xl md:text-7xl">Nuestro taller</h2>
+    <section id="como-se-hace" className="scroll-mt-24 bg-[#23263f]">
+      <div className="relative mx-auto aspect-[1024/434] w-full max-w-[1600px]">
+        <Image
+          src="/images/taller-adornos.jpg"
+          alt="Adornos y regalos personalizados impresos en 3D en nuestro taller: llaveros, árbol, muñeco de nieve y jarrón"
+          fill
+          sizes="100vw"
+          className="object-cover"
+        />
+      </div>
+      <div className="mx-auto max-w-3xl px-4 py-10 text-center sm:py-14">
+        <h2 className="text-4xl font-bold text-white sm:text-6xl">Nuestro taller</h2>
         <p className="mt-3 text-lg text-white/85 sm:text-xl">
           Lo diseñamos, lo imprimimos capa a capa y te lo enviamos a casa.
         </p>

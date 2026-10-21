@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/sheet'
 import { useCart } from '@/lib/cart-context'
 import { FREE_SHIPPING_FROM as FREE_SHIPPING, resolveShipping } from '@/lib/checkout-pricing'
+import { itemShipping } from '@/lib/personalize'
 
 // Carrinho no visual infantil da vitrine (classe .kids: Baloo 2 + Nunito,
 // tons pastel). A logica — quantidades, remover, frete gratis, link pro
@@ -22,7 +23,8 @@ export function CartSidebar() {
 
   const hasFreeShipping = totalPrice >= FREE_SHIPPING
   // Mesma regra do checkout: maior frete entre os produtos (ou a tabela padrao).
-  const shipping = resolveShipping(totalPrice, 'ES', items.map((i) => i.product.shippingCost))
+  const qtyOf = (id: number) => items.reduce((n, it) => n + (it.product.id === id ? it.quantity : 0), 0)
+  const shipping = resolveShipping(totalPrice, 'ES', items.map((i) => itemShipping(i.product.shippingCost, i.product.personalize, qtyOf(i.product.id))))
   const total = totalPrice + shipping
   const remaining = FREE_SHIPPING - totalPrice
   const progress = Math.min(100, (totalPrice / FREE_SHIPPING) * 100)

@@ -177,6 +177,11 @@ export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded,
           </div>
         )}
 
+        {base.freeShipQty > 0 && (
+          <p className="mt-4 rounded-2xl px-4 py-2.5 text-sm font-extrabold" style={{ background: '#DBEAFE', color: '#1E3A8A' }}>
+            🚚 Envío gratis a partir de {base.freeShipQty} unidades{qty >= base.freeShipQty ? ' — ¡ya lo tienes!' : ` (te faltan ${base.freeShipQty - qty})`}
+          </p>
+        )}
         {(promo || minQty > 1) && (
           <div className="mt-4 flex flex-wrap items-center gap-2 rounded-2xl px-4 py-3" style={{ background: L.field }}>
             {promo && (

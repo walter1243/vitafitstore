@@ -123,7 +123,7 @@ export function ThemedProductCard({ product, theme }: { product: Product; theme:
       <div className={`flex flex-1 flex-col ${llaveros ? 'px-1 pt-3' : 'px-1 pt-3'}`}>
         <h3 className="line-clamp-2 text-base font-semibold leading-snug" style={{ fontFamily: theme.heading, color: theme.ink }}>{product.name}</h3>
         <div className="mt-auto flex items-center justify-between gap-2 pt-3">
-          <span className="flex flex-col leading-tight"><span className="text-base font-bold" style={{ color: theme.ink }}>{product.price.toFixed(2)}€</span>{pack && <span className="text-[11px] font-extrabold text-[#16a34a]">Pack {pack.minQty}: -{Math.round(pack.packPercent)}%</span>}</span>
+          <span className="flex flex-col leading-tight"><span className="text-base font-bold" style={{ color: theme.ink }}>{product.price.toFixed(2)}€</span>{pack && <span className="text-[11px] font-extrabold text-[#16a34a]">Pack {pack.minQty}: -{Math.round(pack.packPercent)}%</span>}{(product.personalize?.freeShipQty ?? 0) > 0 && <span className="text-[11px] font-extrabold text-[#2563eb]">Envío gratis desde {product.personalize!.freeShipQty} uds</span>}</span>
           {action}
         </div>
       </div>

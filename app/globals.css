@@ -576,3 +576,6 @@ body:has(.lamp-dark) [data-slot="dialog-overlay"] {
 /* catalogo da colecao Navidad: texto claro sobre o verde */
 .kids-navidad { --k-ink: #FFFBEB; --k-muted: #D1FAE5; }
 .kids-navidad select, .kids-navidad nav a { color: #14532D; }
+.nv-float { animation: nv-float 6s ease-in-out infinite; }
+@keyframes nv-float { 50% { transform: translateY(-8px) rotate(-2deg); } }
+@media (prefers-reduced-motion: reduce) { .nv-float { animation: none; } }

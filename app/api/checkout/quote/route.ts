@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { unitPriceFor } from '@/lib/personalize';
+import { itemShipping, unitPriceFor } from '@/lib/personalize';
 import { sql } from '@/lib/db';
 import { resolveShipping } from '@/lib/checkout-pricing';
 
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
     }, 0);
 
     const shippingById = new Map<number, number | null>((rows as any[]).map((r) => [Number(r.id), r.shipping_cost != null ? Number(r.shipping_cost) : null]));
-    const shipping = resolveShipping(subtotal, country, items.map((item: any) => shippingById.get(Number(item.productId))));
+    const shipping = resolveShipping(subtotal, country, items.map((item: any) => itemShipping(shippingById.get(Number(item.productId)), persById.get(Number(item.productId)), qtyById.get(Number(item.productId)) ?? 0)));
     const total = subtotal + shipping;
 
     return NextResponse.json({
