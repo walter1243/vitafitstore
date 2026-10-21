@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { minQtyFor, unitPriceFor } from '@/lib/personalize';
 import { cleanItems, packItems } from '@/lib/order-items';
 import Stripe from 'stripe';
 import { sql } from '@/lib/db';
@@ -30,8 +31,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Há produtos inválidos no carrinho.' }, { status: 400 });
     }
 
+    // Promocao por quantidade (ex: 5 chaveiros) e pedido minimo, conferidos aqui.
+    const persById = new Map<number, unknown>((productRows as any[]).map((r) => [Number(r.id), r.personalize]));
+    const qtyById = new Map<number, number>();
+    for (const it of items as any[]) qtyById.set(Number(it.productId), (qtyById.get(Number(it.productId)) ?? 0) + Number(it.quantity));
+    for (const [id, q] of qtyById) {
+      if (q < minQtyFor(persById.get(id))) {
+        return NextResponse.json({ error: `Este producto tiene un pedido mínimo de ${minQtyFor(persById.get(id))} unidades.` }, { status: 400 });
+      }
+    }
     const subtotal = items.reduce((sum: number, item: any) => {
-      return sum + (priceById.get(Number(item.productId)) ?? 0) * Number(item.quantity);
+      const id = Number(item.productId);
+      return sum + unitPriceFor(priceById.get(id) ?? 0, persById.get(id), qtyById.get(id) ?? 0) * Number(item.quantity);
     }, 0);
 
     const shippingById = new Map<number, number | null>((productRows as any[]).map((r) => [Number(r.id), r.shipping_cost != null ? Number(r.shipping_cost) : null]));

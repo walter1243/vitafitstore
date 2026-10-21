@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { unitPriceFor } from '@/lib/personalize';
 import { sql } from '@/lib/db';
 import { resolveShipping } from '@/lib/checkout-pricing';
 
@@ -54,8 +55,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Há produtos inválidos no carrinho.' }, { status: 400 });
     }
 
+    const persById = new Map<number, unknown>((rows as any[]).map((r) => [Number(r.id), r.personalize]));
+    const qtyById = new Map<number, number>();
+    for (const it of items) qtyById.set(Number(it.productId), (qtyById.get(Number(it.productId)) ?? 0) + Number(it.quantity));
     const subtotal = items.reduce((sum, item) => {
-      const unitPrice = priceById.get(item.productId) ?? 0;
+      const unitPrice = unitPriceFor(priceById.get(item.productId) ?? 0, persById.get(Number(item.productId)), qtyById.get(Number(item.productId)) ?? 0);
       return sum + unitPrice * item.quantity;
     }, 0);
 

@@ -17,7 +17,7 @@ import { FREE_SHIPPING_FROM as FREE_SHIPPING, resolveShipping } from '@/lib/chec
 // tons pastel). A logica — quantidades, remover, frete gratis, link pro
 // checkout — e a mesma de antes.
 export function CartSidebar() {
-  const { items, isCartOpen, setIsCartOpen, updateQuantity, removeItem, totalPrice } = useCart()
+  const { items, isCartOpen, setIsCartOpen, updateQuantity, removeItem, totalPrice, lineTotal } = useCart()
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({})
 
   const hasFreeShipping = totalPrice >= FREE_SHIPPING
@@ -185,7 +185,7 @@ export function CartSidebar() {
                         </button>
                       </div>
                       <p className="text-base font-extrabold text-[#23263f]">
-                        {(item.product.price * item.quantity).toFixed(2)}€
+                        {lineTotal(item).toFixed(2)}€
                       </p>
                     </div>
                   </div>

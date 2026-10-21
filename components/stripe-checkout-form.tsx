@@ -228,6 +228,7 @@ const inputCls = [
 function OrderSummary({ items, totalPrice, shipping, total }: {
   items:any[]; totalPrice:number; shipping:number; total:number;
 }) {
+  const { lineTotal } = useCart();
   return (
     <div className="space-y-4">
       <div className="rounded-[28px] p-5 space-y-4"
@@ -260,7 +261,7 @@ function OrderSummary({ items, totalPrice, shipping, total }: {
                 <p className="text-slate-500 text-xs">× {item.quantity}</p>
               </div>
               <p className="text-[#23263f] font-extrabold text-sm shrink-0">
-                €{(item.product.price*item.quantity).toFixed(2)}
+                €{lineTotal(item).toFixed(2)}
               </p>
             </div>
           ))}

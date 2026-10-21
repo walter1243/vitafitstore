@@ -81,7 +81,6 @@ export function ThemedCollection({ collection, theme, products = [], showCarouse
 }) {
   const Heading = headingLevel;
   const solid = pill(theme, true);
-  const custom = products.find((p) => p.personalize?.enabled);
   const href = primaryHref ?? `/coleccion/${collection.slug}`;
   const label = primaryLabel ?? `Ver ${products.length ? `los ${products.length}` : 'colección'}`;
 
@@ -101,14 +100,6 @@ export function ThemedCollection({ collection, theme, products = [], showCarouse
           )}
         </div>
 
-        {custom && (
-          <div className="mt-8 bg-white p-5 sm:p-7" style={{ borderRadius: '28px', boxShadow: '0 16px 40px rgba(0,0,0,0.08)' }}>
-            <p className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wide" style={{ color: theme.accent }}>
-              <PenLine className="h-4 w-4" aria-hidden="true" /> Escribe el nombre y míralo al momento
-            </p>
-            <NamePersonalizer product={custom} look={theme.key} />
-          </div>
-        )}
 
         {showCarousel && (
           products.length > 0 ? (

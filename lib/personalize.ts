@@ -35,6 +35,11 @@ export type Personalize = {
   relief: boolean;
   // Cores do nome que o CLIENTE escolhe (vazio = usa `color`, sem escolha).
   colors: { name: string; hex: string }[];
+  // Largura maxima do nome (% da foto): nome comprido diminui pra caber.
+  fitW: number;
+  // Pedido minimo (ex: 5 chaveiros) e desconto da promocao (%) ao comprar o minimo ou mais.
+  minQty: number;
+  packPercent: number;
 };
 
 export const PERSONALIZE_FONTS: { key: PersonalizeFont; label: string; css: string }[] = [
@@ -64,6 +69,9 @@ export const DEFAULT_PERSONALIZE: Personalize = {
   squash: 100,
   relief: true,
   colors: [],
+  fitW: 60,
+  minQty: 1,
+  packPercent: 0,
 };
 
 const clamp = (n: unknown, min: number, max: number, def: number) => {
@@ -98,6 +106,9 @@ export function parsePersonalize(raw: unknown): Personalize {
     skew: clamp(o.skew, -45, 45, 0),
     squash: clamp(o.squash, 40, 160, 100),
     relief: o.relief !== false,
+    fitW: clamp(o.fitW, 10, 100, d.fitW),
+    minQty: Math.round(clamp(o.minQty, 1, 100, 1)),
+    packPercent: clamp(o.packPercent, 0, 90, 0),
     colors: Array.isArray(o.colors)
       ? (o.colors as { name?: unknown; hex?: unknown }[])
           .filter((c) => /^#[0-9a-fA-F]{6}$/.test(String(c?.hex)))
@@ -119,3 +130,28 @@ export function cleanCustomText(raw: unknown, max = 30) {
 }
 
 export const fontCss = (f: PersonalizeFont) => PERSONALIZE_FONTS.find((x) => x.key === f)?.css ?? PERSONALIZE_FONTS[0].css;
+
+// Cores padrao do nome quando o admin nao cadastrou nenhuma.
+export const DEFAULT_NAME_COLORS = [
+  { name: 'Negro', hex: '#1a1a1a' },
+  { name: 'Blanco', hex: '#f5f5f5' },
+  { name: 'Rojo', hex: '#dc2626' },
+  { name: 'Azul', hex: '#2563eb' },
+  { name: 'Verde', hex: '#16a34a' },
+  { name: 'Amarillo', hex: '#facc15' },
+  { name: 'Naranja', hex: '#f97316' },
+  { name: 'Rosa', hex: '#ec4899' },
+];
+
+// Preco unitario com a promocao (servidor e navegador usam a mesma conta).
+export function unitPriceFor(price: number, personalizeRaw: unknown, qty: number) {
+  const p = parsePersonalize(personalizeRaw);
+  if (p.enabled && p.packPercent > 0 && qty >= Math.max(1, p.minQty)) {
+    return Math.round(price * (1 - p.packPercent / 100) * 100) / 100;
+  }
+  return price;
+}
+export function minQtyFor(personalizeRaw: unknown) {
+  const p = parsePersonalize(personalizeRaw);
+  return p.enabled ? Math.max(1, p.minQty) : 1;
+}

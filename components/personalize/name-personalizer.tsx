@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Check, Minus, Plus, ShoppingCart } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 import { type Product } from '@/lib/products';
-import { cleanCustomText, fontCss, parsePersonalize, type Personalize } from '@/lib/personalize';
+import { DEFAULT_NAME_COLORS, cleanCustomText, fontCss, parsePersonalize, unitPriceFor, type Personalize } from '@/lib/personalize';
 
 // Visual de cada setor pro personalizador (botao, destaques).
 export type PersonalizerLook = 'llaveros' | 'mascotas' | 'infantil' | 'hogar';
@@ -31,13 +31,18 @@ export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded,
   onColor?: (hex: string) => void;
   showPreview?: boolean;
 }) {
-  const cfg = parsePersonalize(product.personalize);
+  const base = parsePersonalize(product.personalize);
+  // Sem cores cadastradas: oferece as cores padrao de filamento.
+  const cfg = base.colors.length ? base : { ...base, colors: DEFAULT_NAME_COLORS };
   const L = LOOK[look];
+  const minQty = Math.max(1, base.minQty);
+  const promo = base.packPercent > 0;
+
   const { addItem } = useCart();
   const [ownName, setOwnName] = useState('');
   const name = nameProp ?? ownName;
   const setName = (v: string) => { if (onName) onName(v); else setOwnName(v); };
-  const [qty, setQty] = useState(1);
+  const [qty, setQty] = useState(minQty);
   const [added, setAdded] = useState(false);
   const [swing, setSwing] = useState(0);
   const text = cleanCustomText(name, cfg.maxLength);
@@ -55,7 +60,7 @@ export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded,
     addItem(product, { text, color: chosen?.name }, qty);
     setAdded(true);
     onAdded?.();
-    setTimeout(() => { setAdded(false); setName(''); setQty(1); }, 1600);
+    setTimeout(() => { setAdded(false); setName(''); setQty(minQty); }, 1600);
   }
 
   return (
@@ -103,11 +108,25 @@ export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded,
           </div>
         )}
 
+        {(promo || minQty > 1) && (
+          <div className="mt-4 flex flex-wrap items-center gap-2 rounded-2xl px-4 py-3" style={{ background: L.field }}>
+            {promo && (
+              <span className="rounded-full px-2.5 py-1 text-sm font-extrabold text-white" style={{ background: '#16a34a' }}>-{Math.round(base.packPercent)}%</span>
+            )}
+            <span className="text-sm font-bold" style={{ color: L.ink }}>
+              {minQty > 1 ? `Pack de ${minQty}: ` : 'Promoción: '}
+              {promo && <s className="mr-1 font-semibold opacity-60">{(product.price * minQty).toFixed(2)}€</s>}
+              <span className="text-base font-extrabold">{(unitPriceFor(product.price, base, minQty) * minQty).toFixed(2)}€</span>
+            </span>
+            {minQty > 1 && <span className="w-full text-xs font-semibold" style={{ color: L.muted }}>Pedido mínimo {minQty} unidades · {unitPriceFor(product.price, base, minQty).toFixed(2)}€ cada una</span>}
+          </div>
+        )}
+
         <div className="mt-5 flex flex-wrap items-center gap-3">
           <div className="inline-flex h-12 items-center rounded-full border-2" style={{ borderColor: L.ink, color: L.ink }}>
-            <button type="button" aria-label="Menos" onClick={() => setQty((q) => Math.max(1, q - 1))} className="flex h-12 w-12 cursor-pointer items-center justify-center"><Minus className="h-4 w-4" /></button>
+            <button type="button" aria-label="Menos" onClick={() => setQty((q) => Math.max(minQty, q - 1))} className="flex h-12 w-12 cursor-pointer items-center justify-center"><Minus className="h-4 w-4" /></button>
             <span className="min-w-8 text-center text-lg font-extrabold" aria-live="polite">{qty}</span>
-            <button type="button" aria-label="Más" onClick={() => setQty((q) => Math.min(20, q + 1))} className="flex h-12 w-12 cursor-pointer items-center justify-center"><Plus className="h-4 w-4" /></button>
+            <button type="button" aria-label="Más" onClick={() => setQty((q) => Math.min(100, q + 1))} className="flex h-12 w-12 cursor-pointer items-center justify-center"><Plus className="h-4 w-4" /></button>
           </div>
           <button
             type="button"
@@ -119,7 +138,7 @@ export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded,
             onMouseLeave={(e) => { if (!added) e.currentTarget.style.background = L.cta; }}
           >
             {added ? <Check className="h-5 w-5" /> : <ShoppingCart className="h-5 w-5" />}
-            {added ? '¡Añadido!' : `Añadir · ${(product.price * qty).toFixed(2)}€`}
+            {added ? '¡Añadido!' : `Añadir · ${(unitPriceFor(product.price, base, qty) * qty).toFixed(2)}€`}
           </button>
         </div>
         {!text && <p className="mt-3 text-sm" style={{ color: L.muted }}>Escribe el nombre para poder añadirlo.</p>}
@@ -139,6 +158,8 @@ export function NamePreview({ cfg, product, text, placeholder, swingKey, stage }
   stage: string;
 }) {
   const shown = text || placeholder;
+  // Nome comprido: diminui a letra pra caber na largura maxima (fitW).
+  const fontSize = fitSize(shown, fontCss(cfg.font), cfg.size, cfg.fitW || 60);
   // rotate + skew + scaleY: acompanha a peca inclinada em perspectiva.
   const tf = `translate(-50%, -50%) rotate(${cfg.rotate || 0}deg) skewX(${cfg.skew || 0}deg) scaleY(${(cfg.squash || 100) / 100})`;
   const font = fontCss(cfg.font);
@@ -173,7 +194,7 @@ export function NamePreview({ cfg, product, text, placeholder, swingKey, stage }
               left: `${cfg.x}%`,
               top: `${cfg.y}%`,
               transform: tf,
-              fontSize: `${cfg.size}cqw`,
+              fontSize: `${fontSize}cqw`,
               color: cfg.color,
               fontFamily: font,
               opacity: text ? 1 : 0.45,
@@ -235,4 +256,15 @@ function ShapeSvg({ shape, text, faded, color, font, swingKey }: { shape: 'llave
       </g>
     </svg>
   );
+}
+
+// Mede o texto (canvas) e devolve o tamanho (em % da largura) que cabe em maxW.
+let measureCtx: CanvasRenderingContext2D | null = null;
+export function fitSize(text: string, font: string, size: number, maxW: number) {
+  if (typeof document === 'undefined' || !text) return size;
+  measureCtx ??= document.createElement('canvas').getContext('2d');
+  if (!measureCtx) return size;
+  measureCtx.font = `bold 100px ${font}`;
+  const w = (measureCtx.measureText(text).width / 100) * size; // largura em "cqw"
+  return w > maxW ? Math.max(2, (size * maxW) / w) : size;
 }

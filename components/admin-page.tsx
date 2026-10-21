@@ -3,7 +3,7 @@ import { AdminSectors } from '@/components/admin-sectors';
 import { dataUrlToBlobUrl, uploadInlineImages } from '@/lib/upload-data-url';
 import { clipboardFiles, isEditableTarget, useHoverPaste } from '@/lib/use-hover-paste';
 import { AdminWorlds } from '@/components/admin-worlds';
-import { PersonalizeEditor, ProductPlacement } from '@/components/admin-product-extras';
+import { CategoryCollections, PersonalizeEditor, ProductPlacement } from '@/components/admin-product-extras';
 import { TrackingSection, needsTracking, isNewAlert } from '@/components/admin-tracking';
 import { AnalyticsPanel } from '@/components/admin-analytics';
 import { MediaUploadField } from '@/components/configuracoes/content/shared';
@@ -119,7 +119,7 @@ const SECTION_LABELS: Record<Section, string> = {
 
 function ProductsSection({ products, showForm, saving, form, image, additionalImages, desc, upsellIds,
   onToggleForm, onFormChange, onImageChange, onAdditionalImagesChange, onDescChange, onUpsellChange, onSubmit, onDelete, onMove, onSetCategoryCover,
-  categories, newCategoryName, onNewCategoryNameChange, onCreateCategory,
+  categories, newCategoryName, onNewCategoryNameChange, onCreateCategory, onCategoriesChanged, onNotify,
   onMoveCategory, onSaveCategoryMedia, onDeleteCategory, editingProductId, onEditProduct,
   importSourceUrl, importSourceProductUrl, initialCostPrice,
   productType, onProductTypeChange, sizes, onSizesChange, colorOptions, onColorOptionsChange }: {
@@ -152,6 +152,8 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   onUpsellChange: (ids: number[]) => void;
   onNewCategoryNameChange: (v: string) => void;
   onCreateCategory: () => void;
+  onCategoriesChanged: () => void;
+  onNotify: (type: 'success' | 'error', msg: string) => void;
   onMoveCategory: (id: number, direction: 'up' | 'down') => void;
   onSaveCategoryMedia: (id: number, bannerType: 'image' | 'video', bannerUrl: string, logoUrl: string) => void;
   onDeleteCategory: (id: number, name: string) => void;
@@ -1317,41 +1319,19 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
 
         {productViewTab === 'cards' && (
           <div className="space-y-3 p-5">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={newCategoryName}
-                onChange={e => onNewCategoryNameChange(e.target.value)}
-                placeholder="Ex: Cestas de Navidad"
-                className="flex-1 rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
-              />
-              <button
-                type="button"
-                onClick={onCreateCategory}
-                className="rounded-xl bg-green-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-green-700"
-              >
-                Criar categoria
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {categories.length === 0 && (
-                <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-xs text-white/45">Crie categorias para organizar os produtos da loja.</div>
+            <p className="text-xs text-white/50">Cada categoria fica dentro de uma coleção (ex: Hogar → Decoración → Jarrones). Escolha a coleção e o nome.</p>
+            <CategoryCollections
+              categories={categories}
+              onChanged={onCategoriesChanged}
+              onNotify={onNotify}
+              extra={(c) => (
+                <>
+                  <button type="button" onClick={() => onMoveCategory(c.id, 'up')} className="rounded-lg border border-white/10 p-2 text-white/60 hover:bg-white/5" title="Subir categoria"><ArrowUp size={12} /></button>
+                  <button type="button" onClick={() => onMoveCategory(c.id, 'down')} className="rounded-lg border border-white/10 p-2 text-white/60 hover:bg-white/5" title="Descer categoria"><ArrowDown size={12} /></button>
+                  <button type="button" onClick={() => onDeleteCategory(c.id, c.name)} className="rounded-lg border border-red-500/30 p-2 text-red-300 hover:bg-red-500/10" title="Excluir categoria"><Trash2 size={12} /></button>
+                </>
               )}
-              {categories.map((c, idx) => {
-                return (
-                  <div key={c.id} className="rounded-2xl border border-white/10 bg-[#0f1117] p-4">
-                    <div className="flex items-center gap-2">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/5 text-xs font-semibold text-white/50">{idx + 1}</span>
-                      <span className="flex-1 text-sm font-medium text-white">{c.name}</span>
-                      <button type="button" onClick={() => onMoveCategory(c.id, 'up')} className="rounded-lg border border-white/10 p-2 text-white/60 hover:bg-white/5" title="Subir categoria"><ArrowUp size={12} /></button>
-                      <button type="button" onClick={() => onMoveCategory(c.id, 'down')} className="rounded-lg border border-white/10 p-2 text-white/60 hover:bg-white/5" title="Descer categoria"><ArrowDown size={12} /></button>
-                      <button type="button" onClick={() => onDeleteCategory(c.id, c.name)} className="rounded-lg border border-red-500/30 p-2 text-red-300 hover:bg-red-500/10" title="Excluir categoria"><Trash2 size={12} /></button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            />
           </div>
         )}
 
@@ -2658,6 +2638,8 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
               onUpsellChange={setProdUpsellIds}
               onNewCategoryNameChange={setNewCategoryName}
               onCreateCategory={addCategory}
+              onCategoriesChanged={() => { void fetchData(); }}
+              onNotify={addToast}
               onMoveCategory={moveCategory}
               onSaveCategoryMedia={saveCategoryMedia}
               onDeleteCategory={deleteCategory}

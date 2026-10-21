@@ -13,7 +13,7 @@ import { ProductReviews } from '@/components/product-reviews'
 import { useSectors } from '@/components/kids/sectors-context'
 import { ProductDemo } from '@/components/kids/product-demo'
 import { NamePersonalizer, NamePreview, type PersonalizerLook } from '@/components/personalize/name-personalizer'
-import { cleanCustomText, parsePersonalize } from '@/lib/personalize'
+import { DEFAULT_NAME_COLORS, cleanCustomText, parsePersonalize } from '@/lib/personalize'
 
 export function ProductPageView({ product }: { product: Product }) {
   const { addItem } = useCart()
@@ -25,7 +25,7 @@ export function ProductPageView({ product }: { product: Product }) {
   const look = (collection ? getSector(collection.sectorId)?.style : undefined) as PersonalizerLook | undefined
   const pcfg = parsePersonalize(product.personalize)
   const [customName, setCustomName] = useState('')
-  const [customColor, setCustomColor] = useState(pcfg.colors[0]?.hex ?? '')
+  const [customColor, setCustomColor] = useState((pcfg.colors[0] ?? DEFAULT_NAME_COLORS[0]).hex)
   const sample = look === 'mascotas' ? 'Toby' : 'Lucía'
   const personalizeTitle = look === 'mascotas' ? 'Personaliza el nombre de tu mascota' : look === 'llaveros' ? 'Personaliza tu llavero' : 'Personalízalo con un nombre'
   const router = useRouter()

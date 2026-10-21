@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
 import { type Product, type CartItem } from './products'
+import { minQtyFor, unitPriceFor } from './personalize'
 
 // text = nome personalizado (chaveiro / pet): cada nome e uma linha propria.
 type Variant = { color?: string; size?: string; text?: string }
@@ -19,6 +20,7 @@ interface CartContextType {
   showUpsell: boolean
   setShowUpsell: (show: boolean) => void
   lastAddedProduct: Product | null
+  lineTotal: (item: CartItem) => number
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -75,9 +77,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       removeItem(productId, variant)
       return
     }
+    // Pedido minimo (ex: 5 chaveiros): nao deixa baixar dele (a lixeira remove).
     setItems(prev =>
       prev.map(item =>
-        sameLine(item, productId, variant) ? { ...item, quantity } : item
+        sameLine(item, productId, variant) ? { ...item, quantity: Math.max(quantity, minQtyFor(item.product.personalize)) } : item
       )
     )
   }, [removeItem])
@@ -87,7 +90,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0)
-  const totalPrice = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0)
+  // Preco com promocao por quantidade (ex: 5 chaveiros) somando todas as linhas do produto.
+  const qtyOf = (id: number) => items.reduce((n, it) => n + (it.product.id === id ? it.quantity : 0), 0)
+  const lineTotal = (item: CartItem) => unitPriceFor(item.product.price, item.product.personalize, qtyOf(item.product.id)) * item.quantity
+  const totalPrice = items.reduce((sum, item) => sum + lineTotal(item), 0)
 
   return (
     <CartContext.Provider
@@ -103,7 +109,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setIsCartOpen,
         showUpsell,
         setShowUpsell,
-        lastAddedProduct
+        lastAddedProduct,
+        lineTotal
       }}
     >
       {children}

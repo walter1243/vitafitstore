@@ -4,7 +4,7 @@ import { LayoutGrid, PenLine } from 'lucide-react';
 import { MediaUploadField } from '@/components/configuracoes/content/shared';
 import { NamePreview } from '@/components/personalize/name-personalizer';
 import { PERSONALIZE_FONTS, parsePersonalize, type Personalize } from '@/lib/personalize';
-import { type Sector } from '@/lib/sectors-shared';
+import { slugify, type Sector } from '@/lib/sectors-shared';
 
 const STYLE_LABEL: Record<string, string> = { infantil: 'Infantil', hogar: 'Casa / Hogar', llaveros: 'Chaveiros', mascotas: 'Mascotas / Pet' };
 const card = 'rounded-2xl border border-white/10 bg-[#0f1117] p-5 shadow-none';
@@ -174,8 +174,9 @@ export function PersonalizeEditor({ value, onChange, productImage }: { value: st
       const norm = ((deg + 540) % 360) - 180;
       write({ ...cfg, rotate: Math.round(Math.max(-90, Math.min(90, norm))) });
     } else {
+      // canto da caixa: largura da area do nome
       const dist = Math.hypot(px - cfg.x, py - cfg.y);
-      write({ ...cfg, size: Math.round(Math.max(3, Math.min(40, dist / Math.max(1, sample.length) * 1.6)) * 10) / 10 });
+      write({ ...cfg, fitW: Math.round(Math.max(10, Math.min(100, dist * 2 * 0.95))) });
     }
   }
   const begin = (mode: 'move' | 'rotate' | 'size') => (e: React.PointerEvent) => {
@@ -185,10 +186,10 @@ export function PersonalizeEditor({ value, onChange, productImage }: { value: st
     if (mode === 'move') onDrag(e);
   };
   // largura aproximada do nome (pra desenhar a caixa de selecao)
-  const boxW = Math.min(95, Math.max(8, (sample.length || 5) * cfg.size * 0.62));
+  const boxW = cfg.fitW || 60;
   const boxH = cfg.size * 1.25 * (cfg.squash / 100);
 
-  const slider = (k: 'size' | 'rotate' | 'skew' | 'squash', label: string, min: number, max: number, unit: string) => (
+  const slider = (k: 'size' | 'rotate' | 'skew' | 'squash' | 'fitW', label: string, min: number, max: number, unit: string) => (
     <label className="block text-xs text-white/60">
       {label}: <span className="font-semibold text-white">{Math.round(cfg[k])}{unit}</span>
       <input type="range" min={min} max={max} step={1} value={cfg[k]} onChange={(e) => set(k, Number(e.target.value))} className="mt-1 w-full accent-green-500" />
@@ -275,6 +276,7 @@ export function PersonalizeEditor({ value, onChange, productImage }: { value: st
               {slider('rotate', 'Girar', -90, 90, '°')}
               {slider('skew', 'Perspectiva (inclinar letras)', -45, 45, '°')}
               {slider('squash', 'Achatar / esticar', 40, 160, '%')}
+              {slider('fitW', 'Largura da área do nome (nome comprido diminui pra caber)', 10, 100, '%')}
             </div>
             <label className="mt-3 flex items-center gap-2 text-xs text-white/70">
               <input type="checkbox" checked={cfg.relief} onChange={(e) => set('relief', e.target.checked)} />
@@ -376,6 +378,19 @@ export function PersonalizeEditor({ value, onChange, productImage }: { value: st
                 <input type="number" min={2} max={30} className="mt-1 w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white" value={cfg.maxLength} onChange={(e) => set('maxLength', Number(e.target.value))} />
               </label>
             </div>
+            <p className="mb-1.5 mt-4 text-xs font-semibold uppercase tracking-wide text-white/40">Pedido mínimo e promoção</p>
+            <div className="grid grid-cols-2 gap-3">
+              <label className="block text-xs text-white/60">
+                Pedido mínimo (unidades)
+                <input type="number" min={1} max={100} className="mt-1 w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white" value={cfg.minQty} onChange={(e) => set('minQty', Number(e.target.value))} />
+              </label>
+              <label className="block text-xs text-white/60">
+                Desconto da promoção (%)
+                <input type="number" min={0} max={90} className="mt-1 w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white" value={cfg.packPercent} onChange={(e) => set('packPercent', Number(e.target.value))} />
+              </label>
+            </div>
+            <p className="mt-1 text-[11px] text-white/45">Ex: mínimo 5 e 20% → o cliente vê “Pack de 5: -20%” e paga cada um com desconto. O checkout confere o mínimo e o preço.</p>
+            <p className="mt-2 text-[11px] text-white/45">Sem “Cores que o cliente pode escolher”, o site oferece as cores padrão (Negro, Blanco, Rojo, Azul, Verde, Amarillo, Naranja, Rosa).</p>
           </div>
 
           {/* Outra foto (opcional) */}
@@ -397,3 +412,111 @@ export function PersonalizeEditor({ value, onChange, productImage }: { value: st
   );
 }
 
+
+// Admin → Produtos → "+ categoria": cada categoria pertence a uma colecao
+// (Infantil → Para pintar, Hogar → Decoracion...). Criar/trocar aqui grava a
+// categoria nas palavras da colecao (Setores e colecoes), que e o que liga
+// os produtos dessa categoria a ela.
+export function CategoryCollections({ categories, onChanged, onNotify, extra }: {
+  categories: { id: number; name: string }[];
+  onChanged: () => void;
+  onNotify: (type: 'success' | 'error', msg: string) => void;
+  // botoes extras de cada linha (subir/descer/excluir)
+  extra?: (cat: { id: number; name: string }) => React.ReactNode;
+}) {
+  const [sectors, setSectors] = useState<Sector[]>([]);
+  const [name, setName] = useState('');
+  const [target, setTarget] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const load = () => fetch('/api/sectors?all=1', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : [])).then((s) => { if (Array.isArray(s)) setSectors(s); }).catch(() => {});
+  useEffect(() => { void load(); }, []);
+
+  const all = sectors.flatMap((s) => s.collections.map((c) => ({ c, s })));
+  const terms = (m: string) => m.split(',').map((t) => t.trim()).filter(Boolean);
+  const owner = (cat: string) => all.find(({ c }) => terms(c.match).some((t) => slugify(t) === slugify(cat)))
+    ?? all.find(({ c }) => terms(c.match).some((t) => slugify(cat).includes(slugify(t))));
+
+  async function saveCollection(c: Sector['collections'][number], match: string) {
+    const res = await fetch('/api/sectors', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'saveCollection', ...c, match }) });
+    if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error || 'Erro ao salvar a coleção.');
+    const list = await res.json();
+    if (Array.isArray(list)) setSectors(list);
+  }
+
+  // Tira a categoria das outras colecoes e poe na escolhida.
+  async function assign(cat: string, slug: string) {
+    for (const { c } of all) {
+      const t = terms(c.match);
+      const has = t.some((x) => slugify(x) === slugify(cat));
+      if (c.slug === slug && !has) await saveCollection(c, [...t, cat].join(', '));
+      if (c.slug !== slug && has) await saveCollection(c, t.filter((x) => slugify(x) !== slugify(cat)).join(', '));
+    }
+  }
+
+  async function create() {
+    const n = name.trim();
+    if (!n || !target) return;
+    setBusy(true);
+    try {
+      const res = await fetch('/api/categories', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: n }) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || 'Erro ao criar categoria.');
+      await assign(n, target);
+      setName('');
+      onChanged();
+      onNotify('success', `Categoria “${n}” criada em ${all.find((x) => x.c.slug === target)?.c.name}.`);
+    } catch (e: any) {
+      onNotify('error', e?.message || 'Erro ao criar categoria.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const sel = 'rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white outline-none focus:border-green-500/40';
+  const options = sectors.map((s) => (
+    <optgroup key={s.id} label={s.name}>
+      {s.collections.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
+    </optgroup>
+  ));
+
+  return (
+    <div className="space-y-3">
+      <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+        <select className={sel} value={target} onChange={(e) => setTarget(e.target.value)} aria-label="Coleção da categoria">
+          <option value="">1. Em qual coleção?</option>
+          {options}
+        </select>
+        <input className={sel} value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') void create(); }} placeholder="2. Nome da categoria (ex: Jarrones)" />
+        <button type="button" disabled={busy || !name.trim() || !target} onClick={create} className="rounded-xl bg-green-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-40">
+          {busy ? 'Salvando…' : 'Criar categoria'}
+        </button>
+      </div>
+      {categories.length > 0 && (
+        <div className="space-y-2">
+          {categories.map((cat) => {
+            const o = owner(cat.name);
+            return (
+              <div key={cat.id} className="flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-[#0f1117] px-3 py-2">
+                <span className="min-w-0 flex-1 truncate text-sm text-white">{cat.name}</span>
+                <span className="text-[11px] text-white/45">Coleção:</span>
+                <select
+                  className={`${sel} py-1.5 text-xs`}
+                  value={o?.c.slug ?? ''}
+                  onChange={async (e) => {
+                    try { await assign(cat.name, e.target.value); onNotify('success', `“${cat.name}” agora está em ${all.find((x) => x.c.slug === e.target.value)?.c.name}.`); }
+                    catch (err: any) { onNotify('error', err?.message || 'Erro ao trocar a coleção.'); }
+                  }}
+                >
+                  <option value="">— sem coleção —</option>
+                  {options}
+                </select>
+                {extra?.(cat)}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
