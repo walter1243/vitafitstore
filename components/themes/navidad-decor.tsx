@@ -49,7 +49,7 @@ export function NavidadObjects({ className = '' }: { className?: string }) {
 
   return (
     <div className={`flex items-end gap-2 ${className}`}>
-      <span className="relative block h-20 w-16 sm:h-24 sm:w-20" aria-hidden="true">
+      <span className="relative block h-24 w-20 sm:h-32 sm:w-24" aria-hidden="true">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={`${P}navidad-jarron.png`} alt="" className="h-full w-full object-contain" draggable={false} />
       </span>
@@ -60,7 +60,7 @@ export function NavidadObjects({ className = '' }: { className?: string }) {
         onMouseEnter={() => setStar(true)}
         onMouseLeave={() => setStar(false)}
         onClick={() => setStar((v) => !v)}
-        className="relative block h-24 w-20 cursor-pointer sm:h-28 sm:w-24"
+        className="relative block h-28 w-24 cursor-pointer sm:h-40 sm:w-32"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={`${P}navidad-arbol.png`} alt="" className="h-full w-full object-contain" draggable={false} />
@@ -71,7 +71,7 @@ export function NavidadObjects({ className = '' }: { className?: string }) {
         type="button"
         aria-label="Hacer nevar"
         onClick={() => setSnow((n) => n + 1)}
-        className="relative block h-20 w-16 cursor-pointer sm:h-24 sm:w-20"
+        className="relative block h-24 w-20 cursor-pointer sm:h-32 sm:w-24"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img key={snow} src={`${P}navidad-muneco.png`} alt="" className={`h-full w-full object-contain ${snow ? 'nv-wiggle' : ''}`} draggable={false} />

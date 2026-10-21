@@ -134,7 +134,7 @@ export function CollectionCatalog({ slug }: { slug: string }) {
         </div>
       ) : loaded ? (
         <div className="rounded-[32px] px-6 py-14 text-center" style={{ background: soft }}>
-          <Printer className="mx-auto h-12 w-12 text-[#23263f]" strokeWidth={1.75} aria-hidden="true" />
+          <Printer className="mx-auto h-12 w-12 text-[var(--k-ink)]" strokeWidth={1.75} aria-hidden="true" />
           <p className="mt-4 font-kids text-3xl font-bold text-[var(--k-ink)]">La impresora está trabajando</p>
           <p className="mt-1 text-lg text-[var(--k-muted)]">Muy pronto habrá nuevas creaciones aquí.</p>
         </div>
