@@ -1,5 +1,7 @@
 'use client';
+import { useState } from 'react';
 import Image from 'next/image';
+import { HAS_WORLD_ART, WorldArt } from './world-art';
 import { type Sector, type SectorStyle } from '@/lib/sectors-shared';
 import { SECTOR_THEMES, themeFor, type SectorTheme } from '@/components/themes/sector-themes';
 import { dots } from './palette';
@@ -14,7 +16,7 @@ const COVER: Record<SectorStyle, string> = {
   mascotas: '/images/sectors/mascotas.png',
 };
 
-type Card = { key: string; name: string; tagline: string; image: string; video: string; contain: boolean; theme: SectorTheme | null };
+type Card = { key: string; name: string; tagline: string; image: string; video: string; contain: boolean; theme: SectorTheme | null; style?: SectorStyle };
 // Capa do card: a do Admin → Mundos (imagem ou video); PNG sem fundo fica inteiro.
 function cover(m: Media, legacyImage: string) {
   const url = m.url || legacyImage;
@@ -35,9 +37,10 @@ export function SectorCards({ sectors, active, onSelect, extraHome }: { sectors:
     ...cover(parseWorldContent(s.content, s.style).cover, s.imageUrl),
     contain: false,
     theme: themeFor(s.style),
+    style: s.style,
   }));
   if (extraHome && !sectors.some((s) => s.style === 'hogar')) {
-    cards.push({ key: 'mas', name: 'Hogar', tagline: 'Decoración y detalles para tu casa', image: COVER.hogar, video: '', contain: false, theme: SECTOR_THEMES.hogar });
+    cards.push({ key: 'mas', name: 'Hogar', tagline: 'Decoración y detalles para tu casa', image: COVER.hogar, video: '', contain: false, theme: SECTOR_THEMES.hogar, style: 'hogar' });
   }
   if (cards.length === 0) return null;
 
@@ -61,16 +64,17 @@ export function SectorCards({ sectors, active, onSelect, extraHome }: { sectors:
 }
 
 function KidsCard({ c, priority, on, onSelect }: CardProps) {
+  const [taps, setTaps] = useState(0);
   return (
     <button
       type="button"
       role="tab"
       aria-selected={on}
-      onClick={() => onSelect(c.key)}
+      onClick={() => { setTaps((n) => n + 1); onSelect(c.key); }}
       className={`group relative flex h-full w-full cursor-pointer flex-col overflow-hidden rounded-[32px] border-[3px] border-[#1E1B4B] bg-[#FFD84D] p-4 text-left transition-[transform,box-shadow,opacity] duration-200 hover:-translate-y-1 motion-reduce:hover:translate-y-0 sm:p-5 ${on ? 'shadow-[9px_9px_0_#1E1B4B]' : 'opacity-80 shadow-[5px_5px_0_#1E1B4B] hover:opacity-100'}`}
     >
-      <span className="relative block aspect-[16/10] overflow-hidden rounded-[22px] border-[3px] border-[#1E1B4B] bg-white">
-        <CardMedia c={c} priority={priority} />
+      <span className="relative block aspect-[5/4] overflow-hidden rounded-[22px] border-[3px] border-[#1E1B4B] bg-white">
+        {c.style && HAS_WORLD_ART(c.style) ? <WorldArt style={c.style} on={on} trigger={taps} alt={`Mundo ${c.name}`} /> : <CardMedia c={c} priority={priority} />}
       </span>
       <span className="mt-5 font-kids text-4xl font-bold text-[#1E1B4B]">{c.name}</span>
       {c.tagline && <span className="mt-1 text-base font-semibold text-[#1E1B4B]/80">{c.tagline}</span>}
@@ -85,12 +89,13 @@ function KidsCard({ c, priority, on, onSelect }: CardProps) {
 
 // Card do mundo no visual dele (Casa, Chaveiros, Pet...).
 function ThemedCard({ c, t, priority, on, onSelect }: CardProps & { t: SectorTheme }) {
+  const [taps, setTaps] = useState(0);
   return (
     <button
       type="button"
       role="tab"
       aria-selected={on}
-      onClick={() => onSelect(c.key)}
+      onClick={() => { setTaps((n) => n + 1); onSelect(c.key); }}
       className={`group flex h-full w-full cursor-pointer flex-col p-4 text-left transition-[transform,box-shadow,opacity] duration-300 hover:-translate-y-1 motion-reduce:hover:translate-y-0 sm:p-5 ${on ? '' : 'opacity-80 hover:opacity-100'}`}
       style={{
         background: t.key === 'llaveros' ? `linear-gradient(160deg, #ffffff 0%, ${t.bg} 100%)` : t.bg,
@@ -98,8 +103,8 @@ function ThemedCard({ c, t, priority, on, onSelect }: CardProps & { t: SectorThe
         boxShadow: on ? `0 0 0 3px ${t.ink}, 0 16px 36px ${t.ink}26` : t.key === 'llaveros' ? '0 14px 36px rgba(79,70,229,0.16)' : undefined,
       }}
     >
-      <span className="relative block aspect-[16/10] overflow-hidden" style={{ borderRadius: t.radius, background: c.contain ? t.surface : t.bgAlt }}>
-        <CardMedia c={c} priority={priority} />
+      <span className="relative block aspect-[5/4] overflow-hidden" style={{ borderRadius: t.radius, background: t.key === 'llaveros' ? '#ffffff' : t.bgAlt }}>
+        {c.style && HAS_WORLD_ART(c.style) ? <WorldArt style={c.style} on={on} trigger={taps} alt={`Mundo ${c.name}`} /> : <CardMedia c={c} priority={priority} />}
       </span>
       <span className="mt-5 text-2xl" style={{ fontFamily: t.kickerFont, color: t.accent }}>{t.kicker}</span>
       <span className="text-4xl font-semibold" style={{ fontFamily: t.heading, color: t.ink }}>{c.name}</span>

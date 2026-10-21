@@ -498,3 +498,40 @@ body:has(.lamp-dark) [data-slot="dialog-overlay"] {
 @keyframes world-in { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
 .world-in { animation: world-in 0.5s cubic-bezier(.22,1,.36,1); }
 @media (prefers-reduced-motion: reduce) { .world-in { animation: none; } }
+
+/* Cards "Elige tu mundo" (components/kids/world-art.tsx): estado inicial e,
+   com .wa-on (card escolhido), a animacao ate o estado "pronto". */
+.wa-paint { clip-path: circle(0% at 66% 58%); }
+.wa-paint.wa-on { animation: wa-paint 1.2s cubic-bezier(.22,1,.36,1) forwards; }
+@keyframes wa-paint { to { clip-path: circle(75% at 66% 58%); } }
+
+.wa-glow { border-radius: 9999px; background: radial-gradient(circle, rgba(255,214,90,.9) 0%, rgba(255,190,60,.45) 35%, transparent 70%); opacity: 0; }
+.wa-glow.wa-on { animation: wa-glow 1.6s ease-out forwards; }
+@keyframes wa-glow { 0% { opacity: 0; } 40% { opacity: 1; } 100% { opacity: .75; } }
+
+.wa-flowers { transform: translate(-26%, -20%) rotate(-24deg); transform-origin: 50% 40%; }
+.wa-flowers.wa-on { animation: wa-flowers .95s cubic-bezier(.34,1.56,.64,1) forwards; }
+@keyframes wa-flowers { 0% { transform: translate(-26%, -20%) rotate(-24deg); } 60% { transform: translate(0, 3%) rotate(3deg); } 100% { transform: none; } }
+
+.wa-photo { transform: translate(22%, -34%) rotate(22deg); opacity: .95; }
+.wa-photo.wa-on { animation: wa-photo .8s cubic-bezier(.34,1.56,.64,1) forwards; }
+@keyframes wa-photo { 70% { transform: translate(0, 2%) rotate(-3deg); } 100% { transform: none; opacity: 1; } }
+
+.wa-swing { transform-origin: 25% 21%; }
+.wa-swing.wa-on { animation: wa-swing 1.5s ease-out .35s; }
+@keyframes wa-swing { 0% { transform: rotate(0); } 20% { transform: rotate(-12deg); } 40% { transform: rotate(9deg); } 60% { transform: rotate(-5deg); } 80% { transform: rotate(2deg); } 100% { transform: rotate(0); } }
+
+.wa-food { clip-path: inset(100% 0 0 0); }
+.wa-food.wa-on { animation: wa-food .7s ease-out .75s forwards; }
+@keyframes wa-food { to { clip-path: inset(0 0 0 0); } }
+
+.wa-scoop { transform-origin: 30% 45%; }
+.wa-scoop.wa-on { animation: wa-scoop 1.5s ease-in-out; }
+@keyframes wa-scoop { 0% { transform: none; } 30% { transform: translate(24%, -14%) rotate(-38deg); } 65% { transform: translate(24%, -14%) rotate(-52deg); } 100% { transform: none; } }
+
+.wa-kibble { opacity: 0; animation: wa-kibble .55s ease-in forwards; }
+@keyframes wa-kibble { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(520%); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .wa-on { animation-duration: .01s !important; animation-delay: 0s !important; }
+}
