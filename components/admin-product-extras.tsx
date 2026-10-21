@@ -166,7 +166,7 @@ export function PersonalizeEditor({ value, onChange, productImage }: { value: st
     write({ ...cfg, x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 });
   }
 
-  const slider = (k: 'size' | 'rotate', label: string, min: number, max: number, unit: string) => (
+  const slider = (k: 'size' | 'rotate' | 'skew' | 'squash', label: string, min: number, max: number, unit: string) => (
     <label className="block text-xs text-white/60">
       {label}: <span className="font-semibold text-white">{Math.round(cfg[k])}{unit}</span>
       <input type="range" min={min} max={max} step={1} value={cfg[k]} onChange={(e) => set(k, Number(e.target.value))} className="mt-1 w-full accent-green-500" />
@@ -226,9 +226,15 @@ export function PersonalizeEditor({ value, onChange, productImage }: { value: st
             <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-white/40">2. Como o nome aparece</p>
             <div className="grid grid-cols-2 gap-3">
               {slider('size', 'Tamanho', 3, 40, '%')}
-              {slider('rotate', 'Inclinação', -90, 90, '°')}
+              {slider('rotate', 'Girar', -90, 90, '°')}
+              {slider('skew', 'Perspectiva (inclinar letras)', -45, 45, '°')}
+              {slider('squash', 'Achatar / esticar', 40, 160, '%')}
             </div>
-            <div className="mt-3 grid grid-cols-3 gap-2">
+            <label className="mt-3 flex items-center gap-2 text-xs text-white/70">
+              <input type="checkbox" checked={cfg.relief} onChange={(e) => set('relief', e.target.checked)} />
+              Relevo 3D nas letras (parece filamento impresso em alto-relevo)
+            </label>
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
               {PERSONALIZE_FONTS.map((f) => (
                 <button key={f.key} type="button" onClick={() => set('font', f.key)} className={chip(cfg.font === f.key)} style={{ fontFamily: f.css }}>{f.label}</button>
               ))}

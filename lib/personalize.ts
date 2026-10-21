@@ -2,7 +2,7 @@
 // (coluna `personalize`, JSON) e e configurada no Admin → Produtos. Sem
 // import de banco: serve pro servidor e pro navegador.
 
-export type PersonalizeFont = 'redonda' | 'manuscrita' | 'bloque';
+export type PersonalizeFont = 'redonda' | 'manuscrita' | 'bloque' | 'negrita';
 export type PersonalizeShape = 'llavero' | 'chapa';
 
 export type Personalize = {
@@ -28,12 +28,18 @@ export type Personalize = {
   coverColor: string;
   coverW: number; // % da largura da foto
   coverH: number; // % da altura da foto
+  // Perspectiva (nome numa peca inclinada): inclinar as letras (graus) e
+  // achatar/esticar na vertical (%). Relevo = sombra de filamento 3D.
+  skew: number;
+  squash: number;
+  relief: boolean;
 };
 
 export const PERSONALIZE_FONTS: { key: PersonalizeFont; label: string; css: string }[] = [
   { key: 'redonda', label: 'Redonda', css: "'Baloo 2', 'Nunito', sans-serif" },
   { key: 'manuscrita', label: 'Manuscrita', css: "'Caveat', cursive" },
   { key: 'bloque', label: 'Bloco', css: "'Fredoka', 'Nunito', sans-serif" },
+  { key: 'negrita', label: 'Negrita', css: "'Arial Black', 'Arial', 'Helvetica', sans-serif" },
 ];
 
 export const DEFAULT_PERSONALIZE: Personalize = {
@@ -52,6 +58,9 @@ export const DEFAULT_PERSONALIZE: Personalize = {
   coverColor: '#F97316',
   coverW: 40,
   coverH: 14,
+  skew: 0,
+  squash: 100,
+  relief: true,
 };
 
 const clamp = (n: unknown, min: number, max: number, def: number) => {
@@ -76,13 +85,16 @@ export function parsePersonalize(raw: unknown): Personalize {
     y: clamp(o.y, 0, 100, d.y),
     size: clamp(o.size, 3, 40, d.size),
     color: /^#[0-9a-fA-F]{6}$/.test(String(o.color)) ? String(o.color) : d.color,
-    font: (['redonda', 'manuscrita', 'bloque'] as const).includes(o.font as PersonalizeFont) ? (o.font as PersonalizeFont) : d.font,
+    font: (['redonda', 'manuscrita', 'bloque', 'negrita'] as const).includes(o.font as PersonalizeFont) ? (o.font as PersonalizeFont) : d.font,
     shape: o.shape === 'chapa' ? 'chapa' : 'llavero',
     rotate: clamp(o.rotate, -90, 90, 0),
     cover: o.cover === true,
     coverColor: /^#[0-9a-fA-F]{6}$/.test(String(o.coverColor)) ? String(o.coverColor) : d.coverColor,
     coverW: clamp(o.coverW, 2, 100, d.coverW),
     coverH: clamp(o.coverH, 2, 100, d.coverH),
+    skew: clamp(o.skew, -45, 45, 0),
+    squash: clamp(o.squash, 40, 160, 100),
+    relief: o.relief !== false,
   };
 }
 

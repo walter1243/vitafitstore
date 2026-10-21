@@ -101,6 +101,8 @@ export function NamePreview({ cfg, product, text, placeholder, swingKey, stage }
   stage: string;
 }) {
   const shown = text || placeholder;
+  // rotate + skew + scaleY: acompanha a peca inclinada em perspectiva.
+  const tf = `translate(-50%, -50%) rotate(${cfg.rotate || 0}deg) skewX(${cfg.skew || 0}deg) scaleY(${(cfg.squash || 100) / 100})`;
   const font = fontCss(cfg.font);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -119,7 +121,7 @@ export function NamePreview({ cfg, product, text, placeholder, swingKey, stage }
                 top: `${cfg.y}%`,
                 width: `${cfg.coverW}%`,
                 height: `${cfg.coverH}%`,
-                transform: `translate(-50%, -50%) rotate(${cfg.rotate || 0}deg)`,
+                transform: tf,
                 background: cfg.coverColor,
                 borderRadius: '999px',
                 boxShadow: `0 0 10px 6px ${cfg.coverColor}`,
@@ -132,12 +134,16 @@ export function NamePreview({ cfg, product, text, placeholder, swingKey, stage }
             style={{
               left: `${cfg.x}%`,
               top: `${cfg.y}%`,
-              transform: `translate(-50%, -50%) rotate(${cfg.rotate || 0}deg)`,
+              transform: tf,
               fontSize: `${cfg.size}cqw`,
               color: cfg.color,
               fontFamily: font,
               opacity: text ? 1 : 0.45,
-              textShadow: '0 1px 0 rgba(255,255,255,.35), 0 2px 3px rgba(0,0,0,.25)',
+              // relevo: filamento em alto-relevo (borda escura + sombra), ou leve.
+              textShadow: cfg.relief
+                ? '0.035em 0.035em 0 rgba(0,0,0,.55), 0.07em 0.07em 0.08em rgba(0,0,0,.35), -0.02em -0.02em 0 rgba(255,255,255,.25)'
+                : '0 1px 0 rgba(255,255,255,.35), 0 2px 3px rgba(0,0,0,.25)',
+              letterSpacing: cfg.font === 'negrita' ? '0.02em' : undefined,
             }}
           >
             {shown}
