@@ -90,7 +90,9 @@ export function ThemedCollection({ collection, theme, products = [], showCarouse
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-wrap items-end justify-between gap-4 pb-6" style={{ borderBottom: `1px solid ${theme.ink}1a` }}>
           <div>
-            <p className="text-xl" style={{ fontFamily: theme.kickerFont, color: theme.accent }}>{collection.shortName}</p>
+            {collection.shortName.trim().toLowerCase() !== collection.name.trim().toLowerCase() && (
+              <p className="text-xl" style={{ fontFamily: theme.kickerFont, color: theme.accent }}>{collection.shortName}</p>
+            )}
             <Heading className="text-3xl font-semibold sm:text-4xl" style={{ fontFamily: theme.heading, color: theme.ink }}>{collection.name}</Heading>
             {collection.tagline && <p className="mt-1 text-base" style={{ color: theme.muted }}>{collection.tagline}</p>}
           </div>
