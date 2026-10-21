@@ -5,6 +5,7 @@ import { type Product } from '@/lib/products';
 import { ColorDinoModal } from './color-dino-modal';
 import { LampSwitchModal } from './lamp-switch-modal';
 import { ProductPuzzleModal } from './product-puzzle-modal';
+import { useSectors } from './sectors-context';
 
 const COPY = {
   rompecabezas: { icon: Puzzle, title: '¡Móntalo antes de comprar!', button: '¡Pon la pieza que falta!' },
@@ -17,10 +18,14 @@ const COPY = {
 // e, no fim, oferece adicionar esse produto ao carrinho.
 export function ProductDemo({ product }: { product: Product }) {
   const [open, setOpen] = useState(false);
-  const type = product.demoType;
-  if (!type || type === 'none') return null;
-  // Pintar precisa de um desenho de colorir; sem ele, nao ha amostra.
-  if (type === 'colorear' && !product.demoImage) return null;
+  const { collectionForProduct } = useSectors();
+  // Sem brincadeira propria no cadastro: usa a da colecao do produto
+  // (Rompecabezas → montar, Lamparas → acender, Para pintar → pintar).
+  const fromCollection = collectionForProduct(product)?.interactive;
+  const type = product.demoType && product.demoType !== 'none'
+    ? product.demoType
+    : fromCollection === 'rompecabezas' || fromCollection === 'colorear' || fromCollection === 'encender' ? fromCollection : undefined;
+  if (!type) return null;
   const copy = COPY[type];
   const Icon = copy.icon;
   const image = product.demoImage || product.mainImage || product.image;
@@ -45,7 +50,7 @@ export function ProductDemo({ product }: { product: Product }) {
       </button>
 
       {type === 'rompecabezas' && <ProductPuzzleModal open={open} onOpenChange={setOpen} image={image} product={product} />}
-      {type === 'colorear' && <ColorDinoModal open={open} onOpenChange={setOpen} drawingUrl={product.demoImage} product={product} />}
+      {type === 'colorear' && <ColorDinoModal open={open} onOpenChange={setOpen} drawingUrl={product.demoImage || undefined} product={product} />}
       {type === 'encender' && <LampSwitchModal open={open} onOpenChange={setOpen} photo={image} product={product} />}
     </div>
   );
