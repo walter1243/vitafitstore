@@ -1,5 +1,6 @@
 'use client';
 import { AdminSectors } from '@/components/admin-sectors';
+import { clipboardFiles, isEditableTarget, useHoverPaste } from '@/lib/use-hover-paste';
 import { AdminWorlds } from '@/components/admin-worlds';
 import { PersonalizeEditor, ProductPlacement } from '@/components/admin-product-extras';
 import { TrackingSection, needsTracking, isNewAlert } from '@/components/admin-tracking';
@@ -162,6 +163,30 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   const descRef = useRef<HTMLDivElement>(null);
   const mainFileRef = useRef<HTMLInputElement>(null);
   const galleryFileRef = useRef<HTMLInputElement>(null);
+  // Ctrl+V sem clicar (lib/use-hover-paste): mouse em cima da imagem principal
+  // ou da midia adicional decide pra onde vai; fora delas (e fora de campos de
+  // texto), vai pra principal se estiver vazia, senao pra midia adicional.
+  const isImg = (t: string) => /^image\//.test(t);
+  const mainHover = useHoverPaste<HTMLDivElement>(isImg, (files) => handleMainFile(files[0]));
+  const galleryHover = useHoverPaste<HTMLDivElement>(isImg, (files) => handleAdditionalFiles(files));
+  const pasteFallback = useRef<(files: File[]) => void>(() => {});
+  pasteFallback.current = (files) => {
+    if (!image) { handleMainFile(files[0]); if (files.length > 1) handleAdditionalFiles(files.slice(1)); }
+    else handleAdditionalFiles(files);
+  };
+  useEffect(() => {
+    if (!showForm) return;
+    const onPaste = (e: ClipboardEvent) => {
+      if (e.defaultPrevented || mainHover.hovered.current || galleryHover.hovered.current || isEditableTarget(e.target)) return;
+      const files = clipboardFiles(e, isImg);
+      if (files.length === 0) return;
+      e.preventDefault();
+      pasteFallback.current(files);
+    };
+    document.addEventListener('paste', onPaste);
+    return () => document.removeEventListener('paste', onPaste);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showForm]);
   const [drag, setDrag] = useState(false);
   const [galleryDrag, setGalleryDrag] = useState(false);
   const [mainUploadBusy, setMainUploadBusy] = useState(false);
@@ -312,7 +337,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
     });
   }
 
-  function handleAdditionalFiles(files: FileList | null) {
+  function handleAdditionalFiles(files: FileList | File[] | null) {
     if (!files?.length) return;
     setGalleryBusy(true);
     const accepted = Array.from(files).filter(file => /^(image\/(jpeg|png|webp|avif)|video\/mp4)$/i.test(file.type));
@@ -383,6 +408,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
       if (item.type.startsWith('image/')) {
         const f = item.getAsFile();
         if (f) {
+          e.preventDefault(); // evita o colar global (use-hover-paste) aplicar de novo
           handleMainFile(f);
           break;
         }
@@ -992,6 +1018,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                   <Upload size={16} className="text-green-500" />
                   <h3 className="text-sm font-semibold text-white">Imagem principal do produto</h3>
                 </div>
+                <div ref={mainHover.ref}>
                 <div
                   ref={dropRef}
                   tabIndex={0}
@@ -1055,7 +1082,8 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                     </div>
                   )}
                 </div>
-                <p className="mt-3 text-xs text-white/45">Suporte a Ctrl+V, drag and drop e arquivos de até 10 imagens adicionais no bloco seguinte.</p>
+                </div>
+                <p className="mt-3 text-xs text-white/45">Copie a imagem e aperte <strong className="text-white/70">Ctrl+V</strong> com o mouse em cima — não precisa clicar. Também dá para arrastar.</p>
               </section>
             </div>
 
@@ -1225,6 +1253,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
 
               {/* Real dropzone — click to browse or drag files straight from the desktop */}
               <div
+                ref={galleryHover.ref}
                 onClick={() => galleryFileRef.current?.click()}
                 onDragOver={handleGalleryDragOver}
                 onDragLeave={() => setGalleryDrag(false)}
@@ -1237,9 +1266,9 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
               >
                 <ImagePlus size={22} className={galleryDrag ? 'text-green-400' : 'text-white/40'} />
                 <p className="text-sm font-medium text-white">
-                  {galleryDrag ? 'Solte as fotos aqui' : 'Arraste fotos aqui ou clique para escolher'}
+                  {galleryDrag ? 'Solte as fotos aqui' : 'Cole com Ctrl+V (mouse em cima), arraste ou clique'}
                 </p>
-                <p className="text-xs text-white/40">JPG, PNG, WEBP ou AVIF · até 10 fotos</p>
+                <p className="text-xs text-white/40">JPG, PNG, WEBP ou AVIF · até 10 fotos · dá para colar várias de uma vez</p>
               </div>
 
               <div className="mt-3 flex gap-2">

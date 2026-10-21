@@ -1,4 +1,5 @@
 'use client';
+import { useHoverPaste } from '@/lib/use-hover-paste';
 import { useRef, useState, type ReactNode } from 'react';
 import { upload } from '@vercel/blob/client';
 import { Upload, Loader2 } from 'lucide-react';
@@ -81,9 +82,16 @@ export function MediaUploadField({
     void acceptFile(e.dataTransfer.files?.[0]);
   }
 
+  // Ctrl+V com o mouse em cima, sem precisar clicar na area antes.
+  const hover = useHoverPaste<HTMLDivElement>(
+    (t) => t.startsWith(kind === 'image' ? 'image/' : 'video/'),
+    (files) => { void acceptFile(files[0]); },
+  );
+
   return (
     <Field label={label} hint={hint}>
       <div
+        ref={hover.ref}
         tabIndex={0}
         onPaste={handlePaste}
         onDrop={handleDrop}
@@ -109,7 +117,7 @@ export function MediaUploadField({
           {uploading ? (
             'Enviando...'
           ) : (
-            <>Cole com <span className="font-semibold text-white/80">Ctrl+V</span>, arraste o arquivo aqui, ou</>
+            <>Mouse em cima + <span className="font-semibold text-white/80">Ctrl+V</span>, arraste o arquivo aqui, ou</>
           )}
         </p>
         <button
