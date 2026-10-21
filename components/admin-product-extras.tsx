@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { LayoutGrid, PenLine } from 'lucide-react';
 import { MediaUploadField } from '@/components/configuracoes/content/shared';
 import { NamePreview } from '@/components/personalize/name-personalizer';
@@ -140,16 +140,36 @@ export function ProductPlacement({ value, onChange, category, onCategory }: {
   );
 }
 
-// Admin → Produtos: personalizacao com nome (chaveiro, placa de pet).
-// Previa ao vivo do jeito que o cliente vai ver.
+// Admin → Produtos: personalizacao com nome em QUALQUER produto (chaveiro,
+// placa, quadro, caneca...). A foto do produto aparece e voce clica/arrasta
+// nela pra marcar onde o nome fica; o cliente escreve o nome dele e ve
+// exatamente ali.
 export function PersonalizeEditor({ value, onChange, productImage }: { value: string; onChange: (json: string) => void; productImage?: string | null }) {
   const cfg = parsePersonalize(value);
   const [sample, setSample] = useState('Lucía');
-  const set = <K extends keyof Personalize>(k: K, v: Personalize[K]) => onChange(JSON.stringify({ ...cfg, [k]: v }));
-  const range = (k: 'x' | 'y' | 'size', label: string, min: number, max: number) => (
+  const stageRef = useRef<HTMLDivElement>(null);
+  const dragging = useRef(false);
+  const write = (next: Personalize) => onChange(JSON.stringify(next));
+  const set = <K extends keyof Personalize>(k: K, v: Personalize[K]) => write({ ...cfg, [k]: v });
+
+  // Ligar: ja usa a foto principal do produto como base.
+  function toggle(on: boolean) {
+    write({ ...cfg, enabled: on, previewImage: on && !cfg.previewImage && productImage ? productImage : cfg.previewImage });
+  }
+
+  // Clique/arraste na foto = posicao do nome (em % da foto).
+  function place(e: React.PointerEvent) {
+    const r = stageRef.current?.getBoundingClientRect();
+    if (!r) return;
+    const x = Math.min(100, Math.max(0, ((e.clientX - r.left) / r.width) * 100));
+    const y = Math.min(100, Math.max(0, ((e.clientY - r.top) / r.height) * 100));
+    write({ ...cfg, x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 });
+  }
+
+  const slider = (k: 'size' | 'rotate', label: string, min: number, max: number, unit: string) => (
     <label className="block text-xs text-white/60">
-      {label}: <span className="font-semibold text-white">{Math.round(cfg[k])}%</span>
-      <input type="range" min={min} max={max} step={0.5} value={cfg[k]} onChange={(e) => set(k, Number(e.target.value))} className="mt-1 w-full accent-green-500" />
+      {label}: <span className="font-semibold text-white">{Math.round(cfg[k])}{unit}</span>
+      <input type="range" min={min} max={max} step={1} value={cfg[k]} onChange={(e) => set(k, Number(e.target.value))} className="mt-1 w-full accent-green-500" />
     </label>
   );
 
@@ -160,16 +180,108 @@ export function PersonalizeEditor({ value, onChange, productImage }: { value: st
         <h3 className="text-sm font-semibold text-white">Personalização com nome</h3>
       </div>
       <p className="mb-4 text-xs text-white/50">
-        Para chaveiros, placas de pet e afins: o cliente escreve o nome, vê na hora no modelo, escolhe a quantidade e adiciona. O nome chega no pedido para você imprimir.
+        Serve para qualquer produto (chaveiro, placa, quadro, caneca…): o cliente escreve o nome que quiser, vê na hora no lugar que você marcar na foto, escolhe a quantidade e adiciona. O nome chega no pedido para você imprimir.
       </p>
 
       <label className="mb-4 flex items-center gap-2 text-sm text-white/80">
-        <input type="checkbox" checked={cfg.enabled} onChange={(e) => set('enabled', e.target.checked)} /> Este produto é personalizado com nome
+        <input type="checkbox" checked={cfg.enabled} onChange={(e) => toggle(e.target.checked)} /> Este produto aceita nome personalizado
       </label>
 
       {cfg.enabled && (
-        <div className="grid gap-5 lg:grid-cols-2">
-          <div className="space-y-3">
+        <div className="space-y-5">
+          {/* 1. Foto + marcar o lugar */}
+          <div>
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-white/40">1. Clique na foto onde o nome deve ficar</p>
+            {cfg.previewImage ? (
+              <div
+                ref={stageRef}
+                className="relative cursor-crosshair touch-none select-none overflow-hidden rounded-2xl border border-white/10"
+                onPointerDown={(e) => { dragging.current = true; (e.target as HTMLElement).setPointerCapture?.(e.pointerId); place(e); }}
+                onPointerMove={(e) => { if (dragging.current) place(e); }}
+                onPointerUp={() => { dragging.current = false; }}
+              >
+                <NamePreview cfg={cfg} text={sample} placeholder="Lucía" swingKey={0} stage="#ffffff" />
+                {/* marcador do ponto escolhido */}
+                <span
+                  className="pointer-events-none absolute h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-green-400 bg-green-400/20"
+                  style={{ left: `${cfg.x}%`, top: `${cfg.y}%` }}
+                  aria-hidden="true"
+                />
+              </div>
+            ) : (
+              <p className="rounded-xl border border-dashed border-white/15 px-4 py-6 text-center text-xs text-white/50">
+                Suba a imagem principal do produto (ao lado) ou uma foto abaixo — ela aparece aqui para você marcar o lugar do nome.
+              </p>
+            )}
+            <input
+              value={sample}
+              onChange={(e) => setSample(e.target.value.slice(0, cfg.maxLength))}
+              className="mt-3 w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white"
+              placeholder="Teste um nome"
+            />
+          </div>
+
+          {/* 2. Aparencia do nome */}
+          <div>
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-white/40">2. Como o nome aparece</p>
+            <div className="grid grid-cols-2 gap-3">
+              {slider('size', 'Tamanho', 3, 40, '%')}
+              {slider('rotate', 'Inclinação', -90, 90, '°')}
+            </div>
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              {PERSONALIZE_FONTS.map((f) => (
+                <button key={f.key} type="button" onClick={() => set('font', f.key)} className={chip(cfg.font === f.key)} style={{ fontFamily: f.css }}>{f.label}</button>
+              ))}
+            </div>
+            <label className="mt-3 flex items-center gap-3 text-xs text-white/60">
+              Cor do nome
+              <input type="color" value={cfg.color} onChange={(e) => set('color', e.target.value)} className="h-9 w-12 cursor-pointer rounded" />
+            </label>
+          </div>
+
+          {/* Foto que ja vem com nome escrito */}
+          {cfg.previewImage && (
+            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
+              <label className="flex items-center gap-2 text-sm text-white/80">
+                <input type="checkbox" checked={cfg.cover} onChange={(e) => set('cover', e.target.checked)} />
+                A foto já tem um nome escrito (ex: “BUDDY”) — apagar e trocar pelo do cliente
+              </label>
+              {cfg.cover && (
+                <div className="mt-3 space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="block text-xs text-white/60">
+                      Largura da área: <span className="font-semibold text-white">{Math.round(cfg.coverW)}%</span>
+                      <input type="range" min={2} max={100} value={cfg.coverW} onChange={(e) => set('coverW', Number(e.target.value))} className="mt-1 w-full accent-green-500" />
+                    </label>
+                    <label className="block text-xs text-white/60">
+                      Altura da área: <span className="font-semibold text-white">{Math.round(cfg.coverH)}%</span>
+                      <input type="range" min={2} max={100} value={cfg.coverH} onChange={(e) => set('coverH', Number(e.target.value))} className="mt-1 w-full accent-green-500" />
+                    </label>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-white/60">
+                    Cor da peça (fundo do nome)
+                    <input type="color" value={cfg.coverColor} onChange={(e) => set('coverColor', e.target.value)} className="h-9 w-12 cursor-pointer rounded" />
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const ED = (window as any).EyeDropper;
+                        if (!ED) { alert('Seu navegador não tem conta-gotas. Use o Chrome ou escolha a cor no quadradinho.'); return; }
+                        try { const r = await new ED().open(); if (r?.sRGBHex) set('coverColor', r.sRGBHex); } catch {}
+                      }}
+                      className="rounded-lg border border-white/15 px-3 py-1.5 font-semibold text-white/80 hover:bg-white/5"
+                    >
+                      Pegar cor da foto (conta-gotas)
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-white/40">Ajuste a área até cobrir o nome antigo; o nome do cliente aparece por cima, no mesmo lugar.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 3. Campo pro cliente */}
+          <div>
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-white/40">3. O que o cliente vê</p>
             <div className="grid grid-cols-2 gap-3">
               <label className="block text-xs text-white/60">
                 Texto do campo
@@ -180,60 +292,21 @@ export function PersonalizeEditor({ value, onChange, productImage }: { value: st
                 <input type="number" min={2} max={30} className="mt-1 w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white" value={cfg.maxLength} onChange={(e) => set('maxLength', Number(e.target.value))} />
               </label>
             </div>
-
-            <div>
-              <p className="mb-1.5 text-xs text-white/60">Formato (se não subir foto)</p>
-              <div className="grid grid-cols-2 gap-2">
-                <button type="button" onClick={() => set('shape', 'llavero')} className={chip(cfg.shape === 'llavero')}>Chaveiro</button>
-                <button type="button" onClick={() => set('shape', 'chapa')} className={chip(cfg.shape === 'chapa')}>Placa de pet (osso)</button>
-              </div>
-            </div>
-
-            <div>
-              <p className="mb-1.5 text-xs text-white/60">Letra do nome</p>
-              <div className="grid grid-cols-3 gap-2">
-                {PERSONALIZE_FONTS.map((f) => (
-                  <button key={f.key} type="button" onClick={() => set('font', f.key)} className={chip(cfg.font === f.key)} style={{ fontFamily: f.css }}>{f.label}</button>
-                ))}
-              </div>
-            </div>
-
-            <label className="flex items-center gap-3 text-xs text-white/60">
-              Cor do nome
-              <input type="color" value={cfg.color} onChange={(e) => set('color', e.target.value)} className="h-9 w-12 cursor-pointer rounded" />
-            </label>
-
-            <MediaUploadField
-              label="Foto do modelo SEM nome (opcional)"
-              hint="O nome é desenhado por cima, no lugar que você ajustar abaixo. Sem foto, usamos o desenho do formato."
-              value={cfg.previewImage}
-              onChange={(url) => set('previewImage', url)}
-              kind="image"
-            />
-            {!cfg.previewImage && productImage && (
-              <button type="button" onClick={() => set('previewImage', productImage)} className="text-xs font-semibold text-green-400 hover:underline">
-                Usar a imagem principal do produto
-              </button>
-            )}
-            {cfg.previewImage && (
-              <div className="grid grid-cols-3 gap-3">
-                {range('x', 'Horizontal', 0, 100)}
-                {range('y', 'Vertical', 0, 100)}
-                {range('size', 'Tamanho', 3, 40)}
-              </div>
-            )}
           </div>
 
-          <div>
-            <p className="mb-1.5 text-xs text-white/60">Prévia (como o cliente vê)</p>
-            <NamePreview cfg={cfg} text={sample} placeholder="Lucía" swingKey={sample.length} stage="linear-gradient(160deg,#EEF2FF,#FFE7D6)" />
-            <input
-              value={sample}
-              onChange={(e) => setSample(e.target.value.slice(0, cfg.maxLength))}
-              className="mt-3 w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white"
-              placeholder="Teste um nome"
-            />
-          </div>
+          {/* Outra foto (opcional) */}
+          <MediaUploadField
+            label="Usar outra foto (opcional)"
+            hint="Por padrão usamos a imagem principal. Se tiver uma foto do produto SEM nome, use aqui — fica mais real."
+            value={cfg.previewImage}
+            onChange={(url) => set('previewImage', url)}
+            kind="image"
+          />
+          {productImage && cfg.previewImage !== productImage && (
+            <button type="button" onClick={() => set('previewImage', productImage)} className="text-xs font-semibold text-green-400 hover:underline">
+              Voltar para a imagem principal
+            </button>
+          )}
         </div>
       )}
     </section>

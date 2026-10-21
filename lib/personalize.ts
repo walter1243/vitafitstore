@@ -20,6 +20,14 @@ export type Personalize = {
   color: string;
   font: PersonalizeFont;
   shape: PersonalizeShape;
+  // Inclinacao do nome em graus (nomes em superficie inclinada).
+  rotate: number;
+  // Foto que ja vem com um nome (ex: BUDDY): uma mancha da cor da peca
+  // cobre o nome antigo e o do cliente aparece em cima.
+  cover: boolean;
+  coverColor: string;
+  coverW: number; // % da largura da foto
+  coverH: number; // % da altura da foto
 };
 
 export const PERSONALIZE_FONTS: { key: PersonalizeFont; label: string; css: string }[] = [
@@ -39,6 +47,11 @@ export const DEFAULT_PERSONALIZE: Personalize = {
   color: '#1E1B4B',
   font: 'redonda',
   shape: 'llavero',
+  rotate: 0,
+  cover: false,
+  coverColor: '#F97316',
+  coverW: 40,
+  coverH: 14,
 };
 
 const clamp = (n: unknown, min: number, max: number, def: number) => {
@@ -65,6 +78,11 @@ export function parsePersonalize(raw: unknown): Personalize {
     color: /^#[0-9a-fA-F]{6}$/.test(String(o.color)) ? String(o.color) : d.color,
     font: (['redonda', 'manuscrita', 'bloque'] as const).includes(o.font as PersonalizeFont) ? (o.font as PersonalizeFont) : d.font,
     shape: o.shape === 'chapa' ? 'chapa' : 'llavero',
+    rotate: clamp(o.rotate, -90, 90, 0),
+    cover: o.cover === true,
+    coverColor: /^#[0-9a-fA-F]{6}$/.test(String(o.coverColor)) ? String(o.coverColor) : d.coverColor,
+    coverW: clamp(o.coverW, 2, 100, d.coverW),
+    coverH: clamp(o.coverH, 2, 100, d.coverH),
   };
 }
 

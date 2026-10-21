@@ -110,12 +110,29 @@ export function NamePreview({ cfg, product, text, placeholder, swingKey, stage }
         <div key={swingKey} className="np-swing absolute inset-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={cfg.previewImage} alt={product ? `Modelo de ${product.name}` : 'Modelo'} className="h-full w-full object-contain" />
+          {cfg.cover && (
+            // cobre o nome que ja vem impresso na foto
+            <span
+              className="pointer-events-none absolute"
+              style={{
+                left: `${cfg.x}%`,
+                top: `${cfg.y}%`,
+                width: `${cfg.coverW}%`,
+                height: `${cfg.coverH}%`,
+                transform: `translate(-50%, -50%) rotate(${cfg.rotate || 0}deg)`,
+                background: cfg.coverColor,
+                borderRadius: '999px',
+                boxShadow: `0 0 10px 6px ${cfg.coverColor}`,
+              }}
+              aria-hidden="true"
+            />
+          )}
           <span
             className="np-pop pointer-events-none absolute whitespace-nowrap font-bold leading-none"
             style={{
               left: `${cfg.x}%`,
               top: `${cfg.y}%`,
-              transform: 'translate(-50%, -50%)',
+              transform: `translate(-50%, -50%) rotate(${cfg.rotate || 0}deg)`,
               fontSize: `${cfg.size}cqw`,
               color: cfg.color,
               fontFamily: font,
