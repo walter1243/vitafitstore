@@ -33,6 +33,8 @@ export type Personalize = {
   skew: number;
   squash: number;
   relief: boolean;
+  // Cores do nome que o CLIENTE escolhe (vazio = usa `color`, sem escolha).
+  colors: { name: string; hex: string }[];
 };
 
 export const PERSONALIZE_FONTS: { key: PersonalizeFont; label: string; css: string }[] = [
@@ -61,6 +63,7 @@ export const DEFAULT_PERSONALIZE: Personalize = {
   skew: 0,
   squash: 100,
   relief: true,
+  colors: [],
 };
 
 const clamp = (n: unknown, min: number, max: number, def: number) => {
@@ -95,6 +98,12 @@ export function parsePersonalize(raw: unknown): Personalize {
     skew: clamp(o.skew, -45, 45, 0),
     squash: clamp(o.squash, 40, 160, 100),
     relief: o.relief !== false,
+    colors: Array.isArray(o.colors)
+      ? (o.colors as { name?: unknown; hex?: unknown }[])
+          .filter((c) => /^#[0-9a-fA-F]{6}$/.test(String(c?.hex)))
+          .slice(0, 12)
+          .map((c) => ({ name: String(c.name ?? '').trim().slice(0, 30) || String(c.hex), hex: String(c.hex) }))
+      : [],
   };
 }
 

@@ -25,6 +25,7 @@ export function ProductPageView({ product }: { product: Product }) {
   const look = (collection ? getSector(collection.sectorId)?.style : undefined) as PersonalizerLook | undefined
   const pcfg = parsePersonalize(product.personalize)
   const [customName, setCustomName] = useState('')
+  const [customColor, setCustomColor] = useState(pcfg.colors[0]?.hex ?? '')
   const sample = look === 'mascotas' ? 'Toby' : 'Lucía'
   const personalizeTitle = look === 'mascotas' ? 'Personaliza el nombre de tu mascota' : look === 'llaveros' ? 'Personaliza tu llavero' : 'Personalízalo con un nombre'
   const router = useRouter()
@@ -144,7 +145,7 @@ export function ProductPageView({ product }: { product: Product }) {
               {personalized && activeIndex === 0 ? (
                 // O nome do cliente aparece na propria foto do produto.
                 <div className="absolute inset-0">
-                  <NamePreview cfg={{ ...pcfg, previewImage: activeImage }} product={product} text={cleanCustomText(customName, pcfg.maxLength)} placeholder={sample} swingKey={0} stage="#ffffff" />
+                  <NamePreview cfg={{ ...pcfg, previewImage: activeImage, color: customColor || pcfg.color }} product={product} text={cleanCustomText(customName, pcfg.maxLength)} placeholder={sample} swingKey={0} stage="#ffffff" />
                 </div>
               ) : (
                 <Image
@@ -282,6 +283,8 @@ export function ProductPageView({ product }: { product: Product }) {
                 showPreview={false}
                 name={customName}
                 onName={(v) => { setCustomName(v); if (activeIndex !== 0) goToIndex(0) }}
+                color={customColor}
+                onColor={(hex) => { setCustomColor(hex); if (activeIndex !== 0) goToIndex(0) }}
               />
             </div>
           )}

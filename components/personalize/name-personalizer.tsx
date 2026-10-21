@@ -17,7 +17,7 @@ const LOOK: Record<PersonalizerLook, { ink: string; muted: string; field: string
 // "Ponle su nombre": o cliente escreve e ve o nome no MESMO modelo do
 // produto na hora (o chaveiro balanca, as letras "pulam"), escolhe a
 // quantidade e adiciona. Cada nome vira uma linha no carrinho/pedido.
-export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded, name: nameProp, onName, showPreview = true }: {
+export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded, name: nameProp, onName, color: colorProp, onColor, showPreview = true }: {
   product: Product;
   look?: PersonalizerLook;
   compact?: boolean;
@@ -26,6 +26,9 @@ export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded,
   // do produto) e o personalizador fica so com o campo + quantidade.
   name?: string;
   onName?: (v: string) => void;
+  // Cor escolhida pelo cliente (hex), quando o produto oferece cores.
+  color?: string;
+  onColor?: (hex: string) => void;
   showPreview?: boolean;
 }) {
   const cfg = parsePersonalize(product.personalize);
@@ -38,13 +41,18 @@ export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded,
   const [added, setAdded] = useState(false);
   const [swing, setSwing] = useState(0);
   const text = cleanCustomText(name, cfg.maxLength);
+  const [ownColor, setOwnColor] = useState(cfg.colors[0]?.hex ?? '');
+  const color = colorProp ?? ownColor;
+  const setColor = (hex: string) => { if (onColor) onColor(hex); else setOwnColor(hex); };
+  const chosen = cfg.colors.find((c) => c.hex === color) ?? cfg.colors[0];
 
   // A cada letra, o chaveiro balanca de novo.
   useEffect(() => { setSwing((n) => n + 1); }, [text]);
 
   function add() {
     if (!text) return;
-    addItem(product, { text }, qty);
+    // A cor escolhida vai junto (carrinho, checkout e pedido: "Color: Negro").
+    addItem(product, { text, color: chosen?.name }, qty);
     setAdded(true);
     onAdded?.();
     setTimeout(() => { setAdded(false); setName(''); setQty(1); }, 1600);
@@ -52,7 +60,7 @@ export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded,
 
   return (
     <div className={`grid gap-5 ${compact || !showPreview ? '' : 'lg:grid-cols-2 lg:items-center lg:gap-8'}`}>
-      {showPreview && <NamePreview cfg={cfg} product={product} text={text} placeholder={L.sample} swingKey={swing} stage={L.stage} />}
+      {showPreview && <NamePreview cfg={chosen ? { ...cfg, color: chosen.hex } : cfg} product={product} text={text} placeholder={L.sample} swingKey={swing} stage={L.stage} />}
 
       <div>
         <label className="block">
@@ -71,6 +79,29 @@ export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded,
         <p className="mt-1.5 text-xs font-semibold" style={{ color: L.muted }}>
           {text.length}/{cfg.maxLength} letras · lo imprimimos tal cual lo ves
         </p>
+
+        {cfg.colors.length > 0 && (
+          <div className="mt-4">
+            <span className="mb-2 block text-sm font-extrabold" style={{ color: L.ink }}>
+              Color del nombre: <span className="font-semibold">{chosen?.name}</span>
+            </span>
+            <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Color del nombre">
+              {cfg.colors.map((c) => (
+                <button
+                  key={c.hex}
+                  type="button"
+                  role="radio"
+                  aria-checked={chosen?.hex === c.hex}
+                  aria-label={c.name}
+                  title={c.name}
+                  onClick={() => setColor(c.hex)}
+                  className="h-11 w-11 cursor-pointer rounded-full border-2 transition-transform hover:scale-105"
+                  style={{ background: c.hex, borderColor: chosen?.hex === c.hex ? L.ink : 'rgba(0,0,0,.15)', boxShadow: chosen?.hex === c.hex ? `0 0 0 3px #fff, 0 0 0 5px ${L.ink}` : undefined }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="mt-5 flex flex-wrap items-center gap-3">
           <div className="inline-flex h-12 items-center rounded-full border-2" style={{ borderColor: L.ink, color: L.ink }}>

@@ -148,7 +148,8 @@ export function PersonalizeEditor({ value, onChange, productImage }: { value: st
   const cfg = parsePersonalize(value);
   const [sample, setSample] = useState('Lucía');
   const stageRef = useRef<HTMLDivElement>(null);
-  const dragging = useRef(false);
+  const dragging = useRef<null | 'move' | 'rotate' | 'size'>(null);
+  const [newColor, setNewColor] = useState({ name: '', hex: '#1a1a1a' });
   const write = (next: Personalize) => onChange(JSON.stringify(next));
   const set = <K extends keyof Personalize>(k: K, v: Personalize[K]) => write({ ...cfg, [k]: v });
 
@@ -157,14 +158,35 @@ export function PersonalizeEditor({ value, onChange, productImage }: { value: st
     write({ ...cfg, enabled: on, previewImage: on && !cfg.previewImage && productImage ? productImage : cfg.previewImage });
   }
 
-  // Clique/arraste na foto = posicao do nome (em % da foto).
-  function place(e: React.PointerEvent) {
+  // Como no Bambu Studio: arrastar move o nome; a bolinha de cima gira;
+  // o quadradinho do canto aumenta/diminui. Tudo em % da foto.
+  function onDrag(e: React.PointerEvent) {
     const r = stageRef.current?.getBoundingClientRect();
-    if (!r) return;
-    const x = Math.min(100, Math.max(0, ((e.clientX - r.left) / r.width) * 100));
-    const y = Math.min(100, Math.max(0, ((e.clientY - r.top) / r.height) * 100));
-    write({ ...cfg, x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 });
+    const mode = dragging.current;
+    if (!r || !mode) return;
+    const px = ((e.clientX - r.left) / r.width) * 100;
+    const py = ((e.clientY - r.top) / r.height) * 100;
+    if (mode === 'move') {
+      write({ ...cfg, x: Math.round(Math.min(100, Math.max(0, px)) * 10) / 10, y: Math.round(Math.min(100, Math.max(0, py)) * 10) / 10 });
+    } else if (mode === 'rotate') {
+      // angulo do centro do nome ate o ponteiro (+90: bolinha fica em cima)
+      const deg = (Math.atan2(py - cfg.y, px - cfg.x) * 180) / Math.PI + 90;
+      const norm = ((deg + 540) % 360) - 180;
+      write({ ...cfg, rotate: Math.round(Math.max(-90, Math.min(90, norm))) });
+    } else {
+      const dist = Math.hypot(px - cfg.x, py - cfg.y);
+      write({ ...cfg, size: Math.round(Math.max(3, Math.min(40, dist / Math.max(1, sample.length) * 1.6)) * 10) / 10 });
+    }
   }
+  const begin = (mode: 'move' | 'rotate' | 'size') => (e: React.PointerEvent) => {
+    e.stopPropagation();
+    dragging.current = mode;
+    stageRef.current?.setPointerCapture?.(e.pointerId);
+    if (mode === 'move') onDrag(e);
+  };
+  // largura aproximada do nome (pra desenhar a caixa de selecao)
+  const boxW = Math.min(95, Math.max(8, (sample.length || 5) * cfg.size * 0.62));
+  const boxH = cfg.size * 1.25 * (cfg.squash / 100);
 
   const slider = (k: 'size' | 'rotate' | 'skew' | 'squash', label: string, min: number, max: number, unit: string) => (
     <label className="block text-xs text-white/60">
@@ -191,22 +213,46 @@ export function PersonalizeEditor({ value, onChange, productImage }: { value: st
         <div className="space-y-5">
           {/* 1. Foto + marcar o lugar */}
           <div>
-            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-white/40">1. Arraste o nome na foto até o lugar certo (ou clique onde ele deve ficar)</p>
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-white/40">1. Posicione o nome na foto</p>
+            <p className="mb-2 text-[11px] text-white/45">Arraste o nome para mover · bolinha de cima = girar · quadradinho do canto = tamanho.</p>
             {cfg.previewImage ? (
               <div
                 ref={stageRef}
-                className="relative cursor-grab touch-none select-none overflow-hidden rounded-2xl border border-white/10 active:cursor-grabbing"
-                onPointerDown={(e) => { dragging.current = true; (e.target as HTMLElement).setPointerCapture?.(e.pointerId); place(e); }}
-                onPointerMove={(e) => { if (dragging.current) place(e); }}
-                onPointerUp={() => { dragging.current = false; }}
+                className="relative touch-none select-none overflow-hidden rounded-2xl border border-white/10"
+                onPointerDown={begin('move')}
+                onPointerMove={onDrag}
+                onPointerUp={() => { dragging.current = null; }}
+                onPointerCancel={() => { dragging.current = null; }}
               >
-                <NamePreview cfg={cfg} text={sample} placeholder="Lucía" swingKey={0} stage="#ffffff" />
-                {/* marcador do ponto escolhido */}
-                <span
-                  className="pointer-events-none absolute h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-green-400 bg-green-400/20"
-                  style={{ left: `${cfg.x}%`, top: `${cfg.y}%` }}
-                  aria-hidden="true"
-                />
+                <NamePreview cfg={cfg.colors[0] ? { ...cfg, color: cfg.colors[0].hex } : cfg} text={sample} placeholder="Lucía" swingKey={0} stage="#ffffff" />
+                {/* caixa de selecao do nome, com as alcas (estilo Bambu Studio) */}
+                <div
+                  className="absolute cursor-move border-2 border-dashed border-green-400"
+                  style={{
+                    left: `${cfg.x}%`,
+                    top: `${cfg.y}%`,
+                    width: `${boxW}%`,
+                    height: `${boxH}%`,
+                    transform: `translate(-50%, -50%) rotate(${cfg.rotate}deg)`,
+                  }}
+                  onPointerDown={begin('move')}
+                >
+                  {/* girar */}
+                  <span className="absolute -top-9 left-1/2 h-7 w-px -translate-x-1/2 bg-green-400" aria-hidden="true" />
+                  <button
+                    type="button"
+                    aria-label="Girar o nome"
+                    onPointerDown={begin('rotate')}
+                    className="absolute -top-12 left-1/2 h-6 w-6 -translate-x-1/2 cursor-grab rounded-full border-2 border-white bg-green-500 shadow"
+                  />
+                  {/* tamanho */}
+                  <button
+                    type="button"
+                    aria-label="Tamanho do nome"
+                    onPointerDown={begin('size')}
+                    className="absolute -bottom-2.5 -right-2.5 h-5 w-5 cursor-nwse-resize rounded-sm border-2 border-white bg-green-500 shadow"
+                  />
+                </div>
               </div>
             ) : (
               <p className="rounded-xl border border-dashed border-white/15 px-4 py-6 text-center text-xs text-white/50">
@@ -284,6 +330,38 @@ export function PersonalizeEditor({ value, onChange, productImage }: { value: st
               )}
             </div>
           )}
+
+          {/* Cores do nome pro cliente escolher */}
+          <div>
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-white/40">Cores que o cliente pode escolher</p>
+            <p className="mb-2 text-[11px] text-white/45">Sem cores = o nome sai sempre na cor acima. Com cores, o cliente escolhe uma (vai no pedido).</p>
+            <div className="flex flex-wrap gap-2">
+              {cfg.colors.map((c, i) => (
+                <span key={c.hex + i} className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 py-1 pl-1 pr-2 text-xs text-white/80">
+                  <span className="h-6 w-6 rounded-full border border-white/20" style={{ background: c.hex }} />
+                  {c.name}
+                  <button type="button" aria-label={`Remover ${c.name}`} onClick={() => set('colors', cfg.colors.filter((_, j) => j !== i))} className="ml-1 text-white/40 hover:text-red-300">×</button>
+                </span>
+              ))}
+            </div>
+            <div className="mt-2 flex gap-2">
+              <input type="color" value={newColor.hex} onChange={(e) => setNewColor({ ...newColor, hex: e.target.value })} className="h-9 w-12 cursor-pointer rounded" />
+              <input
+                value={newColor.name}
+                onChange={(e) => setNewColor({ ...newColor, name: e.target.value })}
+                placeholder="Nome da cor (ex: Negro, Blanco)"
+                className="min-w-0 flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white"
+              />
+              <button
+                type="button"
+                disabled={!newColor.name.trim() || cfg.colors.length >= 12}
+                onClick={() => { set('colors', [...cfg.colors, { name: newColor.name.trim(), hex: newColor.hex }]); setNewColor({ name: '', hex: '#1a1a1a' }); }}
+                className="rounded-lg bg-green-600 px-3 text-xs font-semibold text-white disabled:opacity-40"
+              >
+                Adicionar
+              </button>
+            </div>
+          </div>
 
           {/* 3. Campo pro cliente */}
           <div>
