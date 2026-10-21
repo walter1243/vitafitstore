@@ -3,7 +3,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { toStoreProduct } from '@/lib/store-product';
 import { CollectionSpotlight } from './collection-spotlight';
 import { ThemedExtras } from '@/components/themes/themed-sections';
-import { WorldShowcase } from '@/components/themes/world-showcase';
 import { SectorCards } from './sector-cards';
 import { useSectors } from './sectors-context';
 import { useStoreProducts } from './use-store-products';
@@ -67,11 +66,6 @@ export function KidsStorefront() {
             <CollectionSpotlight key={c.slug} slug={c.slug} products={bySlug[c.slug] ?? []} priority={ci === 0} />
           ))}
           {showExtras && <ThemedExtras products={loose.map(toStoreProduct)} />}
-          {/* Fotos de uso, beneficios, passos e confianca do mundo (Casa, Chaveiros, Pet). */}
-          <WorldShowcase
-            sector={active === EXTRA ? { style: 'hogar', content: null } : current}
-            products={[...(current?.collections.flatMap((c) => bySlug[c.slug] ?? []) ?? []), ...(showExtras ? loose.map(toStoreProduct) : [])]}
-          />
         </div>
       </div>
     </>

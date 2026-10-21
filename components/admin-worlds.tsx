@@ -74,7 +74,7 @@ export function AdminWorlds() {
       <div className={box}>
         <h2 className="font-semibold">Editar mundos</h2>
         <p className="mt-1 text-xs text-white/50">
-          Cada mundo é uma aba no início do site. Aqui você troca a capa, os textos, as fotos ou vídeos da vitrine e as imagens de cada coleção. Para criar um mundo novo, use “Setores e coleções”.
+          Cada mundo é uma aba no início do site. Aqui você troca a capa, os textos e as imagens de cada coleção. Para criar um mundo novo, use “Setores e coleções”.
         </p>
         <div className="mt-4 flex flex-wrap gap-2" role="tablist">
           {sectors.map((s) => (
@@ -179,107 +179,11 @@ function WorldEditor({ sector, products, onSaved, onError }: { sector: Sector; p
         />
       </section>
 
-      {/* 2. Vitrine */}
-      <section className={box}>
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h3 className="font-semibold">2. Vitrine (fotos de uso, benefícios e “Cómpralo ya”)</h3>
-          <label className="flex items-center gap-2 text-sm text-white/80">
-            <input type="checkbox" checked={sc.enabled} onChange={(e) => setSc({ enabled: e.target.checked })} /> Mostrar no site
-          </label>
-        </div>
-        <div className="grid gap-x-4 sm:grid-cols-2">
-          <Field label="Frase pequena (acima do título)"><input className={inputCls} value={sc.kicker} onChange={(e) => setSc({ kicker: e.target.value })} /></Field>
-          <Field label="Título"><input className={inputCls} value={sc.title} onChange={(e) => setSc({ title: e.target.value })} /></Field>
-        </div>
-        <Field label="Texto"><textarea rows={2} className={textareaCls} value={sc.intro} onChange={(e) => setSc({ intro: e.target.value })} /></Field>
-
-        <p className="mb-2 mt-2 text-xs font-semibold uppercase tracking-wide text-white/40">Fotos ou vídeos (até 4 — a 1ª fica grande)</p>
-        <div className="space-y-3">
-          {sc.shots.map((shot, i) => (
-            <div key={i} className="rounded-xl border border-white/10 bg-[#0f1117] p-4">
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-xs font-semibold text-white/60">{i === 0 ? 'Foto grande' : `Foto ${i + 1}`}</span>
-                <div className="flex gap-1.5">
-                  <button type="button" className={btn} disabled={i === 0} onClick={() => moveShot(i, -1)} aria-label="Subir"><ArrowUp size={13} /></button>
-                  <button type="button" className={btn} disabled={i === sc.shots.length - 1} onClick={() => moveShot(i, 1)} aria-label="Descer"><ArrowDown size={13} /></button>
-                  <button type="button" className={`${btn} hover:text-red-300`} onClick={() => setSc({ shots: sc.shots.filter((_, j) => j !== i) })} aria-label="Remover"><Trash2 size={13} /></button>
-                </div>
-              </div>
-              <MediaSlot
-                label="Arquivo"
-                value={shot}
-                onChange={(m) => setSc({ shots: sc.shots.map((x, j) => (j === i ? { ...x, ...m } : x)) })}
-              />
-              <div className="grid gap-x-4 sm:grid-cols-2">
-                <Field label="Legenda (aparece na foto)"><input className={inputCls} value={shot.caption} onChange={(e) => setSc({ shots: sc.shots.map((x, j) => (j === i ? { ...x, caption: e.target.value } : x)) })} /></Field>
-                <Field label="Descrição p/ Google e acessibilidade"><input className={inputCls} value={shot.alt} onChange={(e) => setSc({ shots: sc.shots.map((x, j) => (j === i ? { ...x, alt: e.target.value } : x)) })} /></Field>
-              </div>
-              <Field label="Produto desta foto" hint="O card de compra que aparece ao lado da foto. Automático = os produtos do mundo, na ordem.">
-                <select className={inputCls} value={shot.productId} onChange={(e) => setSc({ shots: sc.shots.map((x, j) => (j === i ? { ...x, productId: Number(e.target.value) } : x)) })}>
-                  <option value={0}>Automático</option>
-                  {products.map((p) => <option key={p.id} value={p.id}>{p.name} — {Number(p.price).toFixed(2)} €</option>)}
-                </select>
-              </Field>
-            </div>
-          ))}
-          {sc.shots.length < 4 && (
-            <button type="button" className="inline-flex items-center gap-2 rounded-xl border border-dashed border-white/15 px-4 py-2.5 text-sm font-semibold text-white/70 hover:border-green-500/40" onClick={() => setSc({ shots: [...sc.shots, { url: '', kind: 'image', caption: '', alt: '', productId: 0 }] })}>
-              <Plus size={15} /> Adicionar foto ou vídeo
-            </button>
-          )}
-        </div>
-
-        <p className="mb-2 mt-6 text-xs font-semibold uppercase tracking-wide text-white/40">Blocos de benefício (até 3)</p>
-        <div className="grid gap-3 md:grid-cols-3">
-          {[0, 1, 2].map((i) => {
-            const tile = sc.tiles[i] ?? { icon: 'sparkles', title: '', text: '' };
-            const setTile = (patch: Partial<typeof tile>) => {
-              const tiles = [...sc.tiles];
-              tiles[i] = { ...tile, ...patch };
-              setSc({ tiles: tiles.filter(Boolean) });
-            };
-            return (
-              <div key={i} className="rounded-xl border border-white/10 bg-[#0f1117] p-3">
-                <select className={inputCls} value={tile.icon} onChange={(e) => setTile({ icon: e.target.value as typeof tile.icon })}>
-                  {TILE_ICONS.map((k) => <option key={k} value={k}>Ícone: {ICON_LABEL[k]}</option>)}
-                </select>
-                <input className={`${inputCls} mt-2`} placeholder="Título (vazio = não mostra)" value={tile.title} onChange={(e) => setTile({ title: e.target.value })} />
-                <textarea rows={2} className={`${textareaCls} mt-2`} placeholder="Texto" value={tile.text} onChange={(e) => setTile({ text: e.target.value })} />
-              </div>
-            );
-          })}
-        </div>
-
-        <p className="mb-2 mt-6 text-xs font-semibold uppercase tracking-wide text-white/40">“Así de fácil” — passos (deixe vazio para não mostrar)</p>
-        <div className="grid gap-3 md:grid-cols-3">
-          {[0, 1, 2].map((i) => {
-            const step = sc.steps[i] ?? { title: '', text: '' };
-            const setStep = (patch: Partial<typeof step>) => {
-              const steps = [...sc.steps];
-              steps[i] = { ...step, ...patch };
-              setSc({ steps: steps.filter(Boolean) });
-            };
-            return (
-              <div key={i} className="rounded-xl border border-white/10 bg-[#0f1117] p-3">
-                <span className="text-xs font-semibold text-white/50">Passo {i + 1}</span>
-                <input className={`${inputCls} mt-1`} placeholder="Título" value={step.title} onChange={(e) => setStep({ title: e.target.value })} />
-                <textarea rows={2} className={`${textareaCls} mt-2`} placeholder="Texto" value={step.text} onChange={(e) => setStep({ text: e.target.value })} />
-              </div>
-            );
-          })}
-        </div>
-
-        <label className="mt-5 flex items-center gap-2 text-sm text-white/80">
-          <input type="checkbox" checked={sc.trust} onChange={(e) => setSc({ trust: e.target.checked })} /> Mostrar a faixa de confiança (envio, garantia, pagamento seguro)
-        </label>
-        <p className="mt-3 text-xs text-white/45">“Cómpralo ya” mostra sozinho os produtos das coleções deste mundo (Produtos → “Onde aparece no site”).</p>
-      </section>
-
       <div className="sticky bottom-3 z-10 flex flex-wrap justify-end gap-2 rounded-2xl border border-white/10 bg-[#161b28]/95 p-3 backdrop-blur">
         <button
           type="button"
           className={btn}
-          onClick={() => { if (window.confirm('Voltar a vitrine e a capa deste mundo para o padrão?')) setContent(DEFAULT_WORLD[sector.style]); }}
+          onClick={() => { if (window.confirm('Voltar a capa deste mundo para o padrão?')) setContent((c) => ({ ...c, cover: DEFAULT_WORLD[sector.style].cover })); }}
         >
           <RotateCcw size={13} /> Restaurar padrão
         </button>
@@ -288,9 +192,9 @@ function WorldEditor({ sector, products, onSaved, onError }: { sector: Sector; p
         </button>
       </div>
 
-      {/* 3. Colecoes do mundo */}
+      {/* 2. Colecoes do mundo */}
       <section className={box}>
-        <h3 className="mb-1 font-semibold">3. Coleções deste mundo</h3>
+        <h3 className="mb-1 font-semibold">2. Coleções deste mundo</h3>
         <p className="mb-4 text-xs text-white/50">Imagem, foto e vídeo de cada coleção. Cada uma salva separado.</p>
         {sector.collections.length === 0 && <p className="text-xs text-white/45">Nenhuma coleção. Crie em “Setores e coleções”.</p>}
         <div className="space-y-4">
