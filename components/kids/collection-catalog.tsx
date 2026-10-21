@@ -71,35 +71,25 @@ export function CollectionCatalog({ slug }: { slug: string }) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 pb-20 pt-10 sm:px-6 lg:px-8">
-      <div className="mb-6 flex items-center gap-3">
-        {groups.length > 1 ? (
-          <div className="swipe-row -ml-1 min-w-0 flex-1 py-1 pl-1" aria-label="Tipos dentro de la colección">
-            <button type="button" onClick={() => setGroup('todo')} className={chip(group === 'todo')}>
-              Todo ({items.length})
-            </button>
-            {groups.map(([name, count]) => (
-              <button key={name} type="button" onClick={() => setGroup(name)} className={chip(group === name)}>
-                {name} ({count})
-              </button>
-            ))}
-          </div>
-        ) : (
-          <p className="min-w-0 flex-1 text-base font-semibold text-[var(--k-muted)]">
-            {loaded ? `${items.length} ${items.length === 1 ? 'creación' : 'creaciones'}` : 'Cargando…'}
-          </p>
+      {/* Um seletor de categoria (sem chips nem "ordenar por"). */}
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <p className="text-base font-semibold text-[var(--k-muted)]">
+          {loaded ? `${visible.length} ${visible.length === 1 ? 'producto' : 'productos'}` : 'Cargando…'}
+        </p>
+        {groups.length > 1 && (
+          <label className="flex items-center gap-2 text-base font-semibold text-[var(--k-muted)]">
+            <span className="hidden sm:inline">Categoría</span>
+            <select
+              value={group}
+              onChange={(e) => setGroup(e.target.value)}
+              aria-label="Categoría"
+              className="min-h-11 max-w-[60vw] cursor-pointer rounded-full border border-[var(--k-line)] bg-white px-4 text-sm font-bold text-[var(--k-ink)] outline-none focus:border-[var(--k-ink)] sm:text-base"
+            >
+              <option value="todo">Todas ({items.length})</option>
+              {groups.map(([name, count]) => <option key={name} value={name}>{name} ({count})</option>)}
+            </select>
+          </label>
         )}
-
-        <label className="flex shrink-0 items-center gap-2 text-base font-semibold text-[var(--k-muted)]">
-          <span className="hidden sm:inline">Ordenar por</span>
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value as Sort)}
-            aria-label="Ordenar por"
-            className="min-h-11 cursor-pointer rounded-full border border-[var(--k-line)] bg-white px-3 text-sm font-bold sm:px-4 sm:text-base text-[var(--k-ink)] outline-none focus:border-[var(--k-ink)]"
-          >
-            {SORTS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
-          </select>
-        </label>
       </div>
 
       {visible.length > 0 ? (
