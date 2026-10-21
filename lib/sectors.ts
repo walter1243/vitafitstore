@@ -65,6 +65,7 @@ export async function ensureSectorTables() {
   }
   await seedNewSectors();
   await seedNavidadOnce();
+  await fixNavidadOnce();
   await mergeHogarOnce();
 }
 
@@ -130,6 +131,27 @@ async function seedNavidadOnce() {
     `;
   }
   await sql`INSERT INTO site_flags (key) VALUES ('seed_navidad_v1') ON CONFLICT DO NOTHING`;
+}
+
+// Ja existia um setor Navidad criado no admin (visual Casa, sem colecao):
+// passa pro visual Navidad e ganha a colecao. Uma vez so.
+async function fixNavidadOnce() {
+  const [done] = await sql`SELECT key FROM site_flags WHERE key = 'fix_navidad_v1'`;
+  if (done) return;
+  const [sec] = await sql`SELECT id FROM sectors WHERE slug = 'navidad'`;
+  if (sec) {
+    await sql`UPDATE sectors SET style = 'navidad' WHERE id = ${sec.id}`;
+    const [has] = await sql`SELECT id FROM site_collections WHERE sector_id = ${sec.id} LIMIT 1`;
+    if (!has) {
+      await sql`
+        INSERT INTO site_collections (sector_id, slug, name, short_name, tagline, description, interactive, match, position, enabled, bg_color)
+        VALUES (${sec.id}, 'navidad', 'Navidad', 'Navidad', 'Decora y regala estas fiestas',
+                'Decoración y regalos navideños impresos en 3D.', 'none', 'navidad, navideño, navideno, christmas, natal', 1, TRUE, '#166534')
+        ON CONFLICT (slug) DO NOTHING
+      `;
+    }
+  }
+  await sql`INSERT INTO site_flags (key) VALUES ('fix_navidad_v1') ON CONFLICT DO NOTHING`;
 }
 
 async function seedNewSectors() {
