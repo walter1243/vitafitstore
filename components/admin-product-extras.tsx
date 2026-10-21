@@ -13,7 +13,7 @@ const chip = (on: boolean) =>
 
 // Admin → Produtos: em que setor/colecao o produto aparece no site.
 // "Automático" = pela categoria (regra antiga, palavras da colecao).
-export function ProductPlacement({ value, onChange }: { value: string; onChange: (slug: string) => void }) {
+export function ProductPlacement({ value, onChange }: { value: string; onChange: (slug: string, name?: string) => void }) {
   const [sectors, setSectors] = useState<Sector[]>([]);
   const [sectorId, setSectorId] = useState<number | null>(null);
 
@@ -66,7 +66,7 @@ export function ProductPlacement({ value, onChange }: { value: string; onChange:
           ) : (
             <div className="grid gap-2 sm:grid-cols-2">
               {current.collections.map((c) => (
-                <button key={c.slug} type="button" onClick={() => onChange(c.slug)} className={`${chip(value === c.slug)} flex items-center gap-3`}>
+                <button key={c.slug} type="button" onClick={() => onChange(c.slug, c.name)} className={`${chip(value === c.slug)} flex items-center gap-3`}>
                   <span className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-white/5">
                     {(c.imageUrl || c.photoUrl) && (
                       // eslint-disable-next-line @next/next/no-img-element
