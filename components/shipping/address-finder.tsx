@@ -68,6 +68,7 @@ function bestPosition(): Promise<GeolocationPosition> {
 
 export function AddressFinder({ onAddress }: { onAddress: (a: FoundAddress) => void }) {
   const [ready, setReady] = useState<'loading' | 'ok' | 'off'>('loading');
+  const [placesOk, setPlacesOk] = useState(true);
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [busy, setBusy] = useState(false);
@@ -96,7 +97,11 @@ export function AddressFinder({ onAddress }: { onAddress: (a: FoundAddress) => v
           input: query, sessionToken: token.current, includedRegionCodes: ['es', 'pt'], language: 'es', region: 'es',
         });
         if (alive) setSuggestions((list ?? []).filter((s: any) => s.placePrediction).slice(0, 5));
-      } catch { if (alive) setSuggestions([]); }
+      } catch (e: any) {
+        if (!alive) return;
+        setSuggestions([]);
+        if (/blocked|denied|not authorized|ApiNotActivated/i.test(String(e?.message ?? e))) setPlacesOk(false);
+      }
     }, 250);
     return () => { alive = false; clearTimeout(t); };
   }, [query, ready]);
@@ -107,7 +112,19 @@ export function AddressFinder({ onAddress }: { onAddress: (a: FoundAddress) => v
     setMsg({ ok: true, text: a.number ? 'Dirección rellenada. Si el punto no está en tu portal, arrástralo en el mapa.' : 'Dirección rellenada. Añade el número y el piso.' });
   }
 
+  // Sem o Geocoding do Google (API desativada/recusada): usa /api/shipping/geo.
+  async function reverseOsm(lat: number, lng: number, acc?: number) {
+    const r = await fetch(`/api/shipping/geo?lat=${lat}&lon=${lng}`);
+    const d = await r.json();
+    if (!r.ok || !d?.zip) throw new Error(d?.error || 'No encontramos tu dirección.');
+    await apply({ street: d.street ?? '', number: d.number ?? '', zip: d.zip, city: d.city ?? '', country: d.country ?? 'ES' }, lat, lng, acc);
+  }
+
   async function reverse(lat: number, lng: number, acc?: number) {
+    try { await reverseGoogle(lat, lng, acc); } catch { await reverseOsm(lat, lng, acc); }
+  }
+
+  async function reverseGoogle(lat: number, lng: number, acc?: number) {
     const g = window.google;
     const { Geocoder } = await g.maps.importLibrary('geocoding');
     const { results } = await new Geocoder().geocode({ location: { lat, lng } });
@@ -134,15 +151,8 @@ export function AddressFinder({ onAddress }: { onAddress: (a: FoundAddress) => v
     try {
       const pos = await bestPosition();
       const { latitude: lat, longitude: lng, accuracy } = pos.coords;
-      if (ready === 'ok') {
-        await reverse(lat, lng, accuracy);
-      } else {
-        const r = await fetch(`/api/shipping/geo?lat=${lat}&lon=${lng}`);
-        const d = await r.json();
-        if (!r.ok || !d?.zip) throw new Error(d?.error || 'No encontramos tu dirección.');
-        onAddressRef.current({ street: d.street ?? '', number: d.number ?? '', zip: d.zip, city: d.city ?? '', country: d.country ?? 'ES' });
-        setMsg({ ok: true, text: 'Dirección rellenada. Revisa que esté bien.' });
-      }
+      if (ready === 'ok') await reverse(lat, lng, accuracy);
+      else await reverseOsm(lat, lng, accuracy);
     } catch (e: any) { setMsg({ ok: false, text: e?.message || 'No encontramos tu dirección.' }); }
     finally { setBusy(false); }
   }
@@ -171,7 +181,7 @@ export function AddressFinder({ onAddress }: { onAddress: (a: FoundAddress) => v
 
   return (
     <div className="space-y-2">
-      {ready === 'ok' && (
+      {ready === 'ok' && placesOk && (
         <div className="relative">
           <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true" />
           <input
