@@ -43,6 +43,10 @@ export type Personalize = {
   // Dados extras pedidos ao cliente (ex: chaveiro NFC): telefone e links.
   askPhone: boolean;
   askLinks: boolean;
+  // Observacao livre do cliente (ex: "verde com o nome Max, azul com Toby").
+  askNote: boolean;
+  noteRequired: boolean;
+  notePlaceholder: string;
   // Frete gratis a partir de N unidades deste produto (0 = sem).
   freeShipQty: number;
   // Preco por tamanho (ex: { P: 9.99, G: 14.99 }); tamanho sem preco = preco base.
@@ -85,6 +89,9 @@ export const DEFAULT_PERSONALIZE: Personalize = {
   packPercent: 0,
   askPhone: false,
   askLinks: false,
+  askNote: false,
+  noteRequired: false,
+  notePlaceholder: '',
   freeShipQty: 0,
   sizePrices: {},
   saleMode: 'unit',
@@ -129,6 +136,9 @@ export function parsePersonalize(raw: unknown): Personalize {
     packPercent: clamp(o.packPercent, 0, 90, 0),
     askPhone: o.askPhone === true,
     askLinks: o.askLinks === true,
+    askNote: o.askNote === true,
+    noteRequired: o.noteRequired === true,
+    notePlaceholder: String(o.notePlaceholder ?? '').replace(/[<>]/g, '').slice(0, 120),
     freeShipQty: Math.round(clamp(o.freeShipQty, 0, 1000, 0)),
     sizePrices: o.sizePrices && typeof o.sizePrices === 'object'
       ? Object.fromEntries(Object.entries(o.sizePrices as Record<string, unknown>)

@@ -62,6 +62,9 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: `Escribe el nombre para «${nm}».` }, { status: 400 });
       }
       if (it.text) it.text = cleanCustomText(it.text, pers.maxLength);
+      if (pers.askNote && pers.noteRequired && !/Obs: \S/.test(it.note ?? '')) {
+        return NextResponse.json({ error: `Escribe las observaciones de «${nm}».` }, { status: 400 });
+      }
     }
 
     // Promocao por quantidade (ex: 5 chaveiros) e pedido minimo, conferidos aqui.

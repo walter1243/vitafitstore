@@ -32,7 +32,7 @@ export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded,
   showPreview?: boolean;
   // Pagina do produto: cor/tamanho escolhidos la em cima, preco do tamanho e
   // o que falta escolher (ex: "Elige una talla") antes de adicionar.
-  variant?: { color?: string; size?: string };
+  variant?: { color?: string; size?: string; note?: string };
   basePrice?: number;
   blocked?: string;
 }) {
@@ -74,7 +74,7 @@ export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded,
     // A cor escolhida vai junto (carrinho, checkout e pedido: "Color: Negro").
     // Produto com cores proprias: a cor e a do produto; a das letras vai na nota.
     const letters = variant?.color && chosen ? `Letras: ${chosen.name}` : '';
-    addItem(product, { text, color: variant?.color || chosen?.name, size: variant?.size, note: [letters, note].filter(Boolean).join(' · ') || undefined }, qty);
+    addItem(product, { text, color: variant?.color || chosen?.name, size: variant?.size, note: [letters, variant?.note, note].filter(Boolean).join(' · ') || undefined }, qty);
     setAdded(true);
     onAdded?.();
     setTimeout(() => { setAdded(false); setName(''); setQty(minQty); }, 1600);

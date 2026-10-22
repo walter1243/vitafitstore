@@ -575,6 +575,32 @@ export function SaleModeFields({ value, onChange, unitPrice }: { value: string; 
   );
 }
 
+// Admin → Produtos: observacao que o cliente escreve na pagina do produto
+// (ex: cor e nome de cada comedouro do kit) — um campo so, em vez de varios.
+export function NoteFields({ value, onChange }: { value: string; onChange: (json: string) => void }) {
+  const cfg = parsePersonalize(value);
+  const set = (patch: Partial<Personalize>) => onChange(JSON.stringify({ ...cfg, ...patch }));
+  return (
+    <div className="space-y-3 rounded-xl border border-white/10 bg-white/[0.02] p-3 sm:col-span-2">
+      <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-white/85">
+        <input type="checkbox" checked={cfg.askNote} onChange={(e) => set({ askNote: e.target.checked })} />
+        Cliente escreve uma observação (ex: cor e nome de cada item)
+      </label>
+      {cfg.askNote && (
+        <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+          <label className="block text-xs text-white/60">
+            Exemplo que aparece no campo
+            <input className={`${inp} mt-1 placeholder:text-white/30`} value={cfg.notePlaceholder} maxLength={120} placeholder="Ej: verde con el nombre Max, azul con Toby, morado con Lola" onChange={(e) => set({ notePlaceholder: e.target.value })} />
+          </label>
+          <label className="flex cursor-pointer items-center gap-2 pb-2.5 text-sm text-white/80">
+            <input type="checkbox" checked={cfg.noteRequired} onChange={(e) => set({ noteRequired: e.target.checked })} /> Obrigatória
+          </label>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Admin → Produtos: caixa de envio (peso e medidas) — a Packlink calcula o
 // frete por ela.
 export function ParcelFields({ value, onChange }: { value: string; onChange: (json: string) => void }) {

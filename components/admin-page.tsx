@@ -6,7 +6,7 @@ import { DEFAULT_NAME_COLORS, packOf, parsePersonalize } from '@/lib/personalize
 import { NamePreview } from '@/components/personalize/name-personalizer';
 import { downloadOrderReceipt, type ReceiptOrder } from '@/lib/order-receipt';
 import { AdminWorlds } from '@/components/admin-worlds';
-import { CategoryCollections, ParcelFields, PersonalizeEditor, ProductPlacement, SaleModeFields } from '@/components/admin-product-extras';
+import { CategoryCollections, NoteFields, ParcelFields, PersonalizeEditor, ProductPlacement, SaleModeFields } from '@/components/admin-product-extras';
 import { TrackingSection, needsTracking, isNewAlert } from '@/components/admin-tracking';
 import { AnalyticsPanel } from '@/components/admin-analytics';
 import { MediaUploadField } from '@/components/configuracoes/content/shared';
@@ -855,6 +855,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                     </select>
                   </div>
                   <SaleModeFields value={form.personalize} onChange={(json) => onFormChange('personalize', json)} unitPrice={form.price} />
+                  <NoteFields value={form.personalize} onChange={(json) => onFormChange('personalize', json)} />
                 </div>
               </section>
             </div>

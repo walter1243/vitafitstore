@@ -19,7 +19,7 @@ export function cleanItems(raw: unknown): OrderItem[] {
       color: i?.color ? String(i.color).slice(0, 60) : undefined,
       size: i?.size ? String(i.size).slice(0, 40) : undefined,
       text: i?.text ? cleanCustomText(i.text) || undefined : undefined,
-      note: i?.note ? String(i.note).replace(/[<>]/g, '').slice(0, 300) || undefined : undefined,
+      note: i?.note ? String(i.note).replace(/[<>]/g, '').slice(0, 400) || undefined : undefined,
       total: Number.isFinite(Number(i?.total)) && i?.total !== undefined ? Math.round(Number(i.total) * 100) / 100 : undefined,
     }))
     .filter((i) => Number.isFinite(i.productId) && i.productId > 0);

@@ -53,7 +53,11 @@ export function ProductPageView({ product }: { product: Product }) {
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false)
 
   const needsSize = Boolean(product.productType && product.productType !== 'estandar' && product.sizes?.length)
-  const canBuy = !needsSize || Boolean(selectedSize)
+  // Observacao do cliente (Admin → Produtos → "Cliente escreve uma observação").
+  const noteCfg = parsePersonalize(product.personalize)
+  const [obs, setObs] = useState('')
+  const obsMissing = noteCfg.askNote && noteCfg.noteRequired && !obs.trim()
+  const canBuy = (!needsSize || Boolean(selectedSize)) && !obsMissing
   const productLineTotal = lineTotalFor(sizedPrice(product.price, product.personalize, selectedSize), product.personalize, quantity)
   // Preco por tamanho (Admin → Produtos → Tamanhos): "desde X" ate escolher.
   const sizeRangeView = needsSize ? sizeRange(product.price, product.personalize, product.sizes) : null
@@ -89,9 +93,11 @@ export function ProductPageView({ product }: { product: Product }) {
     touchStartX.current = null
   }
 
+  const obsNote = noteCfg.askNote && obs.trim() ? `Obs: ${obs.trim().replace(/\s+/g, ' ')}` : undefined
   const variant = {
     color: product.colorOptions?.length ? selectedColor : undefined,
     size: needsSize ? selectedSize : undefined,
+    note: obsNote,
   }
 
   function handleAdd() {
@@ -315,6 +321,23 @@ export function ProductPageView({ product }: { product: Product }) {
             </div>
           )}
 
+          {noteCfg.askNote && (
+            <div className="mt-6">
+              <label htmlFor="obs-cliente" className="mb-2 block text-sm font-medium text-slate-700">
+                Observaciones{noteCfg.noteRequired ? ' *' : ' (opcional)'}
+              </label>
+              <textarea
+                id="obs-cliente"
+                value={obs}
+                onChange={(e) => setObs(e.target.value.slice(0, 250))}
+                rows={3}
+                placeholder={noteCfg.notePlaceholder || 'Ej: color y nombre de cada uno'}
+                className="w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-base text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-orange-600"
+              />
+              <p className="mt-1 text-right text-[11px] text-slate-400">{obs.length}/250</p>
+            </div>
+          )}
+
           {personalized && (
             <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4">
               <p className="mb-3 text-base font-bold text-slate-900">{personalizeTitle}</p>
@@ -327,9 +350,9 @@ export function ProductPageView({ product }: { product: Product }) {
                 onName={(v) => { setCustomName(v); if (activeIndex !== previewIndex) goToIndex(previewIndex) }}
                 color={customColor}
                 onColor={(hex) => { setCustomColor(hex); if (activeIndex !== previewIndex) goToIndex(previewIndex) }}
-                variant={{ color: product.colorOptions?.length ? selectedColor : undefined, size: needsSize ? selectedSize : undefined }}
+                variant={{ color: product.colorOptions?.length ? selectedColor : undefined, size: needsSize ? selectedSize : undefined, note: obsNote }}
                 basePrice={sizedPrice(product.price, product.personalize, selectedSize)}
-                blocked={needsSize && !selectedSize ? `Elige ${product.productType === 'tamanho' ? 'un tamaño' : 'una talla'} arriba` : undefined}
+                blocked={needsSize && !selectedSize ? `Elige ${product.productType === 'tamanho' ? 'un tamaño' : 'una talla'} arriba` : obsMissing ? 'Escribe las observaciones' : undefined}
               />
             </div>
           )}
@@ -363,6 +386,9 @@ export function ProductPageView({ product }: { product: Product }) {
               </div>
             </div>
 
+            {obsMissing && (!needsSize || selectedSize) && (
+              <p className="mt-4 text-xs font-medium text-red-500">Escribe las observaciones para continuar.</p>
+            )}
             {needsSize && !selectedSize && (
               <p className="mt-4 text-xs font-medium text-red-500">Elige {product.productType === 'tamanho' ? 'un tamaño' : 'una talla'} para continuar.</p>
             )}
