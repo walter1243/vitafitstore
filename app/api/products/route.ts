@@ -80,6 +80,8 @@ async function ensureVariantColumns() {
   // personalizacao com nome (JSON, ver lib/personalize.ts).
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS collection_slug TEXT`;
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS personalize TEXT`;
+  // Caixa de envio (peso/medidas) pra Packlink.
+  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS parcel TEXT`;
 }
 
 function normalizeProduct(row: any) {
@@ -93,6 +95,7 @@ function normalizeProduct(row: any) {
     demoImage: row.demo_image ?? '',
     collectionSlug: row.collection_slug ?? '',
     personalize: parsePersonalize(row.personalize),
+    parcel: (() => { try { return row.parcel ? JSON.parse(row.parcel) : null; } catch { return null; } })(),
     additionalImages: parseAdditionalImages(row.additional_images ?? row.additionalImages),
     mainImage: row.image ?? row.mainImage ?? '',
     videoUrl: row.video ?? row.videoUrl ?? '',
@@ -111,7 +114,7 @@ export async function GET() {
     const rows = await sql`
       SELECT id, name, description, price, category, image, additional_images, video, stock, position,
              source_store_url, source_product_url, cost_price,
-             product_type, color_options, sizes, is_category_cover, shipping_cost, demo_type, demo_image, collection_slug, personalize,
+             product_type, color_options, sizes, is_category_cover, shipping_cost, demo_type, demo_image, collection_slug, personalize, parcel,
              created_at AS "createdAt"
       FROM products
       ORDER BY COALESCE(position, 999999), created_at DESC
@@ -141,6 +144,7 @@ export async function POST(req: NextRequest) {
     const nextDemoImage = String(body.demoImage ?? '').trim();
     const nextCollectionSlug = String(body.collectionSlug ?? '').trim().slice(0, 120);
     const nextPersonalize = JSON.stringify(parsePersonalize(body.personalize));
+    const nextParcel = body.parcel && typeof body.parcel === 'object' ? JSON.stringify(body.parcel) : null;
 
     if (!name?.trim()) {
       return NextResponse.json({ error: 'O campo "nome" é obrigatório.' }, { status: 400 });
@@ -158,7 +162,7 @@ export async function POST(req: NextRequest) {
     const nextSizes = parseSizes(sizes);
 
     const [product] = await sql`
-      INSERT INTO products (name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost, demo_type, demo_image, collection_slug, personalize)
+      INSERT INTO products (name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost, demo_type, demo_image, collection_slug, personalize, parcel)
       VALUES (
         ${String(name).trim()},
         ${description ? String(description) : null},
@@ -179,9 +183,10 @@ export async function POST(req: NextRequest) {
         ${nextDemoType},
         ${nextDemoImage || null},
         ${nextCollectionSlug || null},
-        ${nextPersonalize}
+        ${nextPersonalize},
+        ${nextParcel}
       )
-      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost, demo_type, demo_image, collection_slug, personalize
+      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost, demo_type, demo_image, collection_slug, personalize, parcel
     `;
 
     return NextResponse.json(normalizeProduct(product), { status: 201 });
@@ -297,6 +302,8 @@ export async function PATCH(req: NextRequest) {
     const collectionSlug = String(body.collectionSlug ?? '').trim().slice(0, 120);
     const updatePersonalize = Object.prototype.hasOwnProperty.call(body, 'personalize');
     const personalize = JSON.stringify(parsePersonalize(body.personalize));
+    const updateParcel = Object.prototype.hasOwnProperty.call(body, 'parcel');
+    const parcel = body.parcel && typeof body.parcel === 'object' ? JSON.stringify(body.parcel) : null;
 
     if (!name) {
       return NextResponse.json({ error: 'O campo "nome" é obrigatório.' }, { status: 400 });
@@ -326,9 +333,10 @@ export async function PATCH(req: NextRequest) {
         demo_type         = CASE WHEN ${updateDemo} THEN ${demoType} ELSE demo_type END,
         demo_image        = CASE WHEN ${updateDemo} THEN ${demoImage || null} ELSE demo_image END,
         collection_slug   = CASE WHEN ${updateCollection} THEN ${collectionSlug || null} ELSE collection_slug END,
-        personalize       = CASE WHEN ${updatePersonalize} THEN ${personalize} ELSE personalize END
+        personalize       = CASE WHEN ${updatePersonalize} THEN ${personalize} ELSE personalize END,
+        parcel            = CASE WHEN ${updateParcel} THEN ${parcel} ELSE parcel END
       WHERE id = ${id}
-      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost, demo_type, demo_image, collection_slug, personalize
+      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost, demo_type, demo_image, collection_slug, personalize, parcel
     `;
 
     if (!product) {

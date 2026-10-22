@@ -6,6 +6,7 @@ import { Check, PenLine, Plus } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 import { type Product } from '@/lib/products';
 import { type SectorTheme } from './sector-themes';
+import { cardPrice } from '@/lib/personalize';
 
 // Card de produto no visual do setor:
 //  - hogar:    foto alta em areia, nome e preco discretos
@@ -13,6 +14,7 @@ import { type SectorTheme } from './sector-themes';
 //  - mascotas: a FOTO e o card (nome/preco por cima, com degrade)
 // Produto com cor/tamanho ou com nome personalizado leva pra pagina dele.
 export function ThemedProductCard({ product, theme }: { product: Product; theme: SectorTheme }) {
+  const cp = cardPrice(product.price, product.personalize);
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
   const [hovered, setHovered] = useState(false);
@@ -73,7 +75,7 @@ export function ThemedProductCard({ product, theme }: { product: Product; theme:
         <div className="flex flex-1 flex-col px-1 pt-3">
           <h3 className="line-clamp-2 text-base font-semibold leading-snug text-[#14532D]" style={{ fontFamily: theme.heading }}>{product.name}</h3>
           <div className="mt-auto flex items-center justify-between gap-2 pt-3">
-            <span className="text-base font-bold text-[#14532D]">{product.price.toFixed(2)}€</span>
+            <span className="text-base font-bold text-[#14532D]">{cp.main}{cp.sub && <span className="ml-1 text-[11px] font-extrabold opacity-80">{cp.sub}{cp.off ? ` · -${cp.off}%` : ''}</span>}</span>
             {action}
           </div>
         </div>
@@ -96,7 +98,7 @@ export function ThemedProductCard({ product, theme }: { product: Product; theme:
         <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-4">
           <span className="min-w-0">
             <span className="line-clamp-2 block text-base font-bold leading-snug text-white" style={{ fontFamily: theme.heading }}>{product.name}</span>
-            <span className="mt-0.5 block text-base font-bold text-[#FDE68A]">{product.price.toFixed(2)}€</span>
+            <span className="mt-0.5 block text-base font-bold text-[#FDE68A]">{cp.main}{cp.sub && <span className="ml-1 text-[11px] font-extrabold opacity-80">{cp.sub}{cp.off ? ` · -${cp.off}%` : ''}</span>}</span>
           </span>
           {action}
         </span>
@@ -123,7 +125,7 @@ export function ThemedProductCard({ product, theme }: { product: Product; theme:
       <div className={`flex flex-1 flex-col ${llaveros ? 'px-1 pt-3' : 'px-1 pt-3'}`}>
         <h3 className="line-clamp-2 text-base font-semibold leading-snug" style={{ fontFamily: theme.heading, color: theme.ink }}>{product.name}</h3>
         <div className="mt-auto flex items-center justify-between gap-2 pt-3">
-          <span className="flex flex-col leading-tight"><span className="text-base font-bold" style={{ color: theme.ink }}>{product.price.toFixed(2)}€</span>{pack && <span className="text-[11px] font-extrabold text-[#16a34a]">Pack {pack.minQty}: -{Math.round(pack.packPercent)}%</span>}{(product.personalize?.freeShipQty ?? 0) > 0 && <span className="text-[11px] font-extrabold text-[#2563eb]">Envío gratis desde {product.personalize!.freeShipQty} uds</span>}</span>
+          <span className="flex flex-col leading-tight"><span className="text-base font-bold" style={{ color: theme.ink }}>{cp.main}{cp.sub && <span className="ml-1 text-[11px] font-extrabold opacity-80">{cp.sub}{cp.off ? ` · -${cp.off}%` : ''}</span>}</span>{pack && <span className="text-[11px] font-extrabold text-[#16a34a]">Pack {pack.minQty}: -{Math.round(pack.packPercent)}%</span>}{(product.personalize?.freeShipQty ?? 0) > 0 && <span className="text-[11px] font-extrabold text-[#2563eb]">Envío gratis desde {product.personalize!.freeShipQty} uds</span>}</span>
           {action}
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { itemShipping, unitPriceFor } from '@/lib/personalize';
+import { chargeShipping } from '@/lib/shipping-quote';
+import { itemShipping, lineTotalFor, packOf, unitPriceFor } from '@/lib/personalize';
 import { sql } from '@/lib/db';
 import { resolveShipping } from '@/lib/checkout-pricing';
 
@@ -59,15 +60,22 @@ export async function POST(req: NextRequest) {
     const qtyById = new Map<number, number>();
     for (const it of items) qtyById.set(Number(it.productId), (qtyById.get(Number(it.productId)) ?? 0) + Number(it.quantity));
     const subtotal = items.reduce((sum, item) => {
+      if (packOf(persById.get(Number(item.productId)))) return sum + lineTotalFor(priceById.get(item.productId) ?? 0, persById.get(Number(item.productId)), item.quantity);
       const unitPrice = unitPriceFor(priceById.get(item.productId) ?? 0, persById.get(Number(item.productId)), qtyById.get(Number(item.productId)) ?? 0);
       return sum + unitPrice * item.quantity;
     }, 0);
 
     const shippingById = new Map<number, number | null>((rows as any[]).map((r) => [Number(r.id), r.shipping_cost != null ? Number(r.shipping_cost) : null]));
-    const shipping = resolveShipping(subtotal, country, items.map((item: any) => itemShipping(shippingById.get(Number(item.productId)), persById.get(Number(item.productId)), qtyById.get(Number(item.productId)) ?? 0)));
+    // Frete da Packlink pro metodo escolhido (casa / punto de recogida).
+    const method = body?.shippingMethod === 'home' ? 'home' : 'pickup';
+    const ship = await chargeShipping(items, String(body?.postalCode ?? ''), country, method, () =>
+      resolveShipping(subtotal, country, items.map((item: any) => itemShipping(shippingById.get(Number(item.productId)), persById.get(Number(item.productId)), qtyById.get(Number(item.productId)) ?? 0))));
+    const shipping = ship.shipping;
     const total = subtotal + shipping;
 
     return NextResponse.json({
+      shippingMethod: ship.method,
+      shippingOptions: ship.quote ? { home: ship.quote.home, pickup: ship.quote.pickup, free: ship.quote.free } : null,
       subtotal: Number(subtotal.toFixed(2)),
       shipping: Number(shipping.toFixed(2)),
       total: Number(total.toFixed(2)),

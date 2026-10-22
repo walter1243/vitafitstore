@@ -6,6 +6,7 @@ import { Check, ShoppingCart } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 import { type Product } from '@/lib/products';
 import { ACCENTS, type Accent } from './palette';
+import { cardPrice } from '@/lib/personalize';
 
 type Props = { product: Product; accent?: Accent; tag?: string; /** @deprecated use accent */ soft?: string };
 
@@ -14,6 +15,7 @@ type Props = { product: Product; accent?: Accent; tag?: string; /** @deprecated 
 // preco num selo e botao laranja grande. Hover so mexe em transform/sombra
 // (sem pular o layout).
 export function KidsProductCard({ product, accent = ACCENTS.mint, tag, soft }: Props) {
+  const cp = cardPrice(product.price, product.personalize);
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
   const [hovered, setHovered] = useState(false);
@@ -60,7 +62,7 @@ export function KidsProductCard({ product, accent = ACCENTS.mint, tag, soft }: P
         </h3>
         <div className="mt-auto flex items-center justify-between gap-2 pt-3">
           <span className="rounded-full px-3 py-1 text-base font-extrabold text-[#1E1B4B] sm:text-lg" style={{ background: accent.block }}>
-            {product.price.toFixed(2)}€
+            {cp.main}{cp.sub && <span className="ml-1 text-[11px] font-extrabold opacity-80">{cp.sub}{cp.off ? ` · -${cp.off}%` : ''}</span>}
           </span>
           {needsChoice ? (
             <span className="inline-flex min-h-11 items-center rounded-2xl border-[3px] border-[#1E1B4B] px-3 text-sm font-extrabold text-[#1E1B4B] transition-colors duration-200 group-hover:bg-[#1E1B4B] group-hover:text-white">

@@ -17,6 +17,9 @@ async function ensureOrderColumns() {
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS tracking_email_sent_at TIMESTAMP`;
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS items_json TEXT`;
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS custom_text TEXT`;
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_method TEXT`;
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_service TEXT`;
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS pickup_point TEXT`;
 }
 
 // Dados pessoais dos clientes: so o admin pode listar.
@@ -41,6 +44,9 @@ export async function GET(req: NextRequest) {
         COALESCE(o.selected_color, '')                AS "selectedColor",
         COALESCE(o.selected_size, '')                 AS "selectedSize",
         COALESCE(o.custom_text, '')                   AS "customText",
+        COALESCE(o.shipping_method, '')               AS "shippingMethod",
+        COALESCE(o.shipping_service, '')              AS "shippingService",
+        COALESCE(o.pickup_point, '')                  AS "pickupPoint",
         o.items_json                                  AS "itemsJson",
         o.status,
         COALESCE(o.tracking_code, '')                 AS tracking,

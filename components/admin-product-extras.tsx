@@ -533,3 +533,68 @@ export function CategoryCollections({ categories, onChanged, onNotify, extra }: 
     </div>
   );
 }
+
+const inp = 'w-full rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40';
+
+// Admin → Produtos: forma de venda (unidade ou pack). Grava no mesmo JSON da
+// personalizacao (campo `personalize`), junto com os outros ajustes.
+export function SaleModeFields({ value, onChange, unitPrice }: { value: string; onChange: (json: string) => void; unitPrice: string }) {
+  const cfg = parsePersonalize(value);
+  const set = (patch: Partial<Personalize>) => onChange(JSON.stringify({ ...cfg, ...patch }));
+  const unit = Number(String(unitPrice || '0').replace(',', '.')) || 0;
+  const full = unit * cfg.packQty;
+  const off = cfg.packPrice > 0 && full > cfg.packPrice ? Math.round((1 - cfg.packPrice / full) * 100) : 0;
+  return (
+    <div className="sm:col-span-2 rounded-xl border border-white/10 bg-white/[0.02] p-3">
+      <label className="mb-1.5 block text-xs font-medium text-white/50">Forma de venda</label>
+      <select className={inp} value={cfg.saleMode} onChange={(e) => set({ saleMode: e.target.value === 'pack' ? 'pack' : 'unit' })}>
+        <option value="unit">Por unidade</option>
+        <option value="pack">Só em pack (ex: 5 unidades por um preço)</option>
+      </select>
+      {cfg.saleMode === 'pack' && (
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <label className="block text-xs text-white/60">
+            Quantidade no pack
+            <input type="number" min={2} max={500} className={`${inp} mt-1`} value={cfg.packQty} onChange={(e) => set({ packQty: Number(e.target.value) })} />
+          </label>
+          <label className="block text-xs text-white/60">
+            Preço do pack (€)
+            <input type="number" min={0} step="0.01" className={`${inp} mt-1`} value={cfg.packPrice || ''} placeholder={full ? full.toFixed(2) : '8.00'} onChange={(e) => set({ packPrice: Number(e.target.value) })} />
+          </label>
+          <p className="text-[11px] text-white/50 sm:col-span-2">
+            O “Preço (€)” acima é o preço da <strong className="text-white/80">unidade</strong> (de referência).{' '}
+            {cfg.packPrice > 0
+              ? <>O cliente vê: <strong className="text-white/80">Pack de {cfg.packQty}: {cfg.packPrice.toFixed(2)}€</strong>{off ? <> (antes {full.toFixed(2)}€, <span className="text-green-300">-{off}%</span>)</> : null} · compra só de {cfg.packQty} em {cfg.packQty}.</>
+              : 'Digite o preço do pack.'}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Admin → Produtos: caixa de envio (peso e medidas) — a Packlink calcula o
+// frete por ela.
+export function ParcelFields({ value, onChange }: { value: string; onChange: (json: string) => void }) {
+  let o: Record<string, unknown> = {};
+  try { o = value ? JSON.parse(value) : {}; } catch { o = {}; }
+  const set = (k: string, v: string) => onChange(JSON.stringify({ ...o, [k]: v }));
+  const f = (k: string, label: string, ph: string) => (
+    <label className="block text-xs text-white/60">
+      {label}
+      <input type="number" min={0} step="0.1" className={`${inp} mt-1`} value={String(o[k] ?? '')} placeholder={ph} onChange={(e) => set(k, e.target.value)} />
+    </label>
+  );
+  return (
+    <div className="sm:col-span-2 rounded-xl border border-white/10 bg-white/[0.02] p-3">
+      <label className="mb-1.5 block text-xs font-medium text-white/50">Caixa de envio (Packlink calcula o frete por ela)</label>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {f('weight', 'Peso (kg)', '0.3')}
+        {f('length', 'Comprimento (cm)', '20')}
+        {f('width', 'Largura (cm)', '15')}
+        {f('height', 'Altura (cm)', '10')}
+      </div>
+      <p className="mt-1.5 text-[11px] text-white/45">Medidas de UMA unidade já embalada. Vazio = caixa pequena padrão (0,3 kg · 20×15×10).</p>
+    </div>
+  );
+}

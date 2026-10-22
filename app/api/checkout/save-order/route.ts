@@ -41,6 +41,11 @@ export async function POST(req: NextRequest) {
       // Todos os itens do pedido (antes so o 1o era salvo) + o nome personalizado.
       await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS items_json TEXT`;
       await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS custom_text TEXT`;
+      // Envio Packlink escolhido pelo cliente.
+      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_method TEXT`;
+      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_service TEXT`;
+      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS pickup_point TEXT`;
+      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_cost NUMERIC`;
       const ids = [...new Set(items.map((i) => i.productId))];
       const names = ids.length ? await sql`SELECT id, name FROM products WHERE id = ANY(${ids})` : [];
       const nameById = new Map((names as any[]).map((r) => [Number(r.id), String(r.name)]));
@@ -50,7 +55,8 @@ export async function POST(req: NextRequest) {
           customer_name, customer_email, customer_phone,
           address_line, postal_code, city, country,
           product_id, total_amount, status, stripe_payment_id,
-          selected_color, selected_size, items_json, custom_text
+          selected_color, selected_size, items_json, custom_text,
+          shipping_method, shipping_service, pickup_point, shipping_cost
         ) VALUES (
           ${meta.customerName  || 'Anônimo'},
           ${meta.customerEmail || null},
@@ -66,7 +72,11 @@ export async function POST(req: NextRequest) {
           ${items[0]?.color || null},
           ${items[0]?.size || null},
           ${itemsJson},
-          ${items.map((i) => [i.text, i.note].filter(Boolean).join(' — ')).filter(Boolean).join(' | ') || null}
+          ${items.map((i) => [i.text, i.note].filter(Boolean).join(' — ')).filter(Boolean).join(' | ') || null},
+          ${meta.shipMethod || null},
+          ${[meta.shipService, meta.shipServiceId && `(id ${meta.shipServiceId})`].filter(Boolean).join(' ') || null},
+          ${meta.pickupPoint || null},
+          ${meta.shipping ? Number(meta.shipping) : null}
         )
       `;
     } catch (dbErr) {

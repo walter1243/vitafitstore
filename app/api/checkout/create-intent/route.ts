@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { itemShipping, minQtyFor, unitPriceFor } from '@/lib/personalize';
+import { chargeShipping } from '@/lib/shipping-quote';
+import { itemShipping, lineTotalFor, minQtyFor, packOf, stepFor, unitPriceFor } from '@/lib/personalize';
 import { cleanItems, packItems } from '@/lib/order-items';
 import Stripe from 'stripe';
 import { sql } from '@/lib/db';
@@ -15,6 +16,8 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { items, country, postalCode, customerName, customerEmail, customerPhone, addressLine, city } = body;
+    const method = body?.shippingMethod === 'home' ? 'home' : 'pickup';
+    const point = body?.pickupPoint && typeof body.pickupPoint === 'object' ? body.pickupPoint : null;
 
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: 'Carrinho vazio.' }, { status: 400 });
@@ -36,17 +39,26 @@ export async function POST(req: NextRequest) {
     const qtyById = new Map<number, number>();
     for (const it of items as any[]) qtyById.set(Number(it.productId), (qtyById.get(Number(it.productId)) ?? 0) + Number(it.quantity));
     for (const [id, q] of qtyById) {
+      const step = stepFor(persById.get(id));
+      if (step > 1 && q % step !== 0) {
+        return NextResponse.json({ error: `Este producto se vende en packs de ${step} unidades.` }, { status: 400 });
+      }
       if (q < minQtyFor(persById.get(id))) {
         return NextResponse.json({ error: `Este producto tiene un pedido mínimo de ${minQtyFor(persById.get(id))} unidades.` }, { status: 400 });
       }
     }
     const subtotal = items.reduce((sum: number, item: any) => {
       const id = Number(item.productId);
-      return sum + unitPriceFor(priceById.get(id) ?? 0, persById.get(id), qtyById.get(id) ?? 0) * Number(item.quantity);
+      return sum + (packOf(persById.get(id)) ? lineTotalFor(priceById.get(id) ?? 0, persById.get(id), Number(item.quantity)) : unitPriceFor(priceById.get(id) ?? 0, persById.get(id), qtyById.get(id) ?? 0) * Number(item.quantity));
     }, 0);
 
     const shippingById = new Map<number, number | null>((productRows as any[]).map((r) => [Number(r.id), r.shipping_cost != null ? Number(r.shipping_cost) : null]));
-    const shipping = resolveShipping(subtotal, String(country ?? 'ES'), items.map((item: any) => itemShipping(shippingById.get(Number(item.productId)), persById.get(Number(item.productId)), qtyById.get(Number(item.productId)) ?? 0)));
+    const ship = await chargeShipping(items, String(postalCode ?? ''), String(country ?? 'ES'), method, () =>
+      resolveShipping(subtotal, String(country ?? 'ES'), items.map((item: any) => itemShipping(shippingById.get(Number(item.productId)), persById.get(Number(item.productId)), qtyById.get(Number(item.productId)) ?? 0))));
+    const shipping = ship.shipping;
+    if (ship.chosen?.type === 'pickup' && !point?.id) {
+      return NextResponse.json({ error: 'Elige el punto de recogida.' }, { status: 400 });
+    }
     const amount = Math.round((subtotal + shipping) * 100);
 
     if (!amount || amount <= 0) {
@@ -69,6 +81,10 @@ export async function POST(req: NextRequest) {
         ...packItems(cleanItems(items)),
         subtotal:      subtotal.toFixed(2),
         shipping:      shipping.toFixed(2),
+        shipMethod:    ship.chosen?.type ?? '',
+        shipService:   ship.chosen ? `${ship.chosen.carrier} · ${ship.chosen.service}`.slice(0, 200) : '',
+        shipServiceId: ship.chosen?.serviceId ?? '',
+        pickupPoint:   point ? `${String(point.id).slice(0, 30)} · ${String(point.name ?? '').slice(0, 120)} · ${String(point.address ?? '').slice(0, 150)} · ${String(point.zip ?? '').slice(0, 10)} ${String(point.city ?? '').slice(0, 60)}` : '',
       },
     });
 

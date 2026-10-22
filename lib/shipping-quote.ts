@@ -4,7 +4,7 @@
 import { sql } from '@/lib/db';
 import { combineParcels } from '@/lib/parcel';
 import { cheapestByType, packlinkServices, type ShipOption } from '@/lib/packlink';
-import { parsePersonalize, unitPriceFor } from '@/lib/personalize';
+import { lineTotalFor, parsePersonalize } from '@/lib/personalize';
 import { FREE_SHIPPING_FROM } from '@/lib/checkout-pricing';
 
 export type ShipMethod = 'home' | 'pickup';
@@ -30,7 +30,7 @@ export async function quoteShipping(items: { productId: number; quantity: number
   for (const [id, q] of qty) {
     const r = byId.get(id);
     if (!r) continue;
-    subtotal += unitPriceFor(Number(r.price), r.personalize, q) * q;
+    subtotal += lineTotalFor(Number(r.price), r.personalize, q);
     const n = parsePersonalize(r.personalize).freeShipQty;
     if (!(n > 0 && q >= n)) freeByQty = false;
   }
@@ -45,4 +45,23 @@ export async function quoteShipping(items: { productId: number; quantity: number
   } catch (e: any) {
     return { free, home: null, pickup: null, subtotal: Math.round(subtotal * 100) / 100, error: e?.message || 'Packlink no disponible' };
   }
+}
+
+// Frete cobrado no checkout pro metodo escolhido. Se a Packlink nao
+// responder (ou pais fora da Espanha), cai na tabela antiga.
+export async function chargeShipping(
+  items: { productId: number; quantity: number }[],
+  zip: string,
+  country: string,
+  method: ShipMethod,
+  fallback: () => number,
+) {
+  const cleanZip = String(zip || '').replace(/\D/g, '').slice(0, 5);
+  if (String(country || 'ES').toUpperCase() !== 'ES' || cleanZip.length !== 5) {
+    return { shipping: fallback(), quote: null as ShippingQuote | null, chosen: null as (ShipOption & { charged: number }) | null, method };
+  }
+  const quote = await quoteShipping(items, cleanZip, 'ES');
+  const chosen = (method === 'pickup' ? quote.pickup ?? quote.home : quote.home ?? quote.pickup) ?? null;
+  const shipping = chosen ? chosen.charged : quote.free ? 0 : fallback();
+  return { shipping: Math.round(shipping * 100) / 100, quote, chosen, method: (chosen?.type ?? method) as ShipMethod };
 }

@@ -3,7 +3,7 @@ import { AdminSectors } from '@/components/admin-sectors';
 import { dataUrlToBlobUrl, uploadInlineImages } from '@/lib/upload-data-url';
 import { clipboardFiles, isEditableTarget, useHoverPaste } from '@/lib/use-hover-paste';
 import { AdminWorlds } from '@/components/admin-worlds';
-import { CategoryCollections, PersonalizeEditor, ProductPlacement } from '@/components/admin-product-extras';
+import { CategoryCollections, ParcelFields, PersonalizeEditor, ProductPlacement, SaleModeFields } from '@/components/admin-product-extras';
 import { TrackingSection, needsTracking, isNewAlert } from '@/components/admin-tracking';
 import { AnalyticsPanel } from '@/components/admin-analytics';
 import { MediaUploadField } from '@/components/configuracoes/content/shared';
@@ -46,6 +46,7 @@ type Product = {
   demoImage?: string;
   collectionSlug?: string;
   personalize?: unknown;
+  parcel?: unknown;
   isCategoryCover?: boolean;
 };
 
@@ -75,6 +76,9 @@ type Order = {
   selectedColor?: string;
   selectedSize?: string;
   customText?: string;
+  shippingMethod?: string;
+  shippingService?: string;
+  pickupPoint?: string;
   itemsJson?: string | null;
   status: 'pending' | 'shipped' | 'delivered';
   tracking: string;
@@ -127,7 +131,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   categories: Category[];
   showForm: boolean;
   saving: boolean;
-  form: { name: string; price: string; category: string; stock: string; videoUrl: string; shippingCost: string; demoType: string; demoImage: string; collectionSlug: string; personalize: string };
+  form: { name: string; price: string; category: string; stock: string; videoUrl: string; shippingCost: string; demoType: string; demoImage: string; collectionSlug: string; personalize: string; parcel: string };
   image: string | null;
   additionalImages: string[];
   desc: string;
@@ -714,6 +718,8 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                   ))}
 
                   {/* Categoria/coleção: escolhidas no bloco "Onde aparece no site" (abaixo). */}
+                  <SaleModeFields value={form.personalize} onChange={(json) => onFormChange('personalize', json)} unitPrice={form.price} />
+                  <ParcelFields value={form.parcel} onChange={(json) => onFormChange('parcel', json)} />
 
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-white/50">Tipo de produto</label>
@@ -1724,6 +1730,13 @@ function OrdersSection({ orders, onUpdateTracking, onRefresh }: {
 
           {supplierPanelOpen[o.id] && (
             <div className="mt-3 space-y-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+              {o.shippingMethod && (
+                <div className="rounded-lg border-2 border-sky-500/40 bg-sky-500/10 p-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-sky-300">Envio Packlink — {o.shippingMethod === 'pickup' ? 'Recolher no ponto' : 'Entrega em casa'}</p>
+                  {o.shippingService && <p className="mt-1 text-sm font-bold text-white">{o.shippingService}</p>}
+                  {o.pickupPoint && <p className="mt-1 text-sm text-white">Ponto: {o.pickupPoint}</p>}
+                </div>
+              )}
               {o.customText && (
                 <div className="rounded-lg border-2 border-fuchsia-500/40 bg-fuchsia-500/10 p-3">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-fuchsia-300">Nome(s) personalizado(s) — imprimir exatamente assim</p>
@@ -1962,7 +1975,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
-  const [prodForm, setProdForm] = useState({ name: '', price: '', category: '', stock: '', videoUrl: '', shippingCost: '', demoType: 'none', demoImage: '', collectionSlug: '', personalize: '' });
+  const [prodForm, setProdForm] = useState({ name: '', price: '', category: '', stock: '', videoUrl: '', shippingCost: '', demoType: 'none', demoImage: '', collectionSlug: '', personalize: '', parcel: '' });
   const [prodImage, setProdImage] = useState<string | null>(null);
   const [prodAdditionalImages, setProdAdditionalImages] = useState<string[]>([]);
   const [prodDesc, setProdDesc] = useState('');
@@ -2117,7 +2130,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
 
   function resetProductForm() {
     setEditingProductId(null);
-    setProdForm({ name: '', price: '', category: '', stock: '', videoUrl: '', shippingCost: '', demoType: 'none', demoImage: '', collectionSlug: '', personalize: '' });
+    setProdForm({ name: '', price: '', category: '', stock: '', videoUrl: '', shippingCost: '', demoType: 'none', demoImage: '', collectionSlug: '', personalize: '', parcel: '' });
     setProdImage(null);
     setProdAdditionalImages([]);
     setProdDesc('');
@@ -2143,6 +2156,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
       demoImage: product.demoImage ?? '',
       collectionSlug: product.collectionSlug ?? '',
       personalize: product.personalize ? JSON.stringify(product.personalize) : '',
+      parcel: product.parcel ? JSON.stringify(product.parcel) : '',
     });
     setProdImage(product.mainImage ?? product.image ?? null);
     setProdAdditionalImages(Array.isArray(product.additionalImages) ? product.additionalImages : []);
@@ -2168,7 +2182,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
     costPrice: number;
   }) {
     setEditingProductId(null);
-    setProdForm({ name: data.name, price: String(data.price), category: '', stock: '99', videoUrl: '', shippingCost: '', demoType: 'none', demoImage: '', collectionSlug: '', personalize: '' });
+    setProdForm({ name: data.name, price: String(data.price), category: '', stock: '99', videoUrl: '', shippingCost: '', demoType: 'none', demoImage: '', collectionSlug: '', personalize: '', parcel: '' });
     setProdImage(data.image || null);
     setProdAdditionalImages(data.additionalImages ?? []);
     setProdDesc(data.description || '');
@@ -2223,6 +2237,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
           demoImage: prodForm.demoImage.trim(),
           collectionSlug: prodForm.collectionSlug,
           personalize: prodForm.personalize ? JSON.parse(prodForm.personalize) : { enabled: false },
+          parcel: prodForm.parcel ? JSON.parse(prodForm.parcel) : null,
           description: description || null,
           mainImage,
           image: mainImage,

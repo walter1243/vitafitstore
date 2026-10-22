@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Check, Minus, Plus, ShoppingCart } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 import { type Product } from '@/lib/products';
-import { DEFAULT_NAME_COLORS, LINK_TYPES, cleanCustomText, fontCss, parsePersonalize, unitPriceFor, type Personalize } from '@/lib/personalize';
+import { DEFAULT_NAME_COLORS, LINK_TYPES, cleanCustomText, fontCss, lineTotalFor, minQtyFor, packOf, parsePersonalize, unitPriceFor, type Personalize } from '@/lib/personalize';
 
 // Visual de cada setor pro personalizador (botao, destaques).
 export type PersonalizerLook = 'llaveros' | 'mascotas' | 'infantil' | 'hogar';
@@ -35,7 +35,9 @@ export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded,
   // Sem cores cadastradas: oferece as cores padrao de filamento.
   const cfg = base.colors.length ? base : { ...base, colors: DEFAULT_NAME_COLORS };
   const L = LOOK[look] ?? LOOK.llaveros;
-  const minQty = Math.max(1, base.minQty);
+  const packInfo = packOf(base);
+  const step = packInfo?.qty ?? 1;
+  const minQty = Math.max(step, minQtyFor(base));
   const promo = base.packPercent > 0;
 
   const { addItem } = useCart();
@@ -182,7 +184,19 @@ export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded,
             🚚 Envío gratis a partir de {base.freeShipQty} unidades{qty >= base.freeShipQty ? ' — ¡ya lo tienes!' : ` (te faltan ${base.freeShipQty - qty})`}
           </p>
         )}
-        {(promo || minQty > 1) && (
+        {packInfo && (
+          <div className="mt-4 flex flex-wrap items-center gap-2 rounded-2xl px-4 py-3" style={{ background: L.field }}>
+            {product.price * packInfo.qty > packInfo.price && (
+              <span className="rounded-full px-2.5 py-1 text-sm font-extrabold text-white" style={{ background: '#16a34a' }}>-{Math.round((1 - packInfo.price / (product.price * packInfo.qty)) * 100)}%</span>
+            )}
+            <span className="text-sm font-bold" style={{ color: L.ink }}>
+              Pack de {packInfo.qty}: {product.price * packInfo.qty > packInfo.price && <s className="mr-1 font-semibold opacity-60">{(product.price * packInfo.qty).toFixed(2)}€</s>}
+              <span className="text-base font-extrabold">{packInfo.price.toFixed(2)}€</span>
+            </span>
+            <span className="w-full text-xs font-semibold" style={{ color: L.muted }}>{(packInfo.price / packInfo.qty).toFixed(2)}€ por unidad · se vende en packs de {packInfo.qty}</span>
+          </div>
+        )}
+        {!packInfo && (promo || minQty > 1) && (
           <div className="mt-4 flex flex-wrap items-center gap-2 rounded-2xl px-4 py-3" style={{ background: L.field }}>
             {promo && (
               <span className="rounded-full px-2.5 py-1 text-sm font-extrabold text-white" style={{ background: '#16a34a' }}>-{Math.round(base.packPercent)}%</span>
@@ -198,9 +212,9 @@ export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded,
 
         <div className="mt-5 flex flex-wrap items-center gap-3">
           <div className="inline-flex h-12 items-center rounded-full border-2" style={{ borderColor: L.ink, color: L.ink }}>
-            <button type="button" aria-label="Menos" onClick={() => setQty((q) => Math.max(minQty, q - 1))} className="flex h-12 w-12 cursor-pointer items-center justify-center"><Minus className="h-4 w-4" /></button>
-            <span className="min-w-8 text-center text-lg font-extrabold" aria-live="polite">{qty}</span>
-            <button type="button" aria-label="Más" onClick={() => setQty((q) => Math.min(100, q + 1))} className="flex h-12 w-12 cursor-pointer items-center justify-center"><Plus className="h-4 w-4" /></button>
+            <button type="button" aria-label="Menos" onClick={() => setQty((q) => Math.max(minQty, q - step))} className="flex h-12 w-12 cursor-pointer items-center justify-center"><Minus className="h-4 w-4" /></button>
+            <span className="min-w-8 px-1 text-center text-lg font-extrabold" aria-live="polite">{packInfo ? `${qty / step} pack${qty / step > 1 ? 's' : ''}` : qty}</span>
+            <button type="button" aria-label="Más" onClick={() => setQty((q) => Math.min(500, q + step))} className="flex h-12 w-12 cursor-pointer items-center justify-center"><Plus className="h-4 w-4" /></button>
           </div>
           <button
             type="button"
@@ -212,7 +226,7 @@ export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded,
             onMouseLeave={(e) => { if (!added) e.currentTarget.style.background = L.cta; }}
           >
             {added ? <Check className="h-5 w-5" /> : <ShoppingCart className="h-5 w-5" />}
-            {added ? '¡Añadido!' : `Añadir · ${(unitPriceFor(product.price, base, qty) * qty).toFixed(2)}€`}
+            {added ? '¡Añadido!' : `Añadir · ${lineTotalFor(product.price, base, qty).toFixed(2)}€`}
           </button>
         </div>
         {!text && <p className="mt-3 text-sm" style={{ color: L.muted }}>Escribe el nombre para poder añadirlo.</p>}

@@ -13,7 +13,8 @@ import { ProductReviews } from '@/components/product-reviews'
 import { useSectors } from '@/components/kids/sectors-context'
 import { ProductDemo } from '@/components/kids/product-demo'
 import { NamePersonalizer, NamePreview, type PersonalizerLook } from '@/components/personalize/name-personalizer'
-import { DEFAULT_NAME_COLORS, cleanCustomText, parsePersonalize } from '@/lib/personalize'
+import { DEFAULT_NAME_COLORS, cleanCustomText, minQtyFor, packOf, parsePersonalize } from '@/lib/personalize'
+import { ProductShipping } from '@/components/shipping/shipping-options'
 
 export function ProductPageView({ product }: { product: Product }) {
   const { addItem } = useCart()
@@ -35,7 +36,10 @@ export function ProductPageView({ product }: { product: Product }) {
   const [slideDir, setSlideDir] = useState<'left' | 'right'>('right')
   const activeImage = galleryImages[activeIndex] ?? galleryImages[0]
   const touchStartX = useRef<number | null>(null)
-  const [quantity, setQuantity] = useState(1)
+  // Venda em pack: a quantidade anda de N em N (unidades).
+  const pack = packOf(product.personalize)
+  const step = pack?.qty ?? 1
+  const [quantity, setQuantity] = useState(Math.max(step, minQtyFor(product.personalize)))
   const [added, setAdded] = useState(false)
   const [selectedColor, setSelectedColor] = useState(product.colorOptions?.[0]?.label ?? '')
   const [selectedSize, setSelectedSize] = useState('')
@@ -81,14 +85,14 @@ export function ProductPageView({ product }: { product: Product }) {
 
   function handleAdd() {
     if (!canBuy) return
-    for (let i = 0; i < quantity; i++) addItem(product, variant)
+    addItem(product, variant, quantity)
     setAdded(true)
     setTimeout(() => setAdded(false), 1800)
   }
 
   function handleBuyNow() {
     if (!canBuy) return
-    for (let i = 0; i < quantity; i++) addItem(product, variant)
+    addItem(product, variant, quantity)
     router.push('/checkout')
   }
 
@@ -196,13 +200,27 @@ export function ProductPageView({ product }: { product: Product }) {
               {product.originalPrice && product.originalPrice > product.price && (
                 <span className="text-base text-slate-400 line-through">{product.originalPrice.toFixed(2)}€</span>
               )}
+              {pack ? (
+                <>
+                  <span className="text-4xl font-black text-slate-900">{pack.price.toFixed(2)}€</span>
+                  <span className="text-base font-bold text-slate-600">pack de {pack.qty} uds</span>
+                  {product.price * pack.qty > pack.price && (
+                    <>
+                      <span className="text-base text-slate-400 line-through">{(product.price * pack.qty).toFixed(2)}€</span>
+                      <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-700">-{Math.round((1 - pack.price / (product.price * pack.qty)) * 100)}%</span>
+                    </>
+                  )}
+                  <span className="w-full text-xs font-semibold text-slate-500">{(pack.price / pack.qty).toFixed(2)}€ por unidad · se vende solo en packs de {pack.qty}</span>
+                </>
+              ) : (
               <span className="text-4xl font-black text-slate-900">{product.price.toFixed(2)}€</span>
-              {discountPct && (
+              )}
+              {!pack && discountPct && (
                 <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-700">-{discountPct}%</span>
               )}
             </div>
             <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
-              <Truck size={13} /> Envío gratis en pedidos +50€ · Envío con seguimiento
+              <Truck size={13} /> Envío con seguimiento
             </p>
           </div>
 
@@ -217,6 +235,9 @@ export function ProductPageView({ product }: { product: Product }) {
               ))}
             </ul>
           )}
+
+          {/* Envio Packlink: ponto de recogida x domicilio, com preco atual */}
+          <ProductShipping productId={product.id} quantity={quantity} />
 
           {/* Color variants */}
           {product.colorOptions && product.colorOptions.length > 0 && (
@@ -295,15 +316,15 @@ export function ProductPageView({ product }: { product: Product }) {
               <span className="text-sm font-medium text-slate-500">Cantidad</span>
               <div className="flex items-center rounded-xl border border-slate-200 bg-white">
                 <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  onClick={() => setQuantity(Math.max(Math.max(step, minQtyFor(product.personalize)), quantity - step))}
                   className="flex h-10 w-10 items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-slate-800"
                   aria-label="Reducir cantidad"
                 >
                   <Minus className="h-4 w-4" />
                 </button>
-                <span className="w-10 text-center text-base font-bold text-slate-900">{quantity}</span>
+                <span className="min-w-10 px-1 text-center text-base font-bold text-slate-900">{pack ? `${quantity / step} pack${quantity / step > 1 ? "s" : ""}` : quantity}</span>
                 <button
-                  onClick={() => setQuantity(quantity + 1)}
+                  onClick={() => setQuantity(quantity + step)}
                   className="flex h-10 w-10 items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-slate-800"
                   aria-label="Aumentar cantidad"
                 >

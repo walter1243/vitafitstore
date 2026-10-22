@@ -45,6 +45,10 @@ export type Personalize = {
   askLinks: boolean;
   // Frete gratis a partir de N unidades deste produto (0 = sem).
   freeShipQty: number;
+  // Forma de venda: por unidade ou so em pack (ex: 5 chaveiros por 8 €).
+  saleMode: 'unit' | 'pack';
+  packQty: number;
+  packPrice: number;
 };
 
 export const PERSONALIZE_FONTS: { key: PersonalizeFont; label: string; css: string }[] = [
@@ -80,6 +84,9 @@ export const DEFAULT_PERSONALIZE: Personalize = {
   askPhone: false,
   askLinks: false,
   freeShipQty: 0,
+  saleMode: 'unit',
+  packQty: 5,
+  packPrice: 0,
 };
 
 const clamp = (n: unknown, min: number, max: number, def: number) => {
@@ -120,6 +127,9 @@ export function parsePersonalize(raw: unknown): Personalize {
     askPhone: o.askPhone === true,
     askLinks: o.askLinks === true,
     freeShipQty: Math.round(clamp(o.freeShipQty, 0, 1000, 0)),
+    saleMode: o.saleMode === 'pack' ? 'pack' : 'unit',
+    packQty: Math.round(clamp(o.packQty, 2, 500, 5)),
+    packPrice: Math.round(clamp(o.packPrice, 0, 100000, 0) * 100) / 100,
     colors: Array.isArray(o.colors)
       ? (o.colors as { name?: unknown; hex?: unknown }[])
           .filter((c) => /^#[0-9a-fA-F]{6}$/.test(String(c?.hex)))
@@ -153,15 +163,36 @@ export const DEFAULT_NAME_COLORS = [
   { name: 'Naranja', hex: '#f97316' },
 ];
 
+// Venda em pack (vale pra qualquer produto, personalizado ou nao).
+export function packOf(personalizeRaw: unknown) {
+  const p = parsePersonalize(personalizeRaw);
+  return p.saleMode === 'pack' && p.packPrice > 0 ? { qty: p.packQty, price: p.packPrice } : null;
+}
+// Quantas unidades sobem/descem por clique (pack = de N em N).
+export function stepFor(personalizeRaw: unknown) {
+  return packOf(personalizeRaw)?.qty ?? 1;
+}
+
 // Preco unitario com a promocao (servidor e navegador usam a mesma conta).
 export function unitPriceFor(price: number, personalizeRaw: unknown, qty: number) {
+  const pack = packOf(personalizeRaw);
+  if (pack) return pack.price / pack.qty;
   const p = parsePersonalize(personalizeRaw);
   if (p.enabled && p.packPercent > 0 && qty >= Math.max(1, p.minQty)) {
     return Math.round(price * (1 - p.packPercent / 100) * 100) / 100;
   }
   return price;
 }
+// Total de uma quantidade (no pack: numero de packs × preco do pack, sem
+// erro de centavo).
+export function lineTotalFor(price: number, personalizeRaw: unknown, qty: number) {
+  const pack = packOf(personalizeRaw);
+  if (pack) return Math.round((qty / pack.qty) * pack.price * 100) / 100;
+  return Math.round(unitPriceFor(price, personalizeRaw, qty) * qty * 100) / 100;
+}
 export function minQtyFor(personalizeRaw: unknown) {
+  const pack = packOf(personalizeRaw);
+  if (pack) return pack.qty;
   const p = parsePersonalize(personalizeRaw);
   return p.enabled ? Math.max(1, p.minQty) : 1;
 }
@@ -172,4 +203,12 @@ export const LINK_TYPES = ['WhatsApp', 'Instagram', 'Bizum', 'Ubicación', 'Web'
 export function itemShipping(shipping: number | null | undefined, personalizeRaw: unknown, qty: number) {
   const n = parsePersonalize(personalizeRaw).freeShipQty;
   return n > 0 && qty >= n ? 0 : shipping;
+}
+
+// Texto do preco nos cards: "8,00€" ou, em pack, "8,00€ · pack 5".
+export function cardPrice(price: number, personalizeRaw: unknown) {
+  const pack = packOf(personalizeRaw);
+  if (!pack) return { main: `${price.toFixed(2)}€`, sub: '', off: 0 };
+  const full = price * pack.qty;
+  return { main: `${pack.price.toFixed(2)}€`, sub: `Pack ${pack.qty} uds`, off: full > pack.price ? Math.round((1 - pack.price / full) * 100) : 0 };
 }

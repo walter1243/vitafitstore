@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { PickupPoints, ShipOptionsList, loadMethod, loadZip, saveMethod, saveZip, type PickupPoint, type ShipMethod, type ShipQuote } from '@/components/shipping/shipping-options';
 import {
   ShieldCheck, Lock, Truck, RotateCcw,
   Package, ChevronRight, ChevronLeft,
@@ -225,8 +226,8 @@ const inputCls = [
 
 // ─── Order Summary ────────────────────────────────────────────────────────────
 
-function OrderSummary({ items, totalPrice, shipping, total }: {
-  items:any[]; totalPrice:number; shipping:number; total:number;
+function OrderSummary({ items, totalPrice, shipping, total, shipLabel }: {
+  items:any[]; totalPrice:number; shipping:number; total:number; shipLabel?:string;
 }) {
   const { lineTotal } = useCart();
   return (
@@ -272,7 +273,7 @@ function OrderSummary({ items, totalPrice, shipping, total }: {
             <span className="text-slate-900">€{totalPrice.toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-xs">
-            <span className="text-slate-500">Envío</span>
+            <span className="text-slate-500">Envío{shipLabel ? ` · ${shipLabel}` : ''}</span>
             {shipping===0
               ? <span className="text-orange-600 font-medium flex items-center gap-1"><Truck size={10}/> Gratis</span>
               : <span className="text-slate-900">€{shipping.toFixed(2)}</span>}
@@ -573,7 +574,11 @@ function CheckoutFormInner() {
 
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quoteError,   setQuoteError]   = useState('');
-  const [quote, setQuote] = useState<{ subtotal:number; shipping:number; total:number }|null>(null);
+  const [quote, setQuote] = useState<{ subtotal:number; shipping:number; total:number; method?:ShipMethod; options?:ShipQuote|null }|null>(null);
+  // Envio Packlink: ponto de recogida (padrao, mais barato) ou domicilio.
+  const [shipMethod, setShipMethod] = useState<ShipMethod>('pickup');
+  const [pickupPoint, setPickupPoint] = useState<PickupPoint | null>(null);
+  useEffect(() => { setShipMethod(loadMethod()); const z = loadZip(); if (z) setPostal((p) => p || z); }, []);
 
   const [errors,  setErrors]  = useState<Record<string,string>>({});
   const [success, setSuccess] = useState(false);
@@ -631,24 +636,32 @@ function CheckoutFormInner() {
         const res = await fetch('/api/checkout/quote', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items: checkoutItems, country, postalCode: postal }),
+          body: JSON.stringify({ items: checkoutItems, country, postalCode: postal, shippingMethod: shipMethod }),
           signal: ctrl.signal,
         });
         const data = await res.json();
         if (!res.ok) { setQuote(null); setQuoteError(data?.error ?? 'No se pudo calcular el checkout.'); return; }
         setQuoteError('');
-        setQuote({ subtotal:Number(data.subtotal??0), shipping:Number(data.shipping??0), total:Number(data.total??0) });
+        setQuote({ subtotal:Number(data.subtotal??0), shipping:Number(data.shipping??0), total:Number(data.total??0), method:data.shippingMethod, options:data.shippingOptions ?? null });
       } catch (err:any) {
         if (err?.name==='AbortError') return;
         setQuote(null); setQuoteError('No se pudo calcular el checkout.');
       } finally { setQuoteLoading(false); }
     }, 150);
     return () => { ctrl.abort(); clearTimeout(timer); };
-  }, [country, postal, items]);
+  }, [country, postal, items, shipMethod]);
 
   const shipping = quote?.shipping ?? 0;
   const total    = quote?.total    ?? totalPrice;
   const subtotal = quote?.subtotal ?? totalPrice;
+  const zip5 = postal.replace(/\D/g, '');
+  const shipOpts = quote?.options ?? null;
+  const activeMethod: ShipMethod = quote?.method ?? shipMethod;
+  const needsPoint = !!shipOpts && activeMethod === 'pickup' && !!shipOpts.pickup;
+  const shipLabel = shipOpts ? (activeMethod === 'pickup' ? 'Recoger en punto' : 'A domicilio') : '';
+  function chooseMethod(m: ShipMethod) { setShipMethod(m); saveMethod(m); }
+  // O ponto so vale pro CP e servico de agora.
+  useEffect(() => { setPickupPoint(null); }, [zip5, shipOpts?.pickup?.serviceId]);
 
   function validateStep1() {
     const e: Record<string,string> = {};
@@ -657,6 +670,7 @@ function CheckoutFormInner() {
     if (!street.trim()) e.street = 'Dirección obligatoria';
     if (!postal.trim()) e.postal = 'Código postal obligatorio';
     if (!city.trim())   e.city   = 'Ciudad obligatoria';
+    if (needsPoint && !pickupPoint) e.point = 'Elige el punto de recogida';
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -678,6 +692,8 @@ function CheckoutFormInner() {
           customerPhone: phone.trim(),
           addressLine:   `${street.trim()} ${streetN.trim()}`.trim(),
           city:          city.trim(),
+          shippingMethod: activeMethod,
+          pickupPoint:    needsPoint ? pickupPoint : null,
         }),
       });
       const data = await res.json();
@@ -766,7 +782,7 @@ function CheckoutFormInner() {
         <div className="grid grid-cols-2 gap-3">
           <Field label="Código Postal *" error={errors.postal}>
             <input className={inputCls} placeholder="28001" value={postal}
-              inputMode="numeric" onChange={e => setPostal(e.target.value)}
+              inputMode="numeric" onChange={e => { setPostal(e.target.value); const z = e.target.value.replace(/\D/g, ''); if (z.length === 5) saveZip(z); }}
               style={errors.postal?{borderColor:'#f87171'}:{}} />
           </Field>
           <Field label="Ciudad *" error={errors.city}>
@@ -785,6 +801,30 @@ function CheckoutFormInner() {
           </select>
         </Field>
       </div>
+
+      {country === 'ES' && (
+        <div className="rounded-[28px] p-5 sm:p-6 space-y-3"
+          style={{ background:'#FFFFFF', border:'none', boxShadow:'0 6px 24px rgba(35,38,63,0.06)' }}>
+          <div className="flex items-center gap-2">
+            <Truck size={18} className="text-[#c2410c]" />
+            <p className="font-kids text-xl font-bold text-[#23263f]">¿Cómo lo recibes?</p>
+          </div>
+          {zip5.length !== 5 ? (
+            <p className="text-sm text-slate-500">Escribe tu código postal para ver las opciones de envío.</p>
+          ) : (
+            <>
+              <ShipOptionsList quote={shipOpts} method={activeMethod} onMethod={chooseMethod} loading={quoteLoading} />
+              {needsPoint && shipOpts?.pickup && (
+                <div>
+                  <p className="mt-2 text-sm font-bold text-[#23263f]">Elige tu punto de recogida</p>
+                  <PickupPoints serviceId={shipOpts.pickup.serviceId} zip={zip5} value={pickupPoint} onChange={setPickupPoint} />
+                  {errors.point && <p className="mt-1 text-xs font-semibold text-red-600">{errors.point}</p>}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {intentError && (
         <div className="rounded-xl px-4 py-3 text-sm text-red-600 flex items-center gap-2"
@@ -864,7 +904,7 @@ function CheckoutFormInner() {
             {step===1 ? step1 : step2}
           </div>
           <div className="lg:sticky lg:top-8 lg:self-start">
-            <OrderSummary items={items} totalPrice={subtotal} shipping={shipping} total={total} />
+            <OrderSummary items={items} totalPrice={subtotal} shipping={shipping} total={total} shipLabel={shipLabel} />
             {quoteLoading && <p className="mt-2 text-center text-xs text-slate-500">Actualizando total...</p>}
           </div>
         </div>

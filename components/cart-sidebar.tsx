@@ -1,6 +1,7 @@
 "use client"
+import { ShipOptionsList, SAMPLE_ZIP, loadMethod, loadZip, saveMethod, useShipQuote, type ShipMethod } from '@/components/shipping/shipping-options'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Minus, Plus, Trash2, ShoppingBag, Truck, X, ShieldCheck, Lock, Gift } from 'lucide-react'
@@ -24,7 +25,15 @@ export function CartSidebar() {
   const hasFreeShipping = totalPrice >= FREE_SHIPPING
   // Mesma regra do checkout: maior frete entre os produtos (ou a tabela padrao).
   const qtyOf = (id: number) => items.reduce((n, it) => n + (it.product.id === id ? it.quantity : 0), 0)
-  const shipping = resolveShipping(totalPrice, 'ES', items.map((i) => itemShipping(i.product.shippingCost, i.product.personalize, qtyOf(i.product.id))))
+  const fallbackShipping = resolveShipping(totalPrice, 'ES', items.map((i) => itemShipping(i.product.shippingCost, i.product.personalize, qtyOf(i.product.id))))
+  // Frete da Packlink pro CP e metodo guardados (ou CP de referencia).
+  const [zip, setZip] = useState('')
+  const [method, setMethod] = useState<ShipMethod>('pickup')
+  useEffect(() => { if (isCartOpen) { setZip(loadZip()); setMethod(loadMethod()) } }, [isCartOpen])
+  const shipItems = isCartOpen ? items.map((i) => ({ productId: i.product.id, quantity: i.quantity })) : []
+  const { quote, loading: shipLoading } = useShipQuote(shipItems, zip.length === 5 ? zip : SAMPLE_ZIP)
+  const chosen = quote ? (quote[method] ?? quote.pickup ?? quote.home) : null
+  const shipping = chosen ? chosen.charged : fallbackShipping
   const total = totalPrice + shipping
   const remaining = FREE_SHIPPING - totalPrice
   const progress = Math.min(100, (totalPrice / FREE_SHIPPING) * 100)
@@ -206,9 +215,15 @@ export function CartSidebar() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-[#565a78]">Envío</span>
-                  <span className={hasFreeShipping ? 'font-extrabold text-[#15803d]' : 'font-semibold text-[#23263f]'}>
-                    {hasFreeShipping ? 'Gratis' : `${shipping.toFixed(2)}€`}
+                  <span className={hasFreeShipping || shipping === 0 ? 'font-extrabold text-[#15803d]' : 'font-semibold text-[#23263f]'}>
+                    {hasFreeShipping || shipping === 0 ? 'Gratis' : `${shipping.toFixed(2)}€`}
                   </span>
+                </div>
+                <div className="pt-1">
+                  <ShipOptionsList quote={quote} method={chosen?.type ?? method} onMethod={(m) => { setMethod(m); saveMethod(m) }} loading={shipLoading} />
+                  <p className="mt-1 text-[11px] text-[#565a78]">
+                    {zip.length === 5 ? `Precio para ${zip}.` : `Precio de referencia (${SAMPLE_ZIP}). El final se calcula con tu código postal en el pago.`}
+                  </p>
                 </div>
                 <div className="flex items-baseline justify-between pt-2">
                   <span className="font-kids text-xl font-bold text-[#23263f]">Total</span>
