@@ -19,7 +19,7 @@ import {
   ArrowUp, ArrowDown, Monitor, Zap, ToggleLeft, ToggleRight,
   MessageCircle, Mail, Globe, RefreshCw, LogOut,
   Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  List, ListOrdered, Undo2, Redo2, Star, LayoutGrid,
+  List, ListOrdered, Undo2, Redo2, Star, LayoutGrid, Calculator, Image as ImageIcon,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -120,6 +120,20 @@ const SECTION_LABELS: Record<Section, string> = {
   'import-supplier': 'Importar Produtos',
   reviews: 'Avaliações',
 };
+
+// Cadastro de produto: todos os blocos com o mesmo cartao e o mesmo cabecalho.
+const CARD = 'rounded-2xl border border-white/10 bg-[#0f1117] p-5';
+function SectionHead({ icon, title, sub }: { icon: React.ReactNode; title: string; sub?: string }) {
+  return (
+    <div className="mb-4 flex items-start gap-3">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-green-500/10 text-green-400">{icon}</span>
+      <div className="min-w-0">
+        <h3 className="text-sm font-semibold text-white">{title}</h3>
+        {sub && <p className="mt-0.5 text-xs text-white/50">{sub}</p>}
+      </div>
+    </div>
+  );
+}
 
 function ProductsSection({ products, showForm, saving, form, image, additionalImages, desc, upsellIds,
   onToggleForm, onFormChange, onImageChange, onAdditionalImagesChange, onDescChange, onUpsellChange, onSubmit, onDelete, onMove, onSetCategoryCover,
@@ -605,7 +619,6 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
     { k: 'name', label: 'Nome do produto *', ph: 'Ex: Cesta de Navidad Premium', type: 'text' },
     { k: 'price', label: 'Preço (€) *', ph: '29.99', type: 'number' },
     { k: 'stock', label: 'Estoque (un.)', ph: '100', type: 'number' },
-    { k: 'shippingCost', label: 'Frete (€)', ph: 'Vazio = tabela padrão', type: 'number' },
   ];
 
   const visibleAdditionalImages = additionalImages.slice(0, 10);
@@ -696,12 +709,79 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                 )}
               </div>
             )}
-            <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-              <section className="rounded-2xl border border-white/10 bg-[#0f1117] p-5 shadow-none">
-                <div className="mb-4 flex items-center gap-2">
-                  <Package size={16} className="text-green-500" />
-                  <h3 className="text-sm font-semibold text-white">Informações básicas</h3>
+            {/* 1) Foto + dados principais */}
+            <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,380px)_1fr]">
+              <section className={CARD}>
+                <SectionHead icon={<ImageIcon size={16} />} title="Foto principal" sub="Arraste, clique ou cole com Ctrl+V." />
+                <div ref={mainHover.ref}>
+                <div
+                  ref={dropRef}
+                  tabIndex={0}
+                  onPaste={handleUploadPaste}
+                  onDragOver={e => { e.preventDefault(); setDrag(true); }}
+                  onDragLeave={() => setDrag(false)}
+                  onDrop={handleDrop}
+                  className={`relative flex min-h-[280px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed p-5 text-center transition-colors focus:outline-none focus:ring-2 focus:ring-green-500/40 ${
+                    drag ? 'border-green-500 bg-white/5' : 'border-white/10 bg-[#1c2236] hover:bg-white/5'
+                  }`}
+                >
+                  <input
+                    ref={mainFileRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/avif"
+                    className="absolute inset-0 cursor-pointer opacity-0"
+                    onChange={e => handleMainFile(e.target.files?.[0] ?? null)}
+                  />
+                  {mainUploadBusy ? (
+                    <div className="flex flex-col items-center gap-3 text-white/60">
+                      <span className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-green-500" />
+                      Processando imagem...
+                    </div>
+                  ) : image ? (
+                    <div className="relative w-full">
+                      <div className="relative mx-auto aspect-square max-h-[320px] w-full overflow-hidden rounded-2xl border border-white/10 bg-[#0f1117]">
+                        <img src={image} alt="Preview do produto" className="h-full w-full object-contain" />
+                      </div>
+                      <div className="mt-3 flex flex-col items-start gap-2 rounded-xl border border-white/10 bg-white/5 p-3 text-left">
+                        <div className="text-sm font-medium text-white">{mainFileInfo?.name ?? 'Imagem selecionada'}</div>
+                        <div className="text-xs text-white/50">
+                          {mainFileInfo ? `${Math.max(1, Math.round(mainFileInfo.size / 1024))} KB` : 'Preview carregado'}
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => mainFileRef.current?.click()}
+                            className="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700"
+                          >
+                            Trocar imagem
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { onImageChange(null); setMainFileInfo(null); }}
+                            className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-semibold text-white/70 hover:bg-white/5"
+                          >
+                            Remover imagem
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-3 text-white/60">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/5 text-green-500">
+                        <Upload size={22} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-white">Arraste, clique ou cole a imagem</p>
+                        <p className="mt-1 text-xs text-white/45">JPG, PNG, WebP e AVIF. Tamanho mínimo recomendado: 1200px.</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
+                </div>
+              </section>
+
+              <section className={CARD}>
+                <SectionHead icon={<Package size={16} />} title="Informações básicas" sub="Nome, preço e como o produto é vendido." />
                 <div className="grid gap-4 sm:grid-cols-2">
                   {fields.map(field => (
                     <div key={field.k} className={field.k === 'name' ? 'sm:col-span-2' : ''}>
@@ -716,39 +796,89 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                       />
                     </div>
                   ))}
-
-                  {/* Categoria/coleção: escolhidas no bloco "Onde aparece no site" (abaixo). */}
-                  <SaleModeFields value={form.personalize} onChange={(json) => onFormChange('personalize', json)} unitPrice={form.price} />
-                  <ParcelFields value={form.parcel} onChange={(json) => onFormChange('parcel', json)} />
-
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-white/50">Tipo de produto</label>
                     <select
                       value={productType}
                       onChange={e => onProductTypeChange(e.target.value as 'estandar' | 'ropa' | 'calzado')}
-                      className="w-full rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                      className="w-full rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
                     >
                       <option value="estandar">Padrão (sem tamanhos)</option>
                       <option value="ropa">Roupa</option>
                       <option value="calzado">Calçado</option>
                     </select>
-                    <p className="mt-1 text-[11px] text-white/35">Define se aparece seletor de tamanho + guia de tallas na página do cliente.</p>
                   </div>
+                  <SaleModeFields value={form.personalize} onChange={(json) => onFormChange('personalize', json)} unitPrice={form.price} />
+                </div>
+              </section>
+            </div>
 
-                  <div>
-                    <label className="mb-1.5 block text-xs font-medium text-white/50">Preço formatado</label>
-                    <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white/70">
-                      €{(Number(form.price || 0) || 0).toFixed(2)}
+              {productType !== 'estandar' && (
+                <section className={CARD}>
+                  <div className="mb-4 flex items-center gap-2">
+                    <Package size={16} className="text-green-500" />
+                    <h3 className="text-sm font-semibold text-white">Tamanhos disponíveis</h3>
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newSizeInput}
+                      onChange={e => setNewSizeInput(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSize())}
+                      placeholder={productType === 'calzado' ? 'Ex: 40' : 'Ex: M ou 40'}
+                      className="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                    />
+                    <button
+                      type="button"
+                      onClick={addSize}
+                      className="shrink-0 rounded-xl bg-green-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-green-700"
+                    >
+                      Adicionar
+                    </button>
+                  </div>
+                  {sizes.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {sizes.map(s => (
+                        <span key={s} className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-white">
+                          {s}
+                          <button type="button" onClick={() => removeSize(s)} className="text-white/40 hover:text-red-400" aria-label={`Remover ${s}`}>
+                            <X size={12} />
+                          </button>
+                        </span>
+                      ))}
                     </div>
-                  </div>
+                  )}
+                  <p className="mt-2 text-[11px] text-white/35">Essas tallas aparecem como seletor na página do cliente, com o guia de tallas correspondente ({productType === 'ropa' ? 'roupa' : 'calçado'}).</p>
+                </section>
+              )}
 
-                  <div className="sm:col-span-2 rounded-2xl border border-white/10 bg-[#161b28] p-4">
-                    <div className="mb-3 flex items-center justify-between gap-3">
-                      <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/55">Precificação inteligente</h4>
+            {/* 2) Envio + precificacao */}
+            <div className="grid items-start gap-5 lg:grid-cols-2">
+              <section className={CARD}>
+                <SectionHead icon={<Truck size={16} />} title="Envio" sub="Na Espanha a Packlink calcula o frete pela caixa." />
+                <div className="space-y-4">
+                  <ParcelFields value={form.parcel} onChange={(json) => onFormChange('parcel', json)} />
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-white/50">Frete fixo fora da Espanha (€)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={form.shippingCost}
+                      onChange={e => onFormChange('shippingCost', e.target.value)}
+                      placeholder="Vazio = tabela padrão"
+                      className="w-full rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                    />
+                  </div>
+                </div>
+              </section>
+
+              <section className={CARD}>
+                    <div className="flex items-start justify-between gap-3">
+                      <SectionHead icon={<Calculator size={16} />} title="Precificação inteligente" sub="Custos, preço sugerido e margem real." />
                       {pricingLoading && <span className="text-[11px] text-white/45">Calculando...</span>}
                     </div>
 
-                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                    <div className="grid gap-3 sm:grid-cols-3">
                       <div>
                         <label className="mb-1 block text-[11px] font-medium text-white/50">Custo do fornecedor (€)</label>
                         <input
@@ -853,123 +983,20 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                         </div>
                       </div>
                     )}
-                  </div>
-                </div>
               </section>
+            </div>
 
-              {productType !== 'estandar' && (
-                <section className="rounded-2xl border border-white/10 bg-[#0f1117] p-5 shadow-none">
-                  <div className="mb-4 flex items-center gap-2">
-                    <Package size={16} className="text-green-500" />
-                    <h3 className="text-sm font-semibold text-white">Tamanhos disponíveis</h3>
-                  </div>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={newSizeInput}
-                      onChange={e => setNewSizeInput(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSize())}
-                      placeholder={productType === 'calzado' ? 'Ex: 40' : 'Ex: M ou 40'}
-                      className="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
-                    />
-                    <button
-                      type="button"
-                      onClick={addSize}
-                      className="shrink-0 rounded-xl bg-green-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-green-700"
-                    >
-                      Adicionar
-                    </button>
-                  </div>
-                  {sizes.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {sizes.map(s => (
-                        <span key={s} className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-white">
-                          {s}
-                          <button type="button" onClick={() => removeSize(s)} className="text-white/40 hover:text-red-400" aria-label={`Remover ${s}`}>
-                            <X size={12} />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  <p className="mt-2 text-[11px] text-white/35">Essas tallas aparecem como seletor na página do cliente, com o guia de tallas correspondente ({productType === 'ropa' ? 'roupa' : 'calçado'}).</p>
-                </section>
-              )}
+            {/* 3) Onde aparece no site */}
+            <ProductPlacement value={form.collectionSlug} onChange={(slug, name) => { onFormChange('collectionSlug', slug); onFormChange('category', slug && name ? name : form.category); }} category={form.category} onCategory={(name) => onFormChange('category', name)} />
 
-              <section className="rounded-2xl border border-white/10 bg-[#0f1117] p-5 shadow-none">
-                <div className="mb-4 flex items-center gap-2">
-                  <Package size={16} className="text-green-500" />
-                  <h3 className="text-sm font-semibold text-white">Cores (opcional)</h3>
-                  <span className="ml-auto text-xs text-white/45">Máximo 5</span>
-                </div>
-                <p className="mb-3 text-[11px] text-white/40">
-                  Escolha a cor no seletor — se você também subir uma foto, ela substitui a imagem principal quando o cliente clicar na cor. Sem foto, aparece só a bolinha colorida.
-                </p>
-                <div className="grid gap-2 sm:grid-cols-[auto_1fr_1fr_auto]">
-                  <input
-                    type="color"
-                    value={newColorHex}
-                    onChange={e => setNewColorHex(e.target.value)}
-                    title="Escolher cor"
-                    className="h-[42px] w-14 cursor-pointer rounded-xl border border-white/10 bg-[#1c2236] p-1"
-                  />
-                  <input
-                    type="text"
-                    value={newColorLabel}
-                    onChange={e => setNewColorLabel(e.target.value)}
-                    placeholder="Nome da cor (ex: Preto)"
-                    className="rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
-                  />
-                  <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-white/15 bg-white/[0.02] px-3 py-2.5 text-xs text-white/60 hover:border-white/25">
-                    <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" className="hidden" onChange={e => readColorImageFile(e.target.files?.[0] ?? null)} />
-                    {newColorImage ? 'Foto selecionada ✓' : 'Foto (opcional)'}
-                  </label>
-                  <button
-                    type="button"
-                    onClick={addColorOption}
-                    disabled={!newColorLabel.trim() || colorOptions.length >= 5}
-                    className="rounded-xl bg-green-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-40"
-                  >
-                    Adicionar
-                  </button>
-                </div>
-                {colorOptions.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-3">
-                    {colorOptions.map(c => (
-                      <div key={c.label} className="relative overflow-hidden rounded-xl border border-white/10">
-                        {c.image ? (
-                          <img src={c.image} alt={c.label} className="h-16 w-16 object-cover" />
-                        ) : (
-                          <div className="h-16 w-16" style={{ background: c.hex || '#c2410c' }} />
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => removeColorOption(c.label)}
-                          className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-white hover:bg-red-500"
-                          aria-label={`Remover ${c.label}`}
-                        >
-                          <X size={10} />
-                        </button>
-                        <span className="absolute inset-x-0 bottom-0 bg-black/60 px-1 py-0.5 text-center text-[9px] text-white">{c.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </section>
-
-              {/* Onde o produto aparece (setor → colecao → categoria) e personalizacao com nome. */}
-              <ProductPlacement value={form.collectionSlug} onChange={(slug, name) => { onFormChange('collectionSlug', slug); onFormChange('category', slug && name ? name : form.category); }} category={form.category} onCategory={(name) => onFormChange('category', name)} />
+            {/* 4) Extras: personalizacao com nome e amostra interativa */}
+            <div className="grid items-start gap-5 lg:grid-cols-2">
               <PersonalizeEditor value={form.personalize} onChange={(json) => onFormChange('personalize', json)} productImage={image} />
-
               {/* Amostra gratis interativa: brincadeira na pagina do produto que
                   termina oferecendo o produto (ver components/kids/product-demo.tsx). */}
-              <section className="rounded-2xl border border-white/10 bg-[#0f1117] p-5 shadow-none">
-                <div className="mb-1 flex items-center gap-2">
-                  <Star size={16} className="text-green-500" />
-                  <h3 className="text-sm font-semibold text-white">Amostra grátis interativa</h3>
-                </div>
-                <p className="mb-4 text-xs text-white/50">A criança brinca com o produto na página dele e, no fim, o site pergunta se quer adicionar ao carrinho.</p>
-                <div className="mb-4 grid gap-2 sm:grid-cols-4">
+              <section className={CARD}>
+                <SectionHead icon={<Star size={16} />} title="Amostra grátis interativa" sub="A criança brinca na página do produto e o site oferece o produto no fim." />
+                <div className="mb-4 grid grid-cols-2 gap-2">
                   {([
                     { key: 'none', label: 'Nenhuma' },
                     { key: 'rompecabezas', label: 'Montar (quebra-cabeça)' },
@@ -997,79 +1024,6 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                     kind="image"
                   />
                 )}
-              </section>
-
-              <section className="rounded-2xl border border-white/10 bg-[#0f1117] p-5 shadow-none">
-                <div className="mb-4 flex items-center gap-2">
-                  <Upload size={16} className="text-green-500" />
-                  <h3 className="text-sm font-semibold text-white">Imagem principal do produto</h3>
-                </div>
-                <div ref={mainHover.ref}>
-                <div
-                  ref={dropRef}
-                  tabIndex={0}
-                  onPaste={handleUploadPaste}
-                  onDragOver={e => { e.preventDefault(); setDrag(true); }}
-                  onDragLeave={() => setDrag(false)}
-                  onDrop={handleDrop}
-                  className={`relative flex min-h-[300px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed p-5 text-center transition-colors focus:outline-none focus:ring-2 focus:ring-green-500/40 ${
-                    drag ? 'border-green-500 bg-white/5' : 'border-white/10 bg-[#1c2236] hover:bg-white/5'
-                  }`}
-                >
-                  <input
-                    ref={mainFileRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/avif"
-                    className="absolute inset-0 cursor-pointer opacity-0"
-                    onChange={e => handleMainFile(e.target.files?.[0] ?? null)}
-                  />
-                  {mainUploadBusy ? (
-                    <div className="flex flex-col items-center gap-3 text-white/60">
-                      <span className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-green-500" />
-                      Processando imagem...
-                    </div>
-                  ) : image ? (
-                    <div className="relative w-full">
-                      <div className="relative mx-auto aspect-[4/3] max-h-[360px] w-full overflow-hidden rounded-2xl border border-white/10 bg-[#0f1117]">
-                        <img src={image} alt="Preview do produto" className="h-full w-full object-cover" />
-                      </div>
-                      <div className="mt-3 flex flex-col items-start gap-2 rounded-xl border border-white/10 bg-white/5 p-3 text-left">
-                        <div className="text-sm font-medium text-white">{mainFileInfo?.name ?? 'Imagem selecionada'}</div>
-                        <div className="text-xs text-white/50">
-                          {mainFileInfo ? `${Math.max(1, Math.round(mainFileInfo.size / 1024))} KB` : 'Preview carregado'}
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => mainFileRef.current?.click()}
-                            className="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700"
-                          >
-                            Trocar imagem
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => { onImageChange(null); setMainFileInfo(null); }}
-                            className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-semibold text-white/70 hover:bg-white/5"
-                          >
-                            Remover imagem
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center gap-3 text-white/60">
-                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/5 text-green-500">
-                        <Upload size={22} />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-white">Arraste, clique ou cole a imagem</p>
-                        <p className="mt-1 text-xs text-white/45">JPG, PNG, WebP e AVIF. Tamanho mínimo recomendado: 1200px.</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                </div>
-                <p className="mt-3 text-xs text-white/45">Copie a imagem e aperte <strong className="text-white/70">Ctrl+V</strong> com o mouse em cima — não precisa clicar. Também dá para arrastar.</p>
               </section>
             </div>
 

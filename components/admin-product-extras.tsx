@@ -51,13 +51,13 @@ export function ProductPlacement({ value, onChange, category, onCategory }: {
 
   return (
     <section className={card}>
-      <div className="mb-1 flex items-center gap-2">
-        <LayoutGrid size={16} className="text-green-500" />
-        <h3 className="text-sm font-semibold text-white">Onde aparece no site *</h3>
+      <div className="mb-4 flex items-start gap-3">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-green-500/10 text-green-400"><LayoutGrid size={16} /></span>
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold text-white">Onde aparece no site *</h3>
+          <p className="mt-0.5 text-xs text-white/50">Setor → coleção → categoria. Novos setores e coleções ficam em “Setores e coleções”.</p>
+        </div>
       </div>
-      <p className="mb-4 text-xs text-white/50">
-        Escolha o setor (Infantil, Casa, Chaveiros, Pet…) e a coleção. O produto aparece nessa coleção, no visual daquele setor. Setores e coleções novos são criados em “Setores e coleções”.
-      </p>
 
       <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/40">1. Setor</p>
       <div className="mb-4 grid gap-2 sm:grid-cols-3">
@@ -198,13 +198,13 @@ export function PersonalizeEditor({ value, onChange, productImage }: { value: st
 
   return (
     <section className={card}>
-      <div className="mb-1 flex items-center gap-2">
-        <PenLine size={16} className="text-green-500" />
-        <h3 className="text-sm font-semibold text-white">Personalização com nome</h3>
+      <div className="mb-4 flex items-start gap-3">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-green-500/10 text-green-400"><PenLine size={16} /></span>
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold text-white">Personalização com nome</h3>
+          <p className="mt-0.5 text-xs text-white/50">O cliente escreve o nome e vê na foto. O nome chega no pedido.</p>
+        </div>
       </div>
-      <p className="mb-4 text-xs text-white/50">
-        Serve para qualquer produto (chaveiro, placa, quadro, caneca…): o cliente escreve o nome que quiser, vê na hora no lugar que você marcar na foto, escolhe a quantidade e adiciona. O nome chega no pedido para você imprimir.
-      </p>
 
       <label className="mb-4 flex items-center gap-2 text-sm text-white/80">
         <input type="checkbox" checked={cfg.enabled} onChange={(e) => toggle(e.target.checked)} /> Este produto aceita nome personalizado
@@ -545,14 +545,16 @@ export function SaleModeFields({ value, onChange, unitPrice }: { value: string; 
   const full = unit * cfg.packQty;
   const off = cfg.packPrice > 0 && full > cfg.packPrice ? Math.round((1 - cfg.packPrice / full) * 100) : 0;
   return (
-    <div className="sm:col-span-2 rounded-xl border border-white/10 bg-white/[0.02] p-3">
-      <label className="mb-1.5 block text-xs font-medium text-white/50">Forma de venda</label>
-      <select className={inp} value={cfg.saleMode} onChange={(e) => set({ saleMode: e.target.value === 'pack' ? 'pack' : 'unit' })}>
-        <option value="unit">Por unidade</option>
-        <option value="pack">Só em pack (ex: 5 unidades por um preço)</option>
-      </select>
+    <>
+      <div>
+        <label className="mb-1.5 block text-xs font-medium text-white/50">Forma de venda</label>
+        <select className={inp} value={cfg.saleMode} onChange={(e) => set({ saleMode: e.target.value === 'pack' ? 'pack' : 'unit' })}>
+          <option value="unit">Por unidade</option>
+          <option value="pack">Só em pack</option>
+        </select>
+      </div>
       {cfg.saleMode === 'pack' && (
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 rounded-xl border border-green-500/20 bg-green-500/[0.04] p-3 sm:col-span-2 sm:grid-cols-2">
           <label className="block text-xs text-white/60">
             Quantidade no pack
             <input type="number" min={2} max={500} className={`${inp} mt-1`} value={cfg.packQty} onChange={(e) => set({ packQty: Number(e.target.value) })} />
@@ -569,7 +571,7 @@ export function SaleModeFields({ value, onChange, unitPrice }: { value: string; 
           </p>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
@@ -586,15 +588,15 @@ export function ParcelFields({ value, onChange }: { value: string; onChange: (js
     </label>
   );
   return (
-    <div className="sm:col-span-2 rounded-xl border border-white/10 bg-white/[0.02] p-3">
-      <label className="mb-1.5 block text-xs font-medium text-white/50">Caixa de envio (Packlink calcula o frete por ela)</label>
+    <div>
+      <label className="mb-1.5 block text-xs font-medium text-white/50">Caixa de envio (uma unidade embalada)</label>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {f('weight', 'Peso (kg)', '0.3')}
         {f('length', 'Comprimento (cm)', '20')}
         {f('width', 'Largura (cm)', '15')}
         {f('height', 'Altura (cm)', '10')}
       </div>
-      <p className="mt-1.5 text-[11px] text-white/45">Medidas de UMA unidade já embalada. Vazio = caixa pequena padrão (0,3 kg · 20×15×10).</p>
+      <p className="mt-1.5 text-[11px] text-white/45">Vazio = caixa pequena padrão (0,3 kg · 20×15×10 cm).</p>
     </div>
   );
 }
