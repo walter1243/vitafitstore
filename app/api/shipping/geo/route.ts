@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// GET ?lat=&lon= → { zip, city } a partir da localizacao do cliente
-// ("Usar mi ubicación" no frete). Usa o geocodificador do OpenStreetMap
+// GET ?lat=&lon= → { zip, city, street, number } a partir da localizacao do
+// cliente ("Usar mi ubicación" no frete e no endereco do checkout). Usa o geocodificador do OpenStreetMap
 // (Nominatim), que pede um User-Agent identificando o site.
 export async function GET(req: NextRequest) {
   const lat = Number(req.nextUrl.searchParams.get('lat'));
@@ -17,7 +17,13 @@ export async function GET(req: NextRequest) {
     const a = d?.address ?? {};
     const zip = String(a.postcode ?? '').replace(/\D/g, '').slice(0, 5);
     if (zip.length !== 5) return NextResponse.json({ error: 'No encontramos tu código postal.' }, { status: 404 });
-    return NextResponse.json({ zip, city: a.city || a.town || a.village || a.municipality || '' });
+    return NextResponse.json({
+      zip,
+      city: a.city || a.town || a.village || a.municipality || '',
+      street: a.road || a.pedestrian || a.footway || a.square || '',
+      number: String(a.house_number ?? '').slice(0, 10),
+      country: String(a.country_code ?? '').toUpperCase(),
+    });
   } catch {
     return NextResponse.json({ error: 'No pudimos obtener tu ubicación.' }, { status: 502 });
   }

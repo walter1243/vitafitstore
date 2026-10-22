@@ -4,7 +4,7 @@ import { PickupPoints, ShipOptionsList, loadMethod, loadZip, saveMethod, saveZip
 import {
   ShieldCheck, Lock, Truck, RotateCcw,
   Package, ChevronRight, ChevronLeft,
-  Loader2, User, MapPin,
+  Loader2, User, MapPin, LocateFixed,
 } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 import { packOf, qtyLabel } from '@/lib/personalize';
@@ -571,6 +571,30 @@ function CheckoutFormInner() {
   const [streetN, setStreetN] = useState('');
   const [postal,  setPostal]  = useState('');
   const [city,    setCity]    = useState('');
+  // "Usar mi ubicación": rua, numero, CP e cidade a partir do GPS.
+  const [locating, setLocating] = useState(false);
+  const [geoMsg, setGeoMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  function fillFromLocation() {
+    setGeoMsg(null);
+    if (!navigator.geolocation) { setGeoMsg({ ok: false, text: 'Tu navegador no permite ubicación. Escribe la dirección.' }); return; }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      try {
+        const r = await fetch(`/api/shipping/geo?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
+        const d = await r.json();
+        if (!r.ok || !d?.zip) throw new Error(d?.error || 'No encontramos tu dirección.');
+        if (d.street) setStreet(d.street);
+        if (d.number) setStreetN(d.number);
+        setPostal(d.zip); saveZip(d.zip);
+        if (d.city) setCity(d.city);
+        if (d.country && ['ES', 'PT', 'FR', 'DE', 'BR'].includes(d.country)) setCountry(d.country);
+        setErrors({});
+        setGeoMsg({ ok: true, text: d.number ? 'Dirección rellenada. Revisa que esté bien.' : 'Dirección rellenada. Añade el número y el piso.' });
+      } catch (e: any) {
+        setGeoMsg({ ok: false, text: e?.message || 'No encontramos tu dirección.' });
+      } finally { setLocating(false); }
+    }, () => { setLocating(false); setGeoMsg({ ok: false, text: 'Permite la ubicación o escribe la dirección.' }); }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 });
+  }
   const [country, setCountry] = useState('ES');
 
   const [quoteLoading, setQuoteLoading] = useState(false);
@@ -768,6 +792,17 @@ function CheckoutFormInner() {
           <MapPin size={18} className="text-[#c2410c]" />
           <p className="font-kids text-xl font-bold text-[#23263f]">¿Dónde lo enviamos?</p>
         </div>
+        {/* Usa o GPS do celular pra preencher rua, numero, CP e cidade. */}
+        <button
+          type="button"
+          onClick={fillFromLocation}
+          disabled={locating}
+          className="flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#c2410c]/40 bg-orange-50/60 px-4 text-sm font-bold text-[#9a3412] transition-colors hover:border-[#c2410c] hover:bg-orange-50 disabled:cursor-wait disabled:opacity-60"
+        >
+          {locating ? <Loader2 size={16} className="animate-spin" /> : <LocateFixed size={16} />}
+          {locating ? 'Buscando tu dirección…' : 'Usar mi ubicación para rellenar la dirección'}
+        </button>
+        {geoMsg && <p className={`-mt-2 text-xs font-medium ${geoMsg.ok ? 'text-emerald-700' : 'text-red-600'}`}>{geoMsg.text}</p>}
         <div className="grid grid-cols-3 gap-3">
           <div className="col-span-2">
             <Field label="Calle / Dirección *" error={errors.street}>
