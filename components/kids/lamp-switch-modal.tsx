@@ -31,13 +31,15 @@ const PROJECTIONS: { kind: keyof typeof SHAPES; x: number; y: number; s: number 
 // quarto aparece apagada e um interruptor de parede acende a lampada
 // foguete: a foto ganha luz e um brilho quente pulsa em volta.
 // `photo`/`product`: amostra de um produto (foto dele aceso; oferece ele).
-export function LampSwitchModal({ open, onOpenChange, slug, photo, product }: {
+// `stars`: false = so acende a foto (abajur sem projecao).
+export function LampSwitchModal({ open, onOpenChange, slug, photo, product, stars = true }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   collectionHref?: string;
   slug?: string;
   photo?: string;
   product?: Product;
+  stars?: boolean;
 }) {
   const [on, setOn] = useState(false);
 
@@ -78,7 +80,7 @@ export function LampSwitchModal({ open, onOpenChange, slug, photo, product }: {
             />
             {/* Formas projetadas na parede ao acender: estrelas, lua e
                 planetas surgem uma a uma e ficam piscando devagar. */}
-            <svg viewBox="0 0 100 75" preserveAspectRatio="none" className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true">
+            {stars && <svg viewBox="0 0 100 75" preserveAspectRatio="none" className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true">
               {PROJECTIONS.map((p, i) => (
                 <g
                   key={i}
@@ -93,7 +95,7 @@ export function LampSwitchModal({ open, onOpenChange, slug, photo, product }: {
                   <path d={SHAPES[p.kind]} fill="#FFD9A0" />
                 </g>
               ))}
-            </svg>
+            </svg>}
           </div>
         </div>
 

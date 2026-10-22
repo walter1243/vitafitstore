@@ -40,7 +40,7 @@ export interface Product {
   // Frete proprio (Admin → Produtos); null = tabela padrao.
   shippingCost?: number | null
   // Amostra interativa (Admin → Produtos): montar, pintar ou acender.
-  demoType?: 'none' | 'rompecabezas' | 'colorear' | 'encender'
+  demoType?: 'none' | 'rompecabezas' | 'colorear' | 'encender' | 'encender_simple'
   demoImage?: string
   // Colecao escolhida no cadastro (vazio = pela categoria) e personalizacao com nome.
   collectionSlug?: string

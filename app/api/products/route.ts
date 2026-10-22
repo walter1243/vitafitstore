@@ -56,7 +56,7 @@ function parseSizes(value: unknown): string[] {
 }
 
 const VALID_PRODUCT_TYPES = ['estandar', 'ropa', 'calzado'];
-const DEMO_TYPES = ['none', 'rompecabezas', 'colorear', 'encender'];
+const DEMO_TYPES = ['none', 'rompecabezas', 'colorear', 'encender', 'encender_simple'];
 
 // Frete do produto em euros; vazio/invalido = null (usa a tabela padrao).
 function parseShipping(value: unknown): number | null {
@@ -72,7 +72,7 @@ async function ensureVariantColumns() {
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS is_category_cover BOOLEAN DEFAULT FALSE`;
   // Frete proprio do produto (null = tabela padrao, ver lib/checkout-pricing.ts).
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS shipping_cost NUMERIC`;
-  // Amostra interativa do produto: 'none' | 'rompecabezas' | 'colorear' | 'encender'
+  // Amostra interativa do produto: 'none' | 'rompecabezas' | 'colorear' | 'encender' (estrelado) | 'encender_simple' (so acende)
   // e a imagem dela (desenho de colorir / foto acesa; vazio = foto do produto).
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS demo_type TEXT`;
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS demo_image TEXT`;

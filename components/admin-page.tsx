@@ -1001,7 +1001,8 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                     { key: 'none', label: 'Nenhuma' },
                     { key: 'rompecabezas', label: 'Montar (quebra-cabeça)' },
                     { key: 'colorear', label: 'Pintar' },
-                    { key: 'encender', label: 'Acender (luminária)' },
+                    { key: 'encender', label: 'Abajur estrelado' },
+                    { key: 'encender_simple', label: 'Abajur aceso' },
                   ] as const).map(opt => (
                     <button
                       key={opt.key}
@@ -1015,7 +1016,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                 </div>
                 {form.demoType !== 'none' && (
                   <MediaUploadField
-                    label={form.demoType === 'colorear' ? 'Desenho para colorir (obrigatório)' : form.demoType === 'encender' ? 'Foto do produto aceso (opcional)' : 'Imagem do quebra-cabeça (opcional)'}
+                    label={form.demoType === 'colorear' ? 'Desenho para colorir (obrigatório)' : form.demoType === 'encender' || form.demoType === 'encender_simple' ? 'Foto do produto aceso (recomendado)' : 'Imagem do quebra-cabeça (opcional)'}
                     hint={form.demoType === 'colorear'
                       ? 'Traço preto sobre fundo branco ou transparente, como um desenho de livro de colorir. O site detecta as áreas sozinho.'
                       : 'Vazio = usa a imagem principal do produto.'}

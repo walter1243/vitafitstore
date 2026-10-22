@@ -40,7 +40,7 @@ export async function getProductById(id: number): Promise<Product | null> {
       video: row.video ?? '',
       stock: row.stock,
       shippingCost: row.shipping_cost != null ? Number(row.shipping_cost) : null,
-      demoType: ['rompecabezas', 'colorear', 'encender'].includes(row.demo_type) ? row.demo_type : 'none',
+      demoType: ['rompecabezas', 'colorear', 'encender', 'encender_simple'].includes(row.demo_type) ? row.demo_type : 'none',
       demoImage: row.demo_image ?? '',
       collectionSlug: row.collection_slug ?? '',
       personalize: row.personalize ?? null,

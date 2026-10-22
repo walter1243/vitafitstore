@@ -22,7 +22,7 @@ export type DbProduct = {
   sizes?: string[];
   isCategoryCover?: boolean;
   shippingCost?: number | null;
-  demoType?: 'none' | 'rompecabezas' | 'colorear' | 'encender';
+  demoType?: 'none' | 'rompecabezas' | 'colorear' | 'encender' | 'encender_simple';
   demoImage?: string;
   collectionSlug?: string;
   personalize?: unknown;

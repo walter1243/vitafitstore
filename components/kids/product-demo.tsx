@@ -11,6 +11,7 @@ const COPY = {
   rompecabezas: { icon: Puzzle, title: '¡Móntalo antes de comprar!', button: '¡Pon la pieza que falta!' },
   colorear: { icon: Paintbrush, title: '¡Píntalo antes de comprar!', button: '¡Pruébalo gratis: píntalo!' },
   encender: { icon: Lightbulb, title: '¡Mira cómo ilumina!', button: 'Enciende la lámpara' },
+  encender_simple: { icon: Lightbulb, title: '¡Mira cómo ilumina!', button: 'Enciende la lámpara' },
 } as const;
 
 // "Amostra gratis" de um produto (Admin → Produtos → Amostra interativa):
@@ -51,7 +52,7 @@ export function ProductDemo({ product }: { product: Product }) {
 
       {type === 'rompecabezas' && <ProductPuzzleModal open={open} onOpenChange={setOpen} image={image} product={product} />}
       {type === 'colorear' && <ColorDinoModal open={open} onOpenChange={setOpen} drawingUrl={product.demoImage || undefined} product={product} />}
-      {type === 'encender' && <LampSwitchModal open={open} onOpenChange={setOpen} photo={image} product={product} />}
+      {(type === 'encender' || type === 'encender_simple') && <LampSwitchModal open={open} onOpenChange={setOpen} photo={image} product={product} stars={type === 'encender'} />}
     </div>
   );
 }
