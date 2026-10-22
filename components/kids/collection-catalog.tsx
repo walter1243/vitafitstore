@@ -10,7 +10,7 @@ import { KidsProductCard } from './kids-product-card';
 import { accentFor } from './palette';
 import { ThemedProductCard } from '@/components/themes/themed-product-card';
 import { themeFor } from '@/components/themes/sector-themes';
-import { NavidadSides, NavidadSnow } from '@/components/themes/navidad-decor';
+import { NavidadShelf, NavidadSides, NavidadSnow } from '@/components/themes/navidad-decor';
 import { useStoreProducts } from './use-store-products';
 
 type Sort = 'destacados' | 'precio-asc' | 'precio-desc';
@@ -73,8 +73,8 @@ export function CollectionCatalog({ slug }: { slug: string }) {
   const navidad = sectorTheme?.key === 'navidad';
   return (
     <div className={navidad ? 'kids-navidad relative min-h-[560px] overflow-hidden' : ''} style={navidad ? { background: sectorTheme!.bgAlt } : undefined}>
-    {navidad && <><NavidadSnow /><NavidadSides mobile={false} /></>}
-    <div className="relative mx-auto max-w-7xl px-4 pb-20 pt-10 sm:px-6 lg:px-8">
+    {navidad && <><NavidadSnow /><NavidadSides mobile={false} wide /><NavidadShelf /></>}
+    <div className={`relative mx-auto max-w-7xl px-4 pt-10 sm:px-6 lg:px-8 ${navidad ? 'pb-44 2xl:pb-20' : 'pb-20'}`}>
       {/* Topo: atalhos pras outras colecoes do mundo (desliza no celular). */}
       {(others.length > 0 || sector) && (
         <nav aria-label="Otras colecciones" className="swipe-row -mx-1 mb-4 px-1 py-1">

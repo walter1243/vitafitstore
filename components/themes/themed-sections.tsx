@@ -87,8 +87,9 @@ export function ThemedCollection({ collection, theme, products = [], showCarouse
   const label = primaryLabel ?? `Ver ${products.length ? `los ${products.length}` : 'colección'}`;
 
   return (
-    <section className={`relative overflow-hidden px-4 sm:px-6 lg:px-8 ${theme.key === 'navidad' ? (first ? 'pb-36 pt-32 sm:pt-36 xl:pb-10' : 'pb-40 pt-16 sm:pt-24 xl:min-h-[520px] xl:pb-24') : first ? 'pb-10 pt-32 sm:pt-36' : 'py-12 sm:py-16'}`} style={{ background: theme.bgAlt }}>
-      {theme.key === 'navidad' && <><NavidadSnow /><NavidadSleigh /><NavidadSides /></>}
+    <section className={`relative overflow-hidden px-4 sm:px-6 lg:px-8 ${theme.key === 'navidad' ? (first ? 'pb-10 pt-32 sm:pt-36' : 'pb-40 pt-16 sm:pt-24 xl:min-h-[520px] xl:pb-24') : first ? 'pb-10 pt-32 sm:pt-36' : 'py-12 sm:py-16'}`} style={{ background: theme.bgAlt }}>
+      {/* Cabecalho da pagina da colecao (first): so a neve; os enfeites ficam no catalogo. */}
+      {theme.key === 'navidad' && <><NavidadSnow />{!first && <><NavidadSleigh /><NavidadSides /></>}</>}
       <div className="relative mx-auto max-w-6xl">
         <div className="flex flex-wrap items-end justify-between gap-4 pb-6" style={{ borderBottom: `1px solid ${theme.ink}1a` }}>
           <div>
