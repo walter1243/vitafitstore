@@ -7,6 +7,7 @@ import {
   Loader2, User, MapPin,
 } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
+import { packOf, qtyLabel } from '@/lib/personalize';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
@@ -229,7 +230,7 @@ const inputCls = [
 function OrderSummary({ items, totalPrice, shipping, total, shipLabel }: {
   items:any[]; totalPrice:number; shipping:number; total:number; shipLabel?:string;
 }) {
-  const { lineTotal } = useCart();
+  const { lineTotal, totalItems } = useCart();
   return (
     <div className="space-y-4">
       <div className="rounded-[28px] p-5 space-y-4"
@@ -238,7 +239,7 @@ function OrderSummary({ items, totalPrice, shipping, total, shipLabel }: {
           <p className="font-kids text-xl font-bold text-[#23263f]">Tu pedido</p>
           <span className="px-2.5 py-1 rounded-full text-xs font-bold text-[#9a3412]"
             style={{ background:'rgba(194,65,12,0.12)' }}>
-            {items.reduce((s:number,i:any)=>s+i.quantity,0)} item(s)
+            {totalItems} item(s)
           </span>
         </div>
         <div className="space-y-3">
@@ -259,7 +260,7 @@ function OrderSummary({ items, totalPrice, shipping, total, shipLabel }: {
                 ) : item.product.shortDescription && (
                   <p className="text-[10px] text-slate-500 line-clamp-2">{item.product.shortDescription}</p>
                 )}
-                <p className="text-slate-500 text-xs">× {item.quantity}</p>
+                <p className="text-slate-500 text-xs">× {packOf(item.product.personalize) ? `${qtyLabel(item.product.personalize, item.quantity)} (${item.quantity} uds)` : item.quantity}</p>
               </div>
               <p className="text-[#23263f] font-extrabold text-sm shrink-0">
                 €{lineTotal(item).toFixed(2)}

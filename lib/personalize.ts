@@ -172,6 +172,15 @@ export function packOf(personalizeRaw: unknown) {
 export function stepFor(personalizeRaw: unknown) {
   return packOf(personalizeRaw)?.qty ?? 1;
 }
+// Quantidade pra mostrar ao cliente: pack conta como 1 (nao as unidades dentro).
+export function packCount(personalizeRaw: unknown, qty: number) {
+  return Math.max(1, Math.round(qty / stepFor(personalizeRaw)));
+}
+export function qtyLabel(personalizeRaw: unknown, qty: number) {
+  if (!packOf(personalizeRaw)) return String(qty);
+  const n = packCount(personalizeRaw, qty);
+  return `${n} pack${n > 1 ? 's' : ''}`;
+}
 
 // Preco unitario com a promocao (servidor e navegador usam a mesma conta).
 export function unitPriceFor(price: number, personalizeRaw: unknown, qty: number) {

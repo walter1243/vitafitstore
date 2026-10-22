@@ -13,13 +13,13 @@ import {
 } from '@/components/ui/sheet'
 import { useCart } from '@/lib/cart-context'
 import { FREE_SHIPPING_FROM as FREE_SHIPPING, resolveShipping } from '@/lib/checkout-pricing'
-import { itemShipping } from '@/lib/personalize'
+import { itemShipping, qtyLabel } from '@/lib/personalize'
 
 // Carrinho no visual infantil da vitrine (classe .kids: Baloo 2 + Nunito,
 // tons pastel). A logica — quantidades, remover, frete gratis, link pro
 // checkout — e a mesma de antes.
 export function CartSidebar() {
-  const { items, isCartOpen, setIsCartOpen, updateQuantity, removeItem, totalPrice, lineTotal } = useCart()
+  const { items, isCartOpen, setIsCartOpen, updateQuantity, removeItem, totalPrice, lineTotal, totalItems } = useCart()
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({})
 
   const hasFreeShipping = totalPrice >= FREE_SHIPPING
@@ -56,7 +56,7 @@ export function CartSidebar() {
               <span className="font-kids text-2xl font-bold text-[#23263f]">Tu carrito</span>
               {items.length > 0 && (
                 <span className="rounded-full bg-[#c2410c] px-2.5 py-0.5 text-xs font-extrabold text-white">
-                  {items.reduce((s, i) => s + i.quantity, 0)}
+                  {totalItems}
                 </span>
               )}
             </div>
@@ -185,8 +185,8 @@ export function CartSidebar() {
                         >
                           <Minus className="h-3.5 w-3.5" />
                         </button>
-                        <span className="w-7 select-none text-center text-base font-extrabold text-[#23263f]">
-                          {item.quantity}
+                        <span className="min-w-7 whitespace-nowrap px-1 select-none text-center text-base font-extrabold text-[#23263f]">
+                          {qtyLabel(item.product.personalize, item.quantity)}
                         </span>
                         <button
                           onClick={() => updateQuantity(item.product.id, item.quantity + 1, { color: item.selectedColor, size: item.selectedSize, text: item.customText, note: item.customNote })}

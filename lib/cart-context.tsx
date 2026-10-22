@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
 import { type Product, type CartItem } from './products'
-import { lineTotalFor, minQtyFor, packOf, stepFor, unitPriceFor } from './personalize'
+import { lineTotalFor, minQtyFor, packCount, packOf, stepFor, unitPriceFor } from './personalize'
 
 // text = nome personalizado (chaveiro / pet): cada nome e uma linha propria.
 type Variant = { color?: string; size?: string; text?: string; note?: string }
@@ -100,7 +100,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems([])
   }, [])
 
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0)
+  const totalItems = items.reduce((sum, item) => sum + packCount(item.product.personalize, item.quantity), 0)
   // Preco com promocao por quantidade (ex: 5 chaveiros) somando todas as linhas do produto.
   const qtyOf = (id: number) => items.reduce((n, it) => n + (it.product.id === id ? it.quantity : 0), 0)
   const lineTotal = (item: CartItem) => packOf(item.product.personalize)
