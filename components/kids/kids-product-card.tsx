@@ -62,7 +62,7 @@ export function KidsProductCard({ product, accent = ACCENTS.mint, tag, soft }: P
         </h3>
         <div className="mt-auto flex items-center justify-between gap-2 pt-3">
           <span className="min-w-0 leading-tight text-[#1E1B4B]">
-            <span className="block text-lg font-extrabold sm:text-xl">{cp.main}</span>
+            <span className="block whitespace-nowrap text-lg font-extrabold sm:text-xl">{cp.main}</span>
             {cp.sub && <span className="block whitespace-nowrap text-[11px] font-extrabold opacity-80">{cp.sub}{cp.off ? ` · -${cp.off}%` : ''}</span>}
           </span>
           {needsChoice ? (
