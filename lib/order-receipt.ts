@@ -2,7 +2,7 @@
 // Etiqueta de envio do pedido em PDF pra impressora termica de 58 mm
 // (Bluetooth, impressa pelo celular). Papel de 58 mm = area util de 48 mm
 // (384 pontos a 203 dpi): a pagina tem exatamente 48 mm de largura e a altura
-// acompanha o conteudo. Layout de etiqueta: moldura, marca, nome completo,
+// acompanha o conteudo. Layout de etiqueta: moldura, logo, nome completo,
 // endereco, telefone e o numero do pedido. So preto puro.
 import { jsPDF } from 'jspdf';
 
@@ -30,32 +30,38 @@ const M = 0.8;     // moldura afastada da borda (mm)
 const IN = 2.4;    // respiro interno (mm)
 const COUNTRY: Record<string, string> = { ES: 'ESPAÑA', PT: 'PORTUGAL', FR: 'FRANCIA', DE: 'ALEMANIA', BR: 'BRASIL' };
 
-// Cubo (marca) em linhas, como na etiqueta: frente + topo + lateral.
-function cube(doc: jsPDF, x: number, y: number, s: number) {
-  const d = s * 0.32;
-  doc.setLineWidth(0.35);
-  doc.rect(x, y + d, s - d, s - d);
-  doc.lines([[d, -d], [s - d, 0], [-d, d]], x, y + d, [1, 1], 'S', false);
-  doc.lines([[d, -d], [0, s - d], [-d, d]], x + s - d, y + d, [1, 1], 'S', false);
+// Logo da marca ja em preto e branco puro (1 bit, 384 px) pra termica.
+const LOGO = '/images/logo-kitoys-termica.png';
+const LOGO_RATIO = 264 / 384;
+const LOGO_W = 30; // mm
+
+async function dataUrl(src: string) {
+  const blob = await (await fetch(src)).blob();
+  return await new Promise<string>((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(String(r.result));
+    r.onerror = rej;
+    r.readAsDataURL(blob);
+  });
 }
 
 // Desenha tudo; draw=false so mede a altura.
-function layout(doc: jsPDF, o: ReceiptOrder, draw: boolean) {
+function layout(doc: jsPDF, o: ReceiptOrder, logo: string | null, draw: boolean) {
   const inner = W - 2 * M - 2 * IN;
   const x0 = M + IN;
   let y = M;
 
-  // Cabecalho: cubo + Kitoys3D
-  const headH = 8.5;
+  // Cabecalho: a logo (sem ela, o nome escrito)
+  const logoH = LOGO_W * LOGO_RATIO;
+  const headH = logo ? logoH + 2 : 8.5;
   if (draw) {
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
-    const tw = doc.getTextWidth('Kitoys3D');
-    const cs = 4.6;
-    const total = cs + 1.6 + tw;
-    const cx = (W - total) / 2;
-    cube(doc, cx, y + (headH - cs) / 2, cs);
-    doc.text('Kitoys3D', cx + cs + 1.6, y + headH / 2 + 1.7);
+    if (logo) {
+      doc.addImage(logo, 'PNG', (W - LOGO_W) / 2, y + 1, LOGO_W, logoH);
+    } else {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(14);
+      doc.text('Kitoys 3D', W / 2, y + headH / 2 + 1.7, { align: 'center' });
+    }
   }
   y += headH;
   if (draw) { doc.setLineWidth(0.35); doc.line(M, y, W - M, y); }
@@ -103,16 +109,18 @@ function layout(doc: jsPDF, o: ReceiptOrder, draw: boolean) {
 }
 
 // Monta o PDF (separado do download pra poder testar).
-export function buildOrderReceipt(o: ReceiptOrder) {
+export function buildOrderReceipt(o: ReceiptOrder, logo: string | null = null) {
   const probe = new jsPDF({ unit: 'mm', format: [W, 200] });
-  const height = Math.ceil(layout(probe, o, false));
+  const height = Math.ceil(layout(probe, o, logo, false));
   const doc = new jsPDF({ unit: 'mm', format: [W, Math.max(height, W + 1)] });
   doc.setTextColor(0, 0, 0);
   doc.setDrawColor(0, 0, 0);
-  layout(doc, o, true);
+  layout(doc, o, logo, true);
   return doc;
 }
 
 export async function downloadOrderReceipt(o: ReceiptOrder) {
-  buildOrderReceipt(o).save(`etiqueta-pedido-${o.id}.pdf`);
+  let logo: string | null = null;
+  try { logo = await dataUrl(LOGO); } catch { logo = null; }
+  buildOrderReceipt(o, logo).save(`etiqueta-pedido-${o.id}.pdf`);
 }
