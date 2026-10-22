@@ -133,7 +133,8 @@ export function ProductPageView({ product }: { product: Product }) {
       </nav>
 
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        {/* Gallery */}
+        {/* Gallery (no computador a descricao fica embaixo das fotos) */}
+        <div className="min-w-0">
         <div className="flex gap-3">
           {/* Vertical thumbnail rail on desktop */}
           {galleryImages.length > 1 && (
@@ -196,6 +197,14 @@ export function ProductPageView({ product }: { product: Product }) {
               </div>
             )}
           </div>
+        </div>
+        <div className="mt-[30px] hidden lg:block">
+          <h2 className="mb-4 text-lg font-bold text-slate-900">Descripción</h2>
+          <div
+            className="prose prose-sm max-w-none prose-p:text-slate-600 prose-p:leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: product.description }}
+          />
+        </div>
         </div>
 
         {/* Info */}
@@ -421,8 +430,8 @@ export function ProductPageView({ product }: { product: Product }) {
         </div>
       </div>
 
-      {/* Full description */}
-      <div className="mt-12 max-w-3xl">
+      {/* Descricao no celular/tablet (no computador fica embaixo das fotos) */}
+      <div className="mt-12 max-w-3xl lg:hidden">
         <h2 className="mb-4 text-lg font-bold text-slate-900">Descripción</h2>
         <div
           className="prose prose-sm max-w-none prose-p:text-slate-600 prose-p:leading-relaxed"
