@@ -118,3 +118,80 @@ Sigue tu envío aquí: ${trackingUrl}
 
   return { subject, html, text };
 }
+
+// Pedido com "Recoger en punto": o cliente recebe o ponto escolhido, o codigo
+// e um botao que abre o Google Maps no endereco certo (so tocar e ir buscar).
+export function pickupEmail({ name, orderId, pickupPoint }: { name: string; orderId: number; pickupPoint: string }) {
+  // pickupPoint vem como "codigo · nome · endereco · cp cidade"
+  const [code = '', pointName = '', address = '', zipCity = ''] = pickupPoint.split(' · ').map((s) => s.trim());
+  const first = (name || '').trim().split(/\s+/)[0] || '';
+  const hello = first ? `¡Hola, ${esc(first)}!` : '¡Hola!';
+  const query = [pointName, address, zipCity, 'España'].filter(Boolean).join(', ');
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+  const subject = `Tu pedido #${orderId}: punto de recogida 📍`;
+
+  const html = `<!doctype html>
+<html lang="es"><body style="margin:0;padding:0;background:#FFF8EF;font-family:Arial,Helvetica,sans-serif;color:#23263f;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FFF8EF;padding:32px 12px;">
+    <tr><td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:24px;overflow:hidden;">
+        <tr><td align="center" style="padding:28px 24px 8px;">
+          <img src="https://www.kitoys3d.com/images/logo-kitoys-3d.png" alt="Kitoys 3D" width="150" style="display:block;width:150px;height:auto;border:0;" />
+        </td></tr>
+        <tr><td style="padding:8px 32px 0;">
+          <h1 style="margin:0 0 12px;font-size:26px;line-height:1.2;color:#23263f;">${hello} Recibimos tu pedido #${orderId} 🎉</h1>
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#565a78;">
+            Elegiste <strong>recoger tu pedido en un punto</strong>. Cuando llegue, la empresa de transporte te avisará y podrás ir a buscarlo aquí:
+          </p>
+        </td></tr>
+        <tr><td style="padding:0 32px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FFF4E0;border-radius:16px;">
+            <tr><td style="padding:18px 20px;">
+              <p style="margin:0 0 4px;font-size:12px;font-weight:bold;letter-spacing:1px;color:#9a3412;">📍 TU PUNTO DE RECOGIDA</p>
+              <p style="margin:0 0 6px;font-size:18px;font-weight:bold;color:#23263f;">${esc(pointName || code)}</p>
+              <p style="margin:0;font-size:15px;line-height:1.5;color:#23263f;">${esc(address)}<br />${esc(zipCity)}</p>
+              ${code ? `<p style="margin:10px 0 0;font-size:13px;color:#565a78;">Código del punto: <strong style="color:#23263f;">${esc(code)}</strong> · Pedido: <strong style="color:#23263f;">#${orderId}</strong></p>` : ''}
+            </td></tr>
+          </table>
+        </td></tr>
+        <tr><td align="center" style="padding:20px 32px 8px;">
+          <a href="${esc(mapsUrl)}" target="_blank" rel="noopener" style="display:inline-block;background:#c2410c;color:#ffffff;text-decoration:none;font-weight:bold;font-size:18px;padding:16px 32px;border-radius:999px;">
+            🗺️ Cómo llegar
+          </a>
+        </td></tr>
+        <tr><td style="padding:12px 32px 0;">
+          <p style="margin:0;font-size:13px;line-height:1.6;color:#565a78;">
+            Lleva tu DNI/NIE y el número de pedido para recogerlo. ¿El botón no funciona? Abre este enlace:<br />
+            <a href="${esc(mapsUrl)}" style="color:#c2410c;word-break:break-all;">${esc(mapsUrl)}</a>
+          </p>
+        </td></tr>
+        <tr><td style="padding:24px 32px 28px;">
+          <p style="margin:0 0 6px;font-size:15px;line-height:1.6;color:#23263f;">¡Gracias por confiar en Kitoys 3D!</p>
+          <p style="margin:0;font-size:13px;line-height:1.6;color:#565a78;">
+            ¿Alguna duda? Responde a este correo o escríbenos por WhatsApp al +34 678 68 4704.
+          </p>
+        </td></tr>
+        <tr><td align="center" style="background:#F2F4FA;padding:16px 24px;font-size:12px;color:#565a78;">
+          Kitoys 3D · Juguetes y lámparas impresos en 3D · <a href="https://www.kitoys3d.com" style="color:#565a78;">kitoys3d.com</a>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
+
+  const text = `${first ? `¡Hola, ${first}!` : '¡Hola!'} Recibimos tu pedido #${orderId}.
+
+Elegiste recogerlo en un punto. Cuando llegue, la empresa de transporte te avisará.
+
+Tu punto de recogida:
+${pointName}
+${address}
+${zipCity}
+${code ? `Código del punto: ${code} · Pedido: #${orderId}\n` : ''}
+Cómo llegar (Google Maps): ${mapsUrl}
+
+Lleva tu DNI/NIE y el número de pedido para recogerlo.
+¡Gracias por confiar en Kitoys 3D! ¿Dudas? Responde a este correo o escríbenos por WhatsApp al +34 678 68 4704.`;
+
+  return { subject, html, text };
+}

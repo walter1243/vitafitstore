@@ -3,6 +3,7 @@ import { unpackItems } from '@/lib/order-items';
 import Stripe from 'stripe';
 import { sql } from '@/lib/db';
 import { processOrder } from '@/lib/order-orchestrator';
+import { pickupEmail, sendEmail } from '@/lib/email';
 
 function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -89,6 +90,12 @@ export async function POST(req: NextRequest) {
         processOrder((newOrder as any).id).catch((e: unknown) =>
           console.error('[save-order] Orchestrator error:', e)
         );
+      }
+      // Recoger en punto: e-mail pro cliente com o ponto e o link do Google Maps.
+      // So aqui (pedido acabou de ser gravado), entao sai uma vez por pedido.
+      if ((newOrder as any)?.id && meta.shipMethod === 'pickup' && meta.pickupPoint && meta.customerEmail) {
+        const mail = pickupEmail({ name: meta.customerName || '', orderId: Number((newOrder as any).id), pickupPoint: meta.pickupPoint });
+        await sendEmail({ to: meta.customerEmail, ...mail }).catch((e: unknown) => console.error('[save-order] pickup email:', e));
       }
     } catch (_) {}
 
