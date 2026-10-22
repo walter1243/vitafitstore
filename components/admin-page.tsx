@@ -4,6 +4,7 @@ import { dataUrlToBlobUrl, uploadInlineImages } from '@/lib/upload-data-url';
 import { clipboardFiles, isEditableTarget, useHoverPaste } from '@/lib/use-hover-paste';
 import { DEFAULT_NAME_COLORS, packOf, parsePersonalize } from '@/lib/personalize';
 import { NamePreview } from '@/components/personalize/name-personalizer';
+import { downloadOrderReceipt } from '@/lib/order-receipt';
 import { AdminWorlds } from '@/components/admin-worlds';
 import { CategoryCollections, ParcelFields, PersonalizeEditor, ProductPlacement, SaleModeFields } from '@/components/admin-product-extras';
 import { TrackingSection, needsTracking, isNewAlert } from '@/components/admin-tracking';
@@ -21,7 +22,7 @@ import {
   ArrowUp, ArrowDown, Monitor, Zap, ToggleLeft, ToggleRight,
   MessageCircle, Mail, Globe, RefreshCw, LogOut,
   Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  List, ListOrdered, Undo2, Redo2, Star, LayoutGrid, Calculator, Image as ImageIcon, Palette,
+  List, ListOrdered, Undo2, Redo2, Star, LayoutGrid, Calculator, Image as ImageIcon, Palette, Printer,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -1676,6 +1677,35 @@ function OrdersSection({ orders, products, onUpdateTracking, onRefresh }: {
     onUpdateTracking(id, tracking, tracking ? 'shipped' : 'pending');
   }
 
+  // PDF do pedido no formato da impressora termica (58 mm).
+  async function printReceipt(o: Order) {
+    let lines: any[] = [];
+    try { lines = o.itemsJson ? JSON.parse(o.itemsJson) : []; } catch { lines = []; }
+    if (!lines.length) lines = [{ name: o.product, quantity: 1, color: o.selectedColor, size: o.selectedSize, text: o.customText }];
+    await downloadOrderReceipt({
+      id: o.id,
+      when: o.dateTime || o.date,
+      customer: o.customer,
+      phone: o.customerPhone,
+      email: o.customerEmail,
+      addressLine: o.addressLine,
+      postalCode: o.postalCode,
+      city: o.city,
+      country: o.country,
+      shippingMethod: o.shippingMethod,
+      shippingService: o.shippingService,
+      pickupPoint: o.pickupPoint,
+      shippingCost: o.shippingCost != null && o.shippingCost !== '' ? Number(o.shippingCost) : null,
+      total: o.total ?? 0,
+      items: lines.map((it) => {
+        const prod = products.find((x) => x.id === it.productId);
+        const pack = packOf((prod as any)?.personalize);
+        const hasColors = ((prod as any)?.colorOptions ?? []).length > 0;
+        return { ...it, packQty: pack?.qty, colorIsLetters: Boolean(it.text && it.color && !hasColors) };
+      }),
+    });
+  }
+
   async function requestReview(id: number) {
     setRequestingReview(s => ({ ...s, [id]: true }));
     setReviewResult(s => ({ ...s, [id]: { ok: false, msg: '' } }));
@@ -1762,6 +1792,14 @@ function OrdersSection({ orders, products, onUpdateTracking, onRefresh }: {
           </div>
 
           <div className="flex gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => printReceipt(o)}
+              className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-xl bg-white px-4 text-sm font-bold text-[#0f1117] transition-colors hover:bg-white/85"
+              title="PDF para impressora térmica 58 mm"
+            >
+              <Printer size={15} /> Baixar PDF (58 mm)
+            </button>
             <input
               type="text"
               value={inputs[o.id] ?? ''}
