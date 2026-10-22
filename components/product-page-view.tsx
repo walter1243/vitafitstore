@@ -33,7 +33,8 @@ export function ProductPageView({ product }: { product: Product }) {
   const pBase = product.personalize?.enabled ? (product.personalize.previewImage || '') : ''
   // Fotos das cores entram na galeria: escolher a cor mostra a foto dela.
   const galleryImages = [...new Set([pBase || product.mainImage || product.image, ...(product.additionalImages ?? []), ...(product.colorOptions ?? []).map((c) => c.image)].filter(Boolean) as string[])]
-  const [activeIndex, setActiveIndex] = useState(0)
+  // Abre na foto da cor ja selecionada (a primeira), se ela tiver foto.
+  const [activeIndex, setActiveIndex] = useState(() => { const im = product.colorOptions?.[0]?.image; const i = im ? galleryImages.indexOf(im) : -1; return i >= 0 ? i : 0 })
   const [slideDir, setSlideDir] = useState<'left' | 'right'>('right')
   const activeImage = galleryImages[activeIndex] ?? galleryImages[0]
   const touchStartX = useRef<number | null>(null)
@@ -43,6 +44,10 @@ export function ProductPageView({ product }: { product: Product }) {
   const [quantity, setQuantity] = useState(Math.max(step, minQtyFor(product.personalize)))
   const [added, setAdded] = useState(false)
   const [selectedColor, setSelectedColor] = useState(product.colorOptions?.[0]?.label ?? '')
+  // Foto que combina com a cor escolhida (ou a principal): e nela que o nome aparece.
+  const colorImages = (product.colorOptions ?? []).map((c) => c.image).filter(Boolean) as string[]
+  const selectedColorImage = product.colorOptions?.find((c) => c.label === selectedColor)?.image
+  const previewIndex = Math.max(0, selectedColorImage ? galleryImages.indexOf(selectedColorImage) : 0)
   const [selectedSize, setSelectedSize] = useState('')
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false)
 
@@ -150,7 +155,7 @@ export function ProductPageView({ product }: { product: Product }) {
               onTouchStart={handleTouchStart}
               onTouchEnd={handleTouchEnd}
             >
-              {personalized && activeIndex === 0 ? (
+              {personalized && (activeIndex === 0 || colorImages.includes(activeImage)) ? (
                 // O nome do cliente aparece na propria foto do produto.
                 <div className="absolute inset-0">
                   <NamePreview cfg={{ ...pcfg, previewImage: activeImage, color: customColor || pcfg.color }} product={product} text={cleanCustomText(customName, pcfg.maxLength)} placeholder={sample} swingKey={0} stage="#ffffff" />
@@ -317,9 +322,12 @@ export function ProductPageView({ product }: { product: Product }) {
                 compact
                 showPreview={false}
                 name={customName}
-                onName={(v) => { setCustomName(v); if (activeIndex !== 0) goToIndex(0) }}
+                onName={(v) => { setCustomName(v); if (activeIndex !== previewIndex) goToIndex(previewIndex) }}
                 color={customColor}
-                onColor={(hex) => { setCustomColor(hex); if (activeIndex !== 0) goToIndex(0) }}
+                onColor={(hex) => { setCustomColor(hex); if (activeIndex !== previewIndex) goToIndex(previewIndex) }}
+                variant={{ color: product.colorOptions?.length ? selectedColor : undefined, size: needsSize ? selectedSize : undefined }}
+                basePrice={sizedPrice(product.price, product.personalize, selectedSize)}
+                blocked={needsSize && !selectedSize ? `Elige ${product.productType === 'tamanho' ? 'un tamaño' : 'una talla'} arriba` : undefined}
               />
             </div>
           )}

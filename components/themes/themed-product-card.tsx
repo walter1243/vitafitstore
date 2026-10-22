@@ -83,25 +83,26 @@ export function ThemedProductCard({ product, theme }: { product: Product; theme:
     );
   }
 
-  // Mascotas: a foto ocupa o card inteiro.
+  // Mascotas: card branco, foto quadrada em cima; nome e preco embaixo.
   if (theme.key === 'mascotas') {
     return (
       <Link
         href={href}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
-        className="group relative block aspect-[4/5] cursor-pointer overflow-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4"
-        style={{ borderRadius: theme.radius, background: theme.surface, outlineColor: theme.ink }}
+        className="group flex h-full cursor-pointer flex-col overflow-hidden bg-white p-2.5 shadow-[0_10px_28px_rgba(42,16,2,0.10)] transition-shadow duration-300 hover:shadow-[0_16px_36px_rgba(42,16,2,0.16)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4"
+        style={{ borderRadius: theme.radius, outlineColor: theme.ink }}
       >
-        <Image src={img} alt={product.name} fill sizes="(min-width: 1024px) 25vw, 60vw" className="object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none" />
-        <span className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#2a1002]/85 via-[#2a1002]/40 to-transparent" aria-hidden="true" />
-        <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-4">
-          <span className="min-w-0">
-            <span className="line-clamp-2 block text-base font-bold leading-snug text-white" style={{ fontFamily: theme.heading }}>{product.name}</span>
-            <span className="mt-0.5 block text-base font-bold text-[#FDE68A]">{cp.main}{cp.sub && <span className="block whitespace-nowrap text-[11px] font-extrabold opacity-80">{cp.sub}{cp.off ? ` · -${cp.off}%` : ''}</span>}</span>
-          </span>
-          {action}
-        </span>
+        <div className="relative aspect-square overflow-hidden" style={{ borderRadius: `calc(${theme.radius} - 6px)`, background: theme.surface }}>
+          <Image src={img} alt={product.name} fill sizes="(min-width: 1024px) 25vw, 60vw" className="object-cover transition-transform duration-500 group-hover:scale-[1.04] motion-reduce:transition-none" />
+        </div>
+        <div className="flex flex-1 flex-col px-1.5 pt-3">
+          <h3 className="line-clamp-2 text-base font-bold leading-snug" style={{ fontFamily: theme.heading, color: theme.ink }}>{product.name}</h3>
+          <div className="mt-auto flex items-center justify-between gap-2 pt-3">
+            <span className="text-lg font-extrabold leading-tight" style={{ color: theme.ink }}>{cp.main}{cp.sub && <span className="block whitespace-nowrap text-[11px] font-extrabold opacity-80">{cp.sub}{cp.off ? ` · -${cp.off}%` : ''}</span>}</span>
+            {action}
+          </div>
+        </div>
       </Link>
     );
   }

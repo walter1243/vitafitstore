@@ -17,7 +17,7 @@ const LOOK: Record<PersonalizerLook, { ink: string; muted: string; field: string
 // "Ponle su nombre": o cliente escreve e ve o nome no MESMO modelo do
 // produto na hora (o chaveiro balanca, as letras "pulam"), escolhe a
 // quantidade e adiciona. Cada nome vira uma linha no carrinho/pedido.
-export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded, name: nameProp, onName, color: colorProp, onColor, showPreview = true }: {
+export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded, name: nameProp, onName, color: colorProp, onColor, showPreview = true, variant, basePrice, blocked }: {
   product: Product;
   look?: PersonalizerLook;
   compact?: boolean;
@@ -30,6 +30,11 @@ export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded,
   color?: string;
   onColor?: (hex: string) => void;
   showPreview?: boolean;
+  // Pagina do produto: cor/tamanho escolhidos la em cima, preco do tamanho e
+  // o que falta escolher (ex: "Elige una talla") antes de adicionar.
+  variant?: { color?: string; size?: string };
+  basePrice?: number;
+  blocked?: string;
 }) {
   const base = parsePersonalize(product.personalize);
   // Sem cores cadastradas: oferece as cores padrao de filamento.
@@ -65,9 +70,11 @@ export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded,
   useEffect(() => { setSwing((n) => n + 1); }, [text]);
 
   function add() {
-    if (!text) return;
+    if (!text || blocked) return;
     // A cor escolhida vai junto (carrinho, checkout e pedido: "Color: Negro").
-    addItem(product, { text, color: chosen?.name, note: note || undefined }, qty);
+    // Produto com cores proprias: a cor e a do produto; a das letras vai na nota.
+    const letters = variant?.color && chosen ? `Letras: ${chosen.name}` : '';
+    addItem(product, { text, color: variant?.color || chosen?.name, size: variant?.size, note: [letters, note].filter(Boolean).join(' · ') || undefined }, qty);
     setAdded(true);
     onAdded?.();
     setTimeout(() => { setAdded(false); setName(''); setQty(minQty); }, 1600);
@@ -219,14 +226,14 @@ export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded,
           <button
             type="button"
             onClick={add}
-            disabled={!text}
+            disabled={!text || Boolean(blocked)}
             className="inline-flex min-h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full px-6 text-base font-extrabold transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-50"
             style={{ background: added ? '#15803d' : L.cta, color: L.ctaText }}
             onMouseEnter={(e) => { if (!added && text) e.currentTarget.style.background = L.ctaHover; }}
             onMouseLeave={(e) => { if (!added) e.currentTarget.style.background = L.cta; }}
           >
             {added ? <Check className="h-5 w-5" /> : <ShoppingCart className="h-5 w-5" />}
-            {added ? '¡Añadido!' : `Añadir · ${lineTotalFor(product.price, base, qty).toFixed(2)}€`}
+            {added ? '¡Añadido!' : blocked && text ? blocked : `Añadir · ${lineTotalFor(basePrice ?? product.price, base, qty).toFixed(2)}€`}
           </button>
         </div>
         {!text && <p className="mt-3 text-sm" style={{ color: L.muted }}>Escribe el nombre para poder añadirlo.</p>}
