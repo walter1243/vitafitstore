@@ -4,7 +4,7 @@ import { dataUrlToBlobUrl, uploadInlineImages } from '@/lib/upload-data-url';
 import { clipboardFiles, isEditableTarget, useHoverPaste } from '@/lib/use-hover-paste';
 import { DEFAULT_NAME_COLORS, packOf, parsePersonalize } from '@/lib/personalize';
 import { NamePreview } from '@/components/personalize/name-personalizer';
-import { downloadOrderReceipt } from '@/lib/order-receipt';
+import { downloadOrderReceipt, type ReceiptOrder } from '@/lib/order-receipt';
 import { AdminWorlds } from '@/components/admin-worlds';
 import { CategoryCollections, ParcelFields, PersonalizeEditor, ProductPlacement, SaleModeFields } from '@/components/admin-product-extras';
 import { TrackingSection, needsTracking, isNewAlert } from '@/components/admin-tracking';
@@ -1754,6 +1754,17 @@ function OrdersSection({ orders, products, onUpdateTracking, onRefresh }: {
 
   return (
     <div className="space-y-4">
+      {/* Teste da impressora termica: PDF com um pedido ficticio. */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#161b28] px-4 py-3">
+        <p className="text-sm text-white/60">Impressora térmica 58 mm: baixe um exemplo para ver como sai no papel.</p>
+        <button
+          type="button"
+          onClick={() => downloadOrderReceipt(SAMPLE_RECEIPT)}
+          className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-xl border border-white/15 px-4 text-sm font-bold text-white transition-colors hover:bg-white/5"
+        >
+          <Printer size={15} /> Baixar PDF de exemplo
+        </button>
+      </div>
       {orders.map(o => (
         <div key={o.id} className="rounded-2xl border border-white/10 bg-[#161b28] p-4 shadow-none sm:p-5">
           <div className="flex items-start justify-between gap-3 mb-4 flex-wrap">
@@ -2926,6 +2937,29 @@ function DashboardSection({ products, orders, revenue, onNavigate, trackingAlert
 
 // Itens do pedido: todos os produtos, quantidade, variante e o nome
 // personalizado (chaveiro / pet) em destaque. Pedidos antigos so tinham o 1o.
+// Pedido ficticio pro teste da impressora (Pedidos → Baixar PDF de exemplo).
+const SAMPLE_RECEIPT: ReceiptOrder = {
+  id: 1001,
+  when: new Date().toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }),
+  customer: 'María López García',
+  phone: '+34 600 000 000',
+  email: 'maria@ejemplo.es',
+  addressLine: 'Calle Mayor 15, 2º B',
+  postalCode: '03201',
+  city: 'Elche',
+  country: 'ES',
+  shippingMethod: 'pickup',
+  shippingService: 'Correos · Paq Standard Oficina-Oficina',
+  pickupPoint: 'S0001688D · CITYPAQ CARREFOUR EXPRESS · CALLE HERMOSILLA 28 · 28001 MADRID',
+  shippingCost: 4.02,
+  total: 46.52,
+  items: [
+    { name: 'Comedero Personalizado para Mascotas', quantity: 1, color: 'Blanco', size: 'M (Mediano)', text: 'Toby', note: 'Letras: negro', total: 34 },
+    { name: 'Lagarto Articulado Flexi 3D', quantity: 3, packQty: 3, total: 7.5 },
+    { name: 'Vela de Navidad', quantity: 1, color: 'Negro', total: 1 },
+  ],
+};
+
 type OrderLine = { productId?: number; name?: string; quantity?: number; color?: string; size?: string; text?: string; note?: string; total?: number };
 
 // Itens do pedido como o cliente montou: foto (da cor escolhida), cor,
