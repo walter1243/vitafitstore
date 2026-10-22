@@ -31,7 +31,8 @@ export function ProductPageView({ product }: { product: Product }) {
   const personalizeTitle = look === 'mascotas' ? 'Personaliza el nombre de tu mascota' : look === 'llaveros' ? 'Personaliza tu llavero' : 'Personalízalo con un nombre'
   const router = useRouter()
   const pBase = product.personalize?.enabled ? (product.personalize.previewImage || '') : ''
-  const galleryImages = [pBase || product.mainImage || product.image, ...(product.additionalImages ?? [])].filter(Boolean) as string[]
+  // Fotos das cores entram na galeria: escolher a cor mostra a foto dela.
+  const galleryImages = [...new Set([pBase || product.mainImage || product.image, ...(product.additionalImages ?? []), ...(product.colorOptions ?? []).map((c) => c.image)].filter(Boolean) as string[])]
   const [activeIndex, setActiveIndex] = useState(0)
   const [slideDir, setSlideDir] = useState<'left' | 'right'>('right')
   const activeImage = galleryImages[activeIndex] ?? galleryImages[0]
@@ -236,33 +237,39 @@ export function ProductPageView({ product }: { product: Product }) {
             </ul>
           )}
 
-          {/* Envio Packlink: ponto de recogida x domicilio, com preco atual */}
-          <ProductShipping productId={product.id} quantity={quantity} />
-
-          {/* Color variants */}
+          {/* Cores (Admin → Produtos → Cores do produto): trocar a cor troca a foto. */}
           {product.colorOptions && product.colorOptions.length > 0 && (
-            <div className="mt-6">
-              <p className="mb-2 text-sm font-medium text-slate-700">Color: <span className="font-semibold text-slate-900">{selectedColor}</span></p>
-              <div className="flex flex-wrap gap-2">
+            <div className="mt-4">
+              <p className="mb-2 text-sm font-medium text-slate-700">Color: <span className="font-bold text-slate-900">{selectedColor}</span></p>
+              <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Color">
                 {product.colorOptions.map(c => (
                   <button
                     key={c.label}
+                    type="button"
+                    role="radio"
+                    aria-checked={selectedColor === c.label}
                     onClick={() => selectColor(c.label, c.image)}
-                    className={`relative h-14 w-14 overflow-hidden rounded-lg border-2 transition-colors ${
-                      selectedColor === c.label ? 'border-orange-600' : 'border-slate-200 hover:border-slate-300'
+                    title={c.label}
+                    className={`relative h-12 w-12 cursor-pointer overflow-hidden rounded-full border-2 p-0.5 transition-colors ${
+                      selectedColor === c.label ? 'border-orange-600' : 'border-slate-200 hover:border-slate-400'
                     }`}
                     aria-label={c.label}
                   >
-                    {c.image ? (
-                      <Image src={c.image} alt={c.label} fill className="object-cover" />
-                    ) : (
-                      <span className="block h-full w-full" style={{ background: c.hex || '#c2410c' }} />
-                    )}
+                    <span className="relative block h-full w-full overflow-hidden rounded-full">
+                      {c.image ? (
+                        <Image src={c.image} alt="" fill sizes="48px" className="object-cover" />
+                      ) : (
+                        <span className="block h-full w-full" style={{ background: c.hex || '#c2410c' }} />
+                      )}
+                    </span>
                   </button>
                 ))}
               </div>
             </div>
           )}
+
+          {/* Envio Packlink: ponto de recogida x domicilio, com preco atual */}
+          <ProductShipping productId={product.id} quantity={quantity} />
 
           {/* Size selector */}
           {needsSize && (

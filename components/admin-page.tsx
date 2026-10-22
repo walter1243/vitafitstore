@@ -19,7 +19,7 @@ import {
   ArrowUp, ArrowDown, Monitor, Zap, ToggleLeft, ToggleRight,
   MessageCircle, Mail, Globe, RefreshCw, LogOut,
   Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  List, ListOrdered, Undo2, Redo2, Star, LayoutGrid, Calculator, Image as ImageIcon,
+  List, ListOrdered, Undo2, Redo2, Star, LayoutGrid, Calculator, Image as ImageIcon, Palette,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -851,6 +851,66 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                   <p className="mt-2 text-[11px] text-white/35">Essas tallas aparecem como seletor na página do cliente, com o guia de tallas correspondente ({productType === 'ropa' ? 'roupa' : 'calçado'}).</p>
                 </section>
               )}
+
+            {/* Cores: o cliente escolhe na pagina do produto e a foto troca pela da cor. */}
+            <section className={CARD}>
+              <SectionHead icon={<Palette size={16} />} title="Cores do produto" sub="O cliente escolhe a cor na página de venda. Com foto, a imagem principal troca pela foto da cor." />
+              <div className="grid gap-2 sm:grid-cols-[auto_1fr_auto_auto]">
+                <input
+                  type="color"
+                  value={newColorHex}
+                  onChange={e => setNewColorHex(e.target.value)}
+                  title="Escolher cor"
+                  aria-label="Escolher cor"
+                  className="h-[42px] w-14 cursor-pointer rounded-xl border border-white/10 bg-[#1c2236] p-1"
+                />
+                <input
+                  type="text"
+                  value={newColorLabel}
+                  onChange={e => setNewColorLabel(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); if (newColorLabel.trim() && colorOptions.length < 5) addColorOption(); } }}
+                  placeholder="Nome da cor (ex: Verde)"
+                  aria-label="Nome da cor"
+                  className="rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                />
+                <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-white/15 px-3 py-2.5 text-xs font-semibold text-white/70 transition-colors hover:border-green-500/40 hover:text-white">
+                  <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" className="hidden" onChange={e => readColorImageFile(e.target.files?.[0] ?? null)} />
+                  <ImageIcon size={14} /> {newColorImage ? 'Foto pronta' : 'Foto da cor'}
+                </label>
+                <button
+                  type="button"
+                  onClick={addColorOption}
+                  disabled={!newColorLabel.trim() || colorOptions.length >= 5}
+                  className="cursor-pointer rounded-xl bg-green-600 px-4 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Adicionar
+                </button>
+              </div>
+              {colorOptions.length > 0 ? (
+                <div className="mt-4 flex flex-wrap gap-3">
+                  {colorOptions.map(c => (
+                    <div key={c.label} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] py-1.5 pl-1.5 pr-2">
+                      {c.image ? (
+                        <img src={c.image} alt={c.label} className="h-10 w-10 rounded-lg object-cover" />
+                      ) : (
+                        <span className="h-10 w-10 rounded-lg border border-white/10" style={{ background: c.hex || '#c2410c' }} />
+                      )}
+                      <span className="text-sm font-semibold text-white">{c.label}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeColorOption(c.label)}
+                        className="ml-1 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full text-white/50 transition-colors hover:bg-red-500/15 hover:text-red-300"
+                        aria-label={`Remover ${c.label}`}
+                      >
+                        <X size={13} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-3 text-xs text-white/40">Sem cores: o produto aparece com uma cor só. Máximo 5 cores.</p>
+              )}
+            </section>
 
             {/* 2) Envio + precificacao */}
             <div className="grid items-start gap-5 lg:grid-cols-2">
