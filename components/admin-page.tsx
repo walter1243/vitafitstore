@@ -2,7 +2,8 @@
 import { AdminSectors } from '@/components/admin-sectors';
 import { dataUrlToBlobUrl, uploadInlineImages } from '@/lib/upload-data-url';
 import { clipboardFiles, isEditableTarget, useHoverPaste } from '@/lib/use-hover-paste';
-import { parsePersonalize } from '@/lib/personalize';
+import { DEFAULT_NAME_COLORS, packOf, parsePersonalize } from '@/lib/personalize';
+import { NamePreview } from '@/components/personalize/name-personalizer';
 import { AdminWorlds } from '@/components/admin-worlds';
 import { CategoryCollections, ParcelFields, PersonalizeEditor, ProductPlacement, SaleModeFields } from '@/components/admin-product-extras';
 import { TrackingSection, needsTracking, isNewAlert } from '@/components/admin-tracking';
@@ -80,6 +81,7 @@ type Order = {
   shippingMethod?: string;
   shippingService?: string;
   pickupPoint?: string;
+  shippingCost?: number | string | null;
   itemsJson?: string | null;
   status: 'pending' | 'shipped' | 'delivered';
   tracking: string;
@@ -640,6 +642,14 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
 
   const visibleAdditionalImages = additionalImages.slice(0, 10);
 
+  // Janela do cadastro aberta: a lista atras nao rola.
+  useEffect(() => {
+    if (!showForm || productViewTab !== 'products') return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, [showForm, productViewTab]);
+
   function stripHtml(html: string) {
     return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
   }
@@ -664,7 +674,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
             <h2 className="flex items-center gap-2 text-sm sm:text-base font-semibold text-white">
               {productViewTab === 'products' ? <Package size={16} className="text-green-500" /> : <Settings size={16} className="text-green-500" />}
               {productViewTab === 'products'
-                ? (showForm ? (editingProductId ? 'Editar Produto' : 'Novo Produto') : 'Produtos')
+                ? 'Produtos'
                 : productViewTab === 'cards'
                   ? 'Categorias'
                   : 'Kits'}
@@ -709,13 +719,30 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                 onClick={onToggleForm}
                 className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-green-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-green-700 sm:w-auto sm:shrink-0"
               >
-                {showForm ? <><X size={13} />Fechar</> : <><Plus size={13} />Novo produto</>}
+                <Plus size={13} />Novo produto
               </button>
             )}
           </div>
         </div>
 
+        {/* Cadastro/edicao de produto em janela (pop-up) por cima da lista. */}
         {productViewTab === 'products' && showForm && (
+          <div className="fixed inset-0 z-[60] overflow-y-auto bg-black/70 p-3 backdrop-blur-sm sm:p-6" role="dialog" aria-modal="true" aria-label={editingProductId ? 'Editar produto' : 'Novo produto'}>
+          <div className="mx-auto w-full max-w-6xl rounded-2xl border border-white/10 bg-[#161b28] shadow-2xl">
+          <div className="sticky top-0 z-20 flex items-center justify-between gap-3 rounded-t-2xl border-b border-white/10 bg-[#161b28]/95 px-5 py-4 backdrop-blur">
+            <h2 className="flex items-center gap-2 text-base font-semibold text-white">
+              <Package size={16} className="text-green-500" />
+              {editingProductId ? 'Editar produto' : 'Novo produto'}
+            </h2>
+            <button
+              type="button"
+              onClick={onToggleForm}
+              aria-label="Fechar"
+              className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+            >
+              <X size={18} />
+            </button>
+          </div>
           <div className="space-y-5 p-5">
             {importSourceUrl && (
               <div className="flex items-center gap-2 rounded-xl border border-blue-500/20 bg-blue-500/10 px-4 py-2.5 text-sm text-blue-300">
@@ -1368,7 +1395,14 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
               </div>
             </section>
 
-            <div className="flex items-center justify-end gap-3 border-t border-white/10 pt-1">
+            <div className="sticky bottom-0 z-20 -mx-5 -mb-5 flex items-center justify-end gap-3 rounded-b-2xl border-t border-white/10 bg-[#161b28]/95 px-5 py-3 backdrop-blur">
+              <button
+                type="button"
+                onClick={onToggleForm}
+                className="cursor-pointer rounded-xl border border-white/10 px-5 py-2.5 text-sm font-semibold text-white/70 transition-colors hover:bg-white/5"
+              >
+                Cancelar
+              </button>
               <button
                 type="button"
                 onClick={onSubmit}
@@ -1379,6 +1413,8 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                 {saving ? 'Salvando...' : editingProductId ? 'Salvar alterações' : 'Cadastrar Produto'}
               </button>
             </div>
+          </div>
+          </div>
           </div>
         )}
 
@@ -1610,8 +1646,9 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
 const BLIND_SHIP_NOTE =
   'We are doing dropshipping. Please DO NOT include any invoices, promotions, price tags or brand QR codes inside the package. Blind shipping only. Thank you!';
 
-function OrdersSection({ orders, onUpdateTracking, onRefresh }: {
+function OrdersSection({ orders, products, onUpdateTracking, onRefresh }: {
   orders: Order[];
+  products: Product[];
   onUpdateTracking: (id: number, tracking: string, status: Order['status']) => void;
   onRefresh: () => void;
 }) {
@@ -1702,9 +1739,9 @@ function OrdersSection({ orders, onUpdateTracking, onRefresh }: {
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4 text-sm">
             <div><div className="mb-1 text-xs font-semibold uppercase tracking-wide text-white/40">Cliente</div><div className="font-medium text-white">{o.customer}</div></div>
-            <div>
-              <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-white/40">Produto</div>
-              <OrderItemsList order={o} />
+            <div className="col-span-2 sm:col-span-3">
+              <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-white/40">Itens do pedido</div>
+              <OrderItemsList order={o} products={products} />
               {!o.itemsJson && (o.selectedColor || o.selectedSize) && (
                 <div className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[11px] font-semibold text-amber-300">
                   {[o.selectedColor && `Color: ${o.selectedColor}`, o.selectedSize && `Talla: ${o.selectedSize}`].filter(Boolean).join(' · ')}
@@ -1712,7 +1749,16 @@ function OrdersSection({ orders, onUpdateTracking, onRefresh }: {
               )}
             </div>
             <div><div className="mb-1 text-xs font-semibold uppercase tracking-wide text-white/40">Contato</div><div className="text-white/70">{o.customerEmail || '—'} {o.customerPhone ? `• ${o.customerPhone}` : ''}</div></div>
-            <div className="sm:col-span-3"><div className="mb-1 text-xs font-semibold uppercase tracking-wide text-white/40">Endereço</div><div className="text-white/70">{o.addressLine || '—'} {o.postalCode ? `• ${o.postalCode}` : ''} {o.city ? `• ${o.city}` : ''} {o.country ? `• ${o.country}` : ''}</div></div>
+            <div className="sm:col-span-2"><div className="mb-1 text-xs font-semibold uppercase tracking-wide text-white/40">Endereço</div><div className="text-white/70">{o.addressLine || '—'} {o.postalCode ? `• ${o.postalCode}` : ''} {o.city ? `• ${o.city}` : ''} {o.country ? `• ${o.country}` : ''}</div></div>
+            <div className="col-span-2 sm:col-span-3">
+              <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-white/40">Entrega</div>
+              <div className="text-white/80">
+                {o.shippingMethod === 'pickup' ? 'Recoger en punto' : o.shippingMethod === 'home' ? 'Entrega a domicilio' : 'Envio padrão'}
+                {o.shippingCost != null && o.shippingCost !== '' && <> · {Number(o.shippingCost) === 0 ? 'grátis' : `€${Number(o.shippingCost).toFixed(2)}`}</>}
+                {o.shippingService && <span className="text-white/50"> · {o.shippingService}</span>}
+              </div>
+              {o.pickupPoint && <div className="mt-1 rounded-lg bg-sky-500/10 px-2.5 py-1.5 text-[13px] text-sky-200">Ponto: {o.pickupPoint}</div>}
+            </div>
           </div>
 
           <div className="flex gap-2 flex-wrap">
@@ -2703,7 +2749,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
               upsellIds={prodUpsellIds}
               newCategoryName={newCategoryName}
               editingProductId={editingProductId}
-              onToggleForm={() => setShowForm(f => !f)}
+              onToggleForm={() => { if (showForm && editingProductId) resetProductForm(); setShowForm(f => !f) }}
               onEditProduct={startEditProduct}
               onFormChange={(k, v) => setProdForm(f => ({ ...f, [k]: v }))}
               onImageChange={setProdImage}
@@ -2735,7 +2781,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
           {section === 'sectors' && <AdminSectors />}
           {section === 'worlds' && <AdminWorlds />}
           {section === 'import-supplier' && <ImportSupplierSection onImportToStore={preFillFromSupplier} />}
-          {section === 'orders' && <OrdersSection orders={orders} onUpdateTracking={updateTracking} onRefresh={fetchData} />}
+          {section === 'orders' && <OrdersSection orders={orders} products={products} onUpdateTracking={updateTracking} onRefresh={fetchData} />}
           {section === 'reviews' && <ReviewsSection />}
           {section === 'tracking' && <TrackingSection orders={orders} onChanged={refreshOrders} notify={addToast} />}
           {section === 'automation' && <AutomationSection />}
@@ -2842,24 +2888,53 @@ function DashboardSection({ products, orders, revenue, onNavigate, trackingAlert
 
 // Itens do pedido: todos os produtos, quantidade, variante e o nome
 // personalizado (chaveiro / pet) em destaque. Pedidos antigos so tinham o 1o.
-function OrderItemsList({ order }: { order: Order }) {
-  let items: { name?: string; quantity?: number; color?: string; size?: string; text?: string; note?: string }[] = [];
+type OrderLine = { productId?: number; name?: string; quantity?: number; color?: string; size?: string; text?: string; note?: string; total?: number };
+
+// Itens do pedido como o cliente montou: foto (da cor escolhida), cor,
+// tamanho, quantidade, valor cobrado e, no personalizado, a arte com o nome
+// do jeito que ele viu na loja.
+function OrderItemsList({ order, products = [] }: { order: Order; products?: Product[] }) {
+  let items: OrderLine[] = [];
   try { items = order.itemsJson ? JSON.parse(order.itemsJson) : []; } catch { items = []; }
   if (items.length === 0) return <div className="text-white/70">{order.product}</div>;
   return (
-    <ul className="space-y-1.5">
-      {items.map((it, i) => (
-        <li key={i} className="text-white/80">
-          <span className="font-semibold text-white">{it.quantity ?? 1}×</span> {it.name}
-          {(it.color || it.size) && <span className="text-white/50"> · {[it.color, it.size].filter(Boolean).join(' · ')}</span>}
-          {it.text && (
-            <span className="ml-1.5 inline-flex rounded-full border border-fuchsia-500/40 bg-fuchsia-500/10 px-2 py-0.5 text-[11px] font-bold text-fuchsia-200">
-              Nome: «{it.text}»
-            </span>
-          )}
-          {it.note && <span className="mt-1 block rounded-lg bg-white/5 px-2 py-1 text-[12px] text-white/75">{it.note}</span>}
-        </li>
-      ))}
+    <ul className="space-y-3">
+      {items.map((it, i) => {
+        const p = products.find((x) => x.id === it.productId);
+        const pers = parsePersonalize((p as any)?.personalize);
+        const colorOpt = ((p as any)?.colorOptions ?? []).find((c: any) => c.label === it.color);
+        const photo = colorOpt?.image || (p as any)?.mainImage || (p as any)?.image || '';
+        // Cor das letras: "Letras: X" na nota, ou a propria cor (produto sem cores).
+        const letterName = (it.note ?? '').match(/Letras: ([^·]+)/)?.[1]?.trim() || (!colorOpt ? it.color : undefined);
+        const palette = pers.colors.length ? pers.colors : DEFAULT_NAME_COLORS;
+        const letter = palette.find((c) => c.name.toLowerCase() === (letterName ?? '').toLowerCase());
+        const pack = packOf(pers);
+        const qty = it.quantity ?? 1;
+        return (
+          <li key={i} className="flex flex-col gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3 sm:flex-row">
+            {it.text && pers.enabled && photo ? (
+              <div className="relative h-40 w-40 shrink-0 overflow-hidden rounded-lg bg-white">
+                <NamePreview cfg={{ ...pers, previewImage: photo, color: letter?.hex || pers.color }} text={it.text} placeholder="" swingKey={0} stage="#ffffff" />
+              </div>
+            ) : photo ? (
+              <img src={photo} alt={it.name ?? ''} className="h-20 w-20 shrink-0 rounded-lg object-cover" />
+            ) : null}
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <span className="font-semibold text-white">{it.name}</span>
+                {it.total != null && <span className="font-bold text-white">€{Number(it.total).toFixed(2)}</span>}
+              </div>
+              <div className="flex flex-wrap gap-1.5 text-[12px]">
+                <span className="rounded-full bg-white/10 px-2 py-0.5 font-bold text-white">{pack ? `${Math.round(qty / pack.qty)} pack(s) · ${qty} un.` : `${qty} un.`}</span>
+                {it.color && <span className="rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 font-bold text-amber-200">{colorOpt ? 'Cor' : 'Cor das letras'}: {it.color}</span>}
+                {it.size && <span className="rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 font-bold text-amber-200">Tamanho: {it.size}</span>}
+                {it.text && <span className="rounded-full border border-fuchsia-500/40 bg-fuchsia-500/10 px-2 py-0.5 font-bold text-fuchsia-200">Nome: «{it.text}»</span>}
+              </div>
+              {it.note && <div className="rounded-lg bg-white/5 px-2 py-1 text-[12px] text-white/75">{it.note}</div>}
+            </div>
+          </li>
+        );
+      })}
     </ul>
   );
 }

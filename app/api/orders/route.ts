@@ -20,6 +20,7 @@ async function ensureOrderColumns() {
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_method TEXT`;
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_service TEXT`;
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS pickup_point TEXT`;
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_cost NUMERIC`;
 }
 
 // Dados pessoais dos clientes: so o admin pode listar.
@@ -47,6 +48,7 @@ export async function GET(req: NextRequest) {
         COALESCE(o.shipping_method, '')               AS "shippingMethod",
         COALESCE(o.shipping_service, '')              AS "shippingService",
         COALESCE(o.pickup_point, '')                  AS "pickupPoint",
+        o.shipping_cost                               AS "shippingCost",
         o.items_json                                  AS "itemsJson",
         o.status,
         COALESCE(o.tracking_code, '')                 AS tracking,

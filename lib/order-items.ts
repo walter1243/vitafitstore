@@ -4,7 +4,9 @@ import { cleanCustomText } from '@/lib/personalize';
 // aceita no maximo 500 caracteres — com os nomes personalizados a lista pode
 // passar disso, entao ela vai dividida em items_0, items_1, ...
 
-export type OrderItem = { productId: number; quantity: number; color?: string; size?: string; text?: string; note?: string };
+// `total`: valor da linha calculado no servidor (create-intent), pra o pedido
+// mostrar exatamente o que foi cobrado.
+export type OrderItem = { productId: number; quantity: number; color?: string; size?: string; text?: string; note?: string; total?: number };
 
 const CHUNK = 490;
 
@@ -13,11 +15,12 @@ export function cleanItems(raw: unknown): OrderItem[] {
   return raw
     .map((i: any) => ({
       productId: Number(i?.productId),
-      quantity: Math.max(1, Math.min(99, Math.floor(Number(i?.quantity) || 1))),
+      quantity: Math.max(1, Math.min(1000, Math.floor(Number(i?.quantity) || 1))),
       color: i?.color ? String(i.color).slice(0, 60) : undefined,
-      size: i?.size ? String(i.size).slice(0, 20) : undefined,
+      size: i?.size ? String(i.size).slice(0, 40) : undefined,
       text: i?.text ? cleanCustomText(i.text) || undefined : undefined,
       note: i?.note ? String(i.note).replace(/[<>]/g, '').slice(0, 300) || undefined : undefined,
+      total: Number.isFinite(Number(i?.total)) && i?.total !== undefined ? Math.round(Number(i.total) * 100) / 100 : undefined,
     }))
     .filter((i) => Number.isFinite(i.productId) && i.productId > 0);
 }
