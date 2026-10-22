@@ -1,5 +1,5 @@
 "use client"
-import { ShipOptionsList, SAMPLE_ZIP, loadMethod, loadZip, saveMethod, useShipQuote, type ShipMethod } from '@/components/shipping/shipping-options'
+import { SAMPLE_ZIP, loadMethod, loadZip, useShipQuote, type ShipMethod } from '@/components/shipping/shipping-options'
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
@@ -29,9 +29,10 @@ export function CartSidebar() {
   // Frete da Packlink pro CP e metodo guardados (ou CP de referencia).
   const [zip, setZip] = useState('')
   const [method, setMethod] = useState<ShipMethod>('pickup')
+  // A escolha (ponto x casa) fica na pagina do produto e no checkout.
   useEffect(() => { if (isCartOpen) { setZip(loadZip()); setMethod(loadMethod()) } }, [isCartOpen])
   const shipItems = isCartOpen ? items.map((i) => ({ productId: i.product.id, quantity: i.quantity })) : []
-  const { quote, loading: shipLoading } = useShipQuote(shipItems, zip.length === 5 ? zip : SAMPLE_ZIP)
+  const { quote } = useShipQuote(shipItems, zip.length === 5 ? zip : SAMPLE_ZIP)
   const chosen = quote ? (quote[method] ?? quote.pickup ?? quote.home) : null
   const shipping = chosen ? chosen.charged : fallbackShipping
   const total = totalPrice + shipping
@@ -214,16 +215,10 @@ export function CartSidebar() {
                   <span className="font-semibold text-[#23263f]">{totalPrice.toFixed(2)}€</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-[#565a78]">Envío</span>
+                  <span className="text-[#565a78]">Envío{chosen ? (chosen.type === 'pickup' ? ' · recoger en punto' : ' · a domicilio') : ''}</span>
                   <span className={hasFreeShipping || shipping === 0 ? 'font-extrabold text-[#15803d]' : 'font-semibold text-[#23263f]'}>
                     {hasFreeShipping || shipping === 0 ? 'Gratis' : `${shipping.toFixed(2)}€`}
                   </span>
-                </div>
-                <div className="pt-1">
-                  <ShipOptionsList quote={quote} method={chosen?.type ?? method} onMethod={(m) => { setMethod(m); saveMethod(m) }} loading={shipLoading} />
-                  <p className="mt-1 text-[11px] text-[#565a78]">
-                    {zip.length === 5 ? `Precio para ${zip}.` : `Precio de referencia (${SAMPLE_ZIP}). El final se calcula con tu código postal en el pago.`}
-                  </p>
                 </div>
                 <div className="flex items-baseline justify-between pt-2">
                   <span className="font-kids text-xl font-bold text-[#23263f]">Total</span>
