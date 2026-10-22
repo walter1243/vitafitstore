@@ -107,7 +107,7 @@ export function NavidadSides({ mobile = true }: { mobile?: boolean }) {
     <div className="pointer-events-none absolute inset-0">
       {mobile && (
         <div className="xl:hidden">
-          <NavidadTree className="absolute right-2 top-16 h-28 w-24 sm:right-6 sm:h-36 sm:w-28" />
+          <NavidadTree className="absolute right-2 top-28 h-28 w-24 sm:right-6 sm:top-32 sm:h-36 sm:w-28" />
           <NavidadVase className="absolute bottom-3 left-2 h-28 w-24 sm:left-6 sm:h-32 sm:w-28" />
           <NavidadSnowman className="absolute bottom-3 right-3 h-24 w-20 sm:right-8 sm:h-28 sm:w-24" />
         </div>
