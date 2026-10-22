@@ -127,7 +127,11 @@ export function AddressFinder({ onAddress }: { onAddress: (a: FoundAddress) => v
   async function reverseGoogle(lat: number, lng: number, acc?: number) {
     const g = window.google;
     const { Geocoder } = await g.maps.importLibrary('geocoding');
-    const { results } = await new Geocoder().geocode({ location: { lat, lng } });
+    // O Google as vezes nao responde: depois de 8 s cai pro OSM (em reverse()).
+    const { results } = await Promise.race([
+      new Geocoder().geocode({ location: { lat, lng } }),
+      new Promise<never>((_, rej) => setTimeout(() => rej(new Error('geocode timeout')), 8000)),
+    ]) as any;
     const best = (results ?? []).find((r: any) => r.types?.includes('street_address') || r.types?.includes('premise')) ?? results?.[0];
     if (!best) throw new Error('No encontramos tu dirección.');
     await apply(fromComponents(best.address_components ?? []), lat, lng, acc);
