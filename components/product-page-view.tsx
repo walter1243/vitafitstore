@@ -378,8 +378,8 @@ export function ProductPageView({ product }: { product: Product }) {
               <span className="text-xs font-medium text-orange-700">{product.stock} disponibles</span>
               {/* Total que o cliente paga: produto + envio escolhido (mesma conta do carrinho). */}
               <div className="flex w-full items-baseline justify-between gap-2 border-t border-slate-100 pt-2 leading-tight sm:ml-auto sm:block sm:w-auto sm:border-0 sm:pt-0 sm:text-right">
-                <span className="block text-xs text-slate-500">{shipCost == null ? 'Total' : shipCost === 0 ? 'Total · envío gratis' : `Total con envío (${shipCost.toFixed(2)}€)`}</span>
-                <span className="block whitespace-nowrap text-xl font-black text-slate-900">{(productLineTotal + (shipCost ?? 0)).toFixed(2)}€</span>
+                <span className="block text-sm text-slate-600">{shipCost == null ? 'Total' : shipCost === 0 ? 'Total · envío gratis' : `Total con envío (${shipCost.toFixed(2)}€)`}</span>
+                <span className="block whitespace-nowrap text-3xl font-black text-slate-900 sm:text-2xl">{(productLineTotal + (shipCost ?? 0)).toFixed(2)}€</span>
               </div>
             </div>
 
