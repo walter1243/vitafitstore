@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Home, Loader2, MapPin, Store } from 'lucide-react';
+import { Home, Loader2, LocateFixed, MapPin, Store } from 'lucide-react';
 
 // Frete pela Packlink: "Recoger en punto" (mais barato) ou "Entrega a
 // domicilio". O CP e o metodo escolhidos ficam guardados no navegador e
@@ -84,27 +84,58 @@ export function ProductShipping({ productId, quantity, size, onShipping }: { pro
   const [zip, setZip] = useState('');
   const [method, setMethod] = useState<ShipMethod>('pickup');
   useEffect(() => { setZip(loadZip()); setMethod(loadMethod()); }, []);
+  // "Usar mi ubicación": GPS do navegador → CP pelo endereco.
+  const [locating, setLocating] = useState(false);
+  const [geoError, setGeoError] = useState('');
+  function locate() {
+    setGeoError('');
+    if (!navigator.geolocation) { setGeoError('Tu navegador no permite ubicación. Escribe el código postal.'); return; }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      try {
+        const r = await fetch(`/api/shipping/geo?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
+        const d = await r.json();
+        if (!r.ok || !d?.zip) throw new Error(d?.error || 'No encontramos tu código postal.');
+        setZip(d.zip); saveZip(d.zip);
+      } catch (e: any) {
+        setGeoError(e?.message || 'No encontramos tu código postal.');
+      } finally { setLocating(false); }
+    }, () => { setLocating(false); setGeoError('Permite la ubicación o escribe el código postal.'); }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 });
+  }
   const z = zip.replace(/\D/g, '');
   const { quote, loading } = useShipQuote([{ productId, quantity, size }], z.length === 5 ? z : SAMPLE_ZIP);
   const chosen = quote ? (quote[method] ?? quote.pickup ?? quote.home) : null;
   const charged = chosen ? chosen.charged : null;
   useEffect(() => { onShipping?.(charged); }, [charged, onShipping]);
   return (
-    <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm font-bold text-slate-900">Envío</p>
-        <label className="flex items-center gap-1.5 text-xs text-slate-500">
-          <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+    <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4">
+      <p className="mb-2 text-sm font-bold text-slate-900">Envío</p>
+      <div className="mb-3 flex gap-2">
+        <label className="relative flex-1">
+          <span className="sr-only">Código postal</span>
+          <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
           <input
             value={zip}
             inputMode="numeric"
+            autoComplete="postal-code"
             maxLength={5}
             placeholder="Tu código postal"
             onChange={(e) => { const v = e.target.value.replace(/\D/g, '').slice(0, 5); setZip(v); if (v.length === 5) saveZip(v); }}
-            className="h-8 w-32 rounded-lg border border-slate-200 px-2 text-sm text-slate-900 outline-none focus:border-[#c2410c]"
+            className="h-11 w-full rounded-xl border border-slate-200 pl-9 pr-3 text-center text-base font-semibold tracking-wider text-slate-900 outline-none transition-colors placeholder:font-normal placeholder:tracking-normal focus:border-[#c2410c]"
           />
         </label>
+        <button
+          type="button"
+          onClick={locate}
+          disabled={locating}
+          className="inline-flex h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border border-slate-200 px-3 text-sm font-semibold text-slate-700 transition-colors hover:border-[#c2410c] hover:text-[#c2410c] disabled:cursor-wait disabled:opacity-60"
+        >
+          {locating ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <LocateFixed className="h-4 w-4" aria-hidden="true" />}
+          <span className="hidden sm:inline">Usar mi ubicación</span>
+          <span className="sm:hidden">Ubicación</span>
+        </button>
       </div>
+      {geoError && <p className="-mt-1 mb-2 text-xs font-medium text-red-600">{geoError}</p>}
       <ShipOptionsList quote={quote} method={method} onMethod={(m) => { setMethod(m); saveMethod(m); }} loading={loading} />
       <p className="mt-2 text-[11px] text-slate-500">
         {z.length === 5 ? `Precio para ${z}.` : `Precio de referencia (${SAMPLE_ZIP}). Escribe tu código postal para el tuyo.`} Envío gratis en pedidos +50€.

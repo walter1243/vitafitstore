@@ -4,7 +4,7 @@ import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ChevronRight, Lock, Truck, RotateCcw, Minus, Plus, ShoppingCart, Check, Play, Ruler } from 'lucide-react'
+import { ChevronRight, Truck, Minus, Plus, ShoppingCart, Check, Play, Ruler } from 'lucide-react'
 import { useCart } from '@/lib/cart-context'
 import { type Product } from '@/lib/products'
 import { TrustpilotWidget } from '@/components/trustpilot-widget'
@@ -244,21 +244,9 @@ export function ProductPageView({ product }: { product: Product }) {
             </p>
           </div>
 
-          {/* Key highlights — pulled up near the price like a real listing, not buried at the bottom */}
-          {product.benefits.length > 0 && (
-            <ul className="mt-4 space-y-1.5">
-              {product.benefits.slice(0, 4).map((b, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
-                  <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-orange-700" />
-                  {b}
-                </li>
-              ))}
-            </ul>
-          )}
-
           {/* Cores (Admin → Produtos → Cores do produto): trocar a cor troca a foto. */}
           {product.colorOptions && product.colorOptions.length > 0 && (
-            <div className="mt-4">
+            <div className="mt-5">
               <p className="mb-2 text-sm font-medium text-slate-700">Color: <span className="font-bold text-slate-900">{selectedColor}</span></p>
               <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Color">
                 {product.colorOptions.map(c => (
@@ -286,9 +274,6 @@ export function ProductPageView({ product }: { product: Product }) {
               </div>
             </div>
           )}
-
-          {/* Envio Packlink: ponto de recogida x domicilio, com preco atual */}
-          <ProductShipping productId={product.id} quantity={quantity} size={selectedSize || undefined} onShipping={setShipCost} />
 
           {/* Size selector */}
           {needsSize && (
@@ -337,6 +322,9 @@ export function ProductPageView({ product }: { product: Product }) {
               <p className="mt-1 text-right text-[11px] text-slate-400">{obs.length}/250</p>
             </div>
           )}
+
+          {/* Envio Packlink (antes da compra): ponto de recogida x domicilio, com preco atual */}
+          <ProductShipping productId={product.id} quantity={quantity} size={selectedSize || undefined} onShipping={setShipCost} />
 
           {personalized && (
             <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4">
@@ -419,19 +407,17 @@ export function ProductPageView({ product }: { product: Product }) {
             <SizeGuideModal type={product.productType} onClose={() => setSizeGuideOpen(false)} />
           )}
 
-          {/* Trust strip */}
-          <div className="mt-4 flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-[0_2px_10px_rgba(0,0,0,0.03)]">
-            {[
-              { icon: <Lock className="h-4 w-4 text-orange-700" />, label: 'Pago seguro' },
-              { icon: <Truck className="h-4 w-4 text-orange-700" />, label: 'Envío gratis +50€' },
-              { icon: <RotateCcw className="h-4 w-4 text-orange-700" />, label: 'Devolución 14 días' },
-            ].map((item, i) => (
-              <div key={i} className="flex flex-col items-center gap-1.5">
-                {item.icon}
-                <span className="text-[11px] font-medium text-slate-500">{item.label}</span>
-              </div>
-            ))}
-          </div>
+          {/* Confianca: so informacao, embaixo e lado a lado */}
+          {product.benefits.length > 0 && (
+            <ul className="mt-4 grid grid-cols-2 gap-x-3 gap-y-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 sm:grid-cols-4">
+              {product.benefits.slice(0, 4).map((b, i) => (
+                <li key={i} className="flex items-center gap-1.5 text-[12px] font-medium leading-tight text-slate-600">
+                  <Check className="h-3.5 w-3.5 shrink-0 text-orange-700" aria-hidden="true" />
+                  {b}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 
