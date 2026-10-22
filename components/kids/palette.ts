@@ -30,6 +30,28 @@ export function accentFor(c?: Pick<SiteCollection, 'slug' | 'interactive'> | nul
   return ROTATION[h % ROTATION.length];
 }
 
+// Cor escolhida no Admin (Setores e coleções → Cor de fundo). Os valores
+// padrao do cadastro nao contam como escolha: ai fica a paleta acima.
+const DEFAULT_BG = ['#F5F5F7', '#07080F'];
+export function customBg(c?: { bgColor?: string } | null) {
+  const hex = String(c?.bgColor || '').toUpperCase();
+  return /^#[0-9A-F]{6}$/.test(hex) && !DEFAULT_BG.includes(hex) ? hex : null;
+}
+const mixHex = (hex: string, to: number, amount: number) => {
+  const n = parseInt(hex.slice(1), 16);
+  const m = (c: number) => Math.round(c + (to - c) * amount).toString(16).padStart(2, '0');
+  return `#${m((n >> 16) & 255)}${m((n >> 8) & 255)}${m(n & 255)}`;
+};
+export function isDarkColor(hex: string) {
+  const n = parseInt(hex.slice(1), 16);
+  const lum = (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+  return lum < 0.55;
+}
+// Acento dos cards derivado da cor da colecao.
+export function accentFromColor(hex: string): Accent {
+  return { block: mixHex(hex, 255, 0.55), deep: mixHex(hex, 0, 0.45), tint: mixHex(hex, 255, 0.8), dot: mixHex(hex, 255, 0.3) };
+}
+
 // Fundo de bolinhas (confete) por cima de uma cor.
 export const dots = (color: string) => ({
   backgroundImage: `radial-gradient(${color} 2px, transparent 2.5px)`,

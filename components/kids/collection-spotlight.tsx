@@ -9,7 +9,7 @@ import { ThemedCollection } from '@/components/themes/themed-sections';
 import { themeFor } from '@/components/themes/sector-themes';
 import { toStoreProduct } from '@/lib/store-product';
 import { useStoreProducts } from './use-store-products';
-import { accentFor } from './palette';
+import { accentFor, accentFromColor, customBg, isDarkColor } from './palette';
 import { useSectors } from './sectors-context';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -78,19 +78,22 @@ export function CollectionSpotlight({ slug, count, products, hideProducts, prima
     return <ThemedCollection collection={collection} theme={theme} products={list} showCarousel={!hideProducts} primaryHref={primaryHref} primaryLabel={primaryLabel} headingLevel={headingLevel} priority={priority} first={first} />;
   }
   const Heading = headingLevel;
-  const accent = accentFor(collection);
+  // Cor de fundo escolhida no Admin manda na faixa; sem escolha, paleta infantil.
+  const bg = customBg(collection);
+  const accent = bg ? accentFromColor(bg) : accentFor(collection);
+  const darkBg = bg ? isDarkColor(bg) : false;
   // Infantil com cara de loja: cabecalho compacto e os produtos logo embaixo.
   // As brincadeiras (montar, pintar, acender) ficam na pagina de cada produto.
   return (
-    <section ref={ref} className={`px-4 sm:px-6 lg:px-8 ${first ? 'pb-10 pt-32 sm:pt-36' : 'py-12 sm:py-16'}`} style={{ background: accent.tint }}>
+    <section ref={ref} className={`px-4 sm:px-6 lg:px-8 ${first ? 'pb-10 pt-32 sm:pt-36' : 'py-12 sm:py-16'}`} style={{ background: bg ?? accent.tint }}>
       <div className="mx-auto max-w-6xl">
-        <div className="flex flex-wrap items-end justify-between gap-4 pb-6" style={{ borderBottom: '2px solid #1E1B4B1a' }}>
+        <div className="flex flex-wrap items-end justify-between gap-4 pb-6" style={{ borderBottom: `2px solid ${darkBg ? '#ffffff33' : '#1E1B4B1a'}` }}>
           <div>
-            <Heading className="text-3xl font-bold text-[#1E1B4B] sm:text-4xl">{collection.name}</Heading>
-            {collection.tagline && <p className="mt-1 text-base text-[#3F3D6B]">{collection.tagline}</p>}
+            <Heading className={`text-3xl font-bold sm:text-4xl ${darkBg ? 'text-white' : 'text-[#1E1B4B]'}`}>{collection.name}</Heading>
+            {collection.tagline && <p className={`mt-1 text-base ${darkBg ? 'text-white/85' : 'text-[#3F3D6B]'}`}>{collection.tagline}</p>}
           </div>
           {!first && list.length > 0 && (
-            <Link href={primaryHref ?? `/coleccion/${collection.slug}`} className="inline-flex min-h-11 items-center rounded-full bg-[#1E1B4B] px-5 text-sm font-extrabold text-white transition-colors hover:bg-[#363a5c]">
+            <Link href={primaryHref ?? `/coleccion/${collection.slug}`} className={`inline-flex min-h-11 items-center rounded-full px-5 text-sm font-extrabold transition-colors ${darkBg ? "bg-white text-[#1E1B4B] hover:bg-white/90" : "bg-[#1E1B4B] text-white hover:bg-[#363a5c]"}`}>
               Ver los {list.length}
             </Link>
           )}
