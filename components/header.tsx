@@ -13,6 +13,12 @@ import { CollectionsMenuPanel, homeCategoryHref, selectHomeCategory, useHomeCate
 // enviada no admin continua sendo usada no modo "icone + nome".
 const DEFAULT_LOGO = '/images/logo-kitoys-3d.png';
 
+const MENU_ART: Record<string, string> = {
+  hogar: '/images/worlds/hogar-vaso.png',
+  llaveros: '/images/worlds/pers-llavero.png',
+  mascotas: '/images/worlds/pet-bol.png',
+  navidad: '/images/worlds/navidad-arbol.png',
+};
 const NAV_ITEM = 'whitespace-nowrap rounded-full px-3 py-2 font-kids text-base font-semibold text-[#23263f] transition-colors duration-200 hover:bg-[#FFF4E0] cursor-pointer lg:px-4 lg:text-lg';
 const MOBILE_ITEM = 'block rounded-xl px-4 py-3 font-kids text-xl font-bold text-[#23263f] transition-colors hover:bg-[#FFF4E0]';
 
@@ -286,11 +292,10 @@ export function Header() {
                       onClick={() => setMobileOpen(false)}
                       className="ml-3 flex items-center gap-3 rounded-xl px-3 py-2 text-base font-semibold text-[#565a78] transition-colors hover:bg-[#FFF4E0] hover:text-[#23263f]"
                     >
-                      <span className="h-9 w-9 shrink-0 overflow-hidden rounded-lg" style={{ background: softOf(c) }}>
-                        {(c.imageUrl || c.photoUrl) && (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={c.imageUrl || c.photoUrl} alt="" className="h-full w-full object-contain p-0.5" />
-                        )}
+                      <span className="h-9 w-9 shrink-0 overflow-hidden rounded-lg" style={{ background: sector.style === 'infantil' ? softOf(c) : '#F3ECE2' }}>
+                        {/* sem arte propria: a ilustracao do mundo */}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={c.imageUrl || c.photoUrl || MENU_ART[sector.style] || ''} alt="" className="h-full w-full object-contain p-0.5" />
                       </span>
                       {c.name}
                     </Link>

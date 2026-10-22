@@ -73,7 +73,7 @@ export function CollectionCatalog({ slug }: { slug: string }) {
   const navidad = sectorTheme?.key === 'navidad';
   return (
     <div className={navidad ? 'kids-navidad relative min-h-[560px] overflow-hidden' : ''} style={navidad ? { background: sectorTheme!.bgAlt } : undefined}>
-    {navidad && <><NavidadSnow /><NavidadSides /></>}
+    {navidad && <><NavidadSnow /><NavidadSides mobile={false} /></>}
     <div className="relative mx-auto max-w-7xl px-4 pb-20 pt-10 sm:px-6 lg:px-8">
       {/* Topo: atalhos pras outras colecoes do mundo (desliza no celular). */}
       {(others.length > 0 || sector) && (
