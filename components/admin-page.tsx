@@ -190,6 +190,8 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   const isImg = (t: string) => /^image\//.test(t);
   const mainHover = useHoverPaste<HTMLDivElement>(isImg, (files) => handleMainFile(files[0]));
   const galleryHover = useHoverPaste<HTMLDivElement>(isImg, (files) => handleAdditionalFiles(files));
+  // Cores: Ctrl+V com o mouse em cima do bloco (ou no campo do nome) vira a foto da cor.
+  const colorHover = useHoverPaste<HTMLElement>(isImg, (files) => readColorImageFile(files[0]));
   const pasteFallback = useRef<(files: File[]) => void>(() => {});
   pasteFallback.current = (files) => {
     if (!image) { handleMainFile(files[0]); if (files.length > 1) handleAdditionalFiles(files.slice(1)); }
@@ -198,7 +200,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   useEffect(() => {
     if (!showForm) return;
     const onPaste = (e: ClipboardEvent) => {
-      if (e.defaultPrevented || mainHover.hovered.current || galleryHover.hovered.current || isEditableTarget(e.target)) return;
+      if (e.defaultPrevented || mainHover.hovered.current || galleryHover.hovered.current || colorHover.hovered.current || isEditableTarget(e.target)) return;
       const files = clipboardFiles(e, isImg);
       if (files.length === 0) return;
       e.preventDefault();
@@ -853,8 +855,8 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
               )}
 
             {/* Cores: o cliente escolhe na pagina do produto e a foto troca pela da cor. */}
-            <section className={CARD}>
-              <SectionHead icon={<Palette size={16} />} title="Cores do produto" sub="O cliente escolhe a cor na página de venda. Com foto, a imagem principal troca pela foto da cor." />
+            <section ref={colorHover.ref} className={CARD}>
+              <SectionHead icon={<Palette size={16} />} title="Cores do produto" sub="O cliente escolhe a cor na página de venda. Foto da cor: clique em “Foto da cor” ou copie a imagem e aperte Ctrl+V aqui." />
               <div className="grid gap-2 sm:grid-cols-[auto_1fr_auto_auto]">
                 <input
                   type="color"
@@ -869,13 +871,17 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                   value={newColorLabel}
                   onChange={e => setNewColorLabel(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); if (newColorLabel.trim() && colorOptions.length < 5) addColorOption(); } }}
+                  onPaste={e => { const f = clipboardFiles(e.nativeEvent, isImg); if (f.length) { e.preventDefault(); readColorImageFile(f[0]); } }}
                   placeholder="Nome da cor (ex: Verde)"
                   aria-label="Nome da cor"
                   className="rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
                 />
                 <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-white/15 px-3 py-2.5 text-xs font-semibold text-white/70 transition-colors hover:border-green-500/40 hover:text-white">
                   <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" className="hidden" onChange={e => readColorImageFile(e.target.files?.[0] ?? null)} />
-                  <ImageIcon size={14} /> {newColorImage ? 'Foto pronta' : 'Foto da cor'}
+                  {newColorImage
+                    ? <img src={newColorImage} alt="Foto da cor" className="h-6 w-6 rounded object-cover" />
+                    : <ImageIcon size={14} />}
+                  {newColorImage ? 'Trocar foto' : 'Foto da cor'}
                 </label>
                 <button
                   type="button"
