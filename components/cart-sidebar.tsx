@@ -31,7 +31,7 @@ export function CartSidebar() {
   const [method, setMethod] = useState<ShipMethod>('pickup')
   // A escolha (ponto x casa) fica na pagina do produto e no checkout.
   useEffect(() => { if (isCartOpen) { setZip(loadZip()); setMethod(loadMethod()) } }, [isCartOpen])
-  const shipItems = isCartOpen ? items.map((i) => ({ productId: i.product.id, quantity: i.quantity })) : []
+  const shipItems = isCartOpen ? items.map((i) => ({ productId: i.product.id, quantity: i.quantity, size: i.selectedSize })) : []
   const { quote } = useShipQuote(shipItems, zip.length === 5 ? zip : SAMPLE_ZIP)
   const chosen = quote ? (quote[method] ?? quote.pickup ?? quote.home) : null
   const shipping = chosen ? chosen.charged : fallbackShipping

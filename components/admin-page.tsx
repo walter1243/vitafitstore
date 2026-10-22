@@ -2,6 +2,7 @@
 import { AdminSectors } from '@/components/admin-sectors';
 import { dataUrlToBlobUrl, uploadInlineImages } from '@/lib/upload-data-url';
 import { clipboardFiles, isEditableTarget, useHoverPaste } from '@/lib/use-hover-paste';
+import { parsePersonalize } from '@/lib/personalize';
 import { AdminWorlds } from '@/components/admin-worlds';
 import { CategoryCollections, ParcelFields, PersonalizeEditor, ProductPlacement, SaleModeFields } from '@/components/admin-product-extras';
 import { TrackingSection, needsTracking, isNewAlert } from '@/components/admin-tracking';
@@ -155,8 +156,8 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   importSourceUrl?: string;
   importSourceProductUrl?: string;
   initialCostPrice?: string;
-  productType: 'estandar' | 'ropa' | 'calzado';
-  onProductTypeChange: (v: 'estandar' | 'ropa' | 'calzado') => void;
+  productType: 'estandar' | 'tamanho' | 'ropa' | 'calzado';
+  onProductTypeChange: (v: 'estandar' | 'tamanho' | 'ropa' | 'calzado') => void;
   sizes: string[];
   onSizesChange: (v: string[]) => void;
   colorOptions: { label: string; image: string; hex?: string }[];
@@ -222,6 +223,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   const [productsSearch, setProductsSearch] = useState('');
   const [categoryDrafts, setCategoryDrafts] = useState<Record<number, { bannerType: 'image' | 'video'; bannerUrl: string; logoUrl: string }>>({});
   const [newSizeInput, setNewSizeInput] = useState('');
+  const [newSizePrice, setNewSizePrice] = useState('');
   const [newColorLabel, setNewColorLabel] = useState('');
   const [newColorImage, setNewColorImage] = useState('');
   const [newColorHex, setNewColorHex] = useState('#c2410c');
@@ -397,15 +399,28 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
     handleAdditionalFiles(e.dataTransfer.files);
   }
 
+  // Preco de cada tamanho fica no JSON `personalize` (sizePrices).
+  const sizePrices = parsePersonalize(form.personalize).sizePrices;
+  function setSizePrice(size: string, raw: string) {
+    const cfg = parsePersonalize(form.personalize);
+    const next = { ...cfg.sizePrices };
+    const v = Number(String(raw).replace(',', '.'));
+    if (raw.trim() && v > 0) next[size] = v; else delete next[size];
+    onFormChange('personalize', JSON.stringify({ ...cfg, sizePrices: next }));
+  }
+
   function addSize() {
     const value = newSizeInput.trim();
     if (!value || sizes.includes(value) || sizes.length >= 20) return;
     onSizesChange([...sizes, value]);
+    if (newSizePrice.trim()) setSizePrice(value, newSizePrice);
     setNewSizeInput('');
+    setNewSizePrice('');
   }
 
   function removeSize(value: string) {
     onSizesChange(sizes.filter(s => s !== value));
+    setSizePrice(value, '');
   }
 
   function readColorImageFile(file: File | null) {
@@ -802,12 +817,13 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                     <label className="mb-1.5 block text-xs font-medium text-white/50">Tipo de produto</label>
                     <select
                       value={productType}
-                      onChange={e => onProductTypeChange(e.target.value as 'estandar' | 'ropa' | 'calzado')}
+                      onChange={e => onProductTypeChange(e.target.value as 'estandar' | 'tamanho' | 'ropa' | 'calzado')}
                       className="w-full rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
                     >
                       <option value="estandar">Padrão (sem tamanhos)</option>
-                      <option value="ropa">Roupa</option>
-                      <option value="calzado">Calçado</option>
+                      <option value="tamanho">Com tamanhos (preço por tamanho)</option>
+                      {productType === 'ropa' && <option value="ropa">Roupa (guia de tallas)</option>}
+                      {productType === 'calzado' && <option value="calzado">Calçado (guia de tallas)</option>}
                     </select>
                   </div>
                   <SaleModeFields value={form.personalize} onChange={(json) => onFormChange('personalize', json)} unitPrice={form.price} />
@@ -817,40 +833,62 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
 
               {productType !== 'estandar' && (
                 <section className={CARD}>
-                  <div className="mb-4 flex items-center gap-2">
-                    <Package size={16} className="text-green-500" />
-                    <h3 className="text-sm font-semibold text-white">Tamanhos disponíveis</h3>
-                  </div>
-                  <div className="flex gap-2">
+                  <SectionHead icon={<Package size={16} />} title="Tamanhos e preços" sub="Cada tamanho com o seu preço. Preço vazio = usa o “Preço (€)” do produto." />
+                  <div className="grid gap-2 sm:grid-cols-[1fr_160px_auto]">
                     <input
                       type="text"
                       value={newSizeInput}
                       onChange={e => setNewSizeInput(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSize())}
-                      placeholder={productType === 'calzado' ? 'Ex: 40' : 'Ex: M ou 40'}
-                      className="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                      placeholder={productType === 'calzado' ? 'Ex: 40' : 'Ex: Pequeno, 20 cm, M'}
+                      aria-label="Nome do tamanho"
+                      className="min-w-0 rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                    />
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={newSizePrice}
+                      onChange={e => setNewSizePrice(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSize())}
+                      placeholder={`Preço (${Number(form.price || 0).toFixed(2)})`}
+                      aria-label="Preço deste tamanho"
+                      className="rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
                     />
                     <button
                       type="button"
                       onClick={addSize}
-                      className="shrink-0 rounded-xl bg-green-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-green-700"
+                      className="shrink-0 cursor-pointer rounded-xl bg-green-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-green-700"
                     >
                       Adicionar
                     </button>
                   </div>
                   {sizes.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-2">
+                    <div className="mt-4 divide-y divide-white/5 overflow-hidden rounded-xl border border-white/10">
                       {sizes.map(s => (
-                        <span key={s} className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-white">
-                          {s}
-                          <button type="button" onClick={() => removeSize(s)} className="text-white/40 hover:text-red-400" aria-label={`Remover ${s}`}>
-                            <X size={12} />
+                        <div key={s} className="flex items-center gap-3 bg-white/[0.02] px-3 py-2">
+                          <span className="min-w-0 flex-1 truncate text-sm font-semibold text-white">{s}</span>
+                          <label className="flex items-center gap-1.5 text-xs text-white/50">
+                            €
+                            <input
+                              type="number"
+                              min={0}
+                              step="0.01"
+                              value={sizePrices[s] ?? ''}
+                              onChange={e => setSizePrice(s, e.target.value)}
+                              placeholder={Number(form.price || 0).toFixed(2)}
+                              aria-label={`Preço do tamanho ${s}`}
+                              className="w-28 rounded-lg border border-white/10 bg-[#1c2236] px-2.5 py-1.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40"
+                            />
+                          </label>
+                          <button type="button" onClick={() => removeSize(s)} className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-white/40 transition-colors hover:bg-red-500/15 hover:text-red-300" aria-label={`Remover ${s}`}>
+                            <X size={13} />
                           </button>
-                        </span>
+                        </div>
                       ))}
                     </div>
                   )}
-                  <p className="mt-2 text-[11px] text-white/35">Essas tallas aparecem como seletor na página do cliente, com o guia de tallas correspondente ({productType === 'ropa' ? 'roupa' : 'calçado'}).</p>
+                  <p className="mt-2 text-[11px] text-white/40">O cliente escolhe o tamanho na página do produto e o preço muda. Nos cards aparece “desde” o menor preço.</p>
                 </section>
               )}
 
@@ -2004,7 +2042,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
   const [prodSourceStoreUrl, setProdSourceStoreUrl] = useState('');
   const [prodSourceProductUrl, setProdSourceProductUrl] = useState('');
   const [prodImportCostPrice, setProdImportCostPrice] = useState('');
-  const [prodProductType, setProdProductType] = useState<'estandar' | 'ropa' | 'calzado'>('estandar');
+  const [prodProductType, setProdProductType] = useState<'estandar' | 'tamanho' | 'ropa' | 'calzado'>('estandar');
   const [prodSizes, setProdSizes] = useState<string[]>([]);
   const [prodColorOptions, setProdColorOptions] = useState<{ label: string; image: string; hex?: string }[]>([]);
   const [newCategoryName, setNewCategoryName] = useState('');

@@ -18,7 +18,7 @@ export function saveZip(z: string) { try { localStorage.setItem(ZIP_KEY, z); } c
 export function loadMethod(): ShipMethod { try { return localStorage.getItem(METHOD_KEY) === 'home' ? 'home' : 'pickup'; } catch { return 'pickup'; } }
 export function saveMethod(m: ShipMethod) { try { localStorage.setItem(METHOD_KEY, m); } catch {} }
 
-export function useShipQuote(items: { productId: number; quantity: number }[], zip: string) {
+export function useShipQuote(items: { productId: number; quantity: number; size?: string }[], zip: string) {
   const [quote, setQuote] = useState<ShipQuote | null>(null);
   const [loading, setLoading] = useState(false);
   const key = JSON.stringify(items) + zip;

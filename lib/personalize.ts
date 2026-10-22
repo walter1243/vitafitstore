@@ -45,6 +45,8 @@ export type Personalize = {
   askLinks: boolean;
   // Frete gratis a partir de N unidades deste produto (0 = sem).
   freeShipQty: number;
+  // Preco por tamanho (ex: { P: 9.99, G: 14.99 }); tamanho sem preco = preco base.
+  sizePrices: Record<string, number>;
   // Forma de venda: por unidade ou so em pack (ex: 5 chaveiros por 8 €).
   saleMode: 'unit' | 'pack';
   packQty: number;
@@ -84,6 +86,7 @@ export const DEFAULT_PERSONALIZE: Personalize = {
   askPhone: false,
   askLinks: false,
   freeShipQty: 0,
+  sizePrices: {},
   saleMode: 'unit',
   packQty: 5,
   packPrice: 0,
@@ -127,6 +130,12 @@ export function parsePersonalize(raw: unknown): Personalize {
     askPhone: o.askPhone === true,
     askLinks: o.askLinks === true,
     freeShipQty: Math.round(clamp(o.freeShipQty, 0, 1000, 0)),
+    sizePrices: o.sizePrices && typeof o.sizePrices === 'object'
+      ? Object.fromEntries(Object.entries(o.sizePrices as Record<string, unknown>)
+          .map(([k, v]) => [String(k).slice(0, 40), Math.round(Number(v) * 100) / 100] as const)
+          .filter(([k, v]) => k && Number.isFinite(v) && v > 0 && v <= 100000)
+          .slice(0, 30))
+      : {},
     saleMode: o.saleMode === 'pack' ? 'pack' : 'unit',
     packQty: Math.round(clamp(o.packQty, 2, 500, 5)),
     packPrice: Math.round(clamp(o.packPrice, 0, 100000, 0) * 100) / 100,
@@ -215,8 +224,24 @@ export function itemShipping(shipping: number | null | undefined, personalizeRaw
 }
 
 // Texto do preco nos cards: "8,00€" ou, em pack, "8,00€ · pack 5".
-export function cardPrice(price: number, personalizeRaw: unknown) {
+// Preco base da linha: o do tamanho escolhido, se tiver; senao o do produto.
+export function sizedPrice(price: number, personalizeRaw: unknown, size?: string | null) {
+  const v = size ? parsePersonalize(personalizeRaw).sizePrices[size] : undefined;
+  return v && v > 0 ? v : price;
+}
+// Menor e maior preco entre os tamanhos (null = sem preco por tamanho).
+export function sizeRange(price: number, personalizeRaw: unknown, sizes?: string[]) {
+  const sp = parsePersonalize(personalizeRaw).sizePrices;
+  const list = (sizes && sizes.length ? sizes : Object.keys(sp)).map((s) => sp[s] > 0 ? sp[s] : price);
+  if (!Object.keys(sp).length || !list.length) return null;
+  return { min: Math.min(...list), max: Math.max(...list) };
+}
+
+export function cardPrice(price: number, personalizeRaw: unknown, sizes?: string[]) {
   const pack = packOf(personalizeRaw);
+  const range = pack ? null : sizeRange(price, personalizeRaw, sizes);
+  if (range && range.min !== range.max) return { main: `desde ${range.min.toFixed(2)}€`, sub: '', off: 0 };
+  if (range) return { main: `${range.min.toFixed(2)}€`, sub: '', off: 0 };
   if (!pack) return { main: `${price.toFixed(2)}€`, sub: '', off: 0 };
   const full = price * pack.qty;
   return { main: `${pack.price.toFixed(2)}€`, sub: `Pack ${pack.qty} uds`, off: full > pack.price ? Math.round((1 - pack.price / full) * 100) : 0 };

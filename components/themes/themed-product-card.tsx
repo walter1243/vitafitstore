@@ -14,7 +14,7 @@ import { cardPrice } from '@/lib/personalize';
 //  - mascotas: a FOTO e o card (nome/preco por cima, com degrade)
 // Produto com cor/tamanho ou com nome personalizado leva pra pagina dele.
 export function ThemedProductCard({ product, theme }: { product: Product; theme: SectorTheme }) {
-  const cp = cardPrice(product.price, product.personalize);
+  const cp = cardPrice(product.price, product.personalize, product.sizes);
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
   const [hovered, setHovered] = useState(false);

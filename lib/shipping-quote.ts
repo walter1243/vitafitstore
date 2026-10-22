@@ -4,7 +4,7 @@
 import { sql } from '@/lib/db';
 import { combineParcels } from '@/lib/parcel';
 import { cheapestByType, packlinkServices, type ShipOption } from '@/lib/packlink';
-import { lineTotalFor, parsePersonalize } from '@/lib/personalize';
+import { lineTotalFor, packOf, parsePersonalize, sizedPrice, unitPriceFor } from '@/lib/personalize';
 import { FREE_SHIPPING_FROM } from '@/lib/checkout-pricing';
 
 export type ShipMethod = 'home' | 'pickup';
@@ -16,7 +16,7 @@ export type ShippingQuote = {
   error?: string;
 };
 
-export async function quoteShipping(items: { productId: number; quantity: number }[], zip: string, country = 'ES'): Promise<ShippingQuote> {
+export async function quoteShipping(items: { productId: number; quantity: number; size?: string }[], zip: string, country = 'ES'): Promise<ShippingQuote> {
   const ids = [...new Set(items.map((i) => Number(i.productId)))].filter(Boolean);
   if (ids.length === 0) return { free: false, home: null, pickup: null, subtotal: 0 };
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS parcel TEXT`;
@@ -27,10 +27,15 @@ export async function quoteShipping(items: { productId: number; quantity: number
 
   let subtotal = 0;
   let freeByQty = items.length > 0;
+  for (const it of items) {
+    const r = byId.get(Number(it.productId));
+    if (!r) continue;
+    const base = sizedPrice(Number(r.price), r.personalize, it.size);
+    subtotal += packOf(r.personalize) ? lineTotalFor(base, r.personalize, Number(it.quantity || 0)) : unitPriceFor(base, r.personalize, qty.get(Number(it.productId)) ?? 0) * Number(it.quantity || 0);
+  }
   for (const [id, q] of qty) {
     const r = byId.get(id);
     if (!r) continue;
-    subtotal += lineTotalFor(Number(r.price), r.personalize, q);
     const n = parsePersonalize(r.personalize).freeShipQty;
     if (!(n > 0 && q >= n)) freeByQty = false;
   }
@@ -50,7 +55,7 @@ export async function quoteShipping(items: { productId: number; quantity: number
 // Frete cobrado no checkout pro metodo escolhido. Se a Packlink nao
 // responder (ou pais fora da Espanha), cai na tabela antiga.
 export async function chargeShipping(
-  items: { productId: number; quantity: number }[],
+  items: { productId: number; quantity: number; size?: string }[],
   zip: string,
   country: string,
   method: ShipMethod,

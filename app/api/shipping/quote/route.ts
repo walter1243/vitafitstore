@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
     const zip = String(body?.zip ?? '').replace(/\D/g, '').slice(0, 5);
     if (zip.length !== 5) return NextResponse.json({ error: 'Código postal no válido.' }, { status: 400 });
-    const items = Array.isArray(body?.items) ? body.items.slice(0, 50).map((i: any) => ({ productId: Number(i?.productId), quantity: Math.max(1, Math.min(99, Number(i?.quantity) || 1)) })) : [];
+    const items = Array.isArray(body?.items) ? body.items.slice(0, 50).map((i: any) => ({ productId: Number(i?.productId), quantity: Math.max(1, Math.min(99, Number(i?.quantity) || 1)), size: typeof i?.size === 'string' ? i.size.slice(0, 40) : undefined })) : [];
     const q = await quoteShipping(items, zip, 'ES');
     return NextResponse.json(q);
   } catch (err: any) {

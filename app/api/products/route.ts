@@ -55,7 +55,7 @@ function parseSizes(value: unknown): string[] {
   return parseJsonArray(value).map((s: any) => String(s).trim()).filter(Boolean).slice(0, 20);
 }
 
-const VALID_PRODUCT_TYPES = ['estandar', 'ropa', 'calzado'];
+const VALID_PRODUCT_TYPES = ['estandar', 'tamanho', 'ropa', 'calzado'];
 const DEMO_TYPES = ['none', 'rompecabezas', 'colorear', 'encender', 'encender_simple'];
 
 // Frete do produto em euros; vazio/invalido = null (usa a tabela padrao).

@@ -13,7 +13,7 @@ import { ProductReviews } from '@/components/product-reviews'
 import { useSectors } from '@/components/kids/sectors-context'
 import { ProductDemo } from '@/components/kids/product-demo'
 import { NamePersonalizer, NamePreview, type PersonalizerLook } from '@/components/personalize/name-personalizer'
-import { DEFAULT_NAME_COLORS, cleanCustomText, minQtyFor, packOf, parsePersonalize } from '@/lib/personalize'
+import { DEFAULT_NAME_COLORS, cleanCustomText, minQtyFor, packOf, parsePersonalize, sizeRange, sizedPrice } from '@/lib/personalize'
 import { ProductShipping } from '@/components/shipping/shipping-options'
 
 export function ProductPageView({ product }: { product: Product }) {
@@ -48,6 +48,9 @@ export function ProductPageView({ product }: { product: Product }) {
 
   const needsSize = Boolean(product.productType && product.productType !== 'estandar' && product.sizes?.length)
   const canBuy = !needsSize || Boolean(selectedSize)
+  // Preco por tamanho (Admin → Produtos → Tamanhos): "desde X" ate escolher.
+  const sizeRangeView = needsSize ? sizeRange(product.price, product.personalize, product.sizes) : null
+  const sizePriceOf = (s: string) => parsePersonalize(product.personalize).sizePrices[s]
   const discountPct = product.originalPrice && product.originalPrice > product.price
     ? Math.round((1 - product.price / product.originalPrice) * 100)
     : null
@@ -214,7 +217,10 @@ export function ProductPageView({ product }: { product: Product }) {
                   <span className="w-full text-xs font-semibold text-slate-500">{(pack.price / pack.qty).toFixed(2)}€ por unidad · se vende solo en packs de {pack.qty}</span>
                 </>
               ) : (
-              <span className="text-4xl font-black text-slate-900">{product.price.toFixed(2)}€</span>
+              <span className="text-4xl font-black text-slate-900">
+                {!selectedSize && sizeRangeView && sizeRangeView.min !== sizeRangeView.max && <span className="mr-1.5 text-base font-bold text-slate-500">desde</span>}
+                {(selectedSize ? sizedPrice(product.price, product.personalize, selectedSize) : sizeRangeView?.min ?? product.price).toFixed(2)}€
+              </span>
               )}
               {!pack && discountPct && (
                 <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-700">-{discountPct}%</span>
@@ -275,7 +281,7 @@ export function ProductPageView({ product }: { product: Product }) {
           {needsSize && (
             <div className="mt-6">
               <p className="mb-2 text-sm font-medium text-slate-700">
-                Talla: <span className="font-semibold text-slate-900">{selectedSize || 'Elige'}</span>
+                {product.productType === 'tamanho' ? 'Tamaño' : 'Talla'}: <span className="font-semibold text-slate-900">{selectedSize || 'Elige'}</span>
               </p>
               <div className="flex flex-wrap gap-2">
                 {product.sizes!.map(size => (
@@ -288,16 +294,17 @@ export function ProductPageView({ product }: { product: Product }) {
                         : 'border-slate-200 text-slate-700 hover:border-slate-300'
                     }`}
                   >
-                    {size}
+                    <span className="block">{size}</span>
+                    {sizePriceOf(size) > 0 && <span className="block text-xs font-bold opacity-80">{sizePriceOf(size).toFixed(2)}€</span>}
                   </button>
                 ))}
               </div>
-              <button
+              {product.productType !== 'tamanho' && <button
                 onClick={() => setSizeGuideOpen(true)}
                 className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-orange-700 hover:text-orange-800"
               >
                 <Ruler size={13} /> Guía de tallas
-              </button>
+              </button>}
             </div>
           )}
 
@@ -342,7 +349,7 @@ export function ProductPageView({ product }: { product: Product }) {
             </div>
 
             {needsSize && !selectedSize && (
-              <p className="mt-4 text-xs font-medium text-red-500">Elige una talla para continuar.</p>
+              <p className="mt-4 text-xs font-medium text-red-500">Elige {product.productType === 'tamanho' ? 'un tamaño' : 'una talla'} para continuar.</p>
             )}
 
             <div className="mt-4 flex flex-col gap-2.5">
@@ -367,7 +374,7 @@ export function ProductPageView({ product }: { product: Product }) {
             <ProductDemo product={product} />
           </div>
 
-          {sizeGuideOpen && product.productType && (
+          {sizeGuideOpen && product.productType && product.productType !== 'tamanho' && (
             <SizeGuideModal type={product.productType} onClose={() => setSizeGuideOpen(false)} />
           )}
 

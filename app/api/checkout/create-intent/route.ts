@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { chargeShipping } from '@/lib/shipping-quote';
-import { itemShipping, lineTotalFor, minQtyFor, packOf, stepFor, unitPriceFor } from '@/lib/personalize';
+import { itemShipping, lineTotalFor, minQtyFor, packOf, sizedPrice, stepFor, unitPriceFor } from '@/lib/personalize';
 import { cleanItems, packItems } from '@/lib/order-items';
 import Stripe from 'stripe';
 import { sql } from '@/lib/db';
@@ -49,7 +49,8 @@ export async function POST(req: NextRequest) {
     }
     const subtotal = items.reduce((sum: number, item: any) => {
       const id = Number(item.productId);
-      return sum + (packOf(persById.get(id)) ? lineTotalFor(priceById.get(id) ?? 0, persById.get(id), Number(item.quantity)) : unitPriceFor(priceById.get(id) ?? 0, persById.get(id), qtyById.get(id) ?? 0) * Number(item.quantity));
+      const base = sizedPrice(priceById.get(id) ?? 0, persById.get(id), item.size);
+      return sum + (packOf(persById.get(id)) ? lineTotalFor(base, persById.get(id), Number(item.quantity)) : unitPriceFor(base, persById.get(id), qtyById.get(id) ?? 0) * Number(item.quantity));
     }, 0);
 
     const shippingById = new Map<number, number | null>((productRows as any[]).map((r) => [Number(r.id), r.shipping_cost != null ? Number(r.shipping_cost) : null]));

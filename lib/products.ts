@@ -4,7 +4,7 @@ export interface ProductVariant {
   label: string
 }
 
-export type ProductType = 'estandar' | 'ropa' | 'calzado'
+export type ProductType = 'estandar' | 'tamanho' | 'ropa' | 'calzado'
 
 export interface ColorOption {
   label: string

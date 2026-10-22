@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { chargeShipping } from '@/lib/shipping-quote';
-import { itemShipping, lineTotalFor, packOf, unitPriceFor } from '@/lib/personalize';
+import { itemShipping, lineTotalFor, packOf, sizedPrice, unitPriceFor } from '@/lib/personalize';
 import { sql } from '@/lib/db';
 import { resolveShipping } from '@/lib/checkout-pricing';
 
 type CheckoutItemInput = {
   productId: number;
   quantity: number;
+  size?: string;
 };
 
 function parseItems(rawItems: unknown): CheckoutItemInput[] {
@@ -16,15 +17,18 @@ function parseItems(rawItems: unknown): CheckoutItemInput[] {
     .map((item) => {
       const productId = Number((item as any)?.productId);
       const quantity = Number((item as any)?.quantity ?? 1);
+      const size = typeof (item as any)?.size === 'string' ? String((item as any).size).slice(0, 40) : undefined;
       return {
         productId,
         quantity,
+        size,
       };
     })
     .filter((item) => Number.isFinite(item.productId) && item.productId > 0 && Number.isFinite(item.quantity) && item.quantity > 0)
     .map((item) => ({
       productId: Math.trunc(item.productId),
       quantity: Math.trunc(item.quantity),
+      size: item.size,
     }));
 }
 
@@ -60,8 +64,9 @@ export async function POST(req: NextRequest) {
     const qtyById = new Map<number, number>();
     for (const it of items) qtyById.set(Number(it.productId), (qtyById.get(Number(it.productId)) ?? 0) + Number(it.quantity));
     const subtotal = items.reduce((sum, item) => {
-      if (packOf(persById.get(Number(item.productId)))) return sum + lineTotalFor(priceById.get(item.productId) ?? 0, persById.get(Number(item.productId)), item.quantity);
-      const unitPrice = unitPriceFor(priceById.get(item.productId) ?? 0, persById.get(Number(item.productId)), qtyById.get(Number(item.productId)) ?? 0);
+      const base = sizedPrice(priceById.get(item.productId) ?? 0, persById.get(Number(item.productId)), item.size);
+      if (packOf(persById.get(Number(item.productId)))) return sum + lineTotalFor(base, persById.get(Number(item.productId)), item.quantity);
+      const unitPrice = unitPriceFor(base, persById.get(Number(item.productId)), qtyById.get(Number(item.productId)) ?? 0);
       return sum + unitPrice * item.quantity;
     }, 0);
 

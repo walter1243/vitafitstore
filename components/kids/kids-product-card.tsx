@@ -15,7 +15,7 @@ type Props = { product: Product; accent?: Accent; tag?: string; /** @deprecated 
 // preco num selo e botao laranja grande. Hover so mexe em transform/sombra
 // (sem pular o layout).
 export function KidsProductCard({ product, accent = ACCENTS.mint, tag, soft }: Props) {
-  const cp = cardPrice(product.price, product.personalize);
+  const cp = cardPrice(product.price, product.personalize, product.sizes);
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
   const [hovered, setHovered] = useState(false);
