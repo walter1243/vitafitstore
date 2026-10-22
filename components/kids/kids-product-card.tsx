@@ -61,8 +61,9 @@ export function KidsProductCard({ product, accent = ACCENTS.mint, tag, soft }: P
           {product.name}
         </h3>
         <div className="mt-auto flex items-center justify-between gap-2 pt-3">
-          <span className="rounded-full px-3 py-1 text-base font-extrabold text-[#1E1B4B] sm:text-lg" style={{ background: accent.block }}>
-            {cp.main}{cp.sub && <span className="ml-1 text-[11px] font-extrabold opacity-80">{cp.sub}{cp.off ? ` · -${cp.off}%` : ''}</span>}
+          <span className="min-w-0 leading-tight text-[#1E1B4B]">
+            <span className="block text-lg font-extrabold sm:text-xl">{cp.main}</span>
+            {cp.sub && <span className="block whitespace-nowrap text-[11px] font-extrabold opacity-80">{cp.sub}{cp.off ? ` · -${cp.off}%` : ''}</span>}
           </span>
           {needsChoice ? (
             <span className="inline-flex min-h-11 items-center rounded-2xl border-[3px] border-[#1E1B4B] px-3 text-sm font-extrabold text-[#1E1B4B] transition-colors duration-200 group-hover:bg-[#1E1B4B] group-hover:text-white">

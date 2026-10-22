@@ -129,10 +129,10 @@ export function NavidadShelf() {
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-3 2xl:hidden">
       <div className="mx-auto flex max-w-6xl items-end justify-between px-4 sm:px-8">
-        <NavidadVase className="h-28 w-24 sm:h-32 sm:w-28" />
+        <NavidadVase className="relative h-28 w-24 sm:h-32 sm:w-28" />
         <div className="flex items-end gap-2 sm:gap-4">
-          <NavidadSnowman className="h-24 w-20 sm:h-28 sm:w-24" />
-          <NavidadTree className="h-28 w-24 sm:h-36 sm:w-28" />
+          <NavidadSnowman className="relative h-24 w-20 sm:h-28 sm:w-24" />
+          <NavidadTree className="relative h-28 w-24 sm:h-36 sm:w-28" />
         </div>
       </div>
     </div>
