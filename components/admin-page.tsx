@@ -1756,13 +1756,13 @@ function OrdersSection({ orders, products, onUpdateTracking, onRefresh }: {
     <div className="space-y-4">
       {/* Teste da impressora termica: PDF com um pedido ficticio. */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#161b28] px-4 py-3">
-        <p className="text-sm text-white/60">Impressora térmica 58 mm: baixe um exemplo para ver como sai no papel.</p>
+        <p className="text-sm text-white/60">Impressora térmica 58 mm: baixe uma etiqueta de exemplo para ver como sai no papel.</p>
         <button
           type="button"
           onClick={() => downloadOrderReceipt(SAMPLE_RECEIPT)}
           className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-xl border border-white/15 px-4 text-sm font-bold text-white transition-colors hover:bg-white/5"
         >
-          <Printer size={15} /> Baixar PDF de exemplo
+          <Printer size={15} /> Baixar etiqueta de exemplo
         </button>
       </div>
       {orders.map(o => (
@@ -1807,9 +1807,9 @@ function OrdersSection({ orders, products, onUpdateTracking, onRefresh }: {
               type="button"
               onClick={() => printReceipt(o)}
               className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-xl bg-white px-4 text-sm font-bold text-[#0f1117] transition-colors hover:bg-white/85"
-              title="PDF para impressora térmica 58 mm"
+              title="Etiqueta de envio para impressora térmica 58 mm"
             >
-              <Printer size={15} /> Baixar PDF (58 mm)
+              <Printer size={15} /> Baixar etiqueta (58 mm)
             </button>
             <input
               type="text"
