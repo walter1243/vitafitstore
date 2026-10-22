@@ -13,7 +13,7 @@ import { ProductReviews } from '@/components/product-reviews'
 import { useSectors } from '@/components/kids/sectors-context'
 import { ProductDemo } from '@/components/kids/product-demo'
 import { NamePersonalizer, NamePreview, type PersonalizerLook } from '@/components/personalize/name-personalizer'
-import { DEFAULT_NAME_COLORS, cleanCustomText, minQtyFor, packOf, parsePersonalize, sizeRange, sizedPrice } from '@/lib/personalize'
+import { DEFAULT_NAME_COLORS, cleanCustomText, lineTotalFor, minQtyFor, packOf, parsePersonalize, sizeRange, sizedPrice } from '@/lib/personalize'
 import { ProductShipping } from '@/components/shipping/shipping-options'
 
 export function ProductPageView({ product }: { product: Product }) {
@@ -49,10 +49,12 @@ export function ProductPageView({ product }: { product: Product }) {
   const selectedColorImage = product.colorOptions?.find((c) => c.label === selectedColor)?.image
   const previewIndex = Math.max(0, selectedColorImage ? galleryImages.indexOf(selectedColorImage) : 0)
   const [selectedSize, setSelectedSize] = useState('')
+  const [shipCost, setShipCost] = useState<number | null>(null)
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false)
 
   const needsSize = Boolean(product.productType && product.productType !== 'estandar' && product.sizes?.length)
   const canBuy = !needsSize || Boolean(selectedSize)
+  const productLineTotal = lineTotalFor(sizedPrice(product.price, product.personalize, selectedSize), product.personalize, quantity)
   // Preco por tamanho (Admin → Produtos → Tamanhos): "desde X" ate escolher.
   const sizeRangeView = needsSize ? sizeRange(product.price, product.personalize, product.sizes) : null
   const sizePriceOf = (s: string) => parsePersonalize(product.personalize).sizePrices[s]
@@ -280,7 +282,7 @@ export function ProductPageView({ product }: { product: Product }) {
           )}
 
           {/* Envio Packlink: ponto de recogida x domicilio, com preco atual */}
-          <ProductShipping productId={product.id} quantity={quantity} />
+          <ProductShipping productId={product.id} quantity={quantity} size={selectedSize || undefined} onShipping={setShipCost} />
 
           {/* Size selector */}
           {needsSize && (
@@ -334,7 +336,7 @@ export function ProductPageView({ product }: { product: Product }) {
 
           {/* Buy box */}
           <div className={`mt-6 rounded-2xl border border-slate-200 bg-white p-4 ${personalized ? 'hidden' : ''}`}>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               <span className="text-sm font-medium text-slate-500">Cantidad</span>
               <div className="flex items-center rounded-xl border border-slate-200 bg-white">
                 <button
@@ -354,6 +356,11 @@ export function ProductPageView({ product }: { product: Product }) {
                 </button>
               </div>
               <span className="text-xs font-medium text-orange-700">{product.stock} disponibles</span>
+              {/* Total que o cliente paga: produto + envio escolhido (mesma conta do carrinho). */}
+              <div className="ml-auto text-right leading-tight">
+                <span className="block text-xs text-slate-500">{shipCost == null ? 'Total' : shipCost === 0 ? 'Total · envío gratis' : `Total con envío (${shipCost.toFixed(2)}€)`}</span>
+                <span className="block whitespace-nowrap text-xl font-black text-slate-900">{(productLineTotal + (shipCost ?? 0)).toFixed(2)}€</span>
+              </div>
             </div>
 
             {needsSize && !selectedSize && (

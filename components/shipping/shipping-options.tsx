@@ -79,12 +79,16 @@ export function ShipOptionsList({ quote, method, onMethod, loading }: { quote: S
 }
 
 // Pagina do produto: CP + as opcoes com preco da Packlink.
-export function ProductShipping({ productId, quantity }: { productId: number; quantity: number }) {
+// `onShipping`: avisa a pagina o frete da opcao escolhida (pro total com envio).
+export function ProductShipping({ productId, quantity, size, onShipping }: { productId: number; quantity: number; size?: string; onShipping?: (charged: number | null) => void }) {
   const [zip, setZip] = useState('');
   const [method, setMethod] = useState<ShipMethod>('pickup');
   useEffect(() => { setZip(loadZip()); setMethod(loadMethod()); }, []);
   const z = zip.replace(/\D/g, '');
-  const { quote, loading } = useShipQuote([{ productId, quantity }], z.length === 5 ? z : SAMPLE_ZIP);
+  const { quote, loading } = useShipQuote([{ productId, quantity, size }], z.length === 5 ? z : SAMPLE_ZIP);
+  const chosen = quote ? (quote[method] ?? quote.pickup ?? quote.home) : null;
+  const charged = chosen ? chosen.charged : null;
+  useEffect(() => { onShipping?.(charged); }, [charged, onShipping]);
   return (
     <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
