@@ -76,7 +76,7 @@ export function ProductCarousel({ products, accent, theme }: { products: Product
         {/* w-max + mx-auto: centraliza quando cabe, rola quando nao cabe. */}
         <ul className="mx-auto flex w-max gap-4 sm:gap-6">
           {products.map((p) => (
-            <li key={p.id} className={`shrink-0 snap-start ${hogar ? 'w-[220px] sm:w-[270px]' : 'w-[200px] sm:w-[250px]'}`}>
+            <li key={p.id} className={`shrink-0 snap-start ${hogar ? 'w-[250px] sm:w-[310px]' : 'w-[240px] sm:w-[300px]'}`}>
               {theme ? <ThemedProductCard product={p} theme={theme} /> : <KidsProductCard product={p} accent={accent} />}
             </li>
           ))}
