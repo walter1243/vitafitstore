@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 export const COOKIE_CONSENT_KEY = 'cookie_consent'
 export const COOKIE_CONSENT_EVENT = 'cookieConsentChanged'
@@ -30,6 +31,7 @@ export function getCookieConsent(): ConsentValue | null {
 // "reject" must carry the same visual weight as "accept" — no dark patterns.
 export function CookieConsent() {
   const [visible, setVisible] = useState(false)
+  const pathname = usePathname()
 
   useEffect(() => {
     if (getCookieConsent() === null) setVisible(true)
@@ -45,7 +47,8 @@ export function CookieConsent() {
     setVisible(false)
   }
 
-  if (!visible) return null
+  // O painel admin nao usa cookies de analise — o aviso so atrapalharia la.
+  if (!visible || pathname?.startsWith('/admin')) return null
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-[200] p-3 sm:p-4">

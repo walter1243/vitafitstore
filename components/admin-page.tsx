@@ -1516,14 +1516,14 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                   <button
                     type="button"
                     onClick={() => onEditProduct(p)}
-                    className="flex-1 rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-white/80 transition-colors hover:bg-white/5"
+                    className="min-w-0 flex-1 rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-white/80 transition-colors hover:bg-white/5"
                   >
                     Editar
                   </button>
                   <button
                     type="button"
                     onClick={() => onDelete(p.id, p.name)}
-                    className="flex-1 rounded-lg border border-red-500/20 px-3 py-2 text-xs font-semibold text-red-300 transition-colors hover:bg-red-500/10 hover:text-red-200"
+                    className="min-w-0 flex-1 rounded-lg border border-red-500/20 px-3 py-2 text-xs font-semibold text-red-300 transition-colors hover:bg-red-500/10 hover:text-red-200"
                   >
                     Excluir
                   </button>
@@ -2573,7 +2573,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
   };
 
   return (
-    <div className="flex min-h-screen bg-[#0f1117] text-white">
+    <div className="flex min-h-screen bg-[#0f1117] text-white [&_h1]:font-sans [&_h2]:font-sans [&_h3]:font-sans">
       {pendingCategoryDelete && (
         <div className="fixed inset-0 z-[260] flex items-center justify-center bg-black/70 px-4">
           <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#161b28] p-5 shadow-2xl">
@@ -2737,7 +2737,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
                   type="button"
                   onClick={changeMyPassword}
                   disabled={pwdSaving}
-                  className="flex-1 rounded-lg bg-green-600 px-3 py-2 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-60"
+                  className="min-w-0 flex-1 rounded-lg bg-green-600 px-3 py-2 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-60"
                 >
                   {pwdSaving ? 'Salvando...' : 'Trocar senha'}
                 </button>
@@ -2881,15 +2881,31 @@ function DashboardSection({ products, orders, revenue, onNavigate, trackingAlert
             <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${s.bg}`}>{s.icon}</div>
             <div className="min-w-0">
               <div className="truncate text-lg font-bold sm:text-xl">{s.value}</div>
-              <div className="truncate text-xs text-white/60 sm:text-sm">{s.label}</div>
-              <div className="truncate text-xs text-white/40">{s.sub}</div>
+              <div className="text-xs leading-tight text-white/60 sm:text-sm">{s.label}</div>
+              <div className="mt-0.5 text-xs leading-tight text-white/40">{s.sub}</div>
             </div>
           </div>
         ))}
       </div>
 
       <TableCard title="Últimos Pedidos" icon={<ShoppingCart size={15} className="text-green-500" />} action={{ label: 'Ver todos', onClick: () => onNavigate('orders') }}>
-        <table className="w-full text-sm">
+        {/* Celular: um cartao por pedido; a tabela so a partir de sm. */}
+        <ul className="divide-y divide-white/10 sm:hidden">
+          {orders.slice(0, 5).map(o => (
+            <li key={o.id} className="flex items-center gap-3 px-4 py-3">
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-medium text-white">{o.customer}</div>
+                <div className="truncate text-xs text-white/50"><span className="font-mono">#{o.id}</span> · {o.product}</div>
+              </div>
+              <div className="flex shrink-0 flex-col items-end gap-1">
+                <span className="text-sm font-semibold text-white">€{(o.total ?? 0).toFixed(2)}</span>
+                <StatusBadge status={o.status} />
+              </div>
+            </li>
+          ))}
+          {orders.length === 0 && <li className="px-5 py-8 text-center text-sm text-white/45">Nenhum pedido ainda</li>}
+        </ul>
+        <table className="hidden w-full text-sm sm:table">
           <thead className="bg-[#0f1117]">
             <tr>{['#', 'Cliente', 'Produto', 'Total', 'Status'].map(h => (
               <th key={h} className="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-white/50">{h}</th>
@@ -2911,7 +2927,22 @@ function DashboardSection({ products, orders, revenue, onNavigate, trackingAlert
       </TableCard>
 
       <TableCard title="Produtos" icon={<Package size={15} className="text-green-500" />} action={{ label: 'Gerenciar', onClick: () => onNavigate('products') }}>
-        <table className="w-full text-sm">
+        <ul className="divide-y divide-white/10 sm:hidden">
+          {products.map(p => (
+            <li key={p.id} className="flex items-center gap-3 px-4 py-3">
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-medium text-white">{p.name}</div>
+                <div className="truncate text-xs text-white/50">{p.category || '—'}</div>
+              </div>
+              <div className="flex shrink-0 flex-col items-end gap-0.5">
+                <span className="text-sm font-semibold text-green-400">€{(p.price ?? 0).toFixed(2)}</span>
+                <span className={`text-xs font-semibold ${(p.stock ?? 0) > 10 ? 'text-green-400' : (p.stock ?? 0) > 0 ? 'text-amber-400' : 'text-red-400'}`}>{p.stock ?? 0} un.</span>
+              </div>
+            </li>
+          ))}
+          {products.length === 0 && <li className="px-5 py-8 text-center text-sm text-white/45">Nenhum produto ainda</li>}
+        </ul>
+        <table className="hidden w-full text-sm sm:table">
           <thead className="bg-[#0f1117]">
             <tr>{['Produto', 'Categoria', 'Preço', 'Estoque'].map(h => (
               <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-white/50">{h}</th>
@@ -3543,7 +3574,7 @@ function ScraperTab({
                   <p className="text-xs font-medium text-white/60">Testar com URL real</p>
                   <div className="flex gap-2">
                     <input
-                      className="flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white outline-none focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/40"
+                      className="min-w-0 flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white outline-none focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/40"
                       placeholder="Cole a URL de um produto para testar"
                       value={testUrl}
                       onChange={e => setTestUrl(e.target.value)}
@@ -3797,7 +3828,7 @@ function ImportSupplierSection({ onImportToStore }: { onImportToStore: (data: Im
         {mode === 'url' ? (
           <div className="flex gap-2">
             <input
-              className="flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+              className="min-w-0 flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
               placeholder="https://distribuidora.com/products"
               value={url}
               onChange={e => setUrl(e.target.value)}
@@ -3815,7 +3846,7 @@ function ImportSupplierSection({ onImportToStore }: { onImportToStore: (data: Im
         ) : (
           <div className="flex gap-2">
             <input
-              className="flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+              className="min-w-0 flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
               placeholder="Ex: cesta de vime, caixa de presente…"
               value={keyword}
               onChange={e => setKeyword(e.target.value)}
@@ -4120,7 +4151,7 @@ function EspiarLojaTab() {
 
         <div className="flex gap-2">
           <input
-            className="flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+            className="min-w-0 flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
             placeholder="https://loja-concorrente.com/produtos"
             value={url}
             onChange={e => setUrl(e.target.value)}
@@ -4751,7 +4782,7 @@ function SettingsSection({
             value={newCategoryName}
             onChange={e => onNewCategoryNameChange(e.target.value)}
             placeholder="Digite o nome da categoria"
-            className="flex-1 rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+            className="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
           />
           <button
             type="button"

@@ -53,7 +53,7 @@ export function TrackingSection({ orders, onChanged, notify }: {
           <Bell size={16} className={pending.some(isNewAlert) ? 'animate-bounce text-red-400' : 'text-green-500'} />
           <h2 className="font-semibold">Enviar rastreio aos clientes</h2>
           {pending.length > 0 && (
-            <span className="rounded-full bg-red-500/15 px-2 py-0.5 text-xs font-bold text-red-300">{pending.length} pendente{pending.length > 1 ? 's' : ''}</span>
+            <span className="shrink-0 whitespace-nowrap rounded-full bg-red-500/15 px-2 py-0.5 text-xs font-bold text-red-300">{pending.length} pendente{pending.length > 1 ? 's' : ''}</span>
           )}
         </div>
         <p className="mb-4 text-sm text-white/60">
@@ -65,7 +65,7 @@ export function TrackingSection({ orders, onChanged, notify }: {
             <CheckCircle2 size={16} className="text-green-500" /> Nenhum envio pendente.
           </div>
         ) : (
-          <ul className="grid gap-2">
+          <ul className="grid grid-cols-[minmax(0,1fr)] gap-2">
             {pending.map(o => {
               const fresh = isNewAlert(o);
               return (
@@ -130,7 +130,7 @@ export function TrackingSection({ orders, onChanged, notify }: {
             onChange={e => setCode(e.target.value.trim())}
             placeholder="Ex: ES123456789ES"
             onKeyDown={e => { if (e.key === 'Enter' && code) window.open(`https://www.correos.es/es/es/herramientas/localizador/envios?numero=${code}`, '_blank'); }}
-            className="flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white outline-none placeholder:text-white/30 focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+            className="min-w-0 flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white outline-none placeholder:text-white/30 focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
           />
           <a
             href={code ? `https://www.correos.es/es/es/herramientas/localizador/envios?numero=${code}` : undefined}
@@ -201,7 +201,7 @@ function EmailTest() {
           value={to}
           onChange={e => setTo(e.target.value)}
           placeholder="seu@email.com"
-          className="flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white outline-none placeholder:text-white/30 focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+          className="min-w-0 flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white outline-none placeholder:text-white/30 focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
         />
         <button type="submit" disabled={busy || !to.trim()} className="flex items-center gap-1.5 whitespace-nowrap rounded-lg bg-green-600 px-4 py-2 text-sm font-bold hover:bg-green-700 disabled:opacity-50">
           <Send size={14} />{busy ? 'Enviando…' : 'Testar'}

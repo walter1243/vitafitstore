@@ -73,7 +73,7 @@ export function DestaquesForm({ data, onChange }: { data: DestaquesContent; onCh
                   value={f.icon}
                   disabled={!!f.imageUrl}
                   onChange={(e) => updateFeature(idx, { icon: e.target.value as DestaqueFeature['icon'] })}
-                  className="flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-2 py-1.5 text-xs text-white outline-none disabled:opacity-40"
+                  className="min-w-0 flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-2 py-1.5 text-xs text-white outline-none disabled:opacity-40"
                 >
                   {ICON_OPTIONS.map((opt) => (
                     <option key={opt.key} value={opt.key}>{opt.label}</option>

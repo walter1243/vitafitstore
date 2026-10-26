@@ -98,18 +98,18 @@ export function AnalyticsPanel() {
             <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${s.bg}`}>{s.icon}</div>
             <div className="min-w-0">
               <div className="text-lg font-bold sm:text-xl">{s.value ?? '–'}</div>
-              <div className="truncate text-xs text-white/60">{s.label}</div>
-              <div className="truncate text-[11px] text-white/40">{s.sub}</div>
+              <div className="text-xs leading-tight text-white/60">{s.label}</div>
+              <div className="mt-0.5 text-[11px] leading-tight text-white/40">{s.sub}</div>
             </div>
           </div>
         ))}
       </div>
 
       {stats && (
-        <div className="mt-5 grid gap-5 lg:grid-cols-[1.3fr_1fr]">
+        <div className="mt-5 grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
           <div>
             <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/50">Visualizações — últimos 14 dias</h3>
-            <div className="flex h-36 items-end gap-1.5 rounded-xl border border-white/10 bg-[#0f1117] p-3">
+            <div className="flex h-36 items-end gap-1 rounded-xl sm:gap-1.5 border border-white/10 bg-[#0f1117] p-3">
               {stats.daily.map(d => (
                 <div key={d.day} className="group relative flex h-full flex-1 flex-col justify-end" title={`${d.day.slice(8, 10)}/${d.day.slice(5, 7)}: ${d.views} visualizações, ${d.visitors} visitantes`}>
                   <div className="w-full rounded-t bg-green-500/70 transition-colors group-hover:bg-green-400" style={{ height: `${Math.max(2, (d.views / maxDay) * 100)}%` }} />
@@ -121,17 +121,17 @@ export function AnalyticsPanel() {
 
           <div>
             <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/50">Produtos mais vistos</h3>
-            <div className="overflow-hidden rounded-xl border border-white/10">
+            <div className="overflow-x-auto rounded-xl border border-white/10">
               <table className="w-full text-sm">
                 <thead className="bg-[#0f1117] text-[11px] uppercase tracking-wider text-white/45">
-                  <tr><th className="px-3 py-2 text-left">Produto</th><th className="px-2 py-2 text-right">Vistas</th><th className="px-2 py-2 text-right">Cliques</th><th className="px-3 py-2 text-right">Carrinho</th></tr>
+                  <tr><th className="px-3 py-2 text-left">Produto</th><th className="px-1.5 py-2 text-right sm:px-2">Vistas</th><th className="px-1.5 py-2 text-right sm:px-2">Cliques</th><th className="px-3 py-2 text-right"><span className="sm:hidden">Carr.</span><span className="hidden sm:inline">Carrinho</span></th></tr>
                 </thead>
                 <tbody className="divide-y divide-white/10">
                   {stats.products.map(p => (
                     <tr key={p.id}>
-                      <td className="max-w-[160px] truncate px-3 py-2">{p.name}</td>
-                      <td className="px-2 py-2 text-right text-white/80">{p.views}</td>
-                      <td className="px-2 py-2 text-right text-white/80">{p.clicks}</td>
+                      <td className="max-w-[120px] truncate px-3 py-2 sm:max-w-[200px]">{p.name}</td>
+                      <td className="px-1.5 py-2 text-right text-white/80 sm:px-2">{p.views}</td>
+                      <td className="px-1.5 py-2 text-right text-white/80 sm:px-2">{p.clicks}</td>
                       <td className="px-3 py-2 text-right text-green-400">{p.carts}</td>
                     </tr>
                   ))}

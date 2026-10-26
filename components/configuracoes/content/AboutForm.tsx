@@ -68,7 +68,7 @@ export function AboutForm({ data, onChange }: { data: AboutContent; onChange: (d
                 <select
                   value={f.icon}
                   onChange={(e) => updateFeature(idx, { icon: e.target.value as AboutFeature['icon'] })}
-                  className="flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-2 py-1.5 text-xs text-white outline-none"
+                  className="min-w-0 flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-2 py-1.5 text-xs text-white outline-none"
                 >
                   {ICON_OPTIONS.map((opt) => (
                     <option key={opt.key} value={opt.key}>{opt.label}</option>
