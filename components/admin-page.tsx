@@ -2784,7 +2784,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
           </div>
         )}
 
-        <main className="flex-1 bg-[#0f1117] p-4 sm:p-6">
+        <main className="min-w-0 flex-1 overflow-x-clip bg-[#0f1117] p-4 sm:p-6">
           {section === 'dashboard' && <DashboardSection products={products} orders={orders} revenue={revenue} onNavigate={navigate} trackingAlerts={trackingPending} />}
           {section === 'products' && (
             <ProductsSection

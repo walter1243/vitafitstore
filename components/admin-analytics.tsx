@@ -146,10 +146,10 @@ export function AnalyticsPanel() {
       {stats && stats.pages.length > 0 && (
         <div className="mt-5">
           <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/50">Páginas mais visitadas</h3>
-          <ul className="grid gap-1.5 sm:grid-cols-2">
+          <ul className="grid grid-cols-[minmax(0,1fr)] gap-1.5 sm:grid-cols-[repeat(2,minmax(0,1fr))]">
             {stats.pages.map(p => (
               <li key={p.path} className="flex items-center justify-between gap-3 rounded-lg bg-[#0f1117] px-3 py-2 text-sm">
-                <span className="truncate text-white/70">{p.path === '/' ? 'Início' : p.path}</span>
+                <span className="min-w-0 truncate text-white/70" title={p.path}>{p.path === '/' ? 'Início' : p.path}</span>
                 <span className="shrink-0 font-semibold">{p.views}</span>
               </li>
             ))}
