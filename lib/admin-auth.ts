@@ -20,8 +20,15 @@ function getDefaultSessionMaxAgeSec() {
   return 60 * 60 * 24 * 30;
 }
 
+// Sem ADMIN_AUTH_SECRET/NEXTAUTH_SECRET, deriva do DATABASE_URL (que ja e
+// secreto) — nunca de um texto fixo no codigo, que qualquer um poderia usar
+// pra forjar a sessao de admin.
 function getSecret() {
-  return process.env.ADMIN_AUTH_SECRET || process.env.NEXTAUTH_SECRET || 'change-me-admin-auth-secret';
+  const secret = process.env.ADMIN_AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+  if (secret) return secret;
+  const db = process.env.DATABASE_URL;
+  if (!db) throw new Error('ADMIN_AUTH_SECRET não está configurado.');
+  return createHmac('sha256', db).update('kitoys3d-admin-session').digest('hex');
 }
 
 function base64UrlEncode(value: string) {

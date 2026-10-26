@@ -20,11 +20,28 @@ async function ensureTable() {
   await sql`INSERT INTO automation_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING`
 }
 
-export async function GET() {
+// Os tokens nunca voltam pro navegador: so se estao preenchidos. Campo vazio
+// no POST mantem o token salvo.
+function withoutSecrets(row: any) {
+  if (!row) return {}
+  const { whatsapp_token, sendgrid_key, ...rest } = row
+  return {
+    ...rest,
+    whatsapp_token: '',
+    sendgrid_key: '',
+    whatsapp_token_set: Boolean(whatsapp_token),
+    sendgrid_key_set: Boolean(sendgrid_key),
+  }
+}
+
+export async function GET(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req)
+    if (!auth.ok) return auth.response
+
     await ensureTable()
     const [row] = await sql`SELECT * FROM automation_settings WHERE id = 1`
-    return NextResponse.json(row ?? {})
+    return NextResponse.json(withoutSecrets(row))
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 })
   }
@@ -53,8 +70,8 @@ export async function POST(req: NextRequest) {
         automation_enabled   = COALESCE(${automationEnabled ?? null}, automation_enabled),
         whatsapp_provider    = COALESCE(${whatsappProvider ?? null}, whatsapp_provider),
         whatsapp_url         = COALESCE(${whatsappUrl ?? null}, whatsapp_url),
-        whatsapp_token       = COALESCE(${whatsappToken ?? null}, whatsapp_token),
-        sendgrid_key         = COALESCE(${sendgridKey ?? null}, sendgrid_key),
+        whatsapp_token       = COALESCE(NULLIF(${whatsappToken ?? null}, ''), whatsapp_token),
+        sendgrid_key         = COALESCE(NULLIF(${sendgridKey ?? null}, ''), sendgrid_key),
         notify_email         = COALESCE(${notifyEmail ?? null}, notify_email),
         notify_whatsapp      = COALESCE(${notifyWhatsapp ?? null}, notify_whatsapp),
         notify_email_enabled = COALESCE(${notifyEmailEnabled ?? null}, notify_email_enabled),
@@ -62,7 +79,7 @@ export async function POST(req: NextRequest) {
       WHERE id = 1
       RETURNING *
     `
-    return NextResponse.json(row)
+    return NextResponse.json(withoutSecrets(row))
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 })
   }

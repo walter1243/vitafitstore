@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
+import { requireAdmin } from '@/lib/admin-auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (!auth.ok) return auth.response;
+
     const { order_id } = await req.json();
     const orderId = Number(order_id);
 
@@ -76,7 +80,7 @@ export async function POST(req: NextRequest) {
       quantity: 1,
       shipping: shippingAddress,
       reference: `PEDIDO-${orderId}`,
-      notify_url: `${req.nextUrl.origin}/api/webhook/tracking`,
+      notify_url: `${req.nextUrl.origin}/api/webhook/tracking?token=${encodeURIComponent(process.env.TRACKING_WEBHOOK_SECRET ?? '')}`,
     };
 
     const supplierRes = await fetch(`${order.supplier_base_url}/orders`, {

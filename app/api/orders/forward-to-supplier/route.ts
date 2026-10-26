@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
+import { requireAdmin } from '@/lib/admin-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,6 +61,9 @@ async function sendEmail(sendgridKey: string, to: string, subject: string, body:
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (!auth.ok) return auth.response;
+
     const { order_id } = await req.json();
     const orderId = Number(order_id);
     if (!orderId || isNaN(orderId)) {

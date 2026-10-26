@@ -3035,6 +3035,8 @@ type AutomationSettings = {
   notify_email: string;
   notify_whatsapp: boolean;
   notify_email_enabled: boolean;
+  whatsapp_token_set?: boolean;
+  sendgrid_key_set?: boolean;
 };
 
 function AutomationSection() {
@@ -3148,8 +3150,9 @@ function AutomationSection() {
   }
 
   async function saveSettings() {
-    const hasWhatsappApi = Boolean(settings.whatsapp_token?.trim());
-    const hasEmailApi = Boolean(settings.sendgrid_key?.trim());
+    // O token salvo nao volta da API (so *_set); campo vazio = manter o salvo.
+    const hasWhatsappApi = Boolean(settings.whatsapp_token?.trim() || settings.whatsapp_token_set);
+    const hasEmailApi = Boolean(settings.sendgrid_key?.trim() || settings.sendgrid_key_set);
 
     setSaving(true);
     try {
@@ -3348,7 +3351,7 @@ function AutomationSection() {
               <Globe size={14} className="text-amber-300" /> Webhook de rastreio do fornecedor
             </p>
             <p className="mt-2 break-all rounded border border-amber-500/20 bg-[#0f1117] px-3 py-2 font-mono text-xs text-amber-100/90">
-              POST https://www.kitoys3d.com/api/webhook/tracking
+              POST https://www.kitoys3d.com/api/webhook/tracking?token=TRACKING_WEBHOOK_SECRET
             </p>
             <p className="mt-2 text-xs text-amber-200/80">
               Body: <code className="font-mono">{'{ "fornecedor_pedido_id": "ID", "codigo_rastreio": "AA000000000BR", "transportadora": "Correios" }'}</code>
@@ -3393,7 +3396,7 @@ function AutomationSection() {
                 <input
                   type="password"
                   className="rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
-                  placeholder="Cole sua API key/token"
+                  placeholder={settings.whatsapp_token_set ? 'Token salvo — deixe vazio para manter' : 'Cole sua API key/token'}
                   value={settings.whatsapp_token ?? ''}
                   onChange={e => setSettings(p => ({ ...p, whatsapp_token: e.target.value }))}
                 />
@@ -3414,7 +3417,7 @@ function AutomationSection() {
                 <input
                   type="password"
                   className="rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
-                  placeholder="SG.xxxxxxxxxxxx"
+                  placeholder={settings.sendgrid_key_set ? 'Chave salva — deixe vazio para manter' : 'SG.xxxxxxxxxxxx'}
                   value={settings.sendgrid_key ?? ''}
                   onChange={e => setSettings(p => ({ ...p, sendgrid_key: e.target.value }))}
                 />

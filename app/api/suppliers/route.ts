@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
+import { requireAdmin } from '@/lib/admin-auth'
 
 async function ensureTable() {
   await sql`
@@ -23,8 +24,11 @@ async function ensureTable() {
   await sql`ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS contact_whatsapp       TEXT`
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req)
+    if (!auth.ok) return auth.response
+
     await ensureTable()
     const suppliers = await sql`
       SELECT id, name, base_url, api_key, active,
@@ -42,6 +46,9 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req)
+    if (!auth.ok) return auth.response
+
     await ensureTable()
     const { name, baseUrl, apiKey, shopifyDomain, shopifyAccessToken, orderMethod, contactEmail, contactWhatsapp } = await req.json()
     if (!name || !baseUrl) {
@@ -60,6 +67,9 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req)
+    if (!auth.ok) return auth.response
+
     const {
       id, name, baseUrl, apiKey, active,
       scraperUrlTemplate, scraperStockSelector,
@@ -94,6 +104,9 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req)
+    if (!auth.ok) return auth.response
+
     const { id } = await req.json()
     if (!id) return NextResponse.json({ error: 'id obrigatório' }, { status: 400 })
     await sql`DELETE FROM suppliers WHERE id = ${id}`

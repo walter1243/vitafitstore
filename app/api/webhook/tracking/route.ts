@@ -3,12 +3,28 @@
  * Chamado pelo fornecedor quando o código de rastreio é gerado.
  * Atualiza o pedido no banco e notifica o cliente via WhatsApp.
  */
+import { timingSafeEqual } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { sendTrackingWhatsApp } from '@/lib/whatsapp'
 
+// So o fornecedor chama: precisa mandar o segredo TRACKING_WEBHOOK_SECRET
+// (Vercel → Environment Variables) no header x-webhook-token ou em ?token=.
+function validToken(req: NextRequest) {
+  const secret = process.env.TRACKING_WEBHOOK_SECRET || ''
+  const sent = req.headers.get('x-webhook-token') || req.nextUrl.searchParams.get('token') || ''
+  if (!secret || !sent) return false
+  const a = Buffer.from(sent)
+  const b = Buffer.from(secret)
+  return a.length === b.length && timingSafeEqual(a, b)
+}
+
 export async function POST(req: NextRequest) {
   try {
+    if (!validToken(req)) {
+      return NextResponse.json({ error: 'No autorizado.' }, { status: 401 })
+    }
+
     // Aceita tanto snake_case (fornecedor) quanto camelCase
     const body = await req.json()
     const supplierOrderId: string =
