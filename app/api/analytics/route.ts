@@ -5,15 +5,17 @@ import { ensureSiteEvents } from '@/lib/site-events';
 
 export const dynamic = 'force-dynamic';
 
-// Estatisticas pro Dashboard do admin. ?days=7|30|90 (padrao 30).
+// Estatisticas pro Dashboard do admin. ?days=1|7|30|90 (padrao 30);
+// days=1 = hoje, desde a meia-noite de Madri.
 export async function GET(req: NextRequest) {
   try {
     const auth = await requireAdmin(req);
     if (!auth.ok) return auth.response;
     await ensureSiteEvents();
     const days = Math.min(365, Math.max(1, Number(req.nextUrl.searchParams.get('days')) || 30));
-    const since = new Date(Date.now() - days * 86400000).toISOString();
-    const dayStart = new Date(); dayStart.setUTCHours(0, 0, 0, 0);
+    const [{ start }] = await sql`SELECT (date_trunc('day', NOW() AT TIME ZONE 'Europe/Madrid') AT TIME ZONE 'Europe/Madrid') AS start`;
+    const dayStart = new Date(start);
+    const since = days === 1 ? dayStart.toISOString() : new Date(Date.now() - days * 86400000).toISOString();
 
     const [totals] = await sql`
       SELECT
@@ -72,5 +74,19 @@ export async function GET(req: NextRequest) {
   } catch (err: any) {
     console.error('[GET /api/analytics]', err);
     return NextResponse.json({ error: err?.message ?? 'Database error' }, { status: 500 });
+  }
+}
+
+// Zera as estatisticas (visitas, cliques, carrinho). Pedidos nao sao tocados.
+export async function DELETE(req: NextRequest) {
+  try {
+    const auth = await requireAdmin(req);
+    if (!auth.ok) return auth.response;
+    await ensureSiteEvents();
+    const rows = await sql`DELETE FROM site_events RETURNING 1`;
+    return NextResponse.json({ ok: true, deleted: rows.length });
+  } catch (err: any) {
+    console.error('[DELETE /api/analytics]', err);
+    return NextResponse.json({ error: 'Não foi possível zerar as estatísticas.' }, { status: 500 });
   }
 }

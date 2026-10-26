@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { BarChart3, Eye, MousePointerClick, ShoppingCart, Users } from 'lucide-react';
+import { BarChart3, Eye, MousePointerClick, RotateCcw, ShoppingCart, Users } from 'lucide-react';
 
 type Stats = {
   days: number;
@@ -12,7 +12,8 @@ type Stats = {
   pages: { path: string; views: number }[];
 };
 
-const RANGES = [7, 30, 90] as const;
+// 1 = hoje (desde a meia-noite de Madri).
+const RANGES = [1, 7, 30, 90] as const;
 
 // Dashboard → estatisticas da loja (app/api/analytics). Visitantes = pessoas
 // diferentes por dia (sem cookies), somadas no periodo.
@@ -20,6 +21,23 @@ export function AnalyticsPanel() {
   const [days, setDays] = useState<number>(30);
   const [stats, setStats] = useState<Stats | null>(null);
   const [error, setError] = useState('');
+  const [reload, setReload] = useState(0);
+  const [resetting, setResetting] = useState(false);
+
+  async function resetStats() {
+    if (!confirm('Zerar todas as estatísticas (visitantes, visualizações, cliques e carrinho)? Os pedidos não são apagados. Isso não pode ser desfeito.')) return;
+    setResetting(true);
+    try {
+      const r = await fetch('/api/analytics', { method: 'DELETE' });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) { setError(d?.error ?? 'Falha ao zerar estatísticas.'); return; }
+      setReload(n => n + 1);
+    } catch {
+      setError('Falha ao zerar estatísticas.');
+    } finally {
+      setResetting(false);
+    }
+  }
 
   useEffect(() => {
     let alive = true;
@@ -32,7 +50,7 @@ export function AnalyticsPanel() {
       })
       .catch(() => alive && setError('Falha ao carregar estatísticas.'));
     return () => { alive = false; };
-  }, [days]);
+  }, [days, reload]);
 
   const t = stats?.totals;
   const conversion = t && t.visitors ? (stats!.orders.count / t.visitors) * 100 : 0;
@@ -48,6 +66,15 @@ export function AnalyticsPanel() {
     <section className="rounded-2xl border border-white/10 bg-[#161b28] p-4 text-white sm:p-5">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <h2 className="flex items-center gap-2 font-semibold"><BarChart3 size={16} className="text-green-500" /> Estatísticas da loja</h2>
+        <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={resetStats}
+          disabled={resetting}
+          className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-semibold text-white/60 transition-colors hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-300 disabled:opacity-50"
+        >
+          <RotateCcw size={13} /> {resetting ? 'Zerando…' : 'Zerar estatísticas'}
+        </button>
         <div className="flex rounded-lg border border-white/10 p-0.5 text-xs">
           {RANGES.map(r => (
             <button
@@ -56,9 +83,10 @@ export function AnalyticsPanel() {
               onClick={() => setDays(r)}
               className={`rounded-md px-3 py-1.5 font-semibold transition-colors ${days === r ? 'bg-green-600 text-white' : 'text-white/60 hover:bg-white/5'}`}
             >
-              {r} dias
+              {r === 1 ? 'Hoje' : `${r} dias`}
             </button>
           ))}
+        </div>
         </div>
       </div>
 

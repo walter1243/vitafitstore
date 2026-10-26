@@ -2,6 +2,7 @@ import { createHash } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { ensureSiteEvents, EVENT_TYPES, type EventType } from '@/lib/site-events';
+import { getAdminSessionFromRequest } from '@/lib/admin-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,6 +14,8 @@ export async function POST(req: NextRequest) {
   try {
     const ua = req.headers.get('user-agent') ?? '';
     if (!ua || BOT.test(ua)) return new NextResponse(null, { status: 204 });
+    // Admin logado conferindo a loja nao conta como visita.
+    if (getAdminSessionFromRequest(req)) return new NextResponse(null, { status: 204 });
     const body = await req.json().catch(() => null);
     const type = body?.type as EventType;
     if (!EVENT_TYPES.includes(type)) return new NextResponse(null, { status: 204 });
