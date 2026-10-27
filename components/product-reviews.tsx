@@ -19,8 +19,12 @@ type Review = {
 
 const BLUE = '#3483FA'
 
-// Bandeira do pais (codigo ISO de 2 letras → emoji).
-const flag = (cc?: string | null) => cc && /^[A-Z]{2}$/.test(cc) ? String.fromCodePoint(...[...cc].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65)) : ''
+// Bandeira do pais como imagem (o Windows nao desenha emoji de bandeira).
+function Flag({ cc }: { cc?: string | null }) {
+  if (!cc || !/^[A-Z]{2}$/.test(cc)) return null
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={`https://flagcdn.com/w20/${cc.toLowerCase()}.png`} alt={cc} width={16} height={12} className="ml-1 inline-block h-3 w-4 rounded-[2px] align-[-1px] object-cover" loading="lazy" />
+}
 
 // "Hace 3 días", "Hace 2 meses", "Hace más de 1 año".
 function ago(date: string) {
@@ -167,7 +171,7 @@ function ReviewItem({ r, voted, onVote }: { r: Review; voted: boolean; onVote: (
         <img src={r.photoUrl} alt={`Foto de ${r.customerName}`} className="mt-3 h-24 w-24 rounded-xl object-cover" />
       )}
       <p className="mt-2 text-xs text-slate-500">
-        {r.customerName}{r.country ? ` ${flag(r.country)}` : ''} ·{' '}
+        {r.customerName}<Flag cc={r.country} /> ·{' '}
         {r.source === 'manual'
           ? <>Opinión recibida {r.sourceNote ? `por ${r.sourceNote}` : 'fuera de la web'}</>
           : <span className="font-medium text-emerald-700">Compra verificada</span>}
@@ -256,7 +260,7 @@ export function ProductReviews({ productId, half = false, className = 'mt-12 max
 
   return (
     <section id={anchor ? 'opiniones' : undefined} data-opiniones className={`${className} scroll-mt-24 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6`}>
-      <h2 className="text-xl font-normal text-slate-900 sm:text-2xl">Opiniones del producto</h2>
+      <h2 className="text-xl font-normal text-slate-900 sm:text-2xl" style={{ fontFamily: 'inherit' }}>Opiniones del producto</h2>
 
       {/* Resumo: media grande + barras por estrela */}
       <div className="mt-5 flex flex-wrap items-start gap-x-8 gap-y-5">
@@ -294,7 +298,7 @@ export function ProductReviews({ productId, half = false, className = 'mt-12 max
         <Dropdown<Filter> label="Calificación" value={filter} onChange={(v) => { setFilter(v); setShowAll(false) }} options={[['all', 'Todas'], ['5', '5 estrellas'], ['4', '4 estrellas'], ['3', '3 estrellas'], ['2', '2 estrellas'], ['1', '1 estrella']]} />
       </div>
 
-      <h3 className="mt-6 text-lg font-semibold text-slate-900">Opiniones</h3>
+      <h3 className="mt-6 text-lg font-semibold text-slate-900" style={{ fontFamily: 'inherit' }}>Opiniones</h3>
       <p className="text-xs text-slate-500">{fmt(withText)} {withText === 1 ? 'comentario' : 'comentarios'}</p>
 
       <div className="mt-2">
