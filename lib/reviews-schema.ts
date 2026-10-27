@@ -23,6 +23,9 @@ export async function ensureReviewsTable() {
   await sql`ALTER TABLE product_reviews ADD COLUMN IF NOT EXISTS country TEXT`;
   await sql`ALTER TABLE product_reviews ADD COLUMN IF NOT EXISTS language TEXT`;
   await sql`ALTER TABLE product_reviews ADD COLUMN IF NOT EXISTS source_note TEXT`;
+  // "Útil" (votos dos visitantes) e denuncias ("Reportar").
+  await sql`ALTER TABLE product_reviews ADD COLUMN IF NOT EXISTS helpful INTEGER NOT NULL DEFAULT 0`;
+  await sql`ALTER TABLE product_reviews ADD COLUMN IF NOT EXISTS reports INTEGER NOT NULL DEFAULT 0`;
 }
 
 export const REVIEW_COUNTRIES = ['ES', 'PT', 'FR', 'IT', 'DE', 'GB', 'NL', 'BE', 'BR', 'AR', 'MX', 'US'] as const;

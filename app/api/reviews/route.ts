@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
 
     const rows = await sql`
       SELECT id, customer_name AS "customerName", rating, comment, photo_url AS "photoUrl",
-             source, country, language, source_note AS "sourceNote",
+             source, country, language, source_note AS "sourceNote", helpful,
              TO_CHAR(created_at, 'YYYY-MM-DD') AS date
       FROM product_reviews
       WHERE product_id = ${productId} AND status = 'approved'
