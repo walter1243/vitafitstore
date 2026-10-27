@@ -6,6 +6,7 @@ import { DEFAULT_NAME_COLORS, packOf, parsePersonalize } from '@/lib/personalize
 import { NamePreview } from '@/components/personalize/name-personalizer';
 import { downloadOrderReceipt, type ReceiptOrder } from '@/lib/order-receipt';
 import { AdminWorlds } from '@/components/admin-worlds';
+import { AdminNfc } from '@/components/admin-nfc';
 import { CategoryCollections, NoteFields, ParcelFields, PersonalizeEditor, ProductPlacement, SaleModeFields } from '@/components/admin-product-extras';
 import { TrackingSection, needsTracking, isNewAlert } from '@/components/admin-tracking';
 import { AnalyticsPanel } from '@/components/admin-analytics';
@@ -22,12 +23,12 @@ import {
   ArrowUp, ArrowDown, Monitor, Zap, ToggleLeft, ToggleRight,
   MessageCircle, Mail, Globe, RefreshCw, LogOut,
   Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  List, ListOrdered, Undo2, Redo2, Star, LayoutGrid, Calculator, Image as ImageIcon, Palette, Printer,
+  List, ListOrdered, Undo2, Redo2, Star, LayoutGrid, Calculator, Image as ImageIcon, Palette, Printer, Nfc,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Section = 'dashboard' | 'products' | 'sectors' | 'worlds' | 'orders' | 'tracking' | 'settings' | 'automation' | 'import-supplier' | 'reviews';
+type Section = 'dashboard' | 'products' | 'sectors' | 'worlds' | 'orders' | 'tracking' | 'settings' | 'automation' | 'import-supplier' | 'reviews' | 'nfc';
 
 type Product = {
   id: number;
@@ -123,6 +124,7 @@ const SECTION_LABELS: Record<Section, string> = {
   settings: 'Editar loja',
   'import-supplier': 'Importar Produtos',
   reviews: 'Avaliações',
+  nfc: 'Tags NFC',
 };
 
 // Cadastro de produto: todos os blocos com o mesmo cartao e o mesmo cabecalho.
@@ -1989,9 +1991,137 @@ type AdminReview = {
   photoUrl: string | null;
   status: 'pending' | 'approved' | 'rejected';
   date: string;
+  source?: 'order' | 'manual';
+  country?: string | null;
+  language?: string | null;
+  sourceNote?: string | null;
 };
 
-function ReviewsSection() {
+const REVIEW_COUNTRY_OPTS: [string, string][] = [['ES', 'Espanha'], ['PT', 'Portugal'], ['FR', 'França'], ['IT', 'Itália'], ['DE', 'Alemanha'], ['GB', 'Reino Unido'], ['NL', 'Holanda'], ['BE', 'Bélgica'], ['BR', 'Brasil'], ['AR', 'Argentina'], ['MX', 'México'], ['US', 'EUA']];
+const REVIEW_LANG_OPTS: [string, string][] = [['es', 'Espanhol'], ['ca', 'Catalão'], ['pt', 'Português'], ['en', 'Inglês'], ['fr', 'Francês'], ['it', 'Italiano'], ['de', 'Alemão']];
+const flagOf = (cc?: string | null) => cc && /^[A-Z]{2}$/.test(cc) ? String.fromCodePoint(...[...cc].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65)) : '';
+const REVIEW_INPUT = 'w-full rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40';
+
+// Depoimento REAL recebido fora do site (WhatsApp, Instagram, feira...).
+function ManualReviewForm({ products, onSaved }: { products: Product[]; onSaved: () => void }) {
+  const empty = { productId: '', customerName: '', rating: 5, country: 'ES', language: 'es', comment: '', sourceNote: 'WhatsApp', photoUrl: '', date: '', confirmReal: false };
+  const [f, setF] = useState(empty);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState('');
+  const set = (patch: Partial<typeof empty>) => setF((v) => ({ ...v, ...patch }));
+
+  async function save() {
+    setErr('');
+    setSaving(true);
+    try {
+      const res = await fetch('/api/reviews/moderate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...f, productId: Number(f.productId) }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error ?? 'Erro ao salvar.');
+      setF({ ...empty, productId: f.productId, sourceNote: f.sourceNote, country: f.country, language: f.language });
+      onSaved();
+    } catch (e: any) {
+      setErr(e?.message ?? 'Erro ao salvar.');
+    } finally { setSaving(false); }
+  }
+
+  return (
+    <section className="rounded-2xl border border-white/10 bg-[#0f1117] p-5">
+      <SectionHead icon={<Star size={16} />} title="Adicionar depoimento real" sub="De um cliente de verdade que te mandou a opinião por WhatsApp, Instagram, e-mail, numa feira... Aparece no produto com a origem (não como “Compra verificada”)." />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="block text-xs text-white/60 sm:col-span-2">
+          Produto *
+          <select className={`${REVIEW_INPUT} mt-1`} value={f.productId} onChange={(e) => set({ productId: e.target.value })}>
+            <option value="">Escolha o produto</option>
+            {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+        </label>
+        <label className="block text-xs text-white/60">
+          Nome do cliente *
+          <input className={`${REVIEW_INPUT} mt-1`} value={f.customerName} maxLength={60} placeholder="Ex: Laura G." onChange={(e) => set({ customerName: e.target.value })} />
+        </label>
+        <div className="text-xs text-white/60">
+          Estrelas *
+          <div className="mt-1 flex h-[42px] items-center gap-1" role="radiogroup" aria-label="Estrelas">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button key={n} type="button" role="radio" aria-checked={f.rating === n} aria-label={`${n} estrela${n > 1 ? 's' : ''}`} onClick={() => set({ rating: n })} className="cursor-pointer p-1">
+                <Star size={22} className={f.rating >= n ? 'fill-amber-400 text-amber-400' : 'fill-white/10 text-white/20'} />
+              </button>
+            ))}
+          </div>
+        </div>
+        <label className="block text-xs text-white/60">
+          País
+          <select className={`${REVIEW_INPUT} mt-1`} value={f.country} onChange={(e) => set({ country: e.target.value })}>
+            {REVIEW_COUNTRY_OPTS.map(([c, n]) => <option key={c} value={c}>{flagOf(c)} {n}</option>)}
+          </select>
+        </label>
+        <label className="block text-xs text-white/60">
+          Idioma do depoimento
+          <select className={`${REVIEW_INPUT} mt-1`} value={f.language} onChange={(e) => set({ language: e.target.value })}>
+            {REVIEW_LANG_OPTS.map(([c, n]) => <option key={c} value={c}>{n}</option>)}
+          </select>
+        </label>
+        <label className="block text-xs text-white/60 sm:col-span-2">
+          Depoimento * <span className="text-white/35">(as palavras do cliente, como ele escreveu)</span>
+          <textarea className={`${REVIEW_INPUT} mt-1 min-h-[90px] resize-y`} value={f.comment} maxLength={1500} onChange={(e) => set({ comment: e.target.value })} />
+        </label>
+        <label className="block text-xs text-white/60">
+          De onde veio *
+          <input className={`${REVIEW_INPUT} mt-1`} value={f.sourceNote} maxLength={80} list="review-sources" placeholder="WhatsApp" onChange={(e) => set({ sourceNote: e.target.value })} />
+          <datalist id="review-sources"><option value="WhatsApp" /><option value="Instagram" /><option value="email" /><option value="Wallapop" /><option value="Etsy" /><option value="feria" /></datalist>
+        </label>
+        <label className="block text-xs text-white/60">
+          Data da opinião
+          <input type="date" className={`${REVIEW_INPUT} mt-1`} value={f.date} onChange={(e) => set({ date: e.target.value })} />
+        </label>
+        <div className="sm:col-span-2">
+          <MediaUploadField label="Foto do cliente com o produto (opcional)" hint="Só com permissão do cliente." value={f.photoUrl} onChange={(url) => set({ photoUrl: url })} kind="image" />
+        </div>
+        <label className="flex cursor-pointer items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-100 sm:col-span-2">
+          <input type="checkbox" className="mt-0.5" checked={f.confirmReal} onChange={(e) => set({ confirmReal: e.target.checked })} />
+          Confirmo que este depoimento é de um cliente real e que tenho permissão dele para publicá-lo.
+        </label>
+      </div>
+      {err && <p className="mt-3 text-sm text-red-300">{err}</p>}
+      <div className="mt-4 flex justify-end">
+        <button type="button" onClick={save} disabled={saving || !f.confirmReal} className="flex cursor-pointer items-center gap-2 rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50">
+          {saving ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : <Check size={15} />}
+          Publicar depoimento
+        </button>
+      </div>
+    </section>
+  );
+}
+
+// Quantos depoimentos aparecem antes do "Ver más" na pagina do produto.
+function ReviewsVisibleSetting() {
+  const [n, setN] = useState(10);
+  const [saved, setSaved] = useState('');
+  useEffect(() => {
+    fetch('/api/reviews/moderate', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+      .then((r) => r.json()).then((d) => { if (d?.visible) setN(Number(d.visible)); }).catch(() => {});
+  }, []);
+  async function save(v: number) {
+    setN(v);
+    const r = await fetch('/api/reviews/moderate', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ visible: v }) });
+    setSaved(r.ok ? 'Salvo' : 'Erro ao salvar');
+    setTimeout(() => setSaved(''), 1500);
+  }
+  return (
+    <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-[#0f1117] px-4 py-3 text-sm text-white/80">
+      <span>Depoimentos visíveis antes do “Ver más”:</span>
+      <input type="number" min={1} max={50} value={n} onChange={(e) => setN(Number(e.target.value))} onBlur={(e) => save(Number(e.target.value) || 10)} className="w-20 rounded-lg border border-white/10 bg-[#1c2236] px-2 py-1.5 text-center text-white outline-none focus:border-green-500/40" aria-label="Quantidade no computador" />
+      <span className="text-white/50">no computador · {Math.max(1, Math.ceil(n / 2))} no celular</span>
+      {saved && <span className="text-xs font-semibold text-green-300">{saved}</span>}
+    </div>
+  );
+}
+
+function ReviewsSection({ products = [] }: { products?: Product[] }) {
   const [reviews, setReviews] = useState<AdminReview[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<number | null>(null);
@@ -2024,6 +2154,15 @@ function ReviewsSection() {
     }
   }
 
+  async function removeReview(id: number) {
+    if (!confirm('Excluir este depoimento?')) return;
+    setBusyId(id);
+    try {
+      const res = await fetch(`/api/reviews/moderate?id=${id}`, { method: 'DELETE' });
+      if (res.ok) setReviews(prev => prev.filter(r => r.id !== id));
+    } finally { setBusyId(null); }
+  }
+
   const pending = reviews.filter(r => r.status === 'pending');
   const decided = reviews.filter(r => r.status !== 'pending');
 
@@ -2051,10 +2190,22 @@ function ReviewsSection() {
                 </span>
               )}
             </div>
-            <p className="mt-1 text-sm font-semibold text-white">{r.customerName} <span className="font-normal text-white/40">· {r.productName}</span></p>
+            <p className="mt-1 text-sm font-semibold text-white">{r.customerName} {flagOf(r.country)} <span className="font-normal text-white/40">· {r.productName}</span></p>
+            <p className="mt-0.5 text-[11px] text-white/45">{r.source === 'manual' ? `Depoimento cadastrado · origem: ${r.sourceNote || '—'}` : 'Compra verificada (link do pedido)'}{r.language ? ` · ${r.language.toUpperCase()}` : ''}</p>
             {r.comment && <p className="mt-1 text-sm text-white/70">{r.comment}</p>}
           </div>
         </div>
+        {r.status !== 'pending' && (
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={() => removeReview(r.id)}
+              disabled={busyId === r.id}
+              className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-red-500/30 px-3 py-1.5 text-xs font-semibold text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+            >
+              <Trash2 size={12} /> Excluir
+            </button>
+          </div>
+        )}
         {r.status === 'pending' && (
           <div className="mt-3 flex gap-2">
             <button
@@ -2083,6 +2234,8 @@ function ReviewsSection() {
 
   return (
     <div className="space-y-6 p-5">
+      <ReviewsVisibleSetting />
+      <ManualReviewForm products={products} onSaved={() => void load()} />
       <div>
         <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-white/50">
           Pendentes {pending.length > 0 && `(${pending.length})`}
@@ -2547,6 +2700,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
         { key: 'automation', label: 'Automação', icon: <Zap size={18} /> },
         { key: 'settings', label: 'Editar loja', icon: <Settings size={18} /> },
         { key: 'worlds', label: 'Editar mundos', icon: <LayoutGrid size={18} /> },
+        { key: 'nfc', label: 'Tags NFC', icon: <Nfc size={18} /> },
       ],
     },
   ];
@@ -2562,6 +2716,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
     automation: 'Configure mensagens automáticas e integrações.',
     settings: 'Edite o conteúdo e as configurações da página de vendas.',
     reviews: 'Aprove ou recuse as avaliações enviadas por clientes reais.',
+    nfc: 'Grave e leia as tags NFC dos chaveiros pelo celular (Chrome no Android).',
   };
 
   return (
@@ -2820,9 +2975,10 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
           )}
           {section === 'sectors' && <AdminSectors />}
           {section === 'worlds' && <AdminWorlds />}
+          {section === 'nfc' && <AdminNfc />}
           {section === 'import-supplier' && <ImportSupplierSection onImportToStore={preFillFromSupplier} />}
           {section === 'orders' && <OrdersSection orders={orders} products={products} onUpdateTracking={updateTracking} onRefresh={fetchData} />}
-          {section === 'reviews' && <ReviewsSection />}
+          {section === 'reviews' && <ReviewsSection products={products} />}
           {section === 'tracking' && <TrackingSection orders={orders} onChanged={refreshOrders} notify={addToast} />}
           {section === 'automation' && <AutomationSection />}
           {section === 'settings' && (

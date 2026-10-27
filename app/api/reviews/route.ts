@@ -1,28 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { validateCustomerAccessToken } from '@/lib/customer-access';
+import { ensureReviewsTable, getReviewsVisible } from '@/lib/reviews-schema';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-async function ensureTable() {
-  await sql`
-    CREATE TABLE IF NOT EXISTS product_reviews (
-      id             SERIAL PRIMARY KEY,
-      product_id     INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-      order_id       INTEGER REFERENCES orders(id) ON DELETE SET NULL,
-      customer_name  TEXT NOT NULL,
-      rating         INTEGER NOT NULL,
-      comment        TEXT,
-      photo_url      TEXT,
-      status         TEXT NOT NULL DEFAULT 'pending',
-      created_at     TIMESTAMP DEFAULT NOW()
-    )
-  `;
-  // One review per order — a real customer leaves one verified review for
-  // what they actually bought, not several.
-  await sql`CREATE UNIQUE INDEX IF NOT EXISTS product_reviews_order_id_key ON product_reviews (order_id) WHERE order_id IS NOT NULL`;
-}
+const ensureTable = ensureReviewsTable;
 
 // Public: approved reviews for a product, plus the aggregate rating —
 // used on the product page. Only ever returns reviews an admin approved.
@@ -36,6 +20,7 @@ export async function GET(req: NextRequest) {
 
     const rows = await sql`
       SELECT id, customer_name AS "customerName", rating, comment, photo_url AS "photoUrl",
+             source, country, language, source_note AS "sourceNote",
              TO_CHAR(created_at, 'YYYY-MM-DD') AS date
       FROM product_reviews
       WHERE product_id = ${productId} AND status = 'approved'
@@ -49,6 +34,8 @@ export async function GET(req: NextRequest) {
       reviews: rows,
       count,
       average: Math.round(average * 10) / 10,
+      // quantos mostrar antes do "Ver más" (Admin → Avaliações)
+      visible: await getReviewsVisible(),
     }, { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' } });
   } catch (err: any) {
     console.error('[GET /api/reviews]', err);

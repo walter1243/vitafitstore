@@ -9,7 +9,7 @@ import { useCart } from '@/lib/cart-context'
 import { type Product } from '@/lib/products'
 import { TrustpilotWidget } from '@/components/trustpilot-widget'
 import { SizeGuideModal } from '@/components/size-guide-modal'
-import { ProductReviews } from '@/components/product-reviews'
+import { ProductReviews, ReviewSummary } from '@/components/product-reviews'
 import { useSectors } from '@/components/kids/sectors-context'
 import { ProductDemo } from '@/components/kids/product-demo'
 import { NamePersonalizer, NamePreview, type PersonalizerLook } from '@/components/personalize/name-personalizer'
@@ -215,6 +215,7 @@ export function ProductPageView({ product }: { product: Product }) {
           <h1 className="text-2xl font-bold leading-tight text-slate-900 sm:text-3xl" style={{ fontFamily: 'var(--font-heading)' }}>
             {product.name}
           </h1>
+          <ReviewSummary productId={product.id} />
 
           <div className="mt-3">
             <TrustpilotWidget />
@@ -427,6 +428,9 @@ export function ProductPageView({ product }: { product: Product }) {
               ))}
             </ul>
           )}
+
+          {/* Opinioes no computador: coluna da direita, embaixo dos selos */}
+          <ProductReviews productId={product.id} anchor={false} className="mt-8 hidden lg:block" />
         </div>
       </div>
 
@@ -439,7 +443,8 @@ export function ProductPageView({ product }: { product: Product }) {
         />
       </div>
 
-      <ProductReviews productId={product.id} />
+      {/* Opinioes no celular/tablet: embaixo da descricao (metade do numero do painel) */}
+      <ProductReviews productId={product.id} half className="mt-12 max-w-3xl lg:hidden" />
     </div>
   )
 }
