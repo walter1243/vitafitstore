@@ -217,6 +217,7 @@ export function ProductReviews({ productId, half = false, className = 'mt-12 max
   const [sort, setSort] = useState<Sort>('recent')
   const [filter, setFilter] = useState<Filter>('all')
   const [votes, setVotes] = useState<number[]>([])
+  const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
     setVotes(loadVotes())
@@ -231,6 +232,7 @@ export function ProductReviews({ productId, half = false, className = 'mt-12 max
         if (data.visible) setPerPage(Number(data.visible))
       })
       .catch(() => {})
+      .finally(() => { if (!cancelled) setLoaded(true) })
     return () => { cancelled = true }
   }, [productId])
 
@@ -251,7 +253,21 @@ export function ProductReviews({ productId, half = false, className = 'mt-12 max
     fetch('/api/reviews/vote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, action: on ? 'helpful' : 'unhelpful' }) }).catch(() => {})
   }
 
-  if (count === 0) return null
+
+  // Sem opinioes ainda: a secao aparece com um aviso (nada de lista vazia).
+  if (count === 0) {
+    if (!loaded) return null
+    return (
+      <section id={anchor ? 'opiniones' : undefined} data-opiniones className={`${className} scroll-mt-24 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6`}>
+        <h2 className="text-xl font-normal text-slate-900 sm:text-2xl" style={{ fontFamily: 'inherit' }}>Opiniones del producto</h2>
+        <div className="mt-4 flex items-center gap-3">
+          <Stars value={0} size={20} />
+          <span className="text-sm text-slate-500">Este producto aún no tiene opiniones.</span>
+        </div>
+        <p className="mt-2 text-sm text-slate-500">Después de tu compra te enviaremos un enlace para que cuentes qué te pareció.</p>
+      </section>
+    )
+  }
 
   const limit = half ? Math.max(1, Math.ceil(perPage / 2)) : perPage
   const visible = showAll ? list : list.slice(0, limit)
