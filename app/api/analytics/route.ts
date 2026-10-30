@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin-auth';
-import { ensureSiteEvents } from '@/lib/site-events';
+import { ensureSiteEvents, IGNORE_COOKIE } from '@/lib/site-events';
 
 export const dynamic = 'force-dynamic';
 
@@ -70,7 +70,41 @@ export async function GET(req: NextRequest) {
       GROUP BY path ORDER BY views DESC LIMIT 8
     `;
 
-    return NextResponse.json({ days, totals, today, orders, daily, products, pages }, { headers: { 'Cache-Control': 'no-store' } });
+    // De onde vem o trafego (cidade/pais) e a que horas (fuso de Madri).
+    const geo = await sql`
+      SELECT country, COALESCE(city, '') AS city, AVG(lat)::FLOAT AS lat, AVG(lng)::FLOAT AS lng,
+             COUNT(DISTINCT visitor)::INT AS visitors, COUNT(*)::INT AS views
+      FROM site_events
+      WHERE created_at >= ${since} AND type = 'page_view' AND country IS NOT NULL
+      GROUP BY country, COALESCE(city, '')
+      ORDER BY visitors DESC, views DESC LIMIT 300
+    `;
+    const hours = await sql`
+      SELECT EXTRACT(HOUR FROM created_at AT TIME ZONE 'Europe/Madrid')::INT AS hour, COUNT(*)::INT AS views
+      FROM site_events WHERE created_at >= ${since} AND type = 'page_view'
+      GROUP BY 1 ORDER BY 1
+    `;
+    const recent = await sql`
+      SELECT TO_CHAR(created_at AT TIME ZONE 'Europe/Madrid', 'DD/MM HH24:MI') AS "when", country, city, path
+      FROM site_events WHERE type = 'page_view' AND created_at >= ${since}
+      ORDER BY created_at DESC LIMIT 12
+    `;
+    // Compras: posicao do comprador no pagamento; pedidos antigos so tem o pais.
+    await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS geo_city TEXT`;
+    await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS geo_lat DOUBLE PRECISION`;
+    await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS geo_lng DOUBLE PRECISION`;
+    const purchases = await sql`
+      SELECT UPPER(COALESCE(country, '')) AS country, COALESCE(geo_city, city, '') AS city,
+             AVG(geo_lat)::FLOAT AS lat, AVG(geo_lng)::FLOAT AS lng,
+             COUNT(*)::INT AS orders, COALESCE(SUM(total_amount), 0)::FLOAT AS revenue
+      FROM orders WHERE created_at >= ${since}
+      GROUP BY 1, 2 ORDER BY orders DESC LIMIT 300
+    `;
+
+    const res = NextResponse.json({ days, totals, today, orders, daily, products, pages, geo, hours, recent, purchases }, { headers: { 'Cache-Control': 'no-store' } });
+    // Quem abre o Dashboard e o dono: este aparelho deixa de contar como visita.
+    res.cookies.set(IGNORE_COOKIE, '1', { path: '/', maxAge: 60 * 60 * 24 * 730, httpOnly: true, sameSite: 'lax', secure: true });
+    return res;
   } catch (err: any) {
     console.error('[GET /api/analytics]', err);
     return NextResponse.json({ error: err?.message ?? 'Database error' }, { status: 500 });

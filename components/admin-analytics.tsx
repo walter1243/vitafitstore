@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { BarChart3, Eye, MousePointerClick, RotateCcw, ShoppingCart, Users } from 'lucide-react';
+import { BarChart3, Eye, EyeOff, MousePointerClick, RotateCcw, ShoppingCart, Users } from 'lucide-react';
+import { GeoHeatPanel, type GeoRow, type HourRow, type PurchaseRow, type RecentRow } from '@/components/admin-geo-map';
 
 type Stats = {
   days: number;
@@ -10,6 +11,10 @@ type Stats = {
   daily: { day: string; views: number; visitors: number }[];
   products: { id: number; name: string; views: number; clicks: number; carts: number }[];
   pages: { path: string; views: number }[];
+  geo: GeoRow[];
+  purchases: PurchaseRow[];
+  hours: HourRow[];
+  recent: RecentRow[];
 };
 
 // 1 = hoje (desde a meia-noite de Madri).
@@ -92,6 +97,10 @@ export function AnalyticsPanel() {
 
       {error && <p className="mb-3 rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-300">{error}</p>}
 
+      <p className="mb-3 flex items-center gap-1.5 text-xs text-white/45">
+        <EyeOff size={13} className="shrink-0 text-green-400" /> Este aparelho não entra nas estatísticas. Abra o Dashboard uma vez em cada aparelho seu (computador, celular).
+      </p>
+
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         {tiles.map(s => (
           <div key={s.label} className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#0f1117] p-3 sm:p-4">
@@ -142,6 +151,8 @@ export function AnalyticsPanel() {
           </div>
         </div>
       )}
+
+      {stats && <GeoHeatPanel geo={stats.geo ?? []} purchases={stats.purchases ?? []} hours={stats.hours ?? []} recent={stats.recent ?? []} />}
 
       {stats && stats.pages.length > 0 && (
         <div className="mt-5">

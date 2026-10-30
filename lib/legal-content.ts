@@ -8,7 +8,7 @@ const DOMICILIO = 'Carrer Emilio Sala Hernández, nº 43, Elche (Alicante), Espa
 const EMAIL = 'kitoys3d@gmail.com';
 const WHATSAPP = '+34 678 68 4704';
 
-export type LegalSection = { heading: string; body: string[] };
+export type LegalSection = { heading: string; body: string[]; table?: { head: string[]; rows: string[][] } };
 
 export type LegalPage = {
   slug: string;
@@ -169,6 +169,7 @@ export const LEGAL_PAGES: Record<string, LegalPage> = {
         heading: 'Datos que recopilamos',
         body: [
           'Datos de contacto y envío facilitados al realizar un pedido (nombre, dirección, email, teléfono) y datos de navegación mediante cookies técnicas y analíticas.',
+          'Para nuestras estadísticas internas registramos las páginas visitadas, la hora y la zona aproximada de la visita o de la compra (país y ciudad, deducidos de la conexión). No guardamos tu dirección IP. Si rechazas las cookies en el aviso del sitio, tu visita se cuenta sin ubicación.',
         ],
       },
       {
@@ -189,21 +190,76 @@ export const LEGAL_PAGES: Record<string, LegalPage> = {
     slug: 'cookies',
     title: 'Política de Cookies',
     navLabel: 'Política de cookies',
-    intro: 'Uso de cookies técnicas y analíticas en este sitio web.',
+    intro: 'Qué cookies y tecnologías similares usa kitoys3d.com, para qué sirven, cuánto duran y cómo puedes aceptarlas, rechazarlas o cambiar de opinión. Última actualización: 30 de octubre de 2026.',
     sections: [
       {
         heading: 'Qué son las cookies',
-        body: ['Pequeños archivos que se almacenan en tu navegador para mejorar la experiencia de uso del sitio.'],
-      },
-      {
-        heading: 'Cookies que utilizamos',
         body: [
-          'Cookies técnicas necesarias para el funcionamiento del carrito y el checkout, y cookies analíticas para entender el uso del sitio (Google Analytics).',
+          'Las cookies son pequeños archivos que un sitio web guarda en tu navegador. Otras tecnologías similares, como el almacenamiento local, funcionan de forma parecida y las tratamos igual en esta política.',
+          'Algunas son necesarias para que la web funcione. Otras solo sirven para medir el uso del sitio o para publicidad, y esas únicamente se activan si las aceptas.',
         ],
       },
       {
-        heading: 'Gestión de cookies',
-        body: ['Puedes configurar o bloquear las cookies desde las opciones de tu navegador en cualquier momento.'],
+        heading: 'Responsable',
+        body: [`${TITULAR} (Kitoys 3D). ${NIF}. Domicilio: ${DOMICILIO}. Contacto: ${EMAIL}.`],
+      },
+      {
+        heading: 'Necesarias (no requieren consentimiento)',
+        body: ['Permiten pagar de forma segura y recordar tus elecciones en la tienda. Sin ellas, algunas funciones no van.'],
+        table: {
+          head: ['Nombre', 'Titular', 'Para qué sirve', 'Duración'],
+          rows: [
+            ['__stripe_mid, __stripe_sid', 'Stripe (tercero)', 'Pago seguro y prevención del fraude en el checkout', '1 año / 30 minutos'],
+            ['cookie_consent', 'Kitoys 3D', 'Recordar si aceptaste o rechazaste las cookies', 'Hasta que la borres'],
+            ['kitoys_zip, kitoys_ship_method', 'Kitoys 3D', 'Recordar tu código postal y la forma de envío elegida', 'Hasta que las borres'],
+            ['kitoys_review_votes', 'Kitoys 3D', 'Evitar votar dos veces «Útil» en la misma opinión', 'Hasta que la borres'],
+            ['store_branding_cache, kitoys_sectors_cache', 'Kitoys 3D', 'Cargar la tienda más rápido', 'Hasta cerrar la pestaña'],
+          ],
+        },
+      },
+      {
+        heading: 'Analíticas (solo si aceptas)',
+        body: ['Nos ayudan a saber cómo se usa la tienda para mejorarla.'],
+        table: {
+          head: ['Nombre', 'Titular', 'Para qué sirve', 'Duración'],
+          rows: [['_ga, _ga_*', 'Google Analytics (tercero)', 'Distinguir visitantes y medir el uso del sitio', '2 años']],
+        },
+      },
+      {
+        heading: 'Publicidad (solo si aceptas)',
+        body: ['Miden los resultados de nuestros anuncios en Facebook e Instagram.'],
+        table: {
+          head: ['Nombre', 'Titular', 'Para qué sirve', 'Duración'],
+          rows: [['_fbp', 'Meta (tercero)', 'Medir la eficacia de los anuncios', '3 meses']],
+        },
+      },
+      {
+        heading: 'Estadísticas propias sin cookies',
+        body: [
+          'También contamos visitas de forma interna, sin instalar cookies en tu navegador: páginas vistas, hora y zona aproximada (país y ciudad). No guardamos tu dirección IP y el identificador usado cambia cada día. Si rechazas las cookies, tu visita se cuenta sin ubicación.',
+          'Vercel, nuestro proveedor de alojamiento, ofrece además una medición agregada que tampoco usa cookies.',
+        ],
+      },
+      {
+        heading: 'Cómo aceptar, rechazar o cambiar tu elección',
+        body: [
+          'La primera vez que entras puedes elegir «Aceptar todas» o «Rechazar». Rechazar es tan fácil como aceptar y no te impide comprar.',
+          'Puedes cambiar de opinión cuando quieras con el botón «Cambiar mis preferencias» de esta página. Si retiras tu consentimiento, borramos las cookies analíticas y de publicidad de este sitio.',
+          'También puedes bloquear o eliminar las cookies desde tu navegador: Chrome (Configuración, Privacidad y seguridad), Safari (Ajustes, Privacidad), Firefox (Ajustes, Privacidad y seguridad) o Edge (Configuración, Cookies y permisos del sitio).',
+        ],
+      },
+      {
+        heading: 'Transferencias internacionales',
+        body: [
+          'Google, Meta y Stripe pueden tratar datos fuera de la Unión Europea, incluidos los Estados Unidos, con las garantías previstas por el RGPD. Puedes consultar sus políticas de privacidad en sus sitios web.',
+        ],
+      },
+      {
+        heading: 'Tus derechos y cambios en esta política',
+        body: [
+          `Puedes ejercer tus derechos escribiendo a ${EMAIL} y reclamar ante la Agencia Española de Protección de Datos (www.aepd.es). Más información en nuestra Política de Privacidad.`,
+          'Si cambiamos las cookies que usamos, actualizaremos esta página y su fecha.',
+        ],
       },
     ],
   },

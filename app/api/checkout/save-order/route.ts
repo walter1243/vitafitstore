@@ -47,6 +47,10 @@ export async function POST(req: NextRequest) {
       await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_service TEXT`;
       await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS pickup_point TEXT`;
       await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_cost NUMERIC`;
+      // Regiao aproximada do comprador (mapa de compras do Dashboard).
+      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS geo_city TEXT`;
+      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS geo_lat DOUBLE PRECISION`;
+      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS geo_lng DOUBLE PRECISION`;
       const ids = [...new Set(items.map((i) => i.productId))];
       const names = ids.length ? await sql`SELECT id, name FROM products WHERE id = ANY(${ids})` : [];
       const nameById = new Map((names as any[]).map((r) => [Number(r.id), String(r.name)]));
@@ -57,7 +61,8 @@ export async function POST(req: NextRequest) {
           address_line, postal_code, city, country,
           product_id, total_amount, status, stripe_payment_id,
           selected_color, selected_size, items_json, custom_text,
-          shipping_method, shipping_service, pickup_point, shipping_cost
+          shipping_method, shipping_service, pickup_point, shipping_cost,
+          geo_city, geo_lat, geo_lng
         ) VALUES (
           ${meta.customerName  || 'Anônimo'},
           ${meta.customerEmail || null},
@@ -77,7 +82,10 @@ export async function POST(req: NextRequest) {
           ${meta.shipMethod || null},
           ${[meta.shipService, meta.shipServiceId && `(id ${meta.shipServiceId})`].filter(Boolean).join(' ') || null},
           ${meta.pickupPoint || null},
-          ${meta.shipping ? Number(meta.shipping) : null}
+          ${meta.shipping ? Number(meta.shipping) : null},
+          ${meta.geoCity || null},
+          ${meta.geoLat ? Number(meta.geoLat) : null},
+          ${meta.geoLng ? Number(meta.geoLng) : null}
         )
       `;
     } catch (dbErr) {

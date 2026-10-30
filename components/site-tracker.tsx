@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
+import { getCookieConsent } from '@/components/cookie-consent'
 
 export const ADD_TO_CART_EVENT = 'kitoys:add-to-cart'
 
@@ -10,7 +11,8 @@ export const ADD_TO_CART_EVENT = 'kitoys:add-to-cart'
 // aparelho — ver app/api/track/route.ts.
 function send(data: { type: string; path: string; productId?: number }) {
   try {
-    const body = JSON.stringify(data)
+    // Quem recusou no aviso de cookies conta como visita, mas sem localizacao.
+    const body = JSON.stringify({ ...data, noGeo: getCookieConsent() === 'rejected' })
     if (navigator.sendBeacon?.('/api/track', new Blob([body], { type: 'application/json' }))) return
     fetch('/api/track', { method: 'POST', body, headers: { 'Content-Type': 'application/json' }, keepalive: true }).catch(() => {})
   } catch {}

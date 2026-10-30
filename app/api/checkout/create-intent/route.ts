@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { chargeShipping } from '@/lib/shipping-quote';
 import { cleanCustomText, itemShipping, lineTotalFor, minQtyFor, packOf, parsePersonalize, sizedPrice, stepFor, unitPriceFor } from '@/lib/personalize';
 import { cleanItems, packItems } from '@/lib/order-items';
+import { geoFromHeaders } from '@/lib/site-events';
 import Stripe from 'stripe';
 import { sql } from '@/lib/db';
 import { resolveShipping } from '@/lib/checkout-pricing';
@@ -103,6 +104,7 @@ export async function POST(req: NextRequest) {
     }
 
     const stripe = getStripe();
+    const geo = geoFromHeaders(req.headers); // regiao aproximada, pro mapa de compras
     const pi = await stripe.paymentIntents.create({
       amount,
       currency: 'eur',
@@ -118,6 +120,9 @@ export async function POST(req: NextRequest) {
         ...packItems(items),
         subtotal:      subtotal.toFixed(2),
         shipping:      shipping.toFixed(2),
+        geoCity:       geo.city ?? '',
+        geoLat:        geo.lat != null ? String(geo.lat) : '',
+        geoLng:        geo.lng != null ? String(geo.lng) : '',
         shipMethod:    ship.chosen?.type ?? '',
         shipService:   ship.chosen ? `${ship.chosen.carrier} · ${ship.chosen.service}`.slice(0, 200) : '',
         shipServiceId: ship.chosen?.serviceId ?? '',

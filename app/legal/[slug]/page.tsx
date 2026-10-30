@@ -5,6 +5,7 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { LEGAL_PAGES, LEGAL_SLUGS } from '@/lib/legal-content'
 import { getSiteContent } from '@/lib/site-content'
+import { CookieSettingsButton } from '@/components/cookie-consent'
 
 export const dynamic = 'force-dynamic'
 
@@ -47,6 +48,21 @@ export default async function LegalPage({ params }: PageProps) {
                     <p key={i} className="text-sm leading-relaxed text-slate-600">{paragraph}</p>
                   ))}
                 </div>
+                {section.table && (
+                  <div className="mt-3 overflow-x-auto rounded-xl border border-slate-200 bg-white">
+                    <table className="w-full min-w-[520px] text-left text-xs">
+                      <thead className="bg-slate-50 text-slate-700">
+                        <tr>{section.table.head.map((h) => <th key={h} scope="col" className="px-3 py-2 font-semibold">{h}</th>)}</tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 text-slate-600">
+                        {section.table.rows.map((row) => (
+                          <tr key={row[0]}>{row.map((cell, i) => <td key={i} className="px-3 py-2 align-top">{cell}</td>)}</tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                {slug === 'cookies' && section.heading.startsWith('Cómo aceptar') && <CookieSettingsButton />}
               </div>
             ))}
           </div>
