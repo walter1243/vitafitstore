@@ -102,8 +102,7 @@ export function NavidadSnowman({ className = '' }: { className?: string }) {
 // Os 3 espalhados pela secao. Celular: arvore no alto a direita, jarron
 // embaixo a esquerda, boneco embaixo a direita (a secao reserva espaco).
 // Telas largas: grandes, nas margens, fora dos produtos.
-// `wide`: so mostra nas laterais quando ha espaco de sobra (2xl), pra nao
-// encostar nos produtos; abaixo disso use NavidadShelf.
+// `wide`: so mostra nas laterais quando ha espaco de sobra (2xl).
 export function NavidadSides({ mobile = true, wide = false }: { mobile?: boolean; wide?: boolean }) {
   return (
     <div className="pointer-events-none absolute inset-0">
@@ -118,22 +117,6 @@ export function NavidadSides({ mobile = true, wide = false }: { mobile?: boolean
         <NavidadVase className="nv-float absolute bottom-8 left-[max(8px,calc(50%-46rem))] h-64 w-52" />
         <NavidadTree className="absolute right-[max(8px,calc(50%-46rem))] top-24 h-64 w-52" />
         <NavidadSnowman className="absolute bottom-10 right-[max(8px,calc(50%-44rem))] h-44 w-36" />
-      </div>
-    </div>
-  );
-}
-
-// Enfeites enfileirados no rodape da secao (telas sem espaco nas laterais):
-// ficam abaixo dos produtos, sem cobrir nada.
-export function NavidadShelf() {
-  return (
-    <div className="pointer-events-none absolute inset-x-0 bottom-3 2xl:hidden">
-      <div className="mx-auto flex max-w-6xl items-end justify-between px-4 sm:px-8">
-        <NavidadVase className="relative h-28 w-24 sm:h-32 sm:w-28" />
-        <div className="flex items-end gap-2 sm:gap-4">
-          <NavidadSnowman className="relative h-24 w-20 sm:h-28 sm:w-24" />
-          <NavidadTree className="relative h-28 w-24 sm:h-36 sm:w-28" />
-        </div>
       </div>
     </div>
   );
