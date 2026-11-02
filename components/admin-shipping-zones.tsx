@@ -9,8 +9,12 @@ type Zone = {
   priceLight: number | string;
   priceHeavy: number | string;
   freeOver: number | string | null;
+  embedPct: number | string;
   enabled: boolean;
 };
+
+// Igual a lib/country-price: acrescimo por unidade e o frete que sobra.
+const surchargeOf = (z: Zone) => (z.code === 'ES' ? 0 : Math.ceil((Number(z.embedPct) || 0) / 100 * (Number(z.priceLight) || 0)));
 
 const INPUT = 'w-full rounded-lg border border-white/10 bg-[#1c2236] px-2.5 py-2 text-sm text-white outline-none placeholder:text-white/30 focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40';
 
@@ -34,7 +38,7 @@ export function ShippingZonesSection({ notify }: { notify: (type: 'success' | 'e
     const code = newCode.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 2);
     if (code.length !== 2 || !newName.trim()) { notify('error', 'Informe o código de 2 letras (ex.: SE) e o nome do país.'); return; }
     if (zones?.some((z) => z.code === code)) { notify('error', `${code} já está na lista.`); return; }
-    setZones((z) => [...(z ?? []), { code, name: newName.trim(), mode: 'correos', priceLight: 15, priceHeavy: 32, freeOver: null, enabled: true }]);
+    setZones((z) => [...(z ?? []), { code, name: newName.trim(), mode: 'correos', priceLight: 15, priceHeavy: 32, freeOver: null, embedPct: 60, enabled: true }]);
     setNewCode(''); setNewName(''); setDirty(true);
   }
 
@@ -69,11 +73,11 @@ export function ShippingZonesSection({ notify }: { notify: (type: 'success' | 'e
           <li><strong className="text-white/80">Packlink</strong>: o frete é calculado na hora pela Packlink. Se ela não tiver envio para o endereço, o site usa os preços da tabela.</li>
           <li><strong className="text-white/80">Correos</strong>: preço fixo da tabela (você despacha nos Correos). O cliente só tem entrega a domicílio.</li>
           <li>Até 2 kg = Paquete Internacional Light. Acima de 2 kg = Estándar. O peso vem da caixa de envio de cada produto.</li>
-          <li>Para embutir parte do frete no produto, suba o preço do produto e baixe o valor aqui.</li>
+          <li><strong className="text-white/80">% no produto</strong>: quem é desse país (pela localização ou pelo país escolhido no checkout) vê cada produto mais caro, e o frete cai o mesmo valor. Ex.: EUA €22 com 60% → produto +€14 e frete €8. Na Espanha não muda nada.</li>
         </ul>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[760px] text-left text-sm">
+          <table className="w-full min-w-[880px] text-left text-sm">
             <thead className="text-xs text-white/50">
               <tr>
                 <th className="px-2 py-2 font-medium">Ativo</th>
@@ -82,6 +86,7 @@ export function ShippingZonesSection({ notify }: { notify: (type: 'success' | 'e
                 <th className="px-2 py-2 font-medium">Até 2 kg (€)</th>
                 <th className="px-2 py-2 font-medium">Acima de 2 kg (€)</th>
                 <th className="px-2 py-2 font-medium">Grátis a partir de (€)</th>
+                <th className="px-2 py-2 font-medium">% no produto</th>
                 <th className="px-2 py-2" />
               </tr>
             </thead>
@@ -108,6 +113,14 @@ export function ShippingZonesSection({ notify }: { notify: (type: 'success' | 'e
                   <td className="px-2 py-2"><input className={INPUT} type="number" min={0} step="0.01" value={z.priceLight} onChange={(e) => set(i, { priceLight: e.target.value })} aria-label="Preço até 2 kg" /></td>
                   <td className="px-2 py-2"><input className={INPUT} type="number" min={0} step="0.01" value={z.priceHeavy} onChange={(e) => set(i, { priceHeavy: e.target.value })} aria-label="Preço acima de 2 kg" /></td>
                   <td className="px-2 py-2"><input className={INPUT} type="number" min={0} step="0.01" placeholder="Nunca" value={z.freeOver ?? ''} onChange={(e) => set(i, { freeOver: e.target.value })} aria-label="Frete grátis a partir de" /></td>
+                  <td className="px-2 py-2">
+                    {z.code === 'ES' ? <span className="text-xs text-white/40">—</span> : (
+                      <div>
+                        <input className={INPUT} type="number" min={0} max={100} step="5" value={z.embedPct} onChange={(e) => set(i, { embedPct: e.target.value })} aria-label="Porcentagem do frete no produto" />
+                        {surchargeOf(z) > 0 && <p className="mt-1 whitespace-nowrap text-[11px] text-green-400">+€{surchargeOf(z)} no produto · frete €{Math.max(0, (Number(z.priceLight) || 0) - surchargeOf(z)).toFixed(2)}</p>}
+                      </div>
+                    )}
+                  </td>
                   <td className="px-2 py-2">
                     {z.code !== 'ES' && (
                       <button type="button" onClick={() => { setZones((l) => l && l.filter((_, k) => k !== i)); setDirty(true); }} className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-white/50 hover:bg-red-500/10 hover:text-red-400" aria-label={`Remover ${z.name}`}>

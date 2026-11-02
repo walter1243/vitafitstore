@@ -4,6 +4,8 @@
 // mode 'correos': tabela fixa dos Correos (envio manual), so a domicilio:
 //   price_light ate 2 kg (Paquete Internacional Light) e price_heavy acima.
 // free_over: frete gratis a partir desse subtotal (vazio = nunca).
+// embed_pct: % do frete (preco ate 2 kg) embutido no preco dos produtos
+//   pra quem e desse pais (lib/country-price.ts). Espanha: 0.
 import { sql } from '@/lib/db';
 
 export type ZoneMode = 'packlink' | 'correos';
@@ -14,6 +16,7 @@ export type ShippingZone = {
   priceLight: number;
   priceHeavy: number;
   freeOver: number | null;
+  embedPct: number;
   enabled: boolean;
   position: number;
 };
@@ -21,19 +24,19 @@ export type ShippingZone = {
 export const LIGHT_MAX_KG = 2;
 
 const SEED: Omit<ShippingZone, 'position'>[] = [
-  { code: 'ES', name: 'España', mode: 'packlink', priceLight: 6, priceHeavy: 9, freeOver: 50, enabled: true },
-  { code: 'PT', name: 'Portugal', mode: 'packlink', priceLight: 15, priceHeavy: 32, freeOver: null, enabled: true },
-  { code: 'FR', name: 'Francia', mode: 'packlink', priceLight: 15, priceHeavy: 32, freeOver: null, enabled: true },
-  { code: 'DE', name: 'Alemania', mode: 'packlink', priceLight: 15, priceHeavy: 32, freeOver: null, enabled: true },
-  { code: 'IT', name: 'Italia', mode: 'packlink', priceLight: 15, priceHeavy: 32, freeOver: null, enabled: true },
-  { code: 'BE', name: 'Bélgica', mode: 'packlink', priceLight: 15, priceHeavy: 32, freeOver: null, enabled: true },
-  { code: 'AT', name: 'Austria', mode: 'packlink', priceLight: 15, priceHeavy: 32, freeOver: null, enabled: true },
-  { code: 'NL', name: 'Países Bajos', mode: 'correos', priceLight: 15, priceHeavy: 32, freeOver: null, enabled: true },
-  { code: 'IE', name: 'Irlanda', mode: 'correos', priceLight: 15, priceHeavy: 32, freeOver: null, enabled: true },
-  { code: 'GB', name: 'Reino Unido', mode: 'correos', priceLight: 20, priceHeavy: 35, freeOver: null, enabled: true },
-  { code: 'CH', name: 'Suiza', mode: 'packlink', priceLight: 20, priceHeavy: 35, freeOver: null, enabled: true },
-  { code: 'US', name: 'Estados Unidos', mode: 'correos', priceLight: 22, priceHeavy: 35, freeOver: null, enabled: true },
-  { code: 'BR', name: 'Brasil', mode: 'packlink', priceLight: 25, priceHeavy: 40, freeOver: null, enabled: true },
+  { code: 'ES', name: 'España', mode: 'packlink', priceLight: 6, priceHeavy: 9, freeOver: 50, embedPct: 0, enabled: true },
+  { code: 'PT', name: 'Portugal', mode: 'packlink', priceLight: 7, priceHeavy: 32, freeOver: null, embedPct: 60, enabled: true },
+  { code: 'FR', name: 'Francia', mode: 'packlink', priceLight: 10, priceHeavy: 32, freeOver: null, embedPct: 60, enabled: true },
+  { code: 'DE', name: 'Alemania', mode: 'packlink', priceLight: 10, priceHeavy: 32, freeOver: null, embedPct: 60, enabled: true },
+  { code: 'IT', name: 'Italia', mode: 'packlink', priceLight: 10, priceHeavy: 32, freeOver: null, embedPct: 60, enabled: true },
+  { code: 'BE', name: 'Bélgica', mode: 'packlink', priceLight: 10, priceHeavy: 32, freeOver: null, embedPct: 60, enabled: true },
+  { code: 'AT', name: 'Austria', mode: 'packlink', priceLight: 10, priceHeavy: 32, freeOver: null, embedPct: 60, enabled: true },
+  { code: 'NL', name: 'Países Bajos', mode: 'correos', priceLight: 15, priceHeavy: 32, freeOver: null, embedPct: 60, enabled: true },
+  { code: 'IE', name: 'Irlanda', mode: 'correos', priceLight: 15, priceHeavy: 32, freeOver: null, embedPct: 60, enabled: true },
+  { code: 'GB', name: 'Reino Unido', mode: 'correos', priceLight: 20, priceHeavy: 35, freeOver: null, embedPct: 60, enabled: true },
+  { code: 'CH', name: 'Suiza', mode: 'packlink', priceLight: 12, priceHeavy: 35, freeOver: null, embedPct: 60, enabled: true },
+  { code: 'US', name: 'Estados Unidos', mode: 'correos', priceLight: 22, priceHeavy: 35, freeOver: null, embedPct: 60, enabled: true },
+  { code: 'BR', name: 'Brasil', mode: 'packlink', priceLight: 14, priceHeavy: 40, freeOver: null, embedPct: 60, enabled: true },
 ];
 
 let ready: Promise<void> | null = null;
@@ -47,15 +50,26 @@ export function ensureZonesTable() {
         price_light NUMERIC(10,2) NOT NULL DEFAULT 0,
         price_heavy NUMERIC(10,2) NOT NULL DEFAULT 0,
         free_over NUMERIC(10,2),
+        embed_pct NUMERIC(5,2) NOT NULL DEFAULT 0,
         enabled BOOLEAN NOT NULL DEFAULT TRUE,
         position INT NOT NULL DEFAULT 0
       )`;
+    // Frete embutido (novo): 60% fora da Espanha; nos paises da Packlink o
+    // preco de referencia passa a ser perto do que ela cobra.
+    const col = await sql`SELECT 1 FROM information_schema.columns WHERE table_name = 'shipping_zones' AND column_name = 'embed_pct'`;
+    if ((col as any[]).length === 0) {
+      await sql`ALTER TABLE shipping_zones ADD COLUMN IF NOT EXISTS embed_pct NUMERIC(5,2) NOT NULL DEFAULT 0`;
+      await sql`UPDATE shipping_zones SET embed_pct = 60 WHERE code <> 'ES'`;
+      for (const z of SEED) {
+        if (z.mode === 'packlink' && z.code !== 'ES') await sql`UPDATE shipping_zones SET price_light = ${z.priceLight} WHERE code = ${z.code} AND mode = 'packlink' AND price_light IN (15, 20, 25)`;
+      }
+    }
     const rows = await sql`SELECT COUNT(*)::int AS n FROM shipping_zones`;
     if (Number((rows as any[])[0]?.n ?? 0) === 0) {
       let i = 0;
       for (const z of SEED) {
-        await sql`INSERT INTO shipping_zones (code, name, mode, price_light, price_heavy, free_over, enabled, position)
-          VALUES (${z.code}, ${z.name}, ${z.mode}, ${z.priceLight}, ${z.priceHeavy}, ${z.freeOver}, ${z.enabled}, ${i++})
+        await sql`INSERT INTO shipping_zones (code, name, mode, price_light, price_heavy, free_over, embed_pct, enabled, position)
+          VALUES (${z.code}, ${z.name}, ${z.mode}, ${z.priceLight}, ${z.priceHeavy}, ${z.freeOver}, ${z.embedPct}, ${z.enabled}, ${i++})
           ON CONFLICT (code) DO NOTHING`;
       }
     }
@@ -70,6 +84,7 @@ const toZone = (r: any): ShippingZone => ({
   priceLight: Number(r.price_light),
   priceHeavy: Number(r.price_heavy),
   freeOver: r.free_over == null ? null : Number(r.free_over),
+  embedPct: Number(r.embed_pct ?? 0),
   enabled: Boolean(r.enabled),
   position: Number(r.position),
 });
@@ -100,16 +115,17 @@ export async function saveZones(list: unknown): Promise<ShippingZone[]> {
     priceLight: money(z?.priceLight),
     priceHeavy: money(z?.priceHeavy),
     freeOver: z?.freeOver === null || z?.freeOver === '' || z?.freeOver === undefined ? null : money(z.freeOver),
+    embedPct: Math.min(100, Math.max(0, Math.round(Number(z?.embedPct) || 0))),
     enabled: z?.enabled !== false,
     position: i,
   })).filter((z) => z.code.length === 2 && z.name && !seen.has(z.code) && seen.add(z.code));
   if (!clean.some((z) => z.code === 'ES')) throw new Error('A Espanha precisa ficar na lista.');
   await sql`DELETE FROM shipping_zones WHERE NOT (code = ANY(${clean.map((z) => z.code)}))`;
   for (const z of clean) {
-    await sql`INSERT INTO shipping_zones (code, name, mode, price_light, price_heavy, free_over, enabled, position)
-      VALUES (${z.code}, ${z.name}, ${z.mode}, ${z.priceLight}, ${z.priceHeavy}, ${z.freeOver}, ${z.enabled}, ${z.position})
+    await sql`INSERT INTO shipping_zones (code, name, mode, price_light, price_heavy, free_over, embed_pct, enabled, position)
+      VALUES (${z.code}, ${z.name}, ${z.mode}, ${z.priceLight}, ${z.priceHeavy}, ${z.freeOver}, ${z.code === 'ES' ? 0 : z.embedPct}, ${z.enabled}, ${z.position})
       ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name, mode = EXCLUDED.mode, price_light = EXCLUDED.price_light,
-        price_heavy = EXCLUDED.price_heavy, free_over = EXCLUDED.free_over, enabled = EXCLUDED.enabled, position = EXCLUDED.position`;
+        price_heavy = EXCLUDED.price_heavy, free_over = EXCLUDED.free_over, embed_pct = EXCLUDED.embed_pct, enabled = EXCLUDED.enabled, position = EXCLUDED.position`;
   }
   return getZones();
 }

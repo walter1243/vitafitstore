@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin-auth';
 import { getZones, saveZones } from '@/lib/shipping-zones';
+import { COUNTRY_COOKIE, viewerCountry } from '@/lib/country-price';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +15,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ zones: await getZones() });
     }
     const zones = await getZones(true);
-    return NextResponse.json({ countries: zones.map((z) => ({ code: z.code, name: z.name, mode: z.mode })) });
+    // viewer: pais de quem ve (cookie do checkout ou localizacao), pros precos.
+    const viewer = viewerCountry(req.cookies.get(COUNTRY_COOKIE)?.value, req.headers.get('x-vercel-ip-country'));
+    return NextResponse.json({ viewer, countries: zones.map((z) => ({ code: z.code, name: z.name, mode: z.mode })) });
   } catch (err) {
     console.error('[GET /api/shipping/zones]', err);
     return NextResponse.json({ countries: [{ code: 'ES', name: 'España', mode: 'packlink' }] });

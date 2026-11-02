@@ -10,6 +10,7 @@ import { combineParcels } from '@/lib/parcel';
 import { cheapestByType, packlinkServices, type ShipOption } from '@/lib/packlink';
 import { lineTotalFor, packOf, parsePersonalize, sizedPrice, unitPriceFor } from '@/lib/personalize';
 import { cleanPostal, correosPrice, getZone, LIGHT_MAX_KG } from '@/lib/shipping-zones';
+import { countrySurcharge, saleUnits, withSurcharge } from '@/lib/country-price';
 
 export type ShipMethod = 'home' | 'pickup';
 export type ShippingQuote = {
@@ -30,7 +31,9 @@ export async function quoteShipping(items: { productId: number; quantity: number
   const zone = await getZone(code);
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS parcel TEXT`;
   const rows = await sql`SELECT id, price, personalize, parcel FROM products WHERE id = ANY(${ids})`;
-  const byId = new Map<number, any>((rows as any[]).map((r) => [Number(r.id), r]));
+  // Fora da Espanha parte do frete ja vai no preco (lib/country-price).
+  const surcharge = await countrySurcharge(code);
+  const byId = new Map<number, any>((rows as any[]).map((r) => [Number(r.id), withSurcharge(r, surcharge)]));
   const qty = new Map<number, number>();
   for (const it of items) qty.set(Number(it.productId), (qty.get(Number(it.productId)) ?? 0) + Number(it.quantity || 0));
 
@@ -51,7 +54,8 @@ export async function quoteShipping(items: { productId: number; quantity: number
   subtotal = Math.round(subtotal * 100) / 100;
   if (!zone || !zone.enabled) return { free: false, home: null, pickup: null, subtotal, unsupported: true, error: 'Todavía no enviamos a este país.' };
   const free = (zone.freeOver != null && subtotal >= zone.freeOver) || (code === 'ES' && freeByQty);
-  const wrap = (o: ShipOption | null) => (o ? { ...o, charged: free ? 0 : o.price } : null);
+  const embedded = surcharge * saleUnits(items.map((it) => ({ quantity: Number(it.quantity || 0), personalize: byId.get(Number(it.productId))?.personalize })));
+  const wrap = (o: ShipOption | null) => (o ? { ...o, charged: free ? 0 : Math.max(0, Math.round((o.price - embedded) * 100) / 100) } : null);
 
   const parcel = combineParcels([...qty].map(([id, q]) => ({ parcel: byId.get(id)?.parcel, quantity: q })));
   const correos = (): ShippingQuote => {

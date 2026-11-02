@@ -7,6 +7,8 @@ import { UpsellPopup } from '@/components/upsell-popup'
 import { WhatsAppFloating } from '@/components/whatsapp-floating'
 import { ProductPageView } from '@/components/product-page-view'
 import { getProductById } from '@/lib/get-product'
+import { cookies, headers } from 'next/headers'
+import { COUNTRY_COOKIE, countrySurcharge, viewerCountry } from '@/lib/country-price'
 import { getSiteContent } from '@/lib/site-content'
 import { getSectors } from '@/lib/sectors'
 import { SectorsProvider } from '@/components/kids/sectors-context'
@@ -36,7 +38,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function ProductPage({ params }: PageProps) {
   const { slug } = await params
   const id = parseId(slug)
-  const product = id ? await getProductById(id) : null
+  // Preco do pais de quem ve (fora da Espanha leva parte do frete).
+  const [ck, hd] = await Promise.all([cookies(), headers()])
+  const surcharge = await countrySurcharge(viewerCountry(ck.get(COUNTRY_COOKIE)?.value, hd.get('x-vercel-ip-country')))
+  const product = id ? await getProductById(id, surcharge) : null
 
   if (!product) notFound()
 

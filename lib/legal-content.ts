@@ -212,6 +212,7 @@ export const LEGAL_PAGES: Record<string, LegalPage> = {
             ['__stripe_mid, __stripe_sid', 'Stripe (tercero)', 'Pago seguro y prevención del fraude en el checkout', '1 año / 30 minutos'],
             ['cookie_consent', 'Kitoys 3D', 'Recordar si aceptaste o rechazaste las cookies', 'Hasta que la borres'],
             ['kitoys_zip, kitoys_ship_method', 'Kitoys 3D', 'Recordar tu código postal y la forma de envío elegida', 'Hasta que las borres'],
+            ['kt_country', 'Kitoys 3D', 'Recordar el país de envío elegido para mostrar los precios y el envío de ese país', '1 año'],
             ['googtrans', 'Kitoys 3D / Google', 'Recordar el idioma que elegiste (francés, inglés o portugués). Solo existe si cambias el idioma', '1 año'],
             ['kitoys_review_votes', 'Kitoys 3D', 'Evitar votar dos veces «Útil» en la misma opinión', 'Hasta que la borres'],
             ['store_branding_cache, kitoys_sectors_cache', 'Kitoys 3D', 'Cargar la tienda más rápido', 'Hasta cerrar la pestaña'],

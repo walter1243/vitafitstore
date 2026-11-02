@@ -21,6 +21,8 @@ interface CartContextType {
   setShowUpsell: (show: boolean) => void
   lastAddedProduct: Product | null
   lineTotal: (item: CartItem) => number
+  // Troca o preco dos itens (pais mudou no checkout → preco desse pais).
+  reprice: (fresh: { id: number; price: number; personalize?: unknown }[]) => void
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -100,6 +102,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems([])
   }, [])
 
+  const reprice = useCallback((fresh: { id: number; price: number; personalize?: unknown }[]) => {
+    const byId = new Map(fresh.map((p) => [Number(p.id), p]))
+    setItems(prev => prev.map(it => {
+      const f = byId.get(it.product.id)
+      return f ? { ...it, product: { ...it.product, price: Number(f.price), personalize: (f.personalize ?? it.product.personalize) as any } } : it
+    }))
+  }, [])
+
   const totalItems = items.reduce((sum, item) => sum + packCount(item.product.personalize, item.quantity), 0)
   // Preco com promocao por quantidade (ex: 5 chaveiros) somando todas as linhas do produto.
   const qtyOf = (id: number) => items.reduce((n, it) => n + (it.product.id === id ? it.quantity : 0), 0)
@@ -126,7 +136,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         showUpsell,
         setShowUpsell,
         lastAddedProduct,
-        lineTotal
+        lineTotal,
+        reprice
       }}
     >
       {children}

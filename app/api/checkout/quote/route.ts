@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { chargeShipping } from '@/lib/shipping-quote';
+import { countrySurcharge, withSurcharge } from '@/lib/country-price';
 import { itemShipping, lineTotalFor, packOf, sizedPrice, unitPriceFor } from '@/lib/personalize';
 import { sql } from '@/lib/db';
 import { resolveShipping } from '@/lib/checkout-pricing';
@@ -44,11 +45,13 @@ export async function POST(req: NextRequest) {
 
     const productIds = [...new Set(items.map((item) => item.productId))];
 
-    const rows = await sql`
+    // Preco do pais de entrega (fora da Espanha leva parte do frete).
+    const surcharge = await countrySurcharge(country);
+    const rows = ((await sql`
       SELECT *
       FROM products
       WHERE id = ANY(${productIds})
-    `;
+    `) as any[]).map((r) => withSurcharge(r, surcharge));
 
     const priceById = new Map<number, number>();
     for (const row of rows as any[]) {

@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { PickupPoints, ShipOptionsList, loadMethod, loadZip, saveMethod, saveZip, type PickupPoint, type ShipMethod, type ShipQuote } from '@/components/shipping/shipping-options';
+import { PickupPoints, ShipOptionsList, resetViewerCountry, loadMethod, loadZip, saveMethod, saveZip, type PickupPoint, type ShipMethod, type ShipQuote } from '@/components/shipping/shipping-options';
 import {
   ShieldCheck, Lock, Truck, RotateCcw,
   Package, ChevronRight, ChevronLeft,
@@ -536,7 +536,7 @@ function readCachedBranding() {
 }
 
 function CheckoutFormInner() {
-  const { items, totalPrice, clearCart } = useCart();
+  const { items, totalPrice, clearCart, reprice } = useCart();
 
   // Same branding cache the header writes to — without it this previously
   // hardcoded "V" / "Nuestra Tienda", never reflecting the real store name
@@ -585,9 +585,22 @@ function CheckoutFormInner() {
   const [country, setCountry] = useState('ES');
   // Paises para onde enviamos (Admin → Envio por país).
   const [countries, setCountries] = useState<{ code: string; name: string; mode: string }[]>([{ code: 'ES', name: 'España', mode: 'packlink' }]);
+  // Comeca no pais de quem compra (localizacao ou escolha anterior).
   useEffect(() => {
-    fetch('/api/shipping/zones').then((r) => r.json()).then((d) => { if (Array.isArray(d?.countries) && d.countries.length) setCountries(d.countries); }).catch(() => {});
+    fetch('/api/shipping/zones').then((r) => r.json()).then((d) => {
+      if (Array.isArray(d?.countries) && d.countries.length) setCountries(d.countries);
+      if (d?.viewer && d.countries?.some((c: { code: string }) => c.code === d.viewer)) setCountry(d.viewer);
+    }).catch(() => {});
   }, []);
+  // Trocou o pais: guarda (cookie lido pelo servidor) e atualiza os precos
+  // do carrinho pro desse pais (fora da Espanha parte do frete vai no preco).
+  function changeCountry(code: string) {
+    setCountry(code);
+    setPickupPoint(null);
+    try { document.cookie = `kt_country=${code}; path=/; max-age=31536000; SameSite=Lax`; } catch {}
+    resetViewerCountry();
+    fetch('/api/products', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).then((list) => { if (Array.isArray(list)) reprice(list); }).catch(() => {});
+  }
   const isES = country === 'ES';
 
   const [quoteLoading, setQuoteLoading] = useState(false);
@@ -789,7 +802,7 @@ function CheckoutFormInner() {
         </div>
         {/* Pais primeiro: decide a busca do Google, o formato do CP e o frete. */}
         <Field label="País *">
-          <select className={inputCls} value={country} onChange={e => { setCountry(e.target.value); setPickupPoint(null); }}
+          <select className={inputCls} value={country} onChange={e => changeCountry(e.target.value)}
             style={{ appearance:'none' }}>
             {countries.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
           </select>

@@ -23,18 +23,37 @@ export function saveZip(z: string) { try { localStorage.setItem(ZIP_KEY, z); } c
 export function loadMethod(): ShipMethod { try { return localStorage.getItem(METHOD_KEY) === 'home' ? 'home' : 'pickup'; } catch { return 'pickup'; } }
 export function saveMethod(m: ShipMethod) { try { localStorage.setItem(METHOD_KEY, m); } catch {} }
 
-export function useShipQuote(items: { productId: number; quantity: number; size?: string }[], zip: string) {
+// Pais de quem ve a loja (escolhido no checkout ou pela localizacao) e os
+// paises para onde enviamos. Uma busca so por pagina.
+export type ShipCountry = { code: string; name: string; mode: string };
+let viewerReq: Promise<{ viewer: string; countries: ShipCountry[] }> | null = null;
+export function resetViewerCountry() { viewerReq = null; }
+export function useViewerCountry() {
+  const [v, setV] = useState<{ viewer: string; countries: ShipCountry[] } | null>(null);
+  useEffect(() => {
+    viewerReq ??= fetch('/api/shipping/zones').then((r) => r.json()).then((d) => ({ viewer: String(d?.viewer || 'ES'), countries: Array.isArray(d?.countries) ? d.countries : [] })).catch(() => ({ viewer: 'ES', countries: [] }));
+    let alive = true;
+    viewerReq.then((x) => { if (alive) setV(x); });
+    return () => { alive = false; };
+  }, []);
+  return v;
+}
+
+// country: sem informar, o pais de quem ve. Fora da Espanha nao precisa de CP.
+export function useShipQuote(items: { productId: number; quantity: number; size?: string }[], zip: string, country?: string) {
   const [quote, setQuote] = useState<ShipQuote | null>(null);
   const [loading, setLoading] = useState(false);
-  const key = JSON.stringify(items) + zip;
+  const vc = useViewerCountry();
+  const c = country ?? vc?.viewer ?? '';
+  const key = JSON.stringify(items) + zip + c;
   useEffect(() => {
     const z = zip.replace(/\D/g, '');
-    if (z.length !== 5 || items.length === 0) { setQuote(null); return; }
+    if (!c || (c === 'ES' && z.length !== 5) || items.length === 0) { setQuote(null); return; }
     const ctrl = new AbortController();
     const t = setTimeout(async () => {
       setLoading(true);
       try {
-        const r = await fetch('/api/shipping/quote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items, zip: z }), signal: ctrl.signal });
+        const r = await fetch('/api/shipping/quote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items, zip: c === 'ES' ? z : '', country: c }), signal: ctrl.signal });
         const d = await r.json();
         setQuote(r.ok ? d : null);
       } catch (e: any) {
@@ -108,10 +127,20 @@ export function ProductShipping({ productId, quantity, size, onShipping }: { pro
     }, () => { setLocating(false); setGeoError('Permite la ubicación o escribe el código postal.'); }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 });
   }
   const z = zip.replace(/\D/g, '');
-  const { quote, loading } = useShipQuote([{ productId, quantity, size }], z.length === 5 ? z : SAMPLE_ZIP);
+  const vc = useViewerCountry();
+  const abroad = vc && vc.viewer !== 'ES' ? vc.countries.find((c) => c.code === vc.viewer) ?? null : null;
+  const { quote, loading } = useShipQuote([{ productId, quantity, size }], z.length === 5 ? z : SAMPLE_ZIP, vc ? (abroad ? abroad.code : 'ES') : '');
   const chosen = quote ? (quote[method] ?? quote.pickup ?? quote.home) : null;
   const charged = chosen ? chosen.charged : null;
   useEffect(() => { onShipping?.(charged); }, [charged, onShipping]);
+  // Cliente de fora da Espanha: frete pro pais dele, sem CP.
+  if (abroad) return (
+    <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4">
+      <p className="mb-2 text-sm font-bold text-slate-900">Envío a {abroad.name}</p>
+      <ShipOptionsList quote={quote} method="home" onMethod={() => {}} loading={loading} />
+      <p className="mt-2 text-[11px] text-slate-500">Entrega a domicilio. Puedes cambiar el país al finalizar la compra.</p>
+    </div>
+  );
   return (
     <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4">
       <p className="mb-2 text-sm font-bold text-slate-900">Envío</p>

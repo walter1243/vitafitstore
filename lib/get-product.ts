@@ -1,4 +1,5 @@
 import { sql } from '@/lib/db';
+import { withSurcharge } from '@/lib/country-price';
 import { toStoreProduct, type DbProduct } from '@/lib/store-product';
 import type { Product } from '@/lib/products';
 
@@ -15,7 +16,8 @@ function parseAdditionalImages(value: unknown): string[] {
   return [];
 }
 
-export async function getProductById(id: number): Promise<Product | null> {
+// surcharge: acrescimo do pais de quem ve (lib/country-price).
+export async function getProductById(id: number, surcharge = 0): Promise<Product | null> {
   try {
     // SELECT * de proposito: inclui shipping_cost (frete do produto) sem
     // quebrar se a coluna ainda nao existir. Sem o frete aqui, o carrinho
@@ -26,8 +28,9 @@ export async function getProductById(id: number): Promise<Product | null> {
       WHERE id = ${id}
       LIMIT 1
     `;
-    const row = rows?.[0];
-    if (!row) return null;
+    const row0 = rows?.[0];
+    if (!row0) return null;
+    const row = withSurcharge(row0 as any, surcharge) as any;
 
     const dbProduct: DbProduct = {
       id: row.id,

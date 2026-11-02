@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 import { parsePersonalize } from '@/lib/personalize';
-import { requireAdmin } from "@/lib/admin-auth";
+import { getAdminSessionFromRequest, requireAdmin } from "@/lib/admin-auth";
+import { COUNTRY_COOKIE, countrySurcharge, viewerCountry, withSurcharge } from "@/lib/country-price";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -108,9 +109,14 @@ function normalizeProduct(row: any) {
   };
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     await ensureVariantColumns();
+    // Loja: preco do pais de quem ve (frete embutido fora da Espanha). O
+    // painel (sessao de admin) sempre ve e salva o preco base.
+    const surcharge = getAdminSessionFromRequest(req)
+      ? 0
+      : await countrySurcharge(viewerCountry(req.cookies.get(COUNTRY_COOKIE)?.value, req.headers.get('x-vercel-ip-country')));
     const rows = await sql`
       SELECT id, name, description, price, category, image, additional_images, video, stock, position,
              source_store_url, source_product_url, cost_price,
@@ -119,7 +125,7 @@ export async function GET() {
       FROM products
       ORDER BY COALESCE(position, 999999), created_at DESC
     `;
-    return NextResponse.json(rows.map((p: any) => normalizeProduct(p)), { headers: noStoreHeaders });
+    return NextResponse.json(rows.map((p: any) => normalizeProduct(withSurcharge(p, surcharge))), { headers: noStoreHeaders });
   } catch (err: any) {
     console.error('[GET /api/products]', err);
     return NextResponse.json({ error: err?.message ?? 'Database error' }, { status: 500, headers: noStoreHeaders });
