@@ -4,6 +4,20 @@ import { NextRequest, NextResponse } from 'next/server';
 // cliente ("Usar mi ubicación" no frete e no endereco do checkout). Usa o geocodificador do OpenStreetMap
 // (Nominatim), que pede um User-Agent identificando o site.
 export async function GET(req: NextRequest) {
+  // ?q=endereco → { lat, lon } (mapa dos pontos de recogida no checkout).
+  const q = String(req.nextUrl.searchParams.get('q') ?? '').trim().slice(0, 200);
+  if (q) {
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=es,pt,fr&q=${encodeURIComponent(q)}`;
+      const r = await fetch(url, { headers: { 'User-Agent': 'Kitoys3D/1.0 (https://www.kitoys3d.com)' }, next: { revalidate: 86400 } });
+      const d = r.ok ? await r.json() : [];
+      const hit = Array.isArray(d) ? d[0] : null;
+      if (!hit) return NextResponse.json({ error: 'No encontrado.' }, { status: 404 });
+      return NextResponse.json({ lat: Number(hit.lat), lon: Number(hit.lon) });
+    } catch {
+      return NextResponse.json({ error: 'No pudimos ubicar la dirección.' }, { status: 502 });
+    }
+  }
   const lat = Number(req.nextUrl.searchParams.get('lat'));
   const lon = Number(req.nextUrl.searchParams.get('lon'));
   if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {

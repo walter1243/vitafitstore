@@ -73,7 +73,8 @@ export function cheapestByType(opts: ShipOption[]) {
   return { home: best('home'), pickup: best('pickup') };
 }
 
-export type DropPoint = { id: string; name: string; address: string; city: string; zip: string };
+// hours: dia da semana em ingles (monday...) → "08:30-20:30"; sem o dia = fechado.
+export type DropPoint = { id: string; name: string; address: string; city: string; zip: string; lat: number | null; lng: number | null; carrier: string; hours: Record<string, string> };
 
 export async function packlinkDropoffs(serviceId: string, zip: string, country = 'ES'): Promise<DropPoint[]> {
   const k = key();
@@ -84,11 +85,21 @@ export async function packlinkDropoffs(serviceId: string, zip: string, country =
   if (!res.ok) throw new Error(`Packlink respondió ${res.status}`);
   const raw = await res.json();
   const list: any[] = Array.isArray(raw) ? raw : Array.isArray(raw?.dropoffs) ? raw.dropoffs : [];
-  return list.slice(0, 15).map((p) => ({
-    id: String(p.id ?? p.code ?? ''),
-    name: String(p.commerce_name ?? p.name ?? 'Punto de recogida'),
-    address: String(p.address ?? p.street ?? ''),
-    city: String(p.city ?? ''),
-    zip: String(p.zip ?? p.postal_code ?? ''),
-  })).filter((p) => p.id);
+  const num = (v: unknown) => (Number.isFinite(Number(v)) && v !== null && v !== '' ? Number(v) : null);
+  return list.slice(0, 40).map((p) => {
+    const ot = p.opening_times?.opening_times ?? p.opening_times ?? {};
+    const hours: Record<string, string> = {};
+    if (ot && typeof ot === 'object') for (const [d, t] of Object.entries(ot)) if (typeof t === 'string' && t.trim()) hours[d.toLowerCase()] = t.trim().slice(0, 40);
+    return {
+      id: String(p.id ?? p.code ?? ''),
+      name: String(p.commerce_name ?? p.name ?? 'Punto de recogida'),
+      address: String(p.address ?? p.street ?? ''),
+      city: String(p.city ?? ''),
+      zip: String(p.zip ?? p.postal_code ?? ''),
+      lat: num(p.lat ?? p.latitude),
+      lng: num(p.long ?? p.lng ?? p.longitude),
+      carrier: String(p.carrier ?? ''),
+      hours,
+    };
+  }).filter((p) => p.id);
 }

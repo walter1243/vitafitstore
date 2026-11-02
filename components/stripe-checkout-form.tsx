@@ -831,7 +831,7 @@ function CheckoutFormInner() {
               {needsPoint && shipOpts?.pickup && (
                 <div>
                   <p className="mt-2 text-sm font-bold text-[#23263f]">Elige tu punto de recogida</p>
-                  <PickupPoints serviceId={shipOpts.pickup.serviceId} zip={zip5} value={pickupPoint} onChange={setPickupPoint} />
+                  <PickupPoints serviceId={shipOpts.pickup.serviceId} zip={zip5} address={[street, streetN].filter(Boolean).join(" ") + (city ? `, ${city}` : "")} value={pickupPoint} onChange={setPickupPoint} />
                   {errors.point && <p className="mt-1 text-xs font-semibold text-red-600">{errors.point}</p>}
                 </div>
               )}

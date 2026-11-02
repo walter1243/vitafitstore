@@ -1,6 +1,11 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { Home, Loader2, LocateFixed, MapPin, Store } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Home, Loader2, LocateFixed, Map as MapIcon, MapPin, Store } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import { distanceKm, kmLabel, todayHours, type Origin } from './pickup-geo';
+
+// O mapa (leaflet) so carrega quando o cliente abre.
+const PickupMapModal = dynamic(() => import('./pickup-map').then((m) => m.PickupMapModal), { ssr: false });
 
 // Frete pela Packlink: "Recoger en punto" (mais barato) ou "Entrega a
 // domicilio". O CP e o metodo escolhidos ficam guardados no navegador e
@@ -145,34 +150,79 @@ export function ProductShipping({ productId, quantity, size, onShipping }: { pro
 }
 
 // Checkout: puntos de recogida cerca del CP.
-export type PickupPoint = { id: string; name: string; address: string; city: string; zip: string };
-export function PickupPoints({ serviceId, zip, value, onChange }: { serviceId: string; zip: string; value: PickupPoint | null; onChange: (p: PickupPoint) => void }) {
+export type PickupPoint = { id: string; name: string; address: string; city: string; zip: string; lat?: number | null; lng?: number | null; carrier?: string; hours?: Record<string, string> };
+
+// Pontos de recogida mais perto do endereco do cliente (ordenados pela
+// distancia) + "Ver en el mapa", que abre o mapa de ruas pra escolher.
+export function PickupPoints({ serviceId, zip, address = '', value, onChange }: { serviceId: string; zip: string; address?: string; value: PickupPoint | null; onChange: (p: PickupPoint) => void }) {
   const [points, setPoints] = useState<PickupPoint[] | null>(null);
+  const [origin, setOrigin] = useState<Origin>(null);
+  const [mapOpen, setMapOpen] = useState(false);
+  const [all, setAll] = useState(false);
   useEffect(() => {
     if (!serviceId || zip.length !== 5) return;
     setPoints(null);
     fetch(`/api/shipping/points?service=${encodeURIComponent(serviceId)}&zip=${zip}`).then((r) => r.json()).then((d) => setPoints(Array.isArray(d?.points) ? d.points : [])).catch(() => setPoints([]));
   }, [serviceId, zip]);
+  // Coordenadas do endereco (rua + numero + CP + cidade); sem rua, o CP.
+  useEffect(() => {
+    if (zip.length !== 5) return;
+    const q = [address.trim(), zip, 'España'].filter(Boolean).join(', ');
+    const t = setTimeout(() => {
+      fetch(`/api/shipping/geo?q=${encodeURIComponent(q)}`).then((r) => (r.ok ? r.json() : null)).then((d) => {
+        if (d && Number.isFinite(d.lat) && Number.isFinite(d.lon)) setOrigin({ lat: d.lat, lng: d.lon });
+      }).catch(() => {});
+    }, 700);
+    return () => clearTimeout(t);
+  }, [address, zip]);
+
+  const sorted = useMemo(() => (points ?? [])
+    .map((p) => ({ ...p, km: origin && p.lat != null && p.lng != null ? distanceKm(origin, { lat: p.lat, lng: p.lng }) : null }))
+    .sort((a, b) => (a.km ?? 1e9) - (b.km ?? 1e9)), [points, origin]);
+
   if (points === null) return <p className="flex items-center gap-2 py-2 text-sm text-slate-500"><Loader2 className="h-4 w-4 animate-spin" /> Buscando puntos de recogida…</p>;
   if (points.length === 0) return <p className="py-2 text-sm text-red-600">No encontramos puntos cerca de {zip}. Elige entrega a domicilio.</p>;
+  const hasMap = sorted.some((p) => p.lat != null && p.lng != null);
+  const shown = all ? sorted : sorted.slice(0, 3);
   return (
-    <div className="mt-2 max-h-64 space-y-1.5 overflow-y-auto pr-1" role="radiogroup" aria-label="Punto de recogida">
-      {points.map((p) => (
+    <div className="mt-2">
+      {hasMap && (
         <button
-          key={p.id}
           type="button"
-          role="radio"
-          aria-checked={value?.id === p.id}
-          onClick={() => onChange(p)}
-          className={`flex w-full cursor-pointer items-start gap-2 rounded-xl border px-3 py-2 text-left ${value?.id === p.id ? 'border-[#c2410c] bg-orange-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}
+          onClick={() => setMapOpen(true)}
+          className="mb-2 flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-[#0071e3] bg-white px-4 text-sm font-bold text-[#0071e3] transition-colors hover:bg-[#0071e3]/5"
         >
-          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#c2410c]" aria-hidden="true" />
-          <span className="min-w-0">
-            <span className="block text-sm font-bold text-slate-900">{p.name}</span>
-            <span className="block text-xs text-slate-500">{p.address} · {p.zip} {p.city}</span>
-          </span>
+          <MapIcon className="h-4 w-4" aria-hidden="true" /> Ver en el mapa
         </button>
-      ))}
+      )}
+      <div className="space-y-1.5" role="radiogroup" aria-label="Punto de recogida">
+        {shown.map((p) => (
+          <button
+            key={p.id}
+            type="button"
+            role="radio"
+            aria-checked={value?.id === p.id}
+            onClick={() => onChange(p)}
+            className={`flex w-full cursor-pointer items-start gap-2 rounded-xl border px-3 py-2 text-left ${value?.id === p.id ? 'border-[#c2410c] bg-orange-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}
+          >
+            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#c2410c]" aria-hidden="true" />
+            <span className="min-w-0 flex-1">
+              <span className="flex items-start justify-between gap-2">
+                <span className="text-sm font-bold text-slate-900">{p.name}</span>
+                {p.km != null && <span className="shrink-0 text-xs font-semibold text-slate-600">{kmLabel(p.km)}</span>}
+              </span>
+              <span className="block text-xs text-slate-500">{p.address} · {p.zip} {p.city}</span>
+              {Object.keys(p.hours ?? {}).length > 0 && <span className="block text-xs text-slate-500">{todayHours(p)}{p.carrier ? ` · ${p.carrier}` : ''}</span>}
+            </span>
+          </button>
+        ))}
+      </div>
+      {sorted.length > 3 && (
+        <button type="button" onClick={() => setAll((v) => !v)} className="mt-1.5 cursor-pointer text-xs font-semibold text-[#0071e3] hover:underline">
+          {all ? 'Ver menos' : `Ver los ${sorted.length} puntos`}
+        </button>
+      )}
+      {mapOpen && <PickupMapModal points={sorted} origin={origin} value={value} onChoose={onChange} onClose={() => setMapOpen(false)} />}
     </div>
   );
 }
