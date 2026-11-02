@@ -16,7 +16,8 @@ function buildWhatsAppUrl(rawPhone: string, greeting: string) {
   return `https://wa.me/${digits}${text ? `?text=${text}` : ''}`;
 }
 
-export function WhatsAppFloating() {
+// withTabBar: no celular o WhatsApp ja esta na barra de baixo (Ayuda).
+export function WhatsAppFloating({ withTabBar = false }: { withTabBar?: boolean }) {
   const [settings, setSettings] = useState<StoreSettings | null>(null);
 
   useEffect(() => {
@@ -45,7 +46,7 @@ export function WhatsAppFloating() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Contactar por WhatsApp"
-      className="fixed bottom-6 right-5 z-40 inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_12px_24px_rgba(37,211,102,0.35)] transition-transform hover:scale-105"
+      className={`fixed bottom-6 right-5 z-40 ${withTabBar ? 'hidden md:inline-flex' : 'inline-flex'} h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_12px_24px_rgba(37,211,102,0.35)] transition-transform hover:scale-105`}
     >
       <MessageCircle size={28} />
     </a>

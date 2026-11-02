@@ -4,7 +4,7 @@ import { CartSidebar } from '@/components/cart-sidebar'
 import { UpsellPopup } from '@/components/upsell-popup'
 import { WhatsAppFloating } from '@/components/whatsapp-floating'
 import { AppleHome } from '@/components/apple-home'
-import { KidsHowItsMade } from '@/components/kids/kids-how-its-made'
+import { MobileTabBar } from '@/components/mobile-tab-bar'
 import { getSiteContent } from '@/lib/site-content'
 import { getSectors } from '@/lib/sectors'
 import { SectorsProvider } from '@/components/kids/sectors-context'
@@ -17,22 +17,21 @@ import { SectorsProvider } from '@/components/kids/sectors-context'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-// Home no estilo da Apple (components/apple-home.tsx): abertura limpa e um
-// bloco de produtos por setor. A escolha de colecao fica so no menu.
-// "Nuestro taller" continua no fim.
+// Home em formato de app de loja (components/apple-home.tsx) + barra de
+// baixo no celular. A escolha de colecao detalhada fica no menu.
 export default async function HomePage() {
   const [content, sectors] = await Promise.all([getSiteContent(), getSectors()])
 
   return (
     <SectorsProvider sectors={sectors}>
-    <div className="flex min-h-screen flex-col bg-white">
+    <div className="flex min-h-screen flex-col bg-[#f5f5f7] pb-[76px] md:pb-0">
       <Header />
       <main className="flex-1">
         <AppleHome />
-        <KidsHowItsMade />
       </main>
       <Footer content={content.footer} />
-      <WhatsAppFloating />
+      <WhatsAppFloating withTabBar />
+      <MobileTabBar />
       <CartSidebar />
       <UpsellPopup />
     </div>

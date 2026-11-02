@@ -6,6 +6,7 @@ import { ProductSearch } from '@/components/product-search';
 import { useCart } from '@/lib/cart-context';
 import { useSectors } from '@/components/kids/sectors-context';
 import { softOf } from '@/lib/sectors-shared';
+import { OPEN_MENU_EVENT, OPEN_SEARCH_EVENT } from '@/components/mobile-tab-bar';
 import { CollectionsMenuPanel, homeCategoryHref, selectHomeCategory, useHomeCategories } from '@/components/kids/menu-panel';
 
 
@@ -40,7 +41,7 @@ function readCachedBranding() {
   }
 }
 
-// Menu: um link por setor (Admin → Setores e coleções) + Nuestro taller.
+// Menu: Inicio + Colecciones (setores e colecoes do Admin).
 export function Header() {
   const { sectors } = useSectors();
   const menuSectors = sectors.filter((s) => s.collections.length > 0);
@@ -64,6 +65,14 @@ export function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
   const mobileHomeCats = useHomeCategories(mobileOpen);
   const [scrolled, setScrolled] = useState(false);
+  // Barra de baixo do celular (MobileTabBar) abre o menu e a busca daqui.
+  useEffect(() => {
+    const menu = () => { setSearchOpen(false); setMobileOpen(true); };
+    const search = () => { setMobileOpen(false); setSearchOpen(true); };
+    window.addEventListener(OPEN_MENU_EVENT, menu);
+    window.addEventListener(OPEN_SEARCH_EVENT, search);
+    return () => { window.removeEventListener(OPEN_MENU_EVENT, menu); window.removeEventListener(OPEN_SEARCH_EVENT, search); };
+  }, []);
   const cachedBranding = readCachedBranding();
   const [storeName, setStoreName] = useState(cachedBranding?.storeName ?? 'Nuestra Tienda');
   const [logoUrl, setLogoUrl] = useState(cachedBranding?.logoUrl ?? '');
@@ -195,7 +204,7 @@ export function Header() {
 
           {/* Right side: menu + carrinho */}
           <div className="flex shrink-0 items-center gap-2">
-            {/* Menu: Inicio · Colecciones (painel com setores) · Nuestro taller */}
+            {/* Menu: Inicio · Colecciones (painel com setores) */}
             <nav className="hidden items-center gap-1 md:flex" aria-label="Principal">
               <Link href="/" className={NAV_ITEM}>Inicio</Link>
               <button
@@ -209,7 +218,6 @@ export function Header() {
               >
                 Colecciones
               </button>
-              <Link href="/#como-se-hace" className={NAV_ITEM}>Nuestro taller</Link>
             </nav>
             <button
               type="button"
@@ -264,7 +272,7 @@ export function Header() {
         </div>
       </header>
 
-      {/* Mobile drawer: Inicio, setores com as colecoes e Nuestro taller */}
+      {/* Mobile drawer: Inicio e setores com as colecoes */}
       {mobileOpen && (
         <>
           {/* Abre ABAIXO da faixa do cabecalho (logo, carrinho e o X de
@@ -278,7 +286,7 @@ export function Header() {
             className="kids fixed bottom-0 right-0 z-40 flex w-full max-w-[320px] flex-col border-l border-[#efe7da] bg-white shadow-[-12px_0_32px_rgba(35,38,63,0.12)] md:hidden"
             style={{ top: topBarHeight + 73 }}
           >
-            <nav className="flex flex-1 flex-col overflow-y-auto p-3" aria-label="Principal">
+            <nav className="flex flex-1 flex-col overflow-y-auto p-3 pb-24" aria-label="Principal">
               <Link href="/" onClick={() => setMobileOpen(false)} className={MOBILE_ITEM}>Inicio</Link>
               {menuSectors.map((sector) => (
                 <div key={sector.id || sector.slug} className="mt-2">
@@ -324,7 +332,6 @@ export function Header() {
                   ))}
                 </div>
               )}
-              <Link href="/#como-se-hace" onClick={() => setMobileOpen(false)} className={`${MOBILE_ITEM} mt-2`}>Nuestro taller</Link>
             </nav>
           </div>
         </>
