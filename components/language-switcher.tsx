@@ -34,6 +34,37 @@ function writeLang(code: string) {
   }
 }
 
+// Palavras curtas que o Google traduz mal (ex.: "Inicio" vira "Commencer"):
+// a traducao vem daqui e o Google nao mexe nelas.
+export const UI = {
+  inicio: { es: 'Inicio', fr: 'Accueil', en: 'Home', 'pt-PT': 'Início' },
+  colecciones: { es: 'Colecciones', fr: 'Collections', en: 'Collections', 'pt-PT': 'Coleções' },
+  carrito: { es: 'Carrito', fr: 'Panier', en: 'Cart', 'pt-PT': 'Carrinho' },
+  buscar: { es: 'Buscar', fr: 'Chercher', en: 'Search', 'pt-PT': 'Pesquisar' },
+  ayuda: { es: 'Ayuda', fr: 'Aide', en: 'Help', 'pt-PT': 'Ajuda' },
+  novedades: { es: 'Novedades', fr: 'Nouveautés', en: 'New in', 'pt-PT': 'Novidades' },
+  coleccion: { es: 'Colección', fr: 'Collection', en: 'Collection', 'pt-PT': 'Coleção' },
+  rechazar: { es: 'Rechazar', fr: 'Refuser', en: 'Reject', 'pt-PT': 'Recusar' },
+  aceptar: { es: 'Aceptar todas', fr: 'Tout accepter', en: 'Accept all', 'pt-PT': 'Aceitar todas' },
+} as const;
+
+// Caixa de pagamento da Stripe (iframe, o Google nao alcanca) no mesmo idioma.
+export function stripeLocale(): 'es' | 'fr' | 'en' | 'pt' {
+  const l = readLang();
+  return l === 'pt-PT' ? 'pt' : (l as 'es' | 'fr' | 'en');
+}
+
+export function useLangCode() {
+  const [lang, setLang] = useState('es');
+  useEffect(() => setLang(readLang()), []);
+  return lang;
+}
+
+export function Tr({ t }: { t: Record<string, string> }) {
+  const lang = useLangCode();
+  return <span translate="no" className="notranslate">{t[lang] ?? t.es}</span>;
+}
+
 const Flag = ({ code }: { code: string }) => (
   // eslint-disable-next-line @next/next/no-img-element
   <img src={`https://flagcdn.com/w40/${code}.png`} alt="" width={22} height={16} className="h-4 w-[22px] shrink-0 rounded-[3px] object-cover shadow-[0_0_0_1px_rgba(0,0,0,0.08)]" />

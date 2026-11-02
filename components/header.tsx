@@ -6,7 +6,7 @@ import { ProductSearch } from '@/components/product-search';
 import { useCart } from '@/lib/cart-context';
 import { useSectors } from '@/components/kids/sectors-context';
 import { softOf } from '@/lib/sectors-shared';
-import { LanguageSwitcher } from '@/components/language-switcher';
+import { LanguageSwitcher, Tr, UI } from '@/components/language-switcher';
 import { OPEN_MENU_EVENT, OPEN_SEARCH_EVENT, goHome } from '@/components/mobile-tab-bar';
 import { CollectionsMenuPanel, homeCategoryHref, selectHomeCategory, useHomeCategories } from '@/components/kids/menu-panel';
 
@@ -208,7 +208,7 @@ export function Header() {
           <div className="contents md:flex md:shrink-0 md:items-center md:gap-2">
             {/* Menu: Inicio · Colecciones (painel com setores) */}
             <nav className="hidden items-center gap-1 md:flex" aria-label="Principal">
-              <Link href="/" onClick={goHome} className={NAV_ITEM}>Inicio</Link>
+              <Link href="/" onClick={goHome} className={NAV_ITEM}><Tr t={UI.inicio} /></Link>
               <button
                 type="button"
                 className={`${NAV_ITEM} ${colOpen ? 'bg-[#FFF4E0]' : ''}`}
@@ -218,7 +218,7 @@ export function Header() {
                 onMouseEnter={openCols}
                 onMouseLeave={closeColsSoon}
               >
-                Colecciones
+                <Tr t={UI.colecciones} />
               </button>
             </nav>
             <LanguageSwitcher className="order-last md:order-none" />
@@ -279,7 +279,7 @@ export function Header() {
             style={{ top: topBarHeight + 117 }}
           >
             <nav className="flex flex-1 flex-col overflow-y-auto p-3 pb-24" aria-label="Principal">
-              <Link href="/" onClick={(e) => { setMobileOpen(false); goHome(e); }} className={MOBILE_ITEM}>Inicio</Link>
+              <Link href="/" onClick={(e) => { setMobileOpen(false); goHome(e); }} className={MOBILE_ITEM}><Tr t={UI.inicio} /></Link>
               {menuSectors.map((sector) => (
                 <div key={sector.id || sector.slug} className="mt-2">
                   <Link href={`/sector/${sector.slug}`} onClick={() => setMobileOpen(false)} className={MOBILE_ITEM}>

@@ -10,6 +10,7 @@ import { cardPrice } from '@/lib/personalize';
 import { useSectors } from '@/components/kids/sectors-context';
 import { useStoreProducts } from '@/components/kids/use-store-products';
 import { GO_HOME_EVENT } from '@/components/mobile-tab-bar';
+import { Tr, UI } from '@/components/language-switcher';
 
 // Home no formato de app de loja: banner com slides, setores em cards que
 // filtram os produtos, cards com selo + botao de carrinho e uma faixa de
@@ -176,7 +177,7 @@ function HeroSlides({ blocks, onShop }: { blocks: Block[]; onShop: (key: string)
             aria-label={`${k + 1} de ${n}`}
           >
             <div className="relative z-10 w-[60%] pb-10 pl-5 pr-2 pt-6 sm:w-1/2 sm:py-12 sm:pl-12">
-              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#7cc4ff] sm:text-[13px]">{k === 0 ? 'Novedades' : 'Colección'}</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#7cc4ff] sm:text-[13px]"><Tr t={k === 0 ? UI.novedades : UI.coleccion} /></p>
               <h1 className="mt-1.5 text-[24px] font-extrabold uppercase leading-[1.05] text-white sm:text-[46px]">{s.title}</h1>
               {s.tagline && <p className="mt-2 line-clamp-2 text-[13px] leading-snug text-white/85 sm:text-[18px]">{s.tagline}</p>}
               <button

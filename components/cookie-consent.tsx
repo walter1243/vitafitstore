@@ -1,5 +1,6 @@
 'use client'
 
+import { Tr, UI } from '@/components/language-switcher'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -96,14 +97,14 @@ export function CookieConsent() {
             onClick={reject}
             className="flex-1 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 sm:flex-none"
           >
-            Rechazar
+            <Tr t={UI.rechazar} />
           </button>
           <button
             type="button"
             onClick={accept}
             className="flex-1 rounded-xl bg-orange-700 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-orange-800 sm:flex-none"
           >
-            Aceptar todas
+            <Tr t={UI.aceptar} />
           </button>
         </div>
       </div>

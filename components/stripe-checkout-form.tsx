@@ -13,6 +13,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
+import { stripeLocale } from '@/components/language-switcher';
 
 // Chave publica vem de STRIPE_KEY_PUBLIC (ou da antiga NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
 // — ver `env` em next.config.mjs.
@@ -876,7 +877,7 @@ function CheckoutFormInner() {
   const step2 = clientSecret ? (
     <Elements
       stripe={stripePromise}
-      options={{ clientSecret, appearance: stripeAppearance, locale: 'es' }}
+      options={{ clientSecret, appearance: stripeAppearance, locale: stripeLocale() }}
     >
       <PaymentStepInner
         total={total}
@@ -938,7 +939,7 @@ export default function CheckoutForm() {
     );
   }
   return (
-    <Elements stripe={stripePromise} options={{ locale: 'es' }}>
+    <Elements stripe={stripePromise} options={{ locale: stripeLocale() }}>
       <CheckoutFormInner />
     </Elements>
   );

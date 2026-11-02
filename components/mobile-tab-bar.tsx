@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, LayoutGrid, MessageCircle, Search, ShoppingBag } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
+import { Tr, UI } from '@/components/language-switcher';
 
 // Barra de baixo no celular (formato de app): Inicio, Colecciones (abre o
 // menu do Header), Carrito no centro, Buscar (abre a busca do Header) e Ayuda
@@ -47,10 +48,10 @@ export function MobileTabBar() {
     >
       <div className="mx-auto flex max-w-md items-end px-2">
         <Link href="/" onClick={goHome} className={`${ITEM} ${home ? '!text-[#0071e3]' : ''}`} aria-current={home ? 'page' : undefined}>
-          <Home className="h-[22px] w-[22px]" aria-hidden="true" />Inicio
+          <Home className="h-[22px] w-[22px]" aria-hidden="true" /><Tr t={UI.inicio} />
         </Link>
         <button type="button" onClick={() => window.dispatchEvent(new Event(OPEN_MENU_EVENT))} className={ITEM}>
-          <LayoutGrid className="h-[22px] w-[22px]" aria-hidden="true" />Colecciones
+          <LayoutGrid className="h-[22px] w-[22px]" aria-hidden="true" /><Tr t={UI.colecciones} />
         </button>
         <div className="flex flex-1 justify-center">
           <button
@@ -60,18 +61,18 @@ export function MobileTabBar() {
             aria-label={`Abrir carrito${totalItems ? `, ${totalItems} productos` : ''}`}
           >
             <ShoppingBag className="h-6 w-6" aria-hidden="true" />
-            Carrito
+            <Tr t={UI.carrito} />
             {totalItems > 0 && (
               <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#d70015] px-1 text-[11px] font-bold">{totalItems}</span>
             )}
           </button>
         </div>
         <button type="button" onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); window.dispatchEvent(new Event(OPEN_SEARCH_EVENT)); }} className={ITEM}>
-          <Search className="h-[22px] w-[22px]" aria-hidden="true" />Buscar
+          <Search className="h-[22px] w-[22px]" aria-hidden="true" /><Tr t={UI.buscar} />
         </button>
         {wa ? (
           <a href={wa} target="_blank" rel="noopener noreferrer" className={ITEM}>
-            <MessageCircle className="h-[22px] w-[22px]" aria-hidden="true" />Ayuda
+            <MessageCircle className="h-[22px] w-[22px]" aria-hidden="true" /><Tr t={UI.ayuda} />
           </a>
         ) : (
           <span className={ITEM} aria-hidden="true" />
