@@ -47,7 +47,8 @@ function fromComponents(list: any[]): FoundAddress {
 const withTimeout = <T,>(p: Promise<T>, ms: number) =>
   Promise.race([p, new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
 
-export function AddressFinder({ onAddress }: { onAddress: (a: FoundAddress) => void }) {
+// country: so sugere enderecos do pais escolhido no checkout.
+export function AddressFinder({ onAddress, country = 'ES' }: { onAddress: (a: FoundAddress) => void; country?: string }) {
   const [ready, setReady] = useState(false);
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<any[]>([]);
@@ -69,7 +70,7 @@ export function AddressFinder({ onAddress }: { onAddress: (a: FoundAddress) => v
         const { AutocompleteSuggestion, AutocompleteSessionToken } = await window.google.maps.importLibrary('places');
         if (!token.current) token.current = new AutocompleteSessionToken();
         const { suggestions: list } = await withTimeout(AutocompleteSuggestion.fetchAutocompleteSuggestions({
-          input: query, sessionToken: token.current, includedRegionCodes: ['es', 'pt'], language: 'es', region: 'es',
+          input: query, sessionToken: token.current, includedRegionCodes: [country.toLowerCase()], language: 'es', region: country.toLowerCase(),
         }), 8000) as any;
         if (!alive) return;
         setSuggestions((list ?? []).filter((s: any) => s.placePrediction).slice(0, 5));
@@ -79,7 +80,7 @@ export function AddressFinder({ onAddress }: { onAddress: (a: FoundAddress) => v
       }
     }, 250);
     return () => { alive = false; clearTimeout(t); };
-  }, [query, ready]);
+  }, [query, ready, country]);
 
   async function pick(s: any) {
     const label = [s.placePrediction.mainText?.toString(), s.placePrediction.secondaryText?.toString()].filter(Boolean).join(', ');

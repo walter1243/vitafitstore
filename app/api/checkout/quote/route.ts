@@ -75,6 +75,7 @@ export async function POST(req: NextRequest) {
     const method = body?.shippingMethod === 'home' ? 'home' : 'pickup';
     const ship = await chargeShipping(items, String(body?.postalCode ?? ''), country, method, () =>
       resolveShipping(subtotal, country, items.map((item: any) => itemShipping(shippingById.get(Number(item.productId)), persById.get(Number(item.productId)), qtyById.get(Number(item.productId)) ?? 0))));
+    if (ship.error) return NextResponse.json({ error: ship.error }, { status: 400 });
     const shipping = ship.shipping;
     const total = subtotal + shipping;
 

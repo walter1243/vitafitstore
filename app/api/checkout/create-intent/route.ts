@@ -93,6 +93,7 @@ export async function POST(req: NextRequest) {
     const shippingById = new Map<number, number | null>((productRows as any[]).map((r) => [Number(r.id), r.shipping_cost != null ? Number(r.shipping_cost) : null]));
     const ship = await chargeShipping(items, String(postalCode ?? ''), String(country ?? 'ES'), method, () =>
       resolveShipping(subtotal, String(country ?? 'ES'), items.map((item: any) => itemShipping(shippingById.get(Number(item.productId)), persById.get(Number(item.productId)), qtyById.get(Number(item.productId)) ?? 0))));
+    if (ship.error) return NextResponse.json({ error: ship.error }, { status: 400 });
     const shipping = ship.shipping;
     if (ship.chosen?.type === 'pickup' && !point?.id) {
       return NextResponse.json({ error: 'Elige el punto de recogida.' }, { status: 400 });

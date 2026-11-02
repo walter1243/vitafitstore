@@ -579,10 +579,16 @@ function CheckoutFormInner() {
     setStreetN(a.number || '');
     if (a.zip) { setPostal(a.zip); saveZip(a.zip); }
     if (a.city) setCity(a.city);
-    if (a.country && ['ES', 'PT', 'FR', 'DE', 'BR'].includes(a.country)) setCountry(a.country);
+    if (a.country && countries.some((c) => c.code === a.country)) setCountry(a.country);
     setErrors({});
   }
   const [country, setCountry] = useState('ES');
+  // Paises para onde enviamos (Admin → Envio por país).
+  const [countries, setCountries] = useState<{ code: string; name: string; mode: string }[]>([{ code: 'ES', name: 'España', mode: 'packlink' }]);
+  useEffect(() => {
+    fetch('/api/shipping/zones').then((r) => r.json()).then((d) => { if (Array.isArray(d?.countries) && d.countries.length) setCountries(d.countries); }).catch(() => {});
+  }, []);
+  const isES = country === 'ES';
 
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quoteError,   setQuoteError]   = useState('');
@@ -681,6 +687,8 @@ function CheckoutFormInner() {
     if (!email.trim())  e.email  = 'Email obligatorio';
     if (!street.trim()) e.street = 'Dirección obligatoria';
     if (!postal.trim()) e.postal = 'Código postal obligatorio';
+    else if (isES && zip5.length !== 5) e.postal = 'El código postal tiene 5 números';
+    if (quoteError && !isES) e.postal = quoteError;
     if (!city.trim())   e.city   = 'Ciudad obligatoria';
     if (needsPoint && !pickupPoint) e.point = 'Elige el punto de recogida';
     setErrors(e);
@@ -779,8 +787,15 @@ function CheckoutFormInner() {
           <MapPin size={18} className="text-[#c2410c]" />
           <p className="font-kids text-xl font-bold text-[#23263f]">¿Dónde lo enviamos?</p>
         </div>
-        {/* Endereco com o Google: autocompletar, GPS e mapa com alfinete. */}
-        <AddressFinder onAddress={fillAddress} />
+        {/* Pais primeiro: decide a busca do Google, o formato do CP e o frete. */}
+        <Field label="País *">
+          <select className={inputCls} value={country} onChange={e => { setCountry(e.target.value); setPickupPoint(null); }}
+            style={{ appearance:'none' }}>
+            {countries.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
+          </select>
+        </Field>
+        {/* Endereco com o Google: autocompletar no pais escolhido. */}
+        <AddressFinder onAddress={fillAddress} country={country} />
         <div className="grid grid-cols-3 gap-3">
           <div className="col-span-2">
             <Field label="Calle / Dirección *" error={errors.street}>
@@ -795,8 +810,9 @@ function CheckoutFormInner() {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Código Postal *" error={errors.postal}>
-            <input className={inputCls} placeholder="28001" value={postal}
-              inputMode="numeric" onChange={e => { setPostal(e.target.value); const z = e.target.value.replace(/\D/g, ''); if (z.length === 5) saveZip(z); }}
+            <input className={inputCls} placeholder={POSTAL_HINT[country] ?? ''} value={postal}
+              inputMode={isES ? 'numeric' : 'text'} autoComplete="postal-code"
+              onChange={e => { setPostal(e.target.value); const z = e.target.value.replace(/\D/g, ''); if (isES && z.length === 5) saveZip(z); }}
               style={errors.postal?{borderColor:'#f87171'}:{}} />
           </Field>
           <Field label="Ciudad *" error={errors.city}>
@@ -804,30 +820,25 @@ function CheckoutFormInner() {
               onChange={e => setCity(e.target.value)} style={errors.city?{borderColor:'#f87171'}:{}} />
           </Field>
         </div>
-        <Field label="País">
-          <select className={inputCls} value={country} onChange={e => setCountry(e.target.value)}
-            style={{ appearance:'none' }}>
-            <option value="ES">🇪🇸 España</option>
-            <option value="PT">🇵🇹 Portugal</option>
-            <option value="BR">🇧🇷 Brasil</option>
-            <option value="FR">🇫🇷 Francia</option>
-            <option value="DE">🇩🇪 Alemania</option>
-          </select>
-        </Field>
       </div>
 
-      {country === 'ES' && (
+      {(
         <div className="rounded-[28px] p-5 sm:p-6 space-y-3"
           style={{ background:'#FFFFFF', border:'none', boxShadow:'0 6px 24px rgba(35,38,63,0.06)' }}>
           <div className="flex items-center gap-2">
             <Truck size={18} className="text-[#c2410c]" />
             <p className="font-kids text-xl font-bold text-[#23263f]">¿Cómo lo recibes?</p>
           </div>
-          {zip5.length !== 5 ? (
+          {isES && zip5.length !== 5 ? (
             <p className="text-sm text-slate-500">Escribe tu código postal para ver las opciones de envío.</p>
+          ) : !isES && quoteError ? (
+            <p className="text-sm font-semibold text-red-600">{quoteError}</p>
           ) : (
             <>
               <ShipOptionsList quote={shipOpts} method={activeMethod} onMethod={chooseMethod} loading={quoteLoading} />
+              {!isES && shipOpts?.home && (
+                <p className="text-xs text-slate-500">Envío internacional a domicilio. Los plazos y posibles tasas de aduana dependen del país de destino.</p>
+              )}
               {needsPoint && shipOpts?.pickup && (
                 <div>
                   <p className="mt-2 text-sm font-bold text-[#23263f]">Elige tu punto de recogida</p>
@@ -926,6 +937,9 @@ function CheckoutFormInner() {
     </div>
   );
 }
+
+// Exemplo de codigo postal no campo, por pais.
+const POSTAL_HINT: Record<string, string> = { ES: '28001', PT: '1000-001', FR: '75001', DE: '10115', IT: '00118', BE: '1000', AT: '1010', NL: '1012 AB', IE: 'D02 X285', GB: 'SW1A 1AA', CH: '8001', US: '10001', BR: '01310-100' };
 
 export default function CheckoutForm() {
   if (!process.env.NEXT_PUBLIC_STRIPE_PK) {
