@@ -79,7 +79,7 @@ export function CollectionCatalog({ slug }: { slug: string }) {
       {(others.length > 0 || sector) && (
         <nav aria-label="Otras colecciones" className="swipe-row -mx-1 mb-4 px-1 py-1">
           <Link
-            href={sector ? `/sector/${sector.slug}` : '/#colecciones'}
+            href={sector ? `/sector/${sector.slug}` : '/#productos'}
             className="inline-flex min-h-10 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#F2F4FA] px-4 text-sm font-bold text-[var(--k-ink)] transition-colors hover:bg-[#E6E9F3]"
           >
             <Home className="h-4 w-4" aria-hidden="true" /> {sector ? `Todo ${sector.name.toLowerCase()}` : 'Colecciones'}

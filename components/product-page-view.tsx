@@ -122,7 +122,7 @@ export function ProductPageView({ product }: { product: Product }) {
         {collection ? (
           <Link href={`/coleccion/${collection.slug}`} className="hover:text-slate-800">{collection.shortName}</Link>
         ) : (
-          <Link href="/#colecciones" className="hover:text-slate-800">Colecciones</Link>
+          <Link href="/#productos" className="hover:text-slate-800">Colecciones</Link>
         )}
         {product.categoryLabel && (
           <>

@@ -156,7 +156,7 @@ function WorldEditor({ sector, products, onSaved, onError }: { sector: Sector; p
       <section className={box}>
         <div className="mb-4 flex items-center justify-between gap-3">
           <h3 className="font-semibold">1. Card “Elige tu mundo” e faixa</h3>
-          <a className={btn} href={`/#mundo-${sector.slug}`} target="_blank" rel="noreferrer"><ExternalLink size={13} /> Ver no site</a>
+          <a className={btn} href={`/#${sector.slug}`} target="_blank" rel="noreferrer"><ExternalLink size={13} /> Ver no site</a>
         </div>
         <div className="grid gap-x-4 sm:grid-cols-2">
           <Field label="Nome do mundo"><input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} /></Field>

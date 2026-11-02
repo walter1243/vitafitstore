@@ -77,7 +77,7 @@ export function OfferPrompt({ slug, product, question, prefer, fallbackLabel, on
         <>
           <p className="text-center font-kids text-xl font-bold">{question}</p>
           <Link
-            href={slug ? `/coleccion/${slug}` : '/#colecciones'}
+            href={slug ? `/coleccion/${slug}` : '/#productos'}
             onClick={onClose}
             className="inline-flex min-h-12 cursor-pointer items-center justify-center rounded-2xl bg-[#c2410c] font-extrabold text-white transition-colors hover:bg-[#9a3412]"
           >

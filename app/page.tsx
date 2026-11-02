@@ -3,7 +3,7 @@ import { Footer } from '@/components/footer'
 import { CartSidebar } from '@/components/cart-sidebar'
 import { UpsellPopup } from '@/components/upsell-popup'
 import { WhatsAppFloating } from '@/components/whatsapp-floating'
-import { KidsStorefront } from '@/components/kids/kids-storefront'
+import { AppleHome } from '@/components/apple-home'
 import { KidsHowItsMade } from '@/components/kids/kids-how-its-made'
 import { getSiteContent } from '@/lib/site-content'
 import { getSectors } from '@/lib/sectors'
@@ -17,9 +17,9 @@ import { SectorsProvider } from '@/components/kids/sectors-context'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-// Vitrine infantil estilo loja de brinquedos: banner pastel com fotos reais
-// → compra por colecao → prateleiras → "Nuestro taller". So o conteudo da pagina fica dentro de .kids — carrinho,
-// popup e checkout mantem o visual de antes.
+// Home no estilo da Apple (components/apple-home.tsx): abertura limpa e um
+// bloco de produtos por setor. A escolha de colecao fica so no menu.
+// "Nuestro taller" continua no fim.
 export default async function HomePage() {
   const [content, sectors] = await Promise.all([getSiteContent(), getSectors()])
 
@@ -27,8 +27,8 @@ export default async function HomePage() {
     <SectorsProvider sectors={sectors}>
     <div className="flex min-h-screen flex-col bg-white">
       <Header />
-      <main className="kids flex-1">
-        <KidsStorefront />
+      <main className="flex-1">
+        <AppleHome />
         <KidsHowItsMade />
       </main>
       <Footer content={content.footer} />

@@ -737,7 +737,7 @@ function CheckoutFormInner() {
         {returnMsg && <p className="max-w-sm rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{returnMsg}</p>}
         <h2 className="text-3xl font-bold text-[#23263f]">¡Tu carrito está vacío!</h2>
         <p className="text-slate-500 text-sm max-w-xs">Añade productos antes de finalizar la compra.</p>
-        <Link href="/#colecciones"
+        <Link href="/#productos"
           className="inline-flex min-h-12 items-center gap-2 px-7 rounded-2xl font-extrabold text-base text-white bg-[#c2410c] hover:bg-[#9a3412]">
           Ver juguetes
         </Link>

@@ -32,7 +32,7 @@ export function SearchResults({ query }: { query: string }) {
             <Search className="mx-auto h-10 w-10 text-[#c2410c]" aria-hidden="true" />
             <p className="mt-4 text-2xl font-bold text-[#1E1B4B]">No encontramos nada</p>
             <p className="mt-1 text-base text-[#565a78]">Prueba con otra palabra o explora los mundos.</p>
-            <Link href="/#colecciones" className="mt-6 inline-flex min-h-12 items-center rounded-full bg-[#1E1B4B] px-6 font-bold text-white">Ver los mundos</Link>
+            <Link href="/#productos" className="mt-6 inline-flex min-h-12 items-center rounded-full bg-[#1E1B4B] px-6 font-bold text-white">Ver productos</Link>
           </div>
         ) : (
           <div className="swipe-products mt-10">
