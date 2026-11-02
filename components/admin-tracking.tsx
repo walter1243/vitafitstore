@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { Bell, CheckCircle2, ExternalLink, Mail, Send, Truck, X } from 'lucide-react';
+import { Bell, CheckCircle2, ExternalLink, Mail, Send, X } from 'lucide-react';
 
 export type TrackingOrder = {
   id: number;
@@ -30,7 +30,6 @@ export function TrackingSection({ orders, onChanged, notify }: {
   notify: (type: 'success' | 'error', msg: string) => void;
 }) {
   const [open, setOpen] = useState<TrackingOrder | null>(null);
-  const [code, setCode] = useState('');
   const pending = orders.filter(needsTracking);
   const sent = orders.filter(o => o.trackingSentAt).slice(0, 15);
 
@@ -119,29 +118,6 @@ export function TrackingSection({ orders, onChanged, notify }: {
         </section>
       )}
 
-      <EmailTest />
-
-      <section className="max-w-lg rounded-2xl border border-white/10 bg-[#161b28] p-5 sm:p-6">
-        <h2 className="mb-1 flex items-center gap-2 font-semibold"><Truck size={16} className="text-green-500" />Consultar envio (Correos)</h2>
-        <div className="mt-3 flex gap-2">
-          <input
-            type="text"
-            value={code}
-            onChange={e => setCode(e.target.value.trim())}
-            placeholder="Ex: ES123456789ES"
-            onKeyDown={e => { if (e.key === 'Enter' && code) window.open(`https://www.correos.es/es/es/herramientas/localizador/envios?numero=${code}`, '_blank'); }}
-            className="min-w-0 flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white outline-none placeholder:text-white/30 focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
-          />
-          <a
-            href={code ? `https://www.correos.es/es/es/herramientas/localizador/envios?numero=${code}` : undefined}
-            target="_blank" rel="noopener noreferrer"
-            className={`flex items-center gap-1.5 whitespace-nowrap rounded-lg bg-white/10 px-4 py-2 text-sm font-medium transition-colors ${code ? 'cursor-pointer hover:bg-white/15' : 'pointer-events-none opacity-40'}`}
-          >
-            <ExternalLink size={14} />Rastrear
-          </a>
-        </div>
-      </section>
-
       {open && (
         <SendTrackingPopup
           order={open}
@@ -154,70 +130,6 @@ export function TrackingSection({ orders, onChanged, notify }: {
         />
       )}
     </div>
-  );
-}
-
-const DOMAIN_LABEL: Record<string, string> = {
-  verified: 'verificado — os e-mails chegam a qualquer cliente',
-  pending: 'aguardando verificação na Resend (DNS ainda propagando)',
-  failed: 'falhou a verificação — confira os registros DNS na Resend',
-  not_started: 'verificação não iniciada — clique em Verify na Resend',
-  'not-added': 'não cadastrado na Resend',
-  unknown: 'não foi possível consultar (chave só de envio)',
-  'no-key': 'RESEND_KEY não configurada',
-};
-
-// Envia o e-mail de rastreio de exemplo pra conferir a Resend.
-function EmailTest() {
-  const [to, setTo] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<{ ok: boolean; msg: string; domain?: { name: string; status: string } } | null>(null);
-
-  async function run() {
-    setBusy(true);
-    setResult(null);
-    try {
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'testEmail', to: to.trim() }),
-      });
-      const d = await res.json().catch(() => ({}));
-      setResult(res.ok ? { ok: true, msg: `Enviado para ${d.to}. Confira a caixa de entrada (e o spam).`, domain: d.domain } : { ok: false, msg: d?.error ?? 'Falha ao enviar.', domain: d?.domain });
-    } catch {
-      setResult({ ok: false, msg: 'Erro de conexão.' });
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <section className="max-w-lg rounded-2xl border border-white/10 bg-[#161b28] p-5 sm:p-6">
-      <h2 className="mb-1 flex items-center gap-2 font-semibold"><Mail size={16} className="text-green-500" />Enviar e-mail de teste</h2>
-      <p className="mb-3 text-sm text-white/60">Manda o e-mail de rastreio de exemplo e mostra se o domínio está liberado na Resend.</p>
-      <form onSubmit={e => { e.preventDefault(); void run(); }} className="flex gap-2">
-        <input
-          type="email"
-          value={to}
-          onChange={e => setTo(e.target.value)}
-          placeholder="seu@email.com"
-          className="min-w-0 flex-1 rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white outline-none placeholder:text-white/30 focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
-        />
-        <button type="submit" disabled={busy || !to.trim()} className="flex items-center gap-1.5 whitespace-nowrap rounded-lg bg-green-600 px-4 py-2 text-sm font-bold hover:bg-green-700 disabled:opacity-50">
-          <Send size={14} />{busy ? 'Enviando…' : 'Testar'}
-        </button>
-      </form>
-      {result && (
-        <div className={`mt-3 rounded-lg px-3 py-2 text-xs ${result.ok ? 'bg-green-500/10 text-green-300' : 'bg-red-500/10 text-red-300'}`}>
-          <p>{result.msg}</p>
-          {result.domain && (
-            <p className="mt-1 text-white/70">
-              Domínio {result.domain.name}: <strong>{DOMAIN_LABEL[result.domain.status] ?? result.domain.status}</strong>
-            </p>
-          )}
-        </div>
-      )}
-    </section>
   );
 }
 

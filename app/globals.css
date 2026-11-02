@@ -582,3 +582,9 @@ body:has(.lamp-dark) [data-slot="dialog-overlay"] {
 .nv-branches { transform: translate(-30%, -26%) rotate(-28deg); transform-origin: 50% 40%; transition: transform .9s cubic-bezier(.34,1.56,.64,1); }
 .nv-branches.nv-on { transform: none; }
 @media (prefers-reduced-motion: reduce) { .nv-branches { transition-duration: .01s; } }
+
+/* Google Tradutor (seletor de idioma): sem a barra do Google no topo, sem
+   balao ao passar o mouse e sem o fundo amarelo nos textos traduzidos. */
+iframe.skiptranslate, .goog-te-banner-frame, #goog-gt-tt, .goog-te-balloon-frame, .VIpgJd-ZVi9od-ORHb-OEVmcd, .VIpgJd-ZVi9od-aZ2wEe-wOHMyf { display: none !important; }
+body { top: 0 !important; }
+.goog-text-highlight, font[style*="background-color"] { background: none !important; box-shadow: none !important; }

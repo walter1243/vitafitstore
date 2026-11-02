@@ -7,6 +7,7 @@ import { CookieConsent } from '@/components/cookie-consent'
 import { AnalyticsLoader } from '@/components/analytics-loader'
 import { SiteTracker } from '@/components/site-tracker'
 import { PageTurn } from '@/components/page-turn'
+import { TranslateLoader } from '@/components/language-switcher'
 import './globals.css'
 
 const geistSans = Geist({
@@ -120,6 +121,7 @@ export default function RootLayout({
         <AnalyticsLoader />
         <SiteTracker />
         <PageTurn />
+        <TranslateLoader />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
