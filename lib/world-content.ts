@@ -32,7 +32,7 @@ const img = (url: string, caption = '', alt = ''): Shot => ({ url, kind: 'image'
 
 export const DEFAULT_WORLD: Record<SectorStyle, WorldContent> = {
   navidad: {
-    cover: { url: '/images/worlds/navidad-arbol.png', kind: 'image' },
+    cover: { url: '', kind: 'image' },
     showcase: { enabled: false, kicker: '', title: '', intro: '', shots: [], tiles: [], steps: [], trust: true },
   },
   infantil: {

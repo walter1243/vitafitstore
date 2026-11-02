@@ -10,6 +10,17 @@ import { useCart } from '@/lib/cart-context';
 // (WhatsApp). Os botoes do Header escutam os eventos abaixo.
 export const OPEN_MENU_EVENT = 'kt:open-menu';
 export const OPEN_SEARCH_EVENT = 'kt:open-search';
+export const GO_HOME_EVENT = 'kt:go-home';
+
+// "Inicio": fora da home navega normal; ja na home volta pro topo e a home
+// limpa o filtro de setor (o Link sozinho nao faz nada na mesma pagina).
+export function goHome(e: React.MouseEvent) {
+  if (window.location.pathname !== '/') return;
+  e.preventDefault();
+  if (window.location.hash) history.replaceState(null, '', '/');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.dispatchEvent(new Event(GO_HOME_EVENT));
+}
 
 const ITEM = 'flex min-h-[52px] flex-1 cursor-pointer flex-col items-center justify-center gap-0.5 text-[11px] font-medium text-[#1d1d1f] transition-colors hover:text-[#0071e3]';
 
@@ -35,7 +46,7 @@ export function MobileTabBar() {
       style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif' }}
     >
       <div className="mx-auto flex max-w-md items-end px-2">
-        <Link href="/" className={`${ITEM} ${home ? '!text-[#0071e3]' : ''}`} aria-current={home ? 'page' : undefined}>
+        <Link href="/" onClick={goHome} className={`${ITEM} ${home ? '!text-[#0071e3]' : ''}`} aria-current={home ? 'page' : undefined}>
           <Home className="h-[22px] w-[22px]" aria-hidden="true" />Inicio
         </Link>
         <button type="button" onClick={() => window.dispatchEvent(new Event(OPEN_MENU_EVENT))} className={ITEM}>

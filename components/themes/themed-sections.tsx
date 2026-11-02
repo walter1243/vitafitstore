@@ -10,7 +10,7 @@ import { ACCENTS } from '@/components/kids/palette';
 import { ProductCarousel } from '@/components/kids/product-carousel';
 import { NamePersonalizer } from '@/components/personalize/name-personalizer';
 import { SECTOR_THEMES, type SectorTheme } from './sector-themes';
-import { NavidadSides, NavidadSleigh, NavidadSnow } from './navidad-decor';
+import { NavidadSleigh, NavidadSnow } from './navidad-decor';
 
 // Faixas dos setores com visual proprio (Casa, Chaveiros, Pet). Cada visual
 // tem cores/fontes (sector-themes.ts) e um layout de colecao diferente:
@@ -87,9 +87,9 @@ export function ThemedCollection({ collection, theme, products = [], showCarouse
   const label = primaryLabel ?? `Ver ${products.length ? `los ${products.length}` : 'colección'}`;
 
   return (
-    <section className={`relative overflow-hidden px-4 sm:px-6 lg:px-8 ${theme.key === 'navidad' ? (first ? 'pb-10 pt-32 sm:pt-36' : 'pb-40 pt-16 sm:pt-24 xl:min-h-[520px] xl:pb-24') : first ? 'pb-10 pt-32 sm:pt-36' : 'py-12 sm:py-16'}`} style={{ background: theme.bgAlt }}>
+    <section className={`relative overflow-hidden px-4 sm:px-6 lg:px-8 ${theme.key === 'navidad' ? (first ? 'pb-10 pt-44 md:pt-36' : 'py-12 sm:py-16') : first ? 'pb-10 pt-44 md:pt-36' : 'py-12 sm:py-16'}`} style={{ background: theme.bgAlt }}>
       {/* Cabecalho da pagina da colecao (first): so a neve; os enfeites ficam no catalogo. */}
-      {theme.key === 'navidad' && <><NavidadSnow />{!first && <><NavidadSleigh /><NavidadSides /></>}</>}
+      {theme.key === 'navidad' && <><NavidadSnow />{!first && <NavidadSleigh />}</>}
       <div className="relative mx-auto max-w-6xl">
         <div className="flex flex-wrap items-end justify-between gap-4 pb-6" style={{ borderBottom: `1px solid ${theme.ink}1a` }}>
           <div>

@@ -86,4 +86,4 @@ export function WorldArt({ style, on, go = 0, alt }: { style: SectorStyle; on: b
   );
 }
 
-export const HAS_WORLD_ART = (s: SectorStyle) => s === 'infantil' || s === 'hogar' || s === 'llaveros' || s === 'mascotas' || s === 'navidad';
+export const HAS_WORLD_ART = (s: SectorStyle) => s === 'infantil' || s === 'hogar' || s === 'llaveros' || s === 'mascotas';

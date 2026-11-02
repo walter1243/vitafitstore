@@ -9,6 +9,7 @@ import { useCart } from '@/lib/cart-context';
 import { cardPrice } from '@/lib/personalize';
 import { useSectors } from '@/components/kids/sectors-context';
 import { useStoreProducts } from '@/components/kids/use-store-products';
+import { GO_HOME_EVENT } from '@/components/mobile-tab-bar';
 
 // Home no formato de app de loja: banner com slides, setores em cards que
 // filtram os produtos, cards com selo + botao de carrinho e uma faixa de
@@ -222,6 +223,11 @@ export function AppleHome() {
   const { sectors, collectionForProduct } = useSectors();
   const [active, setActive] = useState('todos');
   const listRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const reset = () => setActive('todos');
+    window.addEventListener(GO_HOME_EVENT, reset);
+    return () => window.removeEventListener(GO_HOME_EVENT, reset);
+  }, []);
 
   const blocks: Block[] = useMemo(() => {
     const bySector: Record<string, Product[]> = {};

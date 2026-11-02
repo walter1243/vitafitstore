@@ -6,7 +6,7 @@ import { ProductSearch } from '@/components/product-search';
 import { useCart } from '@/lib/cart-context';
 import { useSectors } from '@/components/kids/sectors-context';
 import { softOf } from '@/lib/sectors-shared';
-import { OPEN_MENU_EVENT, OPEN_SEARCH_EVENT } from '@/components/mobile-tab-bar';
+import { OPEN_MENU_EVENT, OPEN_SEARCH_EVENT, goHome } from '@/components/mobile-tab-bar';
 import { CollectionsMenuPanel, homeCategoryHref, selectHomeCategory, useHomeCategories } from '@/components/kids/menu-panel';
 
 
@@ -180,12 +180,12 @@ export function Header() {
             {/* Logo — "logo_direto" (padrao; Admin → Informações da Loja)
                 mostra a imagem do logo sozinha, do jeito que ela e. */}
             {logoStyle === 'logo_direto' ? (
-              <Link href="/" className="flex shrink-0 items-center" aria-label={`${storeName} — Inicio`}>
+              <Link href="/" onClick={goHome} className="flex shrink-0 items-center" aria-label={`${storeName} — Inicio`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={DEFAULT_LOGO} alt="Kitoys 3D" className="h-[44px] w-auto object-contain md:h-[58px]" />
               </Link>
             ) : (
-              <Link href="/" className="flex shrink-0 items-center gap-2">
+              <Link href="/" onClick={goHome} className="flex shrink-0 items-center gap-2">
                 <div className="flex h-[42px] w-[42px] items-center justify-center overflow-hidden rounded-xl" style={{ background: themeColor }}>
                   {logoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -207,7 +207,7 @@ export function Header() {
           <div className="contents md:flex md:shrink-0 md:items-center md:gap-2">
             {/* Menu: Inicio · Colecciones (painel com setores) */}
             <nav className="hidden items-center gap-1 md:flex" aria-label="Principal">
-              <Link href="/" className={NAV_ITEM}>Inicio</Link>
+              <Link href="/" onClick={goHome} className={NAV_ITEM}>Inicio</Link>
               <button
                 type="button"
                 className={`${NAV_ITEM} ${colOpen ? 'bg-[#FFF4E0]' : ''}`}
@@ -273,11 +273,11 @@ export function Header() {
             onClick={() => setMobileOpen(false)}
           />
           <div
-            className="kids fixed bottom-0 right-0 z-40 flex w-full max-w-[320px] flex-col border-l border-[#efe7da] bg-white shadow-[-12px_0_32px_rgba(35,38,63,0.12)] md:hidden"
+            className="kids fixed bottom-0 left-0 z-40 flex w-full max-w-[320px] flex-col border-r border-[#efe7da] bg-white shadow-[12px_0_32px_rgba(35,38,63,0.12)] md:hidden"
             style={{ top: topBarHeight + 117 }}
           >
             <nav className="flex flex-1 flex-col overflow-y-auto p-3 pb-24" aria-label="Principal">
-              <Link href="/" onClick={() => setMobileOpen(false)} className={MOBILE_ITEM}>Inicio</Link>
+              <Link href="/" onClick={(e) => { setMobileOpen(false); goHome(e); }} className={MOBILE_ITEM}>Inicio</Link>
               {menuSectors.map((sector) => (
                 <div key={sector.id || sector.slug} className="mt-2">
                   <Link href={`/sector/${sector.slug}`} onClick={() => setMobileOpen(false)} className={MOBILE_ITEM}>
