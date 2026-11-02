@@ -174,7 +174,7 @@ function HeroSlides({ blocks, onShop }: { blocks: Block[]; onShop: (key: string)
             role="group"
             aria-label={`${k + 1} de ${n}`}
           >
-            <div className="relative z-10 w-[58%] py-7 pl-5 pr-2 sm:w-1/2 sm:py-12 sm:pl-12">
+            <div className="relative z-10 w-[60%] pb-10 pl-5 pr-2 pt-6 sm:w-1/2 sm:py-12 sm:pl-12">
               <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#7cc4ff] sm:text-[13px]">{k === 0 ? 'Novedades' : 'Colección'}</p>
               <h1 className="mt-1.5 text-[24px] font-extrabold uppercase leading-[1.05] text-white sm:text-[46px]">{s.title}</h1>
               {s.tagline && <p className="mt-2 line-clamp-2 text-[13px] leading-snug text-white/85 sm:text-[18px]">{s.tagline}</p>}
@@ -182,7 +182,7 @@ function HeroSlides({ blocks, onShop }: { blocks: Block[]; onShop: (key: string)
                 type="button"
                 tabIndex={k === i ? 0 : -1}
                 onClick={() => onShop(s.key)}
-                className="mt-4 inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full pl-5 pr-1.5 text-[13px] font-bold uppercase tracking-wide text-white transition-opacity hover:opacity-90 sm:mt-6 sm:text-[15px]"
+                className="mt-4 inline-flex min-h-11 cursor-pointer items-center gap-2 whitespace-nowrap rounded-full pl-4 pr-1.5 text-[12px] font-bold uppercase tracking-wide text-white transition-opacity hover:opacity-90 sm:mt-6 sm:text-[15px]"
                 style={{ background: BLUE }}
               >
                 Comprar ahora
@@ -292,7 +292,7 @@ export function AppleHome() {
 
   return (
     <div style={FONT} className="bg-[#f5f5f7] antialiased [&_h1]:[font-family:inherit] [&_h2]:[font-family:inherit] [&_h3]:[font-family:inherit]">
-      <div className="mx-auto max-w-6xl px-4 pb-16 pt-[170px] sm:px-6 md:pt-[124px]">
+      <div className="mx-auto max-w-6xl px-4 pb-16 pt-[178px] sm:px-6 md:pt-[124px]">
         <HeroSlides blocks={heroBlocks} onShop={choose} />
 
         {/* Setores em cards: tocar filtra os produtos logo abaixo */}
