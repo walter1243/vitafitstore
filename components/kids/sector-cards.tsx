@@ -31,7 +31,7 @@ export function SectorCards({ sectors, active, onSelect, extraHome }: { sectors:
   if (worlds.length === 0) return null;
 
   return (
-    <section id="colecciones" className="relative scroll-mt-24 overflow-hidden bg-[#FFF8EF] px-4 pb-14 pt-36 sm:px-6 sm:pt-40 lg:px-8">
+    <section id="colecciones" className="relative scroll-mt-24 overflow-hidden bg-[#FFF8EF] px-4 pb-14 pt-44 sm:px-6 sm:pt-40 lg:px-8">
       <div className="pointer-events-none absolute inset-0 opacity-40" style={dots('#FFD9A8')} aria-hidden="true" />
       <div className="relative mx-auto max-w-6xl">
         <div className="mb-8 text-center">

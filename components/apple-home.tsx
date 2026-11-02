@@ -292,7 +292,7 @@ export function AppleHome() {
 
   return (
     <div style={FONT} className="bg-[#f5f5f7] antialiased [&_h1]:[font-family:inherit] [&_h2]:[font-family:inherit] [&_h3]:[font-family:inherit]">
-      <div className="mx-auto max-w-6xl px-4 pb-16 pt-[118px] sm:px-6 sm:pt-[124px]">
+      <div className="mx-auto max-w-6xl px-4 pb-16 pt-[170px] sm:px-6 md:pt-[124px]">
         <HeroSlides blocks={heroBlocks} onShop={choose} />
 
         {/* Setores em cards: tocar filtra os produtos logo abaixo */}

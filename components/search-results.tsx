@@ -17,7 +17,7 @@ export function SearchResults({ query }: { query: string }) {
   const { getSector, collectionForProduct } = useSectors();
 
   return (
-    <section className="px-4 pb-24 pt-36 sm:px-6 sm:pt-40 lg:px-8">
+    <section className="px-4 pb-24 pt-44 sm:px-6 sm:pt-40 lg:px-8">
       <div className="mx-auto max-w-6xl">
         <h1 className="text-4xl font-bold text-[#1E1B4B] sm:text-5xl">
           {query ? <>Resultados para «{query}»</> : 'Buscar productos'}

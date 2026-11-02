@@ -85,7 +85,7 @@ export function CollectionSpotlight({ slug, count, products, hideProducts, prima
   // Infantil com cara de loja: cabecalho compacto e os produtos logo embaixo.
   // As brincadeiras (montar, pintar, acender) ficam na pagina de cada produto.
   return (
-    <section ref={ref} className={`px-4 sm:px-6 lg:px-8 ${first ? 'pb-10 pt-32 sm:pt-36' : 'py-12 sm:py-16'}`} style={{ background: bg ?? accent.tint }}>
+    <section ref={ref} className={`px-4 sm:px-6 lg:px-8 ${first ? 'pb-10 pt-44 sm:pt-36' : 'py-12 sm:py-16'}`} style={{ background: bg ?? accent.tint }}>
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-wrap items-end justify-between gap-4 pb-6" style={{ borderBottom: `2px solid ${darkBg ? '#ffffff33' : '#1E1B4B1a'}` }}>
           <div>

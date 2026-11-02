@@ -33,7 +33,8 @@ export function useProductSearch(query: string) {
   }, [query, products, collectionForProduct]);
 }
 
-export function ProductSearch({ autoFocus, onDone, className = '' }: { autoFocus?: boolean; onDone?: () => void; className?: string }) {
+// soft: campo cinza claro (cabecalho do celular); inputId evita id repetido com 2 buscas na pagina.
+export function ProductSearch({ autoFocus, onDone, className = '', soft = false, inputId = 'busqueda-productos' }: { autoFocus?: boolean; onDone?: () => void; className?: string; soft?: boolean; inputId?: string }) {
   const router = useRouter();
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
@@ -66,10 +67,10 @@ export function ProductSearch({ autoFocus, onDone, className = '' }: { autoFocus
   return (
     <div ref={boxRef} className={`relative ${className}`}>
       <form role="search" onSubmit={submit}>
-        <label className="sr-only" htmlFor="busqueda-productos">Buscar productos</label>
+        <label className="sr-only" htmlFor={inputId}>Buscar productos</label>
         <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#565a78]" aria-hidden="true" />
         <input
-          id="busqueda-productos"
+          id={inputId}
           type="search"
           value={q}
           autoFocus={autoFocus}
@@ -82,7 +83,9 @@ export function ProductSearch({ autoFocus, onDone, className = '' }: { autoFocus
             if (e.key === 'Escape') { setOpen(false); onDone?.(); }
           }}
           placeholder="Buscar juguetes, llaveros, jarrones…"
-          className="h-12 w-full rounded-full border-2 border-[#efe7da] bg-[#FFF8EF] pl-12 pr-11 text-base text-[#23263f] outline-none transition-colors placeholder:text-[#8a8ca6] focus:border-[#23263f] focus:bg-white"
+          className={soft
+            ? 'h-11 w-full rounded-full border border-transparent bg-[#f2f2f4] pl-12 pr-11 text-base text-[#1d1d1f] outline-none transition-colors placeholder:text-[#8e8e93] focus:border-[#0071e3] focus:bg-white'
+            : 'h-12 w-full rounded-full border-2 border-[#efe7da] bg-[#FFF8EF] pl-12 pr-11 text-base text-[#23263f] outline-none transition-colors placeholder:text-[#8a8ca6] focus:border-[#23263f] focus:bg-white'}
           aria-autocomplete="list"
           aria-controls="busqueda-sugerencias"
           aria-expanded={open && q.trim().length > 0}

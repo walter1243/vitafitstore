@@ -15,7 +15,7 @@ export function SectorBand({ sector, first, asTitle }: { sector: Sector; first?:
   return (
     <section
       id={`setor-${sector.slug}`}
-      className={`relative scroll-mt-24 overflow-hidden bg-[#FFD84D] px-4 text-center ${first ? 'pb-14 pt-36 sm:pt-40' : 'py-16 sm:py-20'}`}
+      className={`relative scroll-mt-24 overflow-hidden bg-[#FFD84D] px-4 text-center ${first ? 'pb-14 pt-44 sm:pt-40' : 'py-16 sm:py-20'}`}
     >
       <div className="pointer-events-none absolute inset-0 opacity-50" style={dots('#FFB800')} aria-hidden="true" />
       <Heading className="relative text-4xl font-bold text-[#1E1B4B] sm:text-6xl">{sector.name}</Heading>

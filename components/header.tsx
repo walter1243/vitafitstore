@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
-import { ShoppingCart, Menu, X, Smile, Search } from 'lucide-react';
+import { ShoppingCart, Menu, X, Smile } from 'lucide-react';
 import { ProductSearch } from '@/components/product-search';
 import { useCart } from '@/lib/cart-context';
 import { useSectors } from '@/components/kids/sectors-context';
@@ -62,13 +62,12 @@ export function Header() {
   }, [colOpen]);
   const { totalItems, setIsCartOpen } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
   const mobileHomeCats = useHomeCategories(mobileOpen);
   const [scrolled, setScrolled] = useState(false);
   // Barra de baixo do celular (MobileTabBar) abre o menu e a busca daqui.
   useEffect(() => {
-    const menu = () => { setSearchOpen(false); setMobileOpen(true); };
-    const search = () => { setMobileOpen(false); setSearchOpen(true); };
+    const menu = () => setMobileOpen(true);
+    const search = () => { setMobileOpen(false); document.getElementById('busqueda-movil')?.focus(); };
     window.addEventListener(OPEN_MENU_EVENT, menu);
     window.addEventListener(OPEN_SEARCH_EVENT, search);
     return () => { window.removeEventListener(OPEN_MENU_EVENT, menu); window.removeEventListener(OPEN_SEARCH_EVENT, search); };
@@ -173,15 +172,17 @@ export function Header() {
         style={{ top: topBarHeight }}
       >
         <div ref={colRef} className="relative">
-        {/* Logo · busca · menu · carrinho (no celular a busca abre por baixo) */}
-        <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:gap-6 lg:px-8">
-          <div className="flex shrink-0 items-center">
+        {/* Desktop: logo · busca · menu · carrinho.
+            Celular (estilo app): menu | logo no centro | carrinho, e a busca
+            sempre aberta logo abaixo. */}
+        <div className="mx-auto flex h-[60px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 md:h-[72px] lg:gap-6 lg:px-8">
+          <div className="flex flex-1 shrink-0 items-center justify-center md:flex-none md:justify-start">
             {/* Logo — "logo_direto" (padrao; Admin → Informações da Loja)
                 mostra a imagem do logo sozinha, do jeito que ela e. */}
             {logoStyle === 'logo_direto' ? (
               <Link href="/" className="flex shrink-0 items-center" aria-label={`${storeName} — Inicio`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={DEFAULT_LOGO} alt="Kitoys 3D" className="h-[58px] w-auto object-contain" />
+                <img src={DEFAULT_LOGO} alt="Kitoys 3D" className="h-[44px] w-auto object-contain md:h-[58px]" />
               </Link>
             ) : (
               <Link href="/" className="flex shrink-0 items-center gap-2">
@@ -203,7 +204,7 @@ export function Header() {
           <ProductSearch className="hidden max-w-xl flex-1 md:block" />
 
           {/* Right side: menu + carrinho */}
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="contents md:flex md:shrink-0 md:items-center md:gap-2">
             {/* Menu: Inicio · Colecciones (painel com setores) */}
             <nav className="hidden items-center gap-1 md:flex" aria-label="Principal">
               <Link href="/" className={NAV_ITEM}>Inicio</Link>
@@ -220,22 +221,13 @@ export function Header() {
               </button>
             </nav>
             <button
-              type="button"
-              onClick={() => setSearchOpen((v) => !v)}
-              className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-[#F2F4FA] transition-colors hover:bg-[#E6E9F3] md:hidden"
-              aria-label="Buscar productos"
-              aria-expanded={searchOpen}
-            >
-              {searchOpen ? <X className="h-5 w-5 text-[#23263f]" /> : <Search className="h-5 w-5 text-[#23263f]" />}
-            </button>
-            <button
               onClick={() => setIsCartOpen(true)}
-              className="relative flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-[#FFF4E0] transition-colors duration-200 hover:bg-[#FFE8C2]"
+              className="relative order-last flex h-11 w-11 cursor-pointer items-center justify-center rounded-full transition-colors duration-200 hover:bg-[#FFE8C2] md:order-none md:bg-[#FFF4E0]"
               aria-label="Abrir carrito"
             >
-              <ShoppingCart className="h-5 w-5 text-[#23263f]" />
+              <ShoppingCart className="h-6 w-6 text-[#1d1d1f] md:h-5 md:w-5 md:text-[#23263f]" />
               {totalItems > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#c2410c] px-1 text-[11px] font-extrabold text-white">
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#0071e3] px-1 text-[11px] font-extrabold text-white md:bg-[#c2410c]">
                   {totalItems}
                 </span>
               )}
@@ -243,20 +235,18 @@ export function Header() {
 
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-[#F2F4FA] transition-colors hover:bg-[#E6E9F3] md:hidden"
+              className="order-first flex h-11 w-11 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-[#F2F4FA] md:hidden"
               aria-label="Menú"
               aria-expanded={mobileOpen}
             >
-              {mobileOpen ? <X className="h-5 w-5 text-[#23263f]" /> : <Menu className="h-5 w-5 text-[#23263f]" />}
+              {mobileOpen ? <X className="h-6 w-6 text-[#1d1d1f]" /> : <Menu className="h-6 w-6 text-[#1d1d1f]" />}
             </button>
           </div>
         </div>
 
-        {searchOpen && (
-          <div className="kids absolute inset-x-0 top-full border-t border-[#efe7da] bg-white px-4 py-3 shadow-[0_16px_32px_rgba(35,38,63,0.12)] md:hidden">
-            <ProductSearch autoFocus onDone={() => setSearchOpen(false)} />
-          </div>
-        )}
+        <div className="px-4 pb-3 md:hidden" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif' }}>
+          <ProductSearch soft inputId="busqueda-movil" />
+        </div>
 
         {/* Painel "Colecciones": todas as colecoes lado a lado + categorias.
             Fica montado (so escondido) pra brincadeira aberta dali continuar
@@ -279,12 +269,12 @@ export function Header() {
               fechar continuam visiveis na mesma faixa). */}
           <div
             className="fixed inset-x-0 bottom-0 z-40 bg-[#23263f]/40 md:hidden"
-            style={{ top: topBarHeight + 73 }}
+            style={{ top: topBarHeight + 117 }}
             onClick={() => setMobileOpen(false)}
           />
           <div
             className="kids fixed bottom-0 right-0 z-40 flex w-full max-w-[320px] flex-col border-l border-[#efe7da] bg-white shadow-[-12px_0_32px_rgba(35,38,63,0.12)] md:hidden"
-            style={{ top: topBarHeight + 73 }}
+            style={{ top: topBarHeight + 117 }}
           >
             <nav className="flex flex-1 flex-col overflow-y-auto p-3 pb-24" aria-label="Principal">
               <Link href="/" onClick={() => setMobileOpen(false)} className={MOBILE_ITEM}>Inicio</Link>

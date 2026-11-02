@@ -194,7 +194,7 @@ export default function HeroVideo({ content }: { content?: Partial<HeroContent> 
          sitting right at the edge. Both bars are gone by sm: (header
          becomes much shorter there too, and the hero itself is tall enough
          that centering clears it on its own). */}
-      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pt-[140px] sm:px-6 sm:pt-0 lg:px-8">
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pt-[180px] sm:px-6 sm:pt-0 lg:px-8">
       <div
         ref={textRef}
         className="text-white text-center flex flex-col items-center max-w-5xl mx-auto"

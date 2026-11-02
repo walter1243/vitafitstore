@@ -114,7 +114,7 @@ export function ProductPageView({ product }: { product: Product }) {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 pb-10 pt-36 sm:px-6 sm:pt-40 lg:px-8">
+    <div className="mx-auto max-w-7xl px-4 pb-10 pt-44 sm:px-6 sm:pt-40 lg:px-8">
       {/* Breadcrumb */}
       <nav className="mb-6 flex items-center gap-1.5 text-xs text-slate-500">
         <Link href="/" className="hover:text-slate-800">Inicio</Link>
