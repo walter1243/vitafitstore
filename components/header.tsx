@@ -280,6 +280,7 @@ export function Header() {
           >
             <nav className="flex flex-1 flex-col overflow-y-auto p-3 pb-24" aria-label="Principal">
               <Link href="/" onClick={(e) => { setMobileOpen(false); goHome(e); }} className={MOBILE_ITEM}><Tr t={UI.inicio} /></Link>
+              <Link href="/pedido" onClick={() => setMobileOpen(false)} className={MOBILE_ITEM}>Mi pedido</Link>
               {menuSectors.map((sector) => (
                 <div key={sector.id || sector.slug} className="mt-2">
                   <Link href={`/sector/${sector.slug}`} onClick={() => setMobileOpen(false)} className={MOBILE_ITEM}>

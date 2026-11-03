@@ -55,14 +55,23 @@ export async function sendEmail({ to, subject, html, text }: { to: string; subje
   return data as { id: string };
 }
 
+// Pagina publica do pedido (/pedido): o cliente ve o estado (preparando,
+// em caminho, pronto no ponto) com o numero do pedido + e-mail.
+export const orderStatusUrl = (orderId: number, email?: string) =>
+  `https://www.kitoys3d.com/pedido?n=${orderId}${email ? `&e=${encodeURIComponent(email)}` : ''}`;
+
+const statusLinkHtml = (orderId: number, email?: string) =>
+  `<tr><td align="center" style="padding:14px 32px 0;"><a href="${esc(orderStatusUrl(orderId, email))}" style="color:#23263f;font-size:14px;font-weight:bold;">Ver el estado de mi pedido</a></td></tr>`;
+
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 
 // E-mail amigavel (espanhol) com o link de seguimento em destaque.
-export function trackingEmail({ name, orderId, productName, trackingUrl }: {
+export function trackingEmail({ name, orderId, productName, trackingUrl, email }: {
   name: string;
   orderId: number;
   productName?: string;
   trackingUrl: string;
+  email?: string;
 }) {
   const first = (name || '').trim().split(/\s+/)[0] || '';
   const hello = first ? `¡Hola, ${esc(first)}!` : '¡Hola!';
@@ -96,6 +105,7 @@ export function trackingEmail({ name, orderId, productName, trackingUrl }: {
             <a href="${url}" style="color:#c2410c;word-break:break-all;">${url}</a>
           </p>
         </td></tr>
+        ${statusLinkHtml(orderId, email)}
         <tr><td style="padding:24px 32px 28px;">
           <p style="margin:0 0 6px;font-size:15px;line-height:1.6;color:#23263f;">¡Gracias por confiar en Kitoys 3D! Esperamos que los peques lo disfruten muchísimo.</p>
           <p style="margin:0;font-size:13px;line-height:1.6;color:#565a78;">
@@ -113,6 +123,7 @@ export function trackingEmail({ name, orderId, productName, trackingUrl }: {
   const text = `${first ? `¡Hola, ${first}!` : '¡Hola!'} Tu pedido #${orderId}${productName ? ` (${productName})` : ''} ya está en camino.
 
 Sigue tu envío aquí: ${trackingUrl}
+Estado de tu pedido: ${orderStatusUrl(orderId, email)}
 
 ¡Gracias por confiar en Kitoys 3D! ¿Dudas? Responde a este correo o escríbenos por WhatsApp al +34 678 68 4704.`;
 
@@ -121,7 +132,7 @@ Sigue tu envío aquí: ${trackingUrl}
 
 // Pedido com "Recoger en punto": o cliente recebe o ponto escolhido, o codigo
 // e um botao que abre o Google Maps no endereco certo (so tocar e ir buscar).
-export function pickupEmail({ name, orderId, pickupPoint }: { name: string; orderId: number; pickupPoint: string }) {
+export function pickupEmail({ name, orderId, pickupPoint, email }: { name: string; orderId: number; pickupPoint: string; email?: string }) {
   // pickupPoint vem como "codigo · nome · endereco · cp cidade"
   const [code = '', pointName = '', address = '', zipCity = ''] = pickupPoint.split(' · ').map((s) => s.trim());
   const first = (name || '').trim().split(/\s+/)[0] || '';
@@ -165,6 +176,7 @@ export function pickupEmail({ name, orderId, pickupPoint }: { name: string; orde
             <a href="${esc(mapsUrl)}" style="color:#c2410c;word-break:break-all;">${esc(mapsUrl)}</a>
           </p>
         </td></tr>
+        ${statusLinkHtml(orderId, email)}
         <tr><td style="padding:24px 32px 28px;">
           <p style="margin:0 0 6px;font-size:15px;line-height:1.6;color:#23263f;">¡Gracias por confiar en Kitoys 3D!</p>
           <p style="margin:0;font-size:13px;line-height:1.6;color:#565a78;">
@@ -189,8 +201,70 @@ ${address}
 ${zipCity}
 ${code ? `Código del punto: ${code} · Pedido: #${orderId}\n` : ''}
 Cómo llegar (Google Maps): ${mapsUrl}
+Estado de tu pedido: ${orderStatusUrl(orderId, email)}
 
 Lleva tu DNI/NIE y el número de pedido para recogerlo.
+¡Gracias por confiar en Kitoys 3D! ¿Dudas? Responde a este correo o escríbenos por WhatsApp al +34 678 68 4704.`;
+
+  return { subject, html, text };
+}
+
+// Admin marcou "Entregue no ponto" (ou entregue em casa): aviso ao cliente.
+export function readyEmail({ name, orderId, pickupPoint, email }: { name: string; orderId: number; pickupPoint?: string; email?: string }) {
+  const [, pointName = '', address = '', zipCity = ''] = (pickupPoint || '').split(' · ').map((s) => s.trim());
+  const first = (name || '').trim().split(/\s+/)[0] || '';
+  const hello = first ? `¡Hola, ${esc(first)}!` : '¡Hola!';
+  const atPoint = Boolean(pickupPoint);
+  const subject = atPoint ? `Tu pedido #${orderId} ya está en tu punto de recogida 📍` : `Tu pedido #${orderId} ha sido entregado 🎉`;
+  const lead = atPoint
+    ? 'Tu pedido ya ha llegado al punto de recogida. Puedes ir a buscarlo con tu DNI/NIE y el número de pedido:'
+    : 'Tu pedido ha sido entregado. ¡Esperamos que lo disfrutéis muchísimo!';
+  const statusUrl = esc(orderStatusUrl(orderId, email));
+
+  const html = `<!doctype html>
+<html lang="es"><body style="margin:0;padding:0;background:#FFF8EF;font-family:Arial,Helvetica,sans-serif;color:#23263f;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FFF8EF;padding:32px 12px;">
+    <tr><td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:24px;overflow:hidden;">
+        <tr><td align="center" style="padding:28px 24px 8px;">
+          <img src="https://www.kitoys3d.com/images/logo-kitoys-3d.png" alt="Kitoys 3D" width="150" style="display:block;width:150px;height:auto;border:0;" />
+        </td></tr>
+        <tr><td style="padding:8px 32px 0;">
+          <h1 style="margin:0 0 12px;font-size:26px;line-height:1.2;color:#23263f;">${hello} ${atPoint ? 'Tu pedido te espera 📦' : 'Pedido entregado 🎉'}</h1>
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#565a78;">${lead}</p>
+        </td></tr>
+        ${atPoint ? `<tr><td style="padding:0 32px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FFF4E0;border-radius:16px;">
+            <tr><td style="padding:18px 20px;">
+              <p style="margin:0 0 6px;font-size:18px;font-weight:bold;color:#23263f;">${esc(pointName)}</p>
+              <p style="margin:0;font-size:15px;line-height:1.5;color:#23263f;">${esc(address)}<br />${esc(zipCity)}</p>
+              <p style="margin:10px 0 0;font-size:13px;color:#565a78;">Pedido: <strong style="color:#23263f;">#${orderId}</strong></p>
+            </td></tr>
+          </table>
+        </td></tr>` : ''}
+        <tr><td align="center" style="padding:20px 32px 8px;">
+          <a href="${statusUrl}" target="_blank" rel="noopener" style="display:inline-block;background:#c2410c;color:#ffffff;text-decoration:none;font-weight:bold;font-size:18px;padding:16px 32px;border-radius:999px;">Ver mi pedido</a>
+        </td></tr>
+        <tr><td style="padding:24px 32px 28px;">
+          <p style="margin:0 0 6px;font-size:15px;line-height:1.6;color:#23263f;">¡Gracias por confiar en Kitoys 3D!</p>
+          <p style="margin:0;font-size:13px;line-height:1.6;color:#565a78;">¿Alguna duda? Responde a este correo o escríbenos por WhatsApp al +34 678 68 4704.</p>
+        </td></tr>
+        <tr><td align="center" style="background:#F2F4FA;padding:16px 24px;font-size:12px;color:#565a78;">
+          Kitoys 3D · Juguetes y lámparas impresos en 3D · <a href="https://www.kitoys3d.com" style="color:#565a78;">kitoys3d.com</a>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
+
+  const text = `${first ? `¡Hola, ${first}!` : '¡Hola!'} ${atPoint ? `Tu pedido #${orderId} ya está en el punto de recogida:
+${pointName}
+${address}
+${zipCity}
+Lleva tu DNI/NIE y el número de pedido.` : `Tu pedido #${orderId} ha sido entregado.`}
+
+Estado de tu pedido: ${orderStatusUrl(orderId, email)}
+
 ¡Gracias por confiar en Kitoys 3D! ¿Dudas? Responde a este correo o escríbenos por WhatsApp al +34 678 68 4704.`;
 
   return { subject, html, text };

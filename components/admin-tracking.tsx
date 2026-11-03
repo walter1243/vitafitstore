@@ -122,9 +122,10 @@ export function TrackingSection({ orders, onChanged, notify }: {
         <SendTrackingPopup
           order={open}
           onClose={() => setOpen(null)}
-          onSent={async (email) => {
+          onSent={async (email, emailError) => {
             setOpen(null);
-            notify('success', `E-mail de rastreio enviado para ${email}.`);
+            if (emailError) notify('error', emailError);
+            else notify('success', `E-mail de rastreio enviado para ${email}.`);
             await onChanged();
           }}
         />
@@ -136,7 +137,7 @@ export function TrackingSection({ orders, onChanged, notify }: {
 function SendTrackingPopup({ order, onClose, onSent }: {
   order: TrackingOrder;
   onClose: () => void;
-  onSent: (email: string) => void;
+  onSent: (email: string, emailError?: string) => void;
 }) {
   const [link, setLink] = useState('');
   const [sending, setSending] = useState(false);
@@ -152,7 +153,7 @@ function SendTrackingPopup({ order, onClose, onSent }: {
 
   async function send() {
     const url = link.trim();
-    if (!url) { setError('Cole o link de rastreio.'); return; }
+    if (!url) { setError('Cole o link ou o código de rastreio.'); return; }
     setSending(true);
     setError('');
     try {
@@ -163,7 +164,7 @@ function SendTrackingPopup({ order, onClose, onSent }: {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) { setError(data?.error ?? 'Falha ao enviar.'); return; }
-      onSent(data.sentTo ?? order.customerEmail ?? '');
+      onSent(data.sentTo ?? order.customerEmail ?? '', data.emailError);
     } catch {
       setError('Erro de conexão. Tente de novo.');
     } finally {
@@ -183,6 +184,7 @@ function SendTrackingPopup({ order, onClose, onSent }: {
         <div className="mb-3 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h3 className="font-semibold">Cole o link de rastreio</h3>
+            <p className="text-[11px] text-white/40">Pode ser o link inteiro ou só o código dos Correos.</p>
             <p className="truncate text-xs text-white/50">{order.customer} · {order.customerEmail || 'sem e-mail'}</p>
           </div>
           <button type="button" onClick={onClose} aria-label="Fechar" className="rounded-lg p-1 text-white/50 hover:bg-white/10 hover:text-white"><X size={18} /></button>
@@ -190,11 +192,12 @@ function SendTrackingPopup({ order, onClose, onSent }: {
         <form onSubmit={e => { e.preventDefault(); void send(); }} className="flex flex-col gap-3">
           <input
             ref={inputRef}
-            type="url"
+            type="text"
             inputMode="url"
+            autoComplete="off"
             value={link}
             onChange={e => { setLink(e.target.value); setError(''); }}
-            placeholder="https://..."
+            placeholder="Link ou código (ex: PQ4F6P07…)"
             className="w-full rounded-xl border border-white/10 bg-[#0f1117] px-4 py-3 text-sm outline-none placeholder:text-white/30 focus:border-green-500/50 focus:ring-2 focus:ring-green-500/40"
           />
           {error && <p className="rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-300">{error}</p>}

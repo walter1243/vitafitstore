@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-auth";
-import { sendEmail, senderDomainStatus, trackingEmail } from "@/lib/email";
+import { readyEmail, sendEmail, senderDomainStatus, trackingEmail } from "@/lib/email";
+import { trackingLink } from "@/lib/tracking-link";
 
 export const dynamic = 'force-dynamic';
 
@@ -101,14 +102,9 @@ export async function POST(req: NextRequest) {
     }
 
     if (body.action === 'sendTracking') {
-      const trackingUrl = String(body.trackingUrl ?? '').trim();
-      let parsed: URL;
-      try { parsed = new URL(trackingUrl); } catch {
-        return NextResponse.json({ error: 'Cole um link válido (começando com https://).' }, { status: 400 });
-      }
-      if (!/^https?:$/.test(parsed.protocol)) {
-        return NextResponse.json({ error: 'O link precisa começar com http:// ou https://.' }, { status: 400 });
-      }
+      // Aceita link com ou sem https:// e tambem so o codigo dos Correos.
+      const link = trackingLink(String(body.trackingUrl ?? ''));
+      if (!link) return NextResponse.json({ error: 'Cole o link ou o código de rastreio.' }, { status: 400 });
       const [order] = await sql`
         SELECT o.id, o.customer_name, o.customer_email, p.name AS product
         FROM orders o LEFT JOIN products p ON o.product_id = p.id
@@ -116,27 +112,28 @@ export async function POST(req: NextRequest) {
       `;
       if (!order) return NextResponse.json({ error: 'Pedido não encontrado.' }, { status: 404 });
       const email = String(order.customer_email ?? '').trim();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        return NextResponse.json({ error: 'Este pedido não tem um e-mail de cliente válido.' }, { status: 400 });
-      }
 
-      const mail = trackingEmail({ name: order.customer_name ?? '', orderId: order.id, productName: order.product ?? undefined, trackingUrl: parsed.toString() });
-      try {
-        await sendEmail({ to: email, ...mail });
-      } catch (e: any) {
-        return NextResponse.json({ error: e?.message ?? 'Falha ao enviar o e-mail.' }, { status: 502 });
-      }
-
+      // O link fica salvo (e aparece pro cliente em /pedido) mesmo se o
+      // e-mail falhar; o erro do e-mail volta pro admin.
       const [updated] = await sql`
         UPDATE orders SET
-          tracking_url = ${parsed.toString()},
-          tracking_code = COALESCE(NULLIF(tracking_code, ''), ${parsed.toString()}),
+          tracking_url = ${link},
+          tracking_code = COALESCE(NULLIF(tracking_code, ''), ${link}),
           tracking_email_sent_at = NOW(),
           admin_seen = TRUE,
           status = CASE WHEN status = 'delivered' THEN status ELSE 'shipped' END
         WHERE id = ${id}
         RETURNING id, status
       `;
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return NextResponse.json({ ok: true, order: updated, emailError: 'Link salvo, mas o pedido não tem e-mail válido do cliente.' });
+      }
+      const mail = trackingEmail({ name: order.customer_name ?? '', orderId: order.id, productName: order.product ?? undefined, trackingUrl: link, email });
+      try {
+        await sendEmail({ to: email, ...mail });
+      } catch (e: any) {
+        return NextResponse.json({ ok: true, order: updated, emailError: `Link salvo, mas o e-mail não saiu: ${e?.message ?? 'erro'}` });
+      }
       return NextResponse.json({ ok: true, sentTo: email, order: updated });
     }
 
@@ -161,20 +158,39 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: `Status inválido. Use: ${VALID_STATUSES.join(', ')}` }, { status: 400 });
     }
 
+    await ensureOrderColumns();
+    const [before] = await sql`SELECT status FROM orders WHERE id = ${Number(id)}`;
+    // So o que veio muda: trocar o status nao apaga o codigo de rastreio.
+    const keepTracking = tracking === undefined;
     const [order] = await sql`
       UPDATE orders
       SET
-        tracking_code = ${tracking !== undefined ? String(tracking) : null},
-        status        = ${status ?? 'pending'}
+        tracking_code = CASE WHEN ${keepTracking} THEN tracking_code ELSE ${keepTracking ? '' : String(tracking)} END,
+        status        = COALESCE(${status ?? null}::text, status)
       WHERE id = ${Number(id)}
-      RETURNING id, customer_name AS customer, status,
+      RETURNING id, customer_name AS customer, customer_email, status, shipping_method, pickup_point,
                 COALESCE(tracking_code, '') AS tracking
     `;
 
     if (!order) {
       return NextResponse.json({ error: 'Pedido não encontrado.' }, { status: 404 });
     }
-    return NextResponse.json(order);
+
+    // Virou "entregue" agora: aviso ao cliente (no ponto ou em casa).
+    let emailed = false;
+    let emailError = '';
+    const email = String(order.customer_email ?? '').trim();
+    if (status === 'delivered' && before?.status !== 'delivered' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      const mail = readyEmail({
+        name: order.customer ?? '',
+        orderId: Number(order.id),
+        pickupPoint: order.shipping_method === 'pickup' ? String(order.pickup_point ?? '') : '',
+        email,
+      });
+      try { await sendEmail({ to: email, ...mail }); emailed = true; }
+      catch (e: any) { emailError = e?.message ?? 'Falha ao enviar o e-mail.'; }
+    }
+    return NextResponse.json({ id: order.id, customer: order.customer, status: order.status, tracking: order.tracking, emailed, emailError });
   } catch (err: any) {
     console.error('[PATCH /api/orders]', err);
     return NextResponse.json({ error: err?.message ?? 'Database error' }, { status: 500 });

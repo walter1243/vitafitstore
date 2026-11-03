@@ -18,7 +18,7 @@ type FooterLink = { title: string; description: string; href: string; external?:
 
 const ayuda = (whatsappHref: string): FooterLink[] => [
   { title: 'Centro de ayuda y preguntas frecuentes', description: 'Montaje, uso de rotuladores lavables y mantenimiento.', href: whatsappHref, external: true },
-  { title: 'Seguimiento de envío', description: 'Localiza tu paquete con nuestros operadores logísticos.', href: '/legal/envios' },
+  { title: 'Mi pedido y seguimiento', description: 'Mira en qué paso está tu pedido con el número y tu e-mail.', href: '/pedido' },
   { title: 'Cambios y devoluciones', description: '14 días naturales conforme a la normativa europea.', href: '/legal/devoluciones' },
   { title: 'Garantía legal de 3 años', description: 'Cobertura ante cualquier defecto de fabricación.', href: '/legal/terminos' },
 ]

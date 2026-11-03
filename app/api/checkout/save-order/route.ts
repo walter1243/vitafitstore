@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
       // Recoger en punto: e-mail pro cliente com o ponto e o link do Google Maps.
       // So aqui (pedido acabou de ser gravado), entao sai uma vez por pedido.
       if ((newOrder as any)?.id && meta.shipMethod === 'pickup' && meta.pickupPoint && meta.customerEmail) {
-        const mail = pickupEmail({ name: meta.customerName || '', orderId: Number((newOrder as any).id), pickupPoint: meta.pickupPoint });
+        const mail = pickupEmail({ name: meta.customerName || '', orderId: Number((newOrder as any).id), pickupPoint: meta.pickupPoint, email: meta.customerEmail });
         await sendEmail({ to: meta.customerEmail, ...mail }).catch((e: unknown) => console.error('[save-order] pickup email:', e));
       }
     } catch (_) {}

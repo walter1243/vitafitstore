@@ -4,7 +4,7 @@ import { dataUrlToBlobUrl, uploadInlineImages } from '@/lib/upload-data-url';
 import { clipboardFiles, isEditableTarget, useHoverPaste } from '@/lib/use-hover-paste';
 import { DEFAULT_NAME_COLORS, packOf, parsePersonalize } from '@/lib/personalize';
 import { NamePreview } from '@/components/personalize/name-personalizer';
-import { downloadOrderReceipt, type ReceiptOrder } from '@/lib/order-receipt';
+import { downloadOrderReceipt } from '@/lib/order-receipt';
 import { AdminWorlds } from '@/components/admin-worlds';
 import { AdminNfc } from '@/components/admin-nfc';
 import { ShippingZonesSection } from '@/components/admin-shipping-zones';
@@ -1649,29 +1649,17 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
 
 // ─── Orders ───────────────────────────────────────────────────────────────────
 
-const BLIND_SHIP_NOTE =
-  'We are doing dropshipping. Please DO NOT include any invoices, promotions, price tags or brand QR codes inside the package. Blind shipping only. Thank you!';
-
-function OrdersSection({ orders, products, onUpdateTracking, onRefresh }: {
+function OrdersSection({ orders, products, onUpdateTracking, onUpdateStatus, onRefresh }: {
   orders: Order[];
   products: Product[];
   onUpdateTracking: (id: number, tracking: string, status: Order['status']) => void;
+  onUpdateStatus: (id: number, status: Order['status']) => Promise<void>;
   onRefresh: () => void;
 }) {
   const [inputs, setInputs] = useState<Record<number, string>>({});
-  const [forwarding, setForwarding] = useState<Record<number, boolean>>({});
-  const [forwardResult, setForwardResult] = useState<Record<number, { ok: boolean; msg: string }>>({});
-  const [supplierPanelOpen, setSupplierPanelOpen] = useState<Record<number, boolean>>({});
-  const [copied, setCopied] = useState<string>('');
+  const [changing, setChanging] = useState<Record<number, boolean>>({});
   const [requestingReview, setRequestingReview] = useState<Record<number, boolean>>({});
   const [reviewResult, setReviewResult] = useState<Record<number, { ok: boolean; msg: string }>>({});
-
-  function copyText(key: string, text: string) {
-    navigator.clipboard?.writeText(text).then(() => {
-      setCopied(key);
-      setTimeout(() => setCopied(c => (c === key ? '' : c)), 2000);
-    }).catch(() => {});
-  }
 
   useEffect(() => {
     setInputs(Object.fromEntries(orders.map(o => [o.id, o.tracking ?? ''])));
@@ -1679,7 +1667,15 @@ function OrdersSection({ orders, products, onUpdateTracking, onRefresh }: {
 
   function save(id: number) {
     const tracking = inputs[id] ?? '';
-    onUpdateTracking(id, tracking, tracking ? 'shipped' : 'pending');
+    const cur = orders.find(o => o.id === id)?.status;
+    onUpdateTracking(id, tracking, cur === 'delivered' ? 'delivered' : tracking ? 'shipped' : 'pending');
+  }
+
+  // Toggle Preparando / Entregue no ponto: o cliente ve em /pedido e recebe
+  // e-mail quando vira "entregue".
+  async function setStatus(id: number, status: Order['status']) {
+    setChanging(s => ({ ...s, [id]: true }));
+    try { await onUpdateStatus(id, status); } finally { setChanging(s => ({ ...s, [id]: false })); }
   }
 
   // PDF do pedido no formato da impressora termica (58 mm).
@@ -1734,42 +1730,8 @@ function OrdersSection({ orders, products, onUpdateTracking, onRefresh }: {
     }
   }
 
-  async function forwardToSupplier(id: number) {
-    setForwarding(s => ({ ...s, [id]: true }));
-    setForwardResult(s => ({ ...s, [id]: { ok: false, msg: '' } }));
-    try {
-      const res = await fetch('/api/orders/forward-to-supplier', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ order_id: id }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data.ok) {
-        setForwardResult(s => ({ ...s, [id]: { ok: true, msg: data.message ?? 'Encaminhado com sucesso' } }));
-        onRefresh();
-      } else {
-        setForwardResult(s => ({ ...s, [id]: { ok: false, msg: data.error ?? data.message ?? 'Erro ao encaminhar' } }));
-      }
-    } catch (e: any) {
-      setForwardResult(s => ({ ...s, [id]: { ok: false, msg: e?.message ?? 'Erro de rede' } }));
-    } finally {
-      setForwarding(s => ({ ...s, [id]: false }));
-    }
-  }
-
   return (
     <div className="space-y-4">
-      {/* Teste da impressora termica: PDF com um pedido ficticio. */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#161b28] px-4 py-3">
-        <p className="text-sm text-white/60">Impressora térmica 58 mm: baixe uma etiqueta de exemplo para ver como sai no papel.</p>
-        <button
-          type="button"
-          onClick={() => downloadOrderReceipt(SAMPLE_RECEIPT)}
-          className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-xl border border-white/15 px-4 text-sm font-bold text-white transition-colors hover:bg-white/5"
-        >
-          <Printer size={15} /> Baixar etiqueta de exemplo
-        </button>
-      </div>
       {orders.map(o => (
         <div key={o.id} className="rounded-2xl border border-white/10 bg-[#161b28] p-4 shadow-none sm:p-5">
           <div className="flex items-start justify-between gap-3 mb-4 flex-wrap">
@@ -1827,17 +1789,28 @@ function OrdersSection({ orders, products, onUpdateTracking, onRefresh }: {
               className="flex cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-lg bg-green-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700">
               <Check size={14} />Salvar
             </button>
-            <button
-              onClick={() => forwardToSupplier(o.id)}
-              disabled={forwarding[o.id]}
-              title="Encaminhar pedido ao fornecedor por Shopify, e-mail ou WhatsApp"
-              className="flex cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-lg border border-blue-500/30 bg-blue-600/15 px-3 py-2 text-sm font-medium text-blue-300 transition-colors hover:bg-blue-600/25 disabled:opacity-50"
-            >
-              {forwarding[o.id]
-                ? <RefreshCw size={14} className="animate-spin" />
-                : <Truck size={14} />}
-              {forwarding[o.id] ? 'Enviando…' : 'Encaminhar'}
-            </button>
+            <div role="group" aria-label="Status da entrega" className="flex rounded-lg border border-white/10 bg-[#0f1117] p-0.5">
+              {([
+                ['pending', 'Preparando', Package],
+                ['delivered', o.shippingMethod === 'pickup' ? 'Entregue no ponto' : 'Entregue', CheckCircle2],
+              ] as const).map(([st, label, Icon]) => {
+                const on = o.status === st;
+                return (
+                  <button
+                    key={st}
+                    type="button"
+                    onClick={() => !on && setStatus(o.id, st)}
+                    disabled={changing[o.id]}
+                    aria-pressed={on}
+                    className={`flex cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-60 ${
+                      on ? (st === 'delivered' ? 'bg-green-600 text-white' : 'bg-amber-500 text-[#0f1117]') : 'text-white/60 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    <Icon size={14} /> {label}
+                  </button>
+                );
+              })}
+            </div>
             {o.tracking && (
               <a href={`https://www.correos.es/es/es/herramientas/localizador/envios?numero=${o.tracking}`}
                 target="_blank" rel="noopener noreferrer"
@@ -1845,13 +1818,6 @@ function OrdersSection({ orders, products, onUpdateTracking, onRefresh }: {
                 <ExternalLink size={14} />Rastrear
               </a>
             )}
-            <button
-              onClick={() => setSupplierPanelOpen(s => ({ ...s, [o.id]: !s[o.id] }))}
-              className="flex cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-lg border border-amber-500/30 bg-amber-600/15 px-3 py-2 text-sm font-medium text-amber-300 transition-colors hover:bg-amber-600/25"
-            >
-              <PackageSearch size={14} />
-              {supplierPanelOpen[o.id] ? 'Fechar dados' : 'Fazer pedido no fornecedor'}
-            </button>
             <button
               onClick={() => requestReview(o.id)}
               disabled={requestingReview[o.id]}
@@ -1876,100 +1842,6 @@ function OrdersSection({ orders, products, onUpdateTracking, onRefresh }: {
             </div>
           )}
 
-          {forwardResult[o.id]?.msg && (
-            <div className={`mt-3 flex items-center gap-2 rounded-lg px-3 py-2 text-xs ${
-              forwardResult[o.id].ok
-                ? 'bg-green-500/10 text-green-300 border border-green-500/20'
-                : 'bg-red-500/10 text-red-300 border border-red-500/20'
-            }`}>
-              {forwardResult[o.id].ok ? <CheckCircle2 size={13} /> : <AlertCircle size={13} />}
-              {forwardResult[o.id].msg}
-            </div>
-          )}
-
-          {supplierPanelOpen[o.id] && (
-            <div className="mt-3 space-y-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
-              {o.shippingMethod && (
-                <div className="rounded-lg border-2 border-sky-500/40 bg-sky-500/10 p-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-sky-300">Envio Packlink — {o.shippingMethod === 'pickup' ? 'Recolher no ponto' : 'Entrega em casa'}</p>
-                  {o.shippingService && <p className="mt-1 text-sm font-bold text-white">{o.shippingService}</p>}
-                  {o.pickupPoint && <p className="mt-1 text-sm text-white">Ponto: {o.pickupPoint}</p>}
-                </div>
-              )}
-              {o.customText && (
-                <div className="rounded-lg border-2 border-fuchsia-500/40 bg-fuchsia-500/10 p-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-fuchsia-300">Nome(s) personalizado(s) — imprimir exatamente assim</p>
-                  <p className="mt-1 text-base font-bold text-white">{o.customText}</p>
-                </div>
-              )}
-              {(o.selectedColor || o.selectedSize) && (
-                <div className="rounded-lg border-2 border-amber-500/40 bg-amber-500/15 p-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-300">⚠ Variante pedida pelo cliente — selecione exatamente isso no fornecedor</p>
-                  <p className="mt-1 text-base font-bold text-white">
-                    {[o.selectedColor && `Color: ${o.selectedColor}`, o.selectedSize && `Talla: ${o.selectedSize}`].filter(Boolean).join('   ·   ')}
-                  </p>
-                </div>
-              )}
-              <div>
-                <div className="mb-1.5 flex items-center justify-between">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-amber-300/80">Dados de entrega do cliente</p>
-                  <button
-                    onClick={() => copyText(`addr-${o.id}`, [
-                      o.customer,
-                      o.addressLine,
-                      [o.postalCode, o.city].filter(Boolean).join(' '),
-                      o.country,
-                      o.customerPhone,
-                      (o.selectedColor || o.selectedSize) && [o.selectedColor && `Color: ${o.selectedColor}`, o.selectedSize && `Talla: ${o.selectedSize}`].filter(Boolean).join(' · '),
-                    ].filter(Boolean).join('\n'))}
-                    className="flex cursor-pointer items-center gap-1 rounded-md border border-white/10 px-2 py-1 text-[11px] font-medium text-white/70 hover:bg-white/5"
-                  >
-                    {copied === `addr-${o.id}` ? <Check size={11} className="text-green-400" /> : null}
-                    {copied === `addr-${o.id}` ? 'Copiado!' : 'Copiar tudo'}
-                  </button>
-                </div>
-                <div className="rounded-lg border border-white/10 bg-[#161b28] p-3 font-mono text-xs leading-relaxed text-white/80">
-                  <div>{o.customer}</div>
-                  <div>{o.addressLine || '—'}</div>
-                  <div>{[o.postalCode, o.city].filter(Boolean).join(' ') || '—'}</div>
-                  <div>{o.country || '—'}</div>
-                  <div>{o.customerPhone || '—'}</div>
-                </div>
-              </div>
-
-              <div>
-                <div className="mb-1.5 flex items-center justify-between">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-amber-300/80">Nota para o vendedor (blind shipping)</p>
-                  <button
-                    onClick={() => copyText(`note-${o.id}`, BLIND_SHIP_NOTE)}
-                    className="flex cursor-pointer items-center gap-1 rounded-md border border-white/10 px-2 py-1 text-[11px] font-medium text-white/70 hover:bg-white/5"
-                  >
-                    {copied === `note-${o.id}` ? <Check size={11} className="text-green-400" /> : null}
-                    {copied === `note-${o.id}` ? 'Copiado!' : 'Copiar nota'}
-                  </button>
-                </div>
-                <div className="rounded-lg border border-white/10 bg-[#161b28] p-3 text-xs leading-relaxed text-white/70">
-                  {BLIND_SHIP_NOTE}
-                </div>
-              </div>
-
-              {o.sourceProductUrl ? (
-                <a
-                  href={o.sourceProductUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 rounded-lg bg-amber-600 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-amber-700"
-                >
-                  <ExternalLink size={14} />
-                  Abrir produto {o.sourceStoreUrl ? `no ${o.sourceStoreUrl}` : 'no fornecedor'}
-                </a>
-              ) : (
-                <p className="text-xs text-white/40">
-                  Este produto não tem um fornecedor de origem registrado — importe-o pela aba "Importar Produtos" pra ter esse link disponível aqui.
-                </p>
-              )}
-            </div>
-          )}
         </div>
       ))}
       {orders.length === 0 && (
@@ -2629,6 +2501,21 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
     else addToast('error', 'Falha ao actualizar rastreio.');
   }
 
+  async function updateOrderStatus(id: number, status: Order['status']) {
+    const res = await fetch('/api/orders', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { addToast('error', data?.error ?? 'Falha ao mudar o status.'); return; }
+    setOrders(o => o.map(x => x.id === id ? { ...x, status } : x));
+    if (status !== 'delivered') addToast('success', 'Status: preparando.');
+    else if (data.emailed) addToast('success', 'Marcado como entregue — o cliente recebeu o aviso por e-mail.');
+    else if (data.emailError) addToast('error', `Marcado como entregue, mas o e-mail não saiu: ${data.emailError}`);
+    else addToast('success', 'Marcado como entregue.');
+  }
+
   const revenue = orders.reduce((s, o) => s + (o.total ?? 0), 0);
   const pendingCount = orders.filter(o => o.status === 'pending').length;
   const trackingAlerts = orders.filter(isNewAlert).length;
@@ -2981,7 +2868,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
           {section === 'worlds' && <AdminWorlds />}
           {section === 'nfc' && <AdminNfc />}
           {section === 'import-supplier' && <ImportSupplierSection onImportToStore={preFillFromSupplier} />}
-          {section === 'orders' && <OrdersSection orders={orders} products={products} onUpdateTracking={updateTracking} onRefresh={fetchData} />}
+          {section === 'orders' && <OrdersSection orders={orders} products={products} onUpdateTracking={updateTracking} onUpdateStatus={updateOrderStatus} onRefresh={fetchData} />}
           {section === 'reviews' && <ReviewsSection products={products} />}
           {section === 'tracking' && <TrackingSection orders={orders} onChanged={refreshOrders} notify={addToast} />}
           {section === 'shipping' && <ShippingZonesSection notify={addToast} />}
@@ -3120,29 +3007,6 @@ function DashboardSection({ products, orders, revenue, onNavigate, trackingAlert
 
 // Itens do pedido: todos os produtos, quantidade, variante e o nome
 // personalizado (chaveiro / pet) em destaque. Pedidos antigos so tinham o 1o.
-// Pedido ficticio pro teste da impressora (Pedidos → Baixar PDF de exemplo).
-const SAMPLE_RECEIPT: ReceiptOrder = {
-  id: 1001,
-  when: new Date().toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }),
-  customer: 'María López García',
-  phone: '+34 600 000 000',
-  email: 'maria@ejemplo.es',
-  addressLine: 'Calle Mayor 15, 2º B',
-  postalCode: '03201',
-  city: 'Elche',
-  country: 'ES',
-  shippingMethod: 'pickup',
-  shippingService: 'Correos · Paq Standard Oficina-Oficina',
-  pickupPoint: 'S0001688D · CITYPAQ CARREFOUR EXPRESS · CALLE HERMOSILLA 28 · 28001 MADRID',
-  shippingCost: 4.02,
-  total: 46.52,
-  items: [
-    { name: 'Comedero Personalizado para Mascotas', quantity: 1, color: 'Blanco', size: 'M (Mediano)', text: 'Toby', note: 'Letras: negro', total: 34 },
-    { name: 'Lagarto Articulado Flexi 3D', quantity: 3, packQty: 3, total: 7.5 },
-    { name: 'Vela de Navidad', quantity: 1, color: 'Negro', total: 1 },
-  ],
-};
-
 type OrderLine = { productId?: number; name?: string; quantity?: number; color?: string; size?: string; text?: string; note?: string; total?: number };
 
 // Itens do pedido como o cliente montou: foto (da cor escolhida), cor,
@@ -5104,7 +4968,7 @@ function SettingsSection({
 
 function StatusBadge({ status }: { status: Order['status'] }) {
   const map = {
-    pending:   { label: 'Aguardando', className: 'bg-amber-500/10 text-amber-300 border border-amber-500/20' },
+    pending:   { label: 'Preparando', className: 'bg-amber-500/10 text-amber-300 border border-amber-500/20' },
     shipped:   { label: 'Enviado',    className: 'bg-blue-500/10 text-blue-300 border border-blue-500/20'  },
     delivered: { label: 'Entregue',   className: 'bg-green-500/10 text-green-300 border border-green-500/20' },
   } as const;
