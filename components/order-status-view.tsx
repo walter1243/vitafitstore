@@ -91,13 +91,14 @@ function OrderCard({ order }: { order: OrderStatus }) {
 
       <ol className="mb-6">
         {steps.map((s, i) => {
-          const done = i < current;
+          const finished = order.status === 'delivered';
+          const done = i < current || finished;
           const active = i === current;
           return (
             <li key={s.label} className="relative flex gap-3 pb-5 last:pb-0">
               {i < steps.length - 1 && <span className={`absolute left-[15px] top-8 h-[calc(100%-32px)] w-0.5 ${i < current ? 'bg-[#15803d]' : 'bg-[#e4dccf]'}`} aria-hidden="true" />}
               <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
-                done ? 'bg-[#15803d] text-white' : active ? 'bg-[#23263f] text-white ring-4 ring-[#23263f]/15' : 'bg-[#f1ece4] text-[#9a97ab]'
+                done ? `bg-[#15803d] text-white${active ? ' ring-4 ring-[#15803d]/15' : ''}` : active ? 'bg-[#23263f] text-white ring-4 ring-[#23263f]/15' : 'bg-[#f1ece4] text-[#9a97ab]'
               }`}>
                 {done ? <Check className="h-4 w-4" /> : i + 1}
               </span>
