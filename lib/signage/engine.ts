@@ -507,9 +507,20 @@ export function createArt(rgba: ArrayLike<number>, w: number, h: number, o: ArtO
     const lum = (0.299 * rgba[p] + 0.587 * rgba[p + 1] + 0.114 * rgba[p + 2]) * a + 255 * (1 - a);
     let ink = lum < o.threshold;
     if (o.invert) ink = !ink;
-    if (ink) { m0[y * w + x] = 1; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    if (ink) m0[y * w + x] = 1;
   }
-  if (x1 < 0) throw new Error('Nenhuma forma encontrada. Ajuste o limiar ou inverta a imagem.');
+  // Descarta pontinhos soltos (ruído de JPG, sombras finas) antes de medir a arte:
+  // senão um único pixel escuro vira uma "peça" esticada para a largura total e sem geometria.
+  const noise = label4(m0, w, h);
+  const minSpeck = Math.max(25, Math.round(w * h * 0.0001));
+  for (let i = 0; i < w * h; i++) {
+    const l = noise.lab[i];
+    if (!l) continue;
+    if (noise.areas[l] < minSpeck) { m0[i] = 0; continue; }
+    const x = i % w, y = (i / w) | 0;
+    if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+  }
+  if (x1 < 0) throw new Error('Nenhuma forma encontrada: a imagem tem pouco contraste. Aumente o limiar (arraste para a direita), marque "Inverter" ou use uma imagem com o desenho escuro em fundo claro.');
   const tw = x1 - x0 + 1, th = y1 - y0 + 1;
   const s = o.widthMm / tw;
   const mask = new Uint8Array(tw * th);
@@ -519,8 +530,15 @@ export function createArt(rgba: ArrayLike<number>, w: number, h: number, o: ArtO
   const order: number[] = [];
   for (let l = 1; l <= count; l++) if (areas[l] >= minPx) order.push(l);
   order.sort((a, b) => bb[a][0] - bb[b][0]);
-  const parts = order.map((l, i) => makePart(i + 1, `Peça ${i + 1}`, mask, tw, lab, l, bb[l], 'box', true, []));
-  return { w: tw, h: th, s, parts, nextId: parts.length + 1 };
+  const raw = order.map((l) => makePart(0, '', mask, tw, lab, l, bb[l], 'box', true, []));
+  const art: Art = { w: tw, h: th, s, parts: raw, nextId: 1 };
+  // Peças finas demais somem na suavização do contorno; não deixar peça vazia (sem malha 3D).
+  const parts = raw.filter((p) => partOutline(art, p).length > 0);
+  parts.forEach((p, i) => { p.id = i + 1; p.name = `Peça ${i + 1}`; });
+  if (!parts.length) throw new Error('As formas encontradas são finas demais para virar peça. Aumente o limiar, marque "Inverter" ou use uma imagem com traço mais grosso.');
+  art.parts = parts;
+  art.nextId = parts.length + 1;
+  return art;
 }
 
 // ---------------------------------------------------------------- campos e contornos por peça
@@ -850,6 +868,7 @@ export function buildScene(art: Art, plates: Plate[], P: Params): { objects: Sce
 // ---------------------------------------------------------------- estatísticas
 
 export function meshStats(m: Mesh) {
+  if (!m.pos.length) return { tris: 0, volumeMm3: 0, min: [0, 0, 0], max: [0, 0, 0], size: [0, 0, 0], openEdges: 0 };
   let vol = 0;
   const mn = [Infinity, Infinity, Infinity], mx = [-Infinity, -Infinity, -Infinity];
   for (let i = 0; i < m.pos.length; i += 3) for (let k = 0; k < 3; k++) { mn[k] = Math.min(mn[k], m.pos[i + k]); mx[k] = Math.max(mx[k], m.pos[i + k]); }
