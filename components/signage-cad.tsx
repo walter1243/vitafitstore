@@ -36,6 +36,7 @@ const PARAM_INFO: Record<keyof E.Params, [string, number, number]> = {
   neonHeight: ['Altura do canal do neon', 1, 4], patternHole: ['Diâmetro dos furos da colmeia', 0.5, 1.5], patternBar: ['Espessura entre furos', 0.2, 0.6],
   standBase: ['Espessura da base', 0.5, 1], standMargin: ['Sobra da base', 1, 0], organicRadius: ['Raio do arredondamento', 0.5, 0.5],
   tiltMin: ['Altura no lado raso', 1, 5],
+  reliefHeight: ['Altura de cada cor', 0.2, 0.2], reliefBase: ['Espessura da base', 0.2, 0.4], reliefMargin: ['Sobra da base', 0.5, 0],
 };
 
 // ------------------------------------------------------------------ UI básicos
@@ -267,10 +268,12 @@ export default function SignageCad() {
   const [fitTick, setFitTick] = useState(0);
   const [curStyle, setCurStyle] = useState<E.StyleId>('boxFace');
   const [showWires, setShowWires] = useState(false);
+  const [realColors, setRealColors] = useState(true);
+  const [project, setProject] = useState<'sign' | 'image' | 'character'>('sign');
 
   // fonte
   const srcRef = useRef<Src | null>(null);
-  const [opts, setOpts] = useState<E.ArtOptions>({ widthMm: 300, threshold: 128, invert: false, minAreaMm2: 20, mode: 'auto', tolerance: 0, fill: false, colors: 5 });
+  const [opts, setOpts] = useState<E.ArtOptions>({ widthMm: 300, threshold: 128, invert: false, minAreaMm2: 20, mode: 'auto', tolerance: 0, fill: false, colors: 8, detail: 0.5 });
   const [text, setText] = useState('Kitoys');
   const [font, setFont] = useState(FONTS[0]);
   const [srcName, setSrcName] = useState('');
@@ -302,7 +305,7 @@ export default function SignageCad() {
 
   // --------------------------------------------------- entrada: imagem / SVG / texto
   const makeArt = (s: Src, o: E.ArtOptions, style: E.StyleId): E.Art => {
-    const a = E.createArt(s.data, s.w, s.h, { ...o, colors: style === 'lightbox' || o.mode === 'colors' ? Math.max(2, o.colors ?? 5) : 0 });
+    const a = E.createArt(s.data, s.w, s.h, { ...o, colors: Math.max(2, o.colors ?? 8) });
     return { ...a, parts: a.parts.map((p) => ({ ...p, style })) };
   };
 
@@ -381,6 +384,19 @@ export default function SignageCad() {
     setSrcName(`Texto: ${lines[0]}${lines.length > 1 ? '…' : ''}`);
     const o = { ...opts, mode: 'auto' as const };
     generate(o);
+  };
+
+  const chooseProject = (id: 'sign' | 'image' | 'character') => {
+    setProject(id);
+    if (id === 'image') {
+      setOpts((o) => ({ ...o, mode: 'colors', colors: Math.max(o.colors ?? 8, 10), detail: 0.7 }));
+      setCurStyle('colorRelief'); setLayout('assembled'); setRealColors(true);
+      if (art) applyStyle('colorRelief');
+      flash('Imagem colorida: suba a imagem. Cada cor vira uma peça com a cor real sobre uma base. Exporte "Montado" e no Bambu Studio carregue como um objeto com várias partes.');
+    } else if (id === 'sign') {
+      setOpts((o) => ({ ...o, mode: 'auto' }));
+      setCurStyle('boxFace'); setLayout('print');
+    }
   };
 
   // --------------------------------------------------- seleção e edição
@@ -622,11 +638,11 @@ export default function SignageCad() {
       const sel = selIds.includes(p.id);
       const moving = mo && mo.ids.includes(p.id);
       if (moving) { ctx.save(); ctx.translate(mo!.dx, mo!.dy); }
-      const col = PART_COLORS[i % PART_COLORS.length];
-      ctx.fillStyle = col + (sel ? 'cc' : '77');
+      const col = p.color ?? PART_COLORS[i % PART_COLORS.length];
+      ctx.fillStyle = realColors && p.color ? p.color : col + (sel ? 'cc' : '77');
       ctx.fill(path, 'evenodd');
-      ctx.lineWidth = (sel ? 2.4 : 1) / k; ctx.strokeStyle = sel ? '#ffffff' : col;
-      ctx.stroke(path);
+      ctx.lineWidth = (sel ? 2.4 : realColors ? 0 : 1) / k; ctx.strokeStyle = sel ? '#ffffff' : col;
+      if (sel || !realColors) ctx.stroke(path);
       ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.2 / k;
       for (const h of p.holes) { ctx.beginPath(); ctx.arc(h.x, h.y, h.d / 2, 0, Math.PI * 2); ctx.fillStyle = '#0d1117'; ctx.fill(); ctx.stroke(); }
       if (moving) ctx.restore();
@@ -687,7 +703,7 @@ export default function SignageCad() {
       ctx.fillStyle = '#7d8da1'; ctx.font = '10px sans-serif';
       ctx.fillText(`x ${hv[0].toFixed(1)}  y ${hv[1].toFixed(1)} mm`, size.w - 130, size.h - 8);
     }
-  }, [art, doc.plates, paths, selIds, selPlate, selPart, plate, tool, holeD, cutPts, params, size, dpr, wires]);
+  }, [art, doc.plates, paths, selIds, selPlate, selPart, plate, tool, holeD, cutPts, params, size, dpr, wires, realColors]);
 
   useEffect(() => {
     const cv = cv2.current; if (!cv) return;
@@ -846,6 +862,23 @@ export default function SignageCad() {
         </div>
       </div>
 
+      <div className="flex flex-wrap gap-1 rounded-xl border border-zinc-800 bg-zinc-900/70 p-1">
+        {([
+          ['sign', 'Letreiro (letra-caixa com LED)'],
+          ['image', 'Imagem colorida fiel (relevo multicor)'],
+          ['character', 'Personagem 3D (IA)'],
+        ] as const).map(([id, label]) => (
+          <button key={id} type="button" onClick={() => chooseProject(id)}
+            className={`rounded-lg px-3 py-1.5 text-xs font-medium ${project === id ? 'bg-emerald-600 text-white' : 'text-zinc-300 hover:bg-zinc-800'}`}>{label}</button>
+        ))}
+      </div>
+      {project === 'character' && (
+        <div className="rounded-xl border border-amber-700/50 bg-amber-950/30 p-3 text-xs leading-relaxed text-amber-200">
+          Personagem 3D com volume (frente, costas, rosto) a partir de uma foto precisa de um serviço de IA de imagem para 3D (roda em servidor com GPU).
+          Essa parte ainda não está ligada: falta escolher o serviço e cadastrar a chave da API. Enquanto isso, use "Imagem colorida fiel" para relevo multicor fiel à imagem.
+        </div>
+      )}
+
       <div className="grid gap-3 lg:grid-cols-[300px_minmax(0,1fr)_320px]">
         {/* ---------- coluna esquerda */}
         <div className="space-y-3">
@@ -873,7 +906,13 @@ export default function SignageCad() {
                 <input type="range" min={0} max={150} value={opts.tolerance ?? 0} onChange={(e) => setOpts({ ...opts, tolerance: +e.target.value })} className="w-32 accent-emerald-500" />
               </label>
             )}
-            {opts.mode === 'colors' && <Num label="Máximo de cores" value={opts.colors ?? 5} step={1} min={2} max={8} suffix="" onChange={(v) => setOpts({ ...opts, colors: Math.round(v) })} />}
+            <Num label="Cores da imagem" value={opts.colors ?? 8} step={1} min={2} max={16} suffix="" onChange={(v) => setOpts({ ...opts, colors: Math.max(2, Math.min(16, Math.round(v))) })} />
+            {opts.mode === 'colors' && (
+              <label className="flex items-center justify-between gap-2 text-xs text-zinc-400">
+                <span>Detalhe ({Math.round((opts.detail ?? 0.5) * 100)}%)</span>
+                <input type="range" min={0} max={100} value={Math.round((opts.detail ?? 0.5) * 100)} onChange={(e) => setOpts({ ...opts, detail: +e.target.value / 100 })} className="w-32 accent-emerald-500" />
+              </label>
+            )}
             <label className="flex items-center gap-2 text-xs text-zinc-400">
               <input type="checkbox" checked={!!opts.fill} onChange={(e) => setOpts({ ...opts, fill: e.target.checked })} /> Preencher buracos (silhueta)
             </label>
@@ -936,6 +975,7 @@ export default function SignageCad() {
                 <Btn active={tool === 'hole'} onClick={() => { setTool('hole'); setCutPts([]); }} title="F">Furo</Btn>
                 <Btn active={tool === 'cut'} onClick={() => { setTool('cut'); setCutPts([]); }} title="C">Corte</Btn>
                 <Btn active={showWires} onClick={() => setShowWires(!showWires)} title="Mostra o caminho do LED e dos fios">Fiação</Btn>
+                <Btn active={realColors} onClick={() => setRealColors(!realColors)} title="Mostra as peças com a cor real da imagem">Cores reais</Btn>
                 <Btn onClick={() => { fit(); draw2D(); }}>Ajustar</Btn>
               </div>
             ) : (
@@ -1018,7 +1058,7 @@ export default function SignageCad() {
                 return (
                   <div key={p.id} onClick={(e) => { setSelPlate(null); if (e.shiftKey || e.ctrlKey || e.metaKey) setSelIds((s) => (s.includes(p.id) ? s.filter((q) => q !== p.id) : [...s, p.id])); else setSel(p.id); }}
                     className={`flex cursor-pointer items-center gap-2 rounded-lg border px-2 py-1.5 text-xs ${sel ? 'border-emerald-500/70 bg-emerald-500/10' : 'border-zinc-800 bg-zinc-950/50 hover:border-zinc-600'}`}>
-                    <span className="h-3 w-3 shrink-0 rounded-sm" style={{ background: PART_COLORS[i % PART_COLORS.length] }} />
+                    <span className="h-3 w-3 shrink-0 rounded-sm" style={{ background: p.color ?? PART_COLORS[i % PART_COLORS.length] }} />
                     <input value={p.name} onClick={(e) => e.stopPropagation()} onChange={(e) => updatePart(p.id, { name: e.target.value })} className="w-0 flex-1 bg-transparent outline-none" />
                     <span className="text-[10px] text-zinc-500" title={E.styleInfo(p.style).name}>{(b.x1 - b.x0).toFixed(0)}×{(b.y1 - b.y0).toFixed(0)}</span>
                     <button title="Mostrar/ocultar" className="text-zinc-400 hover:text-white" onClick={(e) => { e.stopPropagation(); updatePart(p.id, { visible: !p.visible }); }}>{p.visible ? '👁' : '—'}</button>

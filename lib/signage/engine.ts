@@ -14,7 +14,7 @@ export interface Mesh { pos: number[]; idx: number[] }
 
 export type StyleId =
   | 'solid' | 'box' | 'boxFace' | 'openBack' | 'doubleLedge' | 'singleLedge' | 'backFit' | 'backlit'
-  | 'inset' | 'insetPrinted' | 'ledDouble' | 'standing' | 'pattern' | 'neon' | 'organic' | 'tilted' | 'lightbox';
+  | 'inset' | 'insetPrinted' | 'ledDouble' | 'standing' | 'pattern' | 'neon' | 'organic' | 'tilted' | 'lightbox' | 'colorRelief';
 export interface Hole { x: number; y: number; d: number }
 
 export interface Part {
@@ -24,6 +24,7 @@ export interface Part {
   w: number; h: number;             // tamanho da sub-máscara (px)
   mask: Uint8Array;                 // 1 = material
   cmap?: Uint8Array;                // índice de cor da imagem por pixel (255 = sem cor)
+  color?: string;                   // cor real (predominante) da peça na imagem
   bx0: number; by0: number; bx1: number; by1: number; // caixa justa na arte (px, inclusiva)
   style: StyleId;
   visible: boolean;
@@ -55,11 +56,15 @@ export interface Params {
   standMargin: number;    // sobra da base da letra em pé (mm)
   organicRadius: number;  // raio do arredondamento (mm)
   tiltMin: number;        // altura no lado raso do fundo inclinado (mm)
+  reliefHeight: number;   // altura de cada cor no relevo colorido (mm)
+  reliefBase: number;     // espessura da base do relevo colorido (mm)
+  reliefMargin: number;   // sobra da base em volta do desenho (mm)
 }
 export const DEFAULT_PARAMS: Params = {
   base: 2, wall: 2, height: 35, solidHeight: 10, faceThickness: 3, clearance: 0.2, simplify: 0.08, kerf: 0.4,
   ledge: 3, ledgeThickness: 1.6, skirtDepth: 4, skirtWidth: 1.2, standoff: 15, tubeWall: 1.6,
   neonWidth: 8, neonHeight: 14, patternHole: 4, patternBar: 1.6, standBase: 5, standMargin: 8, organicRadius: 3, tiltMin: 15,
+  reliefHeight: 1.2, reliefBase: 1.6, reliefMargin: 1.5,
 };
 
 export interface Plate {
@@ -143,6 +148,8 @@ export const STYLES: StyleInfo[] = [
     desc: 'A profundidade diminui da esquerda para a direita (fundo em rampa). Para fachada inclinada ou efeito de perspectiva.', hole: 'Passagem do fio pelo fundo.' },
   { id: 'lightbox', name: 'Lightbox multicolorido', lit: true, face: 'face colorida', params: ['base', 'wall', 'height', 'faceThickness', 'clearance'],
     desc: 'Caixa com face impressa dividida pelas cores da imagem: cada cor sai como uma peça (um filamento por cor).', hole: 'Passagem do fio pelo fundo.' },
+  { id: 'colorRelief', name: 'Imagem colorida (relevo)', lit: false, params: ['reliefBase', 'reliefHeight', 'reliefMargin'],
+    desc: 'Imagem fiel em cores: cada cor vira uma peça com a cor real, encaixada sobre uma base no contorno do desenho. Imprime em multicor (AMS).', hole: 'Furo passante (pendurar ou parafusar).' },
   { id: 'box', name: 'Letra-caixa sem face', lit: false, params: ['base', 'wall', 'height'],
     desc: 'Fundo e parede, aberta em cima.', hole: 'Furo no fundo.' },
   { id: 'solid', name: 'Letra sólida', lit: false, params: ['solidHeight'],
@@ -163,6 +170,7 @@ export function styleLayers(style: StyleId, P: Params): Layer[] {
   switch (style) {
     case 'solid': return [{ obj: 'body', a: 0, b: null, z0: 0, z1: P.solidHeight }];
     case 'standing': return [{ obj: 'body', a: 0, b: null, z0: 0, z1: P.solidHeight }];
+    case 'colorRelief': return [{ obj: 'body', a: 0, b: null, z0: P.reliefBase, z1: P.reliefBase + P.reliefHeight }];
     case 'box': return bodyBox;
     case 'boxFace': return [...bodyBox, { obj: 'face', a: c, b: null, z0: H, z1: H + fT }];
     case 'openBack': return [
@@ -232,7 +240,7 @@ export function styleLayers(style: StyleId, P: Params): Layer[] {
 export function holeBand(style: StyleId, P: Params): [number, number | null] | null {
   switch (style) {
     case 'standing': return null;
-    case 'solid': return [0, null];
+    case 'solid': case 'colorRelief': return [0, null];
     case 'openBack': return [P.wall, P.wall + P.ledge];
     case 'doubleLedge': return [P.wall + P.ledge, null];
     case 'backlit': return [P.wall + P.tubeWall, null];
@@ -696,7 +704,8 @@ export interface ArtOptions {
   mode?: DetectMode;
   tolerance?: number;   // 0 = automático; senão distância de cor ao fundo (0..255)
   fill?: boolean;       // preencher buracos internos (silhueta)
-  colors?: number;      // nº de cores para o lightbox (0 = não separar)
+  colors?: number;      // nº de cores da imagem (0 = não separar)
+  detail?: number;      // 0..1: quanto detalhe de cor manter (1 = máximo)
 }
 
 function otsu(hist: number[], total: number): number {
@@ -776,10 +785,11 @@ function labelByColor(mask: Uint8Array, cidx: Uint8Array, w: number, h: number) 
 }
 
 /** Regiões de cor pequenas (brilhos, sombras, contornos) passam para a região vizinha maior. */
-function mergeSmall(L: { lab: Int32Array; count: number; areas: number[]; bb: number[][] }, mask: Uint8Array, w: number, h: number) {
+function mergeSmall(L: { lab: Int32Array; count: number; areas: number[]; bb: number[][] }, mask: Uint8Array, w: number, h: number, detail: number) {
   let total = 0;
   for (let l = 1; l <= L.count; l++) total += L.areas[l];
-  const minA = Math.max(50, total * 0.004);
+  const dt = Math.max(0, Math.min(1, detail));
+  const minA = Math.max(12, total * (0.006 * Math.pow(1 - dt, 2) + 0.0001));
   const lab = L.lab;
   const q = new Int32Array(w * h);
   let qh = 0, qt = 0;
@@ -881,7 +891,7 @@ function quantize(rgba: ArrayLike<number>, mask: Uint8Array, n: number, k: numbe
       for (const c of cents) md = Math.min(md, (samp[s][0] - c[0]) ** 2 + (samp[s][1] - c[1]) ** 2 + (samp[s][2] - c[2]) ** 2);
       if (md > bd) { bd = md; bi = s; }
     }
-    if (bd < 900) break; // cores restantes muito parecidas
+    if (bd < 250) break; // cores restantes muito parecidas
     cents.push(samp[bi].slice());
   }
   for (let it = 0; it < 8; it++) {
@@ -932,10 +942,10 @@ export function createArt(rgba: ArrayLike<number>, w: number, h: number, o: ArtO
       const sp = ((y + y0) * w + (x + x0)) * 4, dp = (y * tw + x) * 4;
       crop[dp] = rgba[sp]; crop[dp + 1] = rgba[sp + 1]; crop[dp + 2] = rgba[sp + 2]; crop[dp + 3] = 255;
     }
-    const q = quantize(crop, mask, tw * th, Math.min(8, Math.max(2, o.colors || 6)));
+    const q = quantize(crop, mask, tw * th, Math.min(16, Math.max(2, o.colors || 6)));
     cidx = q.idx; palette = q.palette;
   }
-  const L0 = byColor && cidx ? mergeSmall(labelByColor(mask, cidx, tw, th), mask, tw, th) : label4(mask, tw, th);
+  const L0 = byColor && cidx ? mergeSmall(labelByColor(mask, cidx, tw, th), mask, tw, th, o.detail ?? 0.5) : label4(mask, tw, th);
   const { lab, count, areas, bb } = L0;
   const minPx = (o.minAreaMm2 ?? 4) / (s * s);
   const order: number[] = [];
@@ -945,6 +955,12 @@ export function createArt(rgba: ArrayLike<number>, w: number, h: number, o: ArtO
   const art: Art = { w: tw, h: th, s, parts: raw, nextId: 1, palette };
   // Peças finas demais somem na suavização do contorno; não deixar peça vazia (sem malha 3D).
   const parts = raw.filter((p) => partOutline(art, p).length > 0);
+  if (palette.length) for (const p of parts) {
+    const cnt = new Array(palette.length).fill(0);
+    if (p.cmap) for (let i = 0; i < p.cmap.length; i++) if (p.mask[i] && p.cmap[i] < 255) cnt[p.cmap[i]]++;
+    let best = 0; cnt.forEach((c, k) => { if (c > cnt[best]) best = k; });
+    if (cnt[best]) p.color = palette[best];
+  }
   parts.forEach((p, i) => { p.id = i + 1; p.name = `Peça ${i + 1}`; });
   if (!parts.length) throw new Error('As formas encontradas são finas demais para virar peça. Mexa na sensibilidade, troque o modo de detecção ou use uma imagem com traço mais grosso.');
   art.parts = parts;
@@ -1347,6 +1363,13 @@ export function topZ(art: Art, P: Params): number {
 
 const COLORS = ['#e53935', '#fb8c00', '#fdd835', '#43a047', '#1e88e5', '#8e24aa', '#00acc1', '#6d4c41'];
 
+/** Cor mais escura da paleta (contorno do desenho), usada na base do relevo para esconder as emendas. */
+function darkest(pal: string[]): string {
+  let best = '#1f2937', bl = Infinity;
+  for (const c of pal) { const n = parseInt(c.slice(1), 16); const l = 0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255); if (l < bl) { bl = l; best = c; } }
+  return best;
+}
+
 function partObjects(art: Art, p: Part, i: number, P: Params, warnings: string[], tiltRange: [number, number] | null): SceneObject[] {
   const info = styleInfo(p.style);
   const layers = styleLayers(p.style, P);
@@ -1374,7 +1397,7 @@ function partObjects(art: Art, p: Part, i: number, P: Params, warnings: string[]
     if (!p.holes.length) warnings.push(`${p.name}: retroiluminado sem espaçador. Use a ferramenta Furo (ou "Furos automáticos") para criar os espaçadores.`);
   }
   const objs: SceneObject[] = [];
-  const color = COLORS[i % COLORS.length];
+  const color = p.color ?? COLORS[i % COLORS.length];
   if (groups.body.length) objs.push({ id: `p${p.id}`, name: p.style === 'solid' || p.style === 'standing' ? p.name : `${p.name} - corpo`, kind: 'part', partId: p.id, mesh: mergeMeshes(groups.body), color });
   if (groups.face.length) objs.push({ id: `f${p.id}`, name: `${p.name} - ${info.face ?? 'face'}`, kind: 'face', partId: p.id, mesh: mergeMeshes(groups.face), color: p.style === 'insetPrinted' ? '#f5f5f5' : '#4fc3f7' });
   else if (info.face && !extra.length) warnings.push(`${p.name}: a face ficou vazia (a letra é fina demais para esta folga/parede).`);
@@ -1480,7 +1503,7 @@ function buildBlade(art: Art, pl: Plate, P: Params, warnings: string[]): SceneOb
     const bnd = partBounds(art, p);
     if (bnd.x0 < pl.x + w || bnd.x1 > pl.x + pl.w - w || bnd.y0 < pl.y + w || bnd.y1 > pl.y + pl.h - w) { out++; return; }
     const polys = nestRings(partRings(art, p, 0, P.simplify), 0.02);
-    if (polys.length) objs.push({ id: `r${p.id}`, name: `${p.name} - relevo`, kind: 'part', partId: p.id, mesh: prism(polys, D, D + 1.2), color: COLORS[i % COLORS.length] });
+    if (polys.length) objs.push({ id: `r${p.id}`, name: `${p.name} - relevo`, kind: 'part', partId: p.id, mesh: prism(polys, D, D + 1.2), color: p.color ?? COLORS[i % COLORS.length] });
   });
   if (out) warnings.push(`${pl.name}: ${out} peça(s) fora da caixa do luminoso não viraram relevo. Use "Ajustar ao desenho".`);
   return objs;
@@ -1517,6 +1540,11 @@ export function buildScene(art: Art, plates: Plate[], P: Params): { objects: Sce
         warnings.push(`${p.name}: falha ao gerar (${e?.message || e}).`);
       }
     });
+    if (vis.some((p) => p.style === 'colorRelief')) {
+      const rings = globalRings({ ...art, parts: art.parts.filter((p) => p.visible && p.style === 'colorRelief') }, P.reliefMargin, P.simplify);
+      const polys = nestRings(rings, 0.5);
+      if (polys.length) objects.push({ id: 'reliefbase', name: 'Base (contorno da imagem)', kind: 'plate', mesh: prism(polys, 0, P.reliefBase), color: darkest(art.palette) });
+    }
     if (standing.length) {
       const m = P.standMargin, T = P.solidHeight;
       objects.push({ id: 'standbase', name: 'Base das letras em pé', kind: 'plate', mesh: prism(nestRings([rrect(X0 - m, -m, X1 - X0 + 2 * m, T + 2 * m, Math.min(6, m))], 0), 0, P.standBase), color: '#b0bec5' });
