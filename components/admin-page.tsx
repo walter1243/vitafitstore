@@ -7,6 +7,7 @@ import { NamePreview } from '@/components/personalize/name-personalizer';
 import { downloadOrderReceipt } from '@/lib/order-receipt';
 import { AdminWorlds } from '@/components/admin-worlds';
 import { AdminNfc } from '@/components/admin-nfc';
+import SignageCad from '@/components/signage-cad';
 import { ShippingZonesSection } from '@/components/admin-shipping-zones';
 import { CategoryCollections, NoteFields, ParcelFields, PersonalizeEditor, ProductPlacement, SaleModeFields } from '@/components/admin-product-extras';
 import { TrackingSection, needsTracking, isNewAlert } from '@/components/admin-tracking';
@@ -29,7 +30,7 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Section = 'dashboard' | 'products' | 'sectors' | 'worlds' | 'orders' | 'tracking' | 'settings' | 'automation' | 'import-supplier' | 'reviews' | 'nfc' | 'shipping';
+type Section = 'dashboard' | 'products' | 'sectors' | 'worlds' | 'orders' | 'tracking' | 'settings' | 'automation' | 'import-supplier' | 'reviews' | 'nfc' | 'shipping' | 'letreiro';
 
 type Product = {
   id: number;
@@ -127,6 +128,7 @@ const SECTION_LABELS: Record<Section, string> = {
   reviews: 'Avaliações',
   nfc: 'Tags NFC',
   shipping: 'Envio por país',
+  letreiro: 'Letreiro CAD',
 };
 
 // Cadastro de produto: todos os blocos com o mesmo cartao e o mesmo cabecalho.
@@ -2581,6 +2583,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
         { key: 'products', label: 'Produtos', icon: <Package size={18} /> },
         { key: 'sectors', label: 'Setores e coleções', icon: <LayoutGrid size={18} /> },
         { key: 'import-supplier', label: 'Importar Produtos', icon: <PackageSearch size={18} /> },
+        { key: 'letreiro', label: 'Letreiro CAD', icon: <Printer size={18} /> },
       ],
     },
     {
@@ -2608,6 +2611,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
     reviews: 'Aprove ou recuse as avaliações enviadas por clientes reais.',
     nfc: 'Grave e leia as tags NFC dos chaveiros pelo celular (Chrome no Android).',
     shipping: 'Para quais países a loja vende e quanto cobra de frete (Packlink ou tabela dos Correos).',
+    letreiro: 'Suba uma imagem ou texto e gere as peças do letreiro em 3D (3MF) para imprimir.',
   };
 
   return (
@@ -2867,6 +2871,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
           {section === 'sectors' && <AdminSectors />}
           {section === 'worlds' && <AdminWorlds />}
           {section === 'nfc' && <AdminNfc />}
+          {section === 'letreiro' && <SignageCad />}
           {section === 'import-supplier' && <ImportSupplierSection onImportToStore={preFillFromSupplier} />}
           {section === 'orders' && <OrdersSection orders={orders} products={products} onUpdateTracking={updateTracking} onUpdateStatus={updateOrderStatus} onRefresh={fetchData} />}
           {section === 'reviews' && <ReviewsSection products={products} />}
