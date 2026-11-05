@@ -283,3 +283,113 @@ export function litPreview(G: LithoGrid, warm = true): ImageData | null {
   }
   return img;
 }
+
+// ---------------------------------------------------------------- light box (caixa de luz atrás da placa)
+
+export interface BoxOptions {
+  depth: number;      // profundidade atrás da placa (distância LED -> foto)
+  wall: number;       // parede da caixa
+  clearance: number;  // folga em volta da placa
+  lip: number;        // espessura da borda da frente que segura a placa
+  back: number;       // espessura da tampa traseira
+  cableD: number;     // furo do cabo na tampa
+  foot: boolean;      // pé de apoio embaixo
+  footH: number;      // altura do pé
+  hang: boolean;      // furos para pendurar na parede (tampa)
+}
+export const DEFAULT_BOX: BoxOptions = { depth: 30, wall: 2, clearance: 0.35, lip: 1.6, back: 2, cableD: 7, foot: true, footH: 12, hang: false };
+
+export interface LitObj { id: string; name: string; mesh: Mesh; color: string; flatPrint: boolean }
+
+/** Placa de células (grade em u, v) extrudada em d0..d1 e mapeada para o mundo (segue a curvatura). */
+function slabMesh(cell: (i: number, j: number) => boolean, nx: number, ny: number, u0: number, v0: number, r: number, d0: number, d1: number,
+  map: (u: number, d: number, v: number) => [number, number, number], zOff: number): Mesh {
+  const vw = nx + 1;
+  const pos: number[] = [], idx: number[] = [];
+  const top = new Int32Array(vw * (ny + 1)).fill(-1), bot = new Int32Array(vw * (ny + 1)).fill(-1);
+  const V = (arr: Int32Array, i: number, j: number, d: number) => {
+    const k = j * vw + i;
+    if (arr[k] < 0) { const [x, y, z] = map(u0 + i * r, d, v0 + j * r + zOff); arr[k] = pos.length / 3; pos.push(x, y, z); }
+    return arr[k];
+  };
+  const inn = (i: number, j: number) => i >= 0 && j >= 0 && i < nx && j < ny && cell(i, j);
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+    if (!cell(i, j)) continue;
+    const c: [number, number][] = [[i, j], [i + 1, j], [i + 1, j + 1], [i, j + 1]];
+    const T = c.map(([a, b]) => V(top, a, b, d1)), B = c.map(([a, b]) => V(bot, a, b, d0));
+    idx.push(T[0], T[1], T[2], T[0], T[2], T[3], B[0], B[2], B[1], B[0], B[3], B[2]);
+    const nb: [number, number][] = [[i, j - 1], [i + 1, j], [i, j + 1], [i - 1, j]];
+    for (let e = 0; e < 4; e++) {
+      if (inn(nb[e][0], nb[e][1])) continue;
+      const p = e, q = (e + 1) % 4;
+      idx.push(B[p], B[q], T[q], B[p], T[q], T[p]);
+    }
+  }
+  return fixWinding({ pos, idx });
+}
+
+/** Caixa de luz no formato da placa: corpo (borda da frente + paredes + pé), tampa traseira com encaixe e trava da placa. */
+export function buildLightbox(o: LithoOptions, bx: BoxOptions, resOverride?: number): { objects: LitObj[]; plateZ: number } {
+  const [W, H] = lithoSize(o);
+  const T0 = Math.max(o.frameT, o.maxT);
+  const c = bx.clearance, w = bx.wall;
+  const fc = Math.max(1, o.frame - 1);                 // quanto a borda cobre da moldura da placa
+  const r = resOverride ?? Math.max(0.5, Math.min(1.2, Math.max(W, H) / 200));
+  const P = c + w + 2;
+  const footH = bx.foot ? bx.footH : 0;
+  const u0 = -P, v0 = -P - footH;
+  const nx = Math.ceil((W + 2 * P) / r), ny = Math.ceil((H + 2 * P + footH) / r);
+  // distância assinada até a borda do formato (mm, positiva dentro), na grade de vértices
+  const vw = nx + 1, vh = ny + 1;
+  const m = new Uint8Array(vw * vh);
+  for (let j = 0; j < vh; j++) for (let i = 0; i < vw; i++) m[j * vw + i] = insideShape(o, u0 + i * r, v0 + j * r) ? 1 : 0;
+  const sd = sdField(m, vw, vh);
+  const sdc = (i: number, j: number) => ((sd[j * vw + i] + sd[j * vw + i + 1] + sd[(j + 1) * vw + i] + sd[(j + 1) * vw + i + 1]) / 4) * r;
+  const cu = (i: number) => u0 + (i + 0.5) * r, cv = (j: number) => v0 + (j + 0.5) * r;
+  const map = makeMap(o, W);
+  const zOff = footH + c + w;   // a caixa (com o pé) fica apoiada em z = 0
+  const front = T0;   // a placa ocupa d em [0, T0]
+  // furo do cabo e furos de pendurar na tampa
+  const cable = { u: W / 2, v: Math.min(H * 0.2, 18), d: bx.cableD };
+  const hangs = bx.hang ? [{ u: W * 0.3, v: H * 0.82, d: 5 }, { u: W * 0.7, v: H * 0.82, d: 5 }] : [];
+  const notHole = (i: number, j: number) => [cable, ...hangs].every((h) => (cu(i) - h.u) ** 2 + (cv(j) - h.v) ** 2 > (h.d / 2) ** 2);
+  const body: Mesh[] = [];
+  // borda da frente (segura a placa pela moldura)
+  body.push(slabMesh((i, j) => { const s = sdc(i, j); return s >= -(c + w) && s < fc; }, nx, ny, u0, v0, r, front + c, front + c + bx.lip, map, zOff));
+  // paredes: da tampa traseira até a frente da placa
+  body.push(slabMesh((i, j) => { const s = sdc(i, j); return s >= -(c + w) && s < -c; }, nx, ny, u0, v0, r, -bx.depth, front + c + 0.01, map, zOff));
+  // pé: preenche de baixo até a parede, sem invadir o interior
+  if (bx.foot) {
+    const fu0 = W * 0.18, fu1 = W * 0.82, fvTop = Math.min(H * 0.35, 40);
+    body.push(slabMesh((i, j) => cu(i) >= fu0 && cu(i) <= fu1 && cv(j) <= fvTop && cv(j) >= -(c + w) - footH && sdc(i, j) < -c - 0.2, nx, ny, u0, v0, r, -bx.depth, front + c + bx.lip, map, zOff));
+  }
+  // tampa traseira: chapa + aba de encaixe por dentro da parede
+  const back: Mesh[] = [
+    slabMesh((i, j) => sdc(i, j) >= -(c + w) && notHole(i, j), nx, ny, u0, v0, r, -bx.depth - bx.back, -bx.depth, map, zOff),
+    slabMesh((i, j) => { const s = sdc(i, j); return s >= -(c - 0.2) && s < -(c - 0.2) + 1.6; }, nx, ny, u0, v0, r, -bx.depth, -bx.depth + 4, map, zOff),
+  ];
+  // trava: anel atrás da moldura da placa (entra por trás, sob pressão)
+  const lock = slabMesh((i, j) => { const s = sdc(i, j); return s >= -(c - 0.15) && s < fc; }, nx, ny, u0, v0, r, -2.2, -0.05, map, zOff);
+  const flat = o.curve < 1;
+  const objects: LitObj[] = [
+    { id: 'box', name: 'Light box - corpo', mesh: mergeAll(body), color: '#3F3F46', flatPrint: flat },
+    { id: 'back', name: 'Light box - tampa traseira', mesh: mergeAll(back), color: '#52525B', flatPrint: flat },
+    { id: 'lock', name: 'Light box - trava da placa', mesh: lock, color: '#71717A', flatPrint: flat },
+  ];
+  return { objects, plateZ: zOff };
+}
+
+function mergeAll(ms: Mesh[]): Mesh {
+  const pos: number[] = [], idx: number[] = [];
+  for (const m of ms) { const off = pos.length / 3; for (const v of m.pos) pos.push(v); for (const i of m.idx) idx.push(i + off); }
+  return { pos, idx };
+}
+
+/** Para imprimir: peças planas da caixa deitadas (tampa/abertura para baixo), sem suporte. */
+export function layFlat(m: Mesh): Mesh {
+  let yMax = -Infinity;
+  for (let i = 1; i < m.pos.length; i += 3) yMax = Math.max(yMax, m.pos[i]);
+  const pos = new Array<number>(m.pos.length);
+  for (let i = 0; i < m.pos.length; i += 3) { pos[i] = m.pos[i]; pos[i + 1] = m.pos[i + 2]; pos[i + 2] = yMax - m.pos[i + 1]; }
+  return { pos, idx: m.idx.slice() };
+}
