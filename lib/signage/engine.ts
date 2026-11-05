@@ -1107,6 +1107,35 @@ export function autoHolePoint(art: Art, p: Part, P: Params, d: number): Hole | n
   return best;
 }
 
+export type ShapeKind = 'rect' | 'square' | 'rounded' | 'circle' | 'oval';
+
+/** Adiciona uma forma (retângulo, quadrado, círculo...) como peça editável, à direita do desenho. Cria a arte se não houver. */
+export function addShapePart(art: Art | null, kind: ShapeKind, wMm: number, hMm: number, style: StyleId, radiusMm = 6): Art {
+  const s = art?.s ?? 0.25;
+  const sq = kind === 'square' || kind === 'circle';
+  const W = Math.max(4, Math.round(wMm / s)), H = Math.max(4, Math.round((sq ? wMm : hMm) / s));
+  const m = new Uint8Array(W * H);
+  const rr = Math.min(radiusMm / s, W / 2, H / 2);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const u = x + 0.5, v = y + 0.5;
+    let ok = true;
+    if (kind === 'circle' || kind === 'oval') ok = ((u - W / 2) / (W / 2)) ** 2 + ((v - H / 2) / (H / 2)) ** 2 <= 1;
+    else if (kind === 'rounded') { const cx = Math.max(rr, Math.min(W - rr, u)), cy = Math.max(rr, Math.min(H - rr, v)); ok = (u - cx) ** 2 + (v - cy) ** 2 <= rr * rr; }
+    m[y * W + x] = ok ? 1 : 0;
+  }
+  const base: Art = art ?? { w: W, h: H, s, parts: [], nextId: 1, palette: [] };
+  let x0 = 0, y0 = 0;
+  if (art && art.parts.some((p) => p.visible)) {
+    const b = artBounds(art);
+    const cx = b.x1 + 10 + (W * s) / 2, cy = (b.y0 + b.y1) / 2;
+    x0 = Math.round(cx / s - W / 2); y0 = Math.round(base.h - cy / s - H / 2);
+  }
+  const names: Record<ShapeKind, string> = { rect: 'Retângulo', square: 'Quadrado', rounded: 'Arredondado', circle: 'Círculo', oval: 'Oval' };
+  const p = makePart(base.nextId, `${names[kind]} ${base.nextId}`, m, W, null, 1, [0, 0, W - 1, H - 1], style, true, []);
+  p.ox += x0; p.oy += y0; p.bx0 += x0; p.bx1 += x0; p.by0 += y0; p.by1 += y0;
+  return { ...base, parts: [...base.parts, p], nextId: base.nextId + 1 };
+}
+
 /** Junta várias peças numa só (une as máscaras; mantém nome, estilo e furos da primeira). */
 export function mergeParts(art: Art, ids: number[]): Art | null {
   const ps = art.parts.filter((p) => ids.includes(p.id));
@@ -1677,7 +1706,50 @@ export function layoutObjects(objects: SceneObject[], opt: LayoutOptions): { tx:
 const esc = (s: string) => s.replace(/[<>&"']/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' }[c] as string));
 const num = (v: number) => (Math.round(v * 1e4) / 1e4).toString();
 
+/** Igual ao build3MF, mas com compressão (deflate) quando o navegador suporta: arquivos de foto ficam ~5x menores. */
+export async function build3MFCompressed(objects: SceneObject[], opt: LayoutOptions): Promise<{ data: Uint8Array; warnings: string[] }> {
+  const r = build3MFFiles(objects, opt);
+  const CS: any = (globalThis as any).CompressionStream;
+  if (!CS) return { data: zipStore(r.files), warnings: r.warnings };
+  const comp: { name: string; data: Uint8Array; raw: Uint8Array }[] = [];
+  for (const f of r.files) {
+    const stream = new Blob([f.data as unknown as BlobPart]).stream().pipeThrough(new CS('deflate-raw'));
+    const buf = new Uint8Array(await new Response(stream).arrayBuffer());
+    comp.push({ name: f.name, data: buf, raw: f.data });
+  }
+  return { data: zipDeflated(comp), warnings: r.warnings };
+}
+
+function zipDeflated(files: { name: string; data: Uint8Array; raw: Uint8Array }[]): Uint8Array {
+  const enc = new TextEncoder();
+  const chunks: Uint8Array[] = [];
+  const central: Uint8Array[] = [];
+  let offset = 0;
+  const u16 = (v: number) => [v & 255, (v >> 8) & 255];
+  const u32 = (v: number) => [v & 255, (v >> 8) & 255, (v >> 16) & 255, (v >>> 24) & 255];
+  for (const f of files) {
+    const name = enc.encode(f.name);
+    const crc = crc32(f.raw);
+    const local = new Uint8Array([...u32(0x04034b50), ...u16(20), ...u16(0x0800), ...u16(8), ...u16(0), ...u16(0x21), ...u32(crc), ...u32(f.data.length), ...u32(f.raw.length), ...u16(name.length), ...u16(0)]);
+    chunks.push(local, name, f.data);
+    central.push(new Uint8Array([...u32(0x02014b50), ...u16(20), ...u16(20), ...u16(0x0800), ...u16(8), ...u16(0), ...u16(0x21), ...u32(crc), ...u32(f.data.length), ...u32(f.raw.length), ...u16(name.length), ...u16(0), ...u16(0), ...u16(0), ...u16(0), ...u32(0), ...u32(offset)]), name);
+    offset += local.length + name.length + f.data.length;
+  }
+  const cdSize = central.reduce((s, c) => s + c.length, 0);
+  const eocd = new Uint8Array([...u32(0x06054b50), ...u16(0), ...u16(0), ...u16(files.length), ...u16(files.length), ...u32(cdSize), ...u32(offset), ...u16(0)]);
+  const all = [...chunks, ...central, eocd];
+  const out = new Uint8Array(all.reduce((s, c) => s + c.length, 0));
+  let o = 0;
+  for (const c of all) { out.set(c, o); o += c.length; }
+  return out;
+}
+
 export function build3MF(objects: SceneObject[], opt: LayoutOptions): { data: Uint8Array; warnings: string[] } {
+  const r = build3MFFiles(objects, opt);
+  return { data: zipStore(r.files), warnings: r.warnings };
+}
+
+function build3MFFiles(objects: SceneObject[], opt: LayoutOptions): { files: { name: string; data: Uint8Array }[]; warnings: string[] } {
   const lay = layoutObjects(objects, opt);
   const colors: string[] = [];
   objects.forEach((o) => { if (!colors.includes(o.color)) colors.push(o.color); });
@@ -1697,10 +1769,10 @@ export function build3MF(objects: SceneObject[], opt: LayoutOptions): { data: Ui
   objects.forEach((_, i) => { xml += `  <item objectid="${i + 2}" transform="1 0 0 0 1 0 0 0 1 ${num(lay.tx[i])} ${num(lay.ty[i])} ${num(lay.tz[i])}"/>\n`; });
   xml += ' </build>\n</model>\n';
   const enc = new TextEncoder();
-  const data = zipStore([
+  const files = [
     { name: '[Content_Types].xml', data: enc.encode('<?xml version="1.0" encoding="UTF-8"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/></Types>') },
     { name: '_rels/.rels', data: enc.encode('<?xml version="1.0" encoding="UTF-8"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Target="/3D/3dmodel.model" Id="rel0" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/></Relationships>') },
     { name: '3D/3dmodel.model', data: enc.encode(xml) },
-  ]);
-  return { data, warnings: lay.warnings };
+  ];
+  return { files, warnings: lay.warnings };
 }
