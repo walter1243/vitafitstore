@@ -198,16 +198,52 @@ export default function LithophaneStudio() {
     const res = Math.max(0.8, Math.max(W, H) / 160);
     const objs: E.SceneObject[] = [{ id: 'l', name: 'placa', kind: 'part', mesh: L.buildLithophane(photo.g, o, res, plateZ), color: '#f5f0e6' }];
     if (mount === 'base') objs.push({ id: 'b', name: 'base', kind: 'part', mesh: L.buildLithoBase(o, b).mesh, color: '#57534e' });
-    if (mount === 'lightbox') for (const x of L.buildLightbox(o, bx, Math.max(1.2, Math.max(W, H) / 120)).objects) if (x.id !== 'lock') objs.push({ id: x.id, name: x.name, kind: 'part', mesh: x.mesh, color: x.id === 'box' ? '#57534e' : '#78716c' });
+    if (mount === 'lightbox') for (const x of L.buildLightbox(o, bx, Math.max(1.2, Math.max(W, H) / 120)).objects) objs.push({ id: x.id, name: x.name, kind: 'part', mesh: x.mesh, color: x.id === 'box' ? '#57534e' : x.id === 'lock' ? '#a8a29e' : '#78716c' });
     return objs;
   }, [photo, o, b, bx, mount, view, W, H, plateZ]);
+
+  // vista explodida: cada peça se afasta na direção em que é montada
+  const [explode, setExplode] = useState(0);
+  const [anim, setAnim] = useState(false);
+  const exploded = useMemo(() => {
+    if (!explode) return preview;
+    // light box: placa, trava e tampa saem para trás (+Y), na ordem de montagem; base: a placa sobe
+    const step: Record<string, [number, number, number]> = mount === 'lightbox'
+      ? { box: [0, 0, 0], l: [0, 1, 0], lock: [0, 1.6, 0], back: [0, 2.4, 0] }
+      : { b: [0, 0, 0], l: [0, 0, 1] };
+    return preview.map((ob) => {
+      const d = step[ob.id];
+      if (!d || (!d[0] && !d[1] && !d[2])) return ob;
+      const p = ob.mesh.pos, pos = new Array<number>(p.length);
+      for (let i = 0; i < p.length; i += 3) { pos[i] = p[i] + d[0] * explode; pos[i + 1] = p[i + 1] + d[1] * explode; pos[i + 2] = p[i + 2] + d[2] * explode; }
+      return { ...ob, mesh: { pos, idx: ob.mesh.idx } };
+    });
+  }, [preview, explode, mount]);
+  const maxExplode = mount === 'lightbox' ? Math.max(40, bx.depth * 1.5) : Math.max(30, H * 0.4);
+  // animação montar / desmontar
+  useEffect(() => {
+    if (!anim) return;
+    const target = explode > maxExplode / 2 ? 0 : maxExplode;
+    const from = explode, t0 = performance.now(), dur = 1200;
+    let raf = 0;
+    const tick = (t: number) => {
+      const k = Math.min(1, (t - t0) / dur), e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      setExplode(Math.round(from + (target - from) * e));
+      if (k < 1) raf = requestAnimationFrame(tick); else setAnim(false);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+    /* eslint-disable-next-line */
+  }, [anim]);
+
   const draw3 = useCallback(() => {
     const cv = cv3.current; if (!cv) return;
     const box = cv.parentElement!.getBoundingClientRect();
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     cv.width = box.width * dpr; cv.height = box.height * dpr; cv.style.width = `${box.width}px`; cv.style.height = `${box.height}px`;
-    render3D(cv.getContext('2d')!, box.width, box.height, preview, cam.current, 0, dpr);
-  }, [preview]);
+    render3D(cv.getContext('2d')!, box.width, box.height, exploded, cam.current, 0, dpr);
+  }, [exploded]);
+  useEffect(() => { if (view === '3d') draw3(); }, [draw3, view]);
   useEffect(() => {
     if (view !== '3d') return;
     cam.current = { ...cam.current, cx: 0, cy: 0, cz: H / 2, dist: Math.max(W, H) * 1.9 };
@@ -297,6 +333,18 @@ export default function LithophaneStudio() {
           <Btn active={view === 'lit'} onClick={() => setView('lit')}>Prévia acesa</Btn>
           <Btn active={view === '3d'} onClick={() => setView('3d')}>3D</Btn>
           <Btn active={view === 'photo'} onClick={() => setView('photo')}>Foto original</Btn>
+          {view === '3d' && mount !== 'none' && (
+            <div className="ml-auto flex flex-wrap items-center gap-2">
+              <label className="flex items-center gap-2 text-xs text-zinc-400">Explodir
+                <input type="range" min={0} max={Math.round(maxExplode)} value={explode} onChange={(e) => { setAnim(false); setExplode(+e.target.value); }} className="w-32 accent-emerald-500" />
+                <span className="w-12 text-right text-zinc-300">{explode} mm</span>
+              </label>
+              <Btn onClick={() => setAnim(true)} disabled={anim}>{explode > maxExplode / 2 ? 'Montar' : 'Desmontar'}</Btn>
+              <Btn title="Ver de lado" onClick={() => { cam.current = { ...cam.current, yaw: 0, pitch: 0.15 }; draw3(); }}>Lado</Btn>
+              <Btn title="Ver de frente" onClick={() => { cam.current = { ...cam.current, yaw: -Math.PI / 2, pitch: 0.1 }; draw3(); }}>Frente</Btn>
+              <Btn title="Ver por trás" onClick={() => { cam.current = { ...cam.current, yaw: Math.PI / 2 - 0.5, pitch: 0.3 }; draw3(); }}>Trás</Btn>
+            </div>
+          )}
         </div>
         <div className="relative h-[600px] overflow-hidden rounded-xl border border-zinc-800 bg-[#09090b]">
           {!photo && <div className="absolute inset-0 flex items-center justify-center text-center text-sm text-zinc-500">Suba uma foto para criar a litofania.<br />Ela vira uma placa em uma peça só, pronta para imprimir em branco.</div>}
@@ -310,6 +358,15 @@ export default function LithophaneStudio() {
               onWheel={(e) => { cam.current = { ...cam.current, dist: Math.max(50, cam.current.dist * Math.pow(1.0015, e.deltaY)) }; draw3(); }} />
           )}
           {photo && view === '3d' && <div className="absolute left-3 top-3 rounded bg-zinc-800/90 px-2 py-1 text-[11px] text-zinc-300">Prévia simplificada · arraste para girar · o 3MF sai em {o.res} mm</div>}
+          {photo && view === '3d' && explode > 0 && (
+            <div className="absolute bottom-3 left-3 rounded bg-zinc-800/90 px-2 py-1.5 text-[11px] leading-relaxed text-zinc-300">
+              {mount === 'lightbox' ? (
+                <>Ordem de montagem (por trás):<br />1. Corpo (borda da frente) · 2. Placa · 3. Trava · 4. Tampa com o LED e o cabo</>
+              ) : (
+                <>Ordem de montagem:<br />1. Base com o LED · 2. Placa desce no rasgo</>
+              )}
+            </div>
+          )}
         </div>
         {msg && <div className={`rounded-lg px-3 py-2 text-xs ${msg.err ? 'bg-red-950/70 text-red-300' : 'bg-emerald-950/60 text-emerald-300'}`}>{msg.t}</div>}
         {fitWarn.map((w, i) => <div key={i} className="rounded-lg bg-amber-950/50 px-3 py-2 text-xs text-amber-300">{w}</div>)}
