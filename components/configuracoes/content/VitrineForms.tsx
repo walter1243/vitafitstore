@@ -2,12 +2,14 @@
 // Formulários do Admin → Editar loja para o modelo atual da vitrine
 // (faixa do topo, banner, categorias, seções de produtos, banner promocional e rodapé).
 // Campo vazio = automático (nome/descrição do setor, foto do primeiro produto).
-import { type ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { ArrowDown, ArrowUp, ChevronsUp, Plus, Trash2, Wand2 } from 'lucide-react';
 import { Field, inputCls, textareaCls, MediaUploadField } from './shared';
 import {
   SLIDE_COLORS,
   type BannerContent,
+  type Branding,
+  type CabecalhoContent,
   type CategoriasContent,
   type FooterLinkItem,
   type HomeSlide,
@@ -108,6 +110,55 @@ function mergeRows<T extends { sector: string }>(sectors: SectorLite[], items: T
   return kept;
 }
 
+// Rola até o item clicado na cópia da loja (story, seção ou slide) e destaca.
+function useFocusItem(focus?: string) {
+  useEffect(() => {
+    if (!focus) return;
+    const t = setTimeout(() => document.getElementById(`vf-${focus}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60);
+    return () => clearTimeout(t);
+  }, [focus]);
+}
+const focusCls = (on: boolean) => (on ? ' ring-2 ring-green-400/70' : '');
+
+// ------------------------------------------------------------------ cabeçalho / logo
+
+export function CabecalhoForm({ data, onChange, branding, onBranding }: { data: CabecalhoContent; onChange: (d: CabecalhoContent) => void; branding: Branding; onBranding: (b: Branding) => void }) {
+  const set = (p: Partial<CabecalhoContent>) => onChange({ ...data, ...p });
+  const setB = (p: Partial<Branding>) => onBranding({ ...branding, ...p });
+  return (
+    <div>
+      <Group title="Logo">
+        <Field label="Como o logo aparece">
+          <div className="grid grid-cols-2 gap-2">
+            {([['logo_direto', 'Só a imagem', 'o logo do jeito que ele é'], ['icone_nome', 'Ícone + nome', 'quadradinho colorido e o nome da loja']] as const).map(([id, t, d]) => (
+              <button key={id} type="button" onClick={() => setB({ logoStyle: id })}
+                className={`cursor-pointer rounded-lg border px-3 py-2.5 text-left transition-colors ${branding.logoStyle === id ? 'border-green-500/60 bg-green-500/10' : 'border-white/10 hover:border-white/25'}`}>
+                <span className="block text-sm font-semibold text-white">{t}</span>
+                <span className="block text-[11px] text-white/45">{d}</span>
+              </button>
+            ))}
+          </div>
+        </Field>
+        <MediaUploadField label="Imagem do logo" hint="PNG sem fundo fica melhor. Vazio = logo padrão da Kitoys." value={branding.logoUrl} onChange={(v) => setB({ logoUrl: v })} kind="image" />
+        {branding.logoStyle === 'logo_direto' && (
+          <Field label={`Tamanho do logo: ${data.logoHeight}px no computador`} hint="No celular fica um pouco menor sozinho.">
+            <input type="range" min={28} max={68} step={1} value={data.logoHeight} onChange={(e) => set({ logoHeight: +e.target.value })} className="w-full cursor-pointer accent-green-500" />
+          </Field>
+        )}
+        <Txt label="Nome da loja" hint="Aparece no modo Ícone + nome, nas abas do navegador e nos e-mails." value={branding.storeName} onChange={(v) => setB({ storeName: v })} />
+        <Color label="Cor principal (fundo do ícone)" value={branding.themeColor} onChange={(v) => setB({ themeColor: v })} />
+      </Group>
+      <Group title="Busca e menu">
+        <Txt label="Texto dentro da busca" value={data.searchPlaceholder} onChange={(v) => set({ searchPlaceholder: v })} placeholder="Buscar juguetes, llaveros, jarrones…" />
+        <div className="grid grid-cols-2 gap-3">
+          <Txt label="Menu: início" hint="Vazio = &quot;Inicio&quot; (traduzido)" value={data.homeLabel} onChange={(v) => set({ homeLabel: v })} placeholder="Inicio" />
+          <Txt label="Menu: coleções" hint="Vazio = &quot;Colecciones&quot;" value={data.collectionsLabel} onChange={(v) => set({ collectionsLabel: v })} placeholder="Colecciones" />
+        </div>
+      </Group>
+    </div>
+  );
+}
+
 // ------------------------------------------------------------------ faixa do topo
 
 export function TopbarForm({ data, onChange }: { data: TopbarContent; onChange: (d: TopbarContent) => void }) {
@@ -148,7 +199,8 @@ function SlidePreview({ s, sector }: { s: HomeSlide; sector?: SectorLite }) {
   );
 }
 
-export function BannerForm({ data, onChange, sectors }: { data: BannerContent; onChange: (d: BannerContent) => void; sectors: SectorLite[] }) {
+export function BannerForm({ data, onChange, sectors, focus }: { data: BannerContent; onChange: (d: BannerContent) => void; sectors: SectorLite[]; focus?: string }) {
+  useFocusItem(focus);
   const set = (p: Partial<BannerContent>) => onChange({ ...data, ...p });
   const setSlide = (i: number, p: Partial<HomeSlide>) => set({ slides: data.slides.map((s, k) => (k === i ? { ...s, ...p } : s)) });
   const newSlide = (sector: SectorLite | undefined, k: number): HomeSlide => ({
@@ -189,7 +241,7 @@ export function BannerForm({ data, onChange, sectors }: { data: BannerContent; o
           {data.slides.map((s, i) => {
             const sec = sectors.find((x) => x.slug === s.sector);
             return (
-              <div key={s.id} className={`mb-4 rounded-xl border p-3 ${s.enabled ? 'border-white/10 bg-white/[0.02]' : 'border-white/5 opacity-60'}`}>
+              <div key={s.id} id={`vf-${s.id}`} className={`mb-4 scroll-mt-4 rounded-xl border p-3 ${s.enabled ? 'border-white/10 bg-white/[0.02]' : 'border-white/5 opacity-60'}${focusCls(focus === s.id)}`}>
                 <ItemBar index={i} total={data.slides.length} onMove={(d) => set({ slides: move(data.slides, i, d) })} onRemove={() => set({ slides: data.slides.filter((_, k) => k !== i) })}>
                   Slide {i + 1}{sec ? ` · ${sec.name}` : ''}
                 </ItemBar>
@@ -231,7 +283,8 @@ export function BannerForm({ data, onChange, sectors }: { data: BannerContent; o
 
 // ------------------------------------------------------------------ categorias (bolinhas)
 
-export function CategoriasForm({ data, onChange, sectors }: { data: CategoriasContent; onChange: (d: CategoriasContent) => void; sectors: SectorLite[] }) {
+export function CategoriasForm({ data, onChange, sectors, focus }: { data: CategoriasContent; onChange: (d: CategoriasContent) => void; sectors: SectorLite[]; focus?: string }) {
+  useFocusItem(focus);
   const set = (p: Partial<CategoriasContent>) => onChange({ ...data, ...p });
   const rows = mergeRows(sectors, data.items, (s) => ({ sector: s.slug, label: '', image: '', hidden: false }));
   const setRow = (i: number, p: Partial<CategoriasContent['items'][number]>) => set({ items: rows.map((r, k) => (k === i ? { ...r, ...p } : r)) });
@@ -246,7 +299,7 @@ export function CategoriasForm({ data, onChange, sectors }: { data: CategoriasCo
         {rows.map((r, i) => {
           const sec = sectors.find((s) => s.slug === r.sector);
           return (
-            <div key={r.sector} className={`mb-3 rounded-xl border p-3 ${r.hidden ? 'border-white/5 opacity-60' : 'border-white/10 bg-white/[0.02]'}`}>
+            <div key={r.sector} id={`vf-${r.sector}`} className={`mb-3 scroll-mt-4 rounded-xl border p-3 ${r.hidden ? 'border-white/5 opacity-60' : 'border-white/10 bg-white/[0.02]'}${focusCls(focus === r.sector)}`}>
               <ItemBar index={i} total={rows.length} onMove={(d) => set({ items: move(rows, i, d) })}>{sec?.name}</ItemBar>
               <Toggle label="Esconder esta categoria" checked={r.hidden} onChange={(v) => setRow(i, { hidden: v })} />
               {!r.hidden && (
@@ -274,7 +327,8 @@ export function CategoriasForm({ data, onChange, sectors }: { data: CategoriasCo
 
 // ------------------------------------------------------------------ seções de produtos
 
-export function SecoesForm({ data, onChange, sectors }: { data: SecoesContent; onChange: (d: SecoesContent) => void; sectors: SectorLite[] }) {
+export function SecoesForm({ data, onChange, sectors, focus }: { data: SecoesContent; onChange: (d: SecoesContent) => void; sectors: SectorLite[]; focus?: string }) {
+  useFocusItem(focus);
   const set = (p: Partial<SecoesContent>) => onChange({ ...data, ...p });
   const rows = mergeRows(sectors, data.items, (s) => ({ sector: s.slug, title: '', tagline: '', hidden: false }));
   const setRow = (i: number, p: Partial<SecoesContent['items'][number]>) => set({ items: rows.map((r, k) => (k === i ? { ...r, ...p } : r)) });
@@ -298,7 +352,7 @@ export function SecoesForm({ data, onChange, sectors }: { data: SecoesContent; o
         {rows.map((r, i) => {
           const sec = sectors.find((s) => s.slug === r.sector);
           return (
-            <div key={r.sector} className={`mb-3 rounded-xl border p-3 ${r.hidden ? 'border-white/5 opacity-60' : 'border-white/10 bg-white/[0.02]'}`}>
+            <div key={r.sector} id={`vf-${r.sector}`} className={`mb-3 scroll-mt-4 rounded-xl border p-3 ${r.hidden ? 'border-white/5 opacity-60' : 'border-white/10 bg-white/[0.02]'}${focusCls(focus === r.sector)}`}>
               <ItemBar index={i} total={rows.length} onMove={(d) => set({ items: move(rows, i, d) })}>{sec?.name}</ItemBar>
               <Toggle label="Esconder esta seção na home" checked={r.hidden} onChange={(v) => setRow(i, { hidden: v })} />
               {!r.hidden && (

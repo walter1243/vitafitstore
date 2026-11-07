@@ -53,6 +53,9 @@ function ProductCard({ product }: { product: Product }) {
   return (
     <Link
       href={href}
+      data-edit="produto"
+      data-edit-item={String(product.id)}
+      data-edit-label={`Produto: ${product.name}`}
       className="group flex h-full flex-col rounded-[20px] border border-black/[0.06] bg-white p-2.5 shadow-[0_2px_10px_rgba(0,0,0,0.04)] transition-shadow duration-200 hover:shadow-[0_12px_32px_rgba(0,0,0,0.10)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 sm:p-3"
       style={{ outlineColor: BLUE }}
     >
@@ -181,6 +184,7 @@ function HeroSlides({ slides, autoplay, onShop }: { slides: Slide[]; autoplay: n
         {slides.map((s, k) => (
           <div
             key={s.key}
+            data-edit-item={s.key}
             className="relative flex min-h-[210px] w-full shrink-0 items-center sm:min-h-[340px]"
             style={{ background: `linear-gradient(120deg,${s.a} 0%,${s.b} 100%)` }}
             aria-hidden={k !== i}
@@ -386,6 +390,7 @@ export function AppleHome({ content, editing = false }: { content?: HomeContentP
                     <button
                       type="button"
                       onClick={() => choose(c.key)}
+                      data-edit-item={c.key}
                       aria-pressed={on}
                       className="flex w-[78px] cursor-pointer flex-col items-center gap-1.5 rounded-2xl py-1.5 transition-colors sm:w-[96px]"
                     >
@@ -416,7 +421,7 @@ export function AppleHome({ content, editing = false }: { content?: HomeContentP
           ) : (
             blocks.map((b, k) => (
               <div key={b.key}>
-                <section id={b.key} data-edit="secoes" data-edit-label="Seções de produtos" className="scroll-mt-28 pt-6 first:pt-0 sm:pt-8">
+                <section id={b.key} data-edit="secoes" data-edit-item={b.key} data-edit-label="Seções de produtos" className="scroll-mt-28 pt-6 first:pt-0 sm:pt-8">
                   <SectionHead title={b.title} tagline={b.tagline} href={b.href || undefined} viewAll={S.viewAllText} />
                   {S.layout === 'grid' ? (
                     <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">

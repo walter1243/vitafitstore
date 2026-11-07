@@ -272,6 +272,30 @@ export const DEFAULT_TOPBAR: TopbarContent = {
   color: '#1d1d1f',
 };
 
+// Cabeçalho: textos da busca e do menu e o tamanho do logo. O logo, o nome e a cor
+// principal ficam em "Informações da Loja" (store_settings) — ver Branding abaixo.
+export type CabecalhoContent = {
+  searchPlaceholder: string;
+  homeLabel: string;         // '' = "Inicio" (traduzido)
+  collectionsLabel: string;  // '' = "Colecciones" (traduzido)
+  logoHeight: number;        // altura do logo no computador (px)
+};
+
+export const DEFAULT_CABECALHO: CabecalhoContent = {
+  searchPlaceholder: 'Buscar juguetes, llaveros, jarrones…',
+  homeLabel: '',
+  collectionsLabel: '',
+  logoHeight: 58,
+};
+
+// Marca (tabela store_settings, Admin → Informações da Loja).
+export type Branding = {
+  storeName: string;
+  logoUrl: string;
+  logoStyle: 'logo_direto' | 'icone_nome';
+  themeColor: string;
+};
+
 export type HomeSlide = {
   id: string;
   enabled: boolean;
@@ -443,6 +467,7 @@ export const DEFAULT_RODAPE: RodapeContent = {
 
 export type SiteContent = {
   topbar: TopbarContent;
+  cabecalho: CabecalhoContent;
   banner: BannerContent;
   categorias: CategoriasContent;
   secoes: SecoesContent;
@@ -460,6 +485,7 @@ export type SiteContent = {
 
 export const DEFAULT_SITE_CONTENT: SiteContent = {
   topbar: DEFAULT_TOPBAR,
+  cabecalho: DEFAULT_CABECALHO,
   banner: DEFAULT_BANNER,
   categorias: DEFAULT_CATEGORIAS,
   secoes: DEFAULT_SECOES,

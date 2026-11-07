@@ -2182,6 +2182,21 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
 
   useEffect(() => { void fetchData(); }, []);
 
+  // Editor visual (Editar loja): clicar num produto na cópia da loja abre ele aqui.
+  useEffect(() => {
+    const onEdit = (e: Event) => {
+      const id = Number((e as CustomEvent).detail?.id);
+      const p = products.find((x) => x.id === id);
+      if (!p) return;
+      setSection('products');
+      startEditProduct(p);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    window.addEventListener('admin:edit-product', onEdit);
+    return () => window.removeEventListener('admin:edit-product', onEdit);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [products]);
+
   // Avisos de compra nova (Rastreio): busca os pedidos de novo a cada 30 s.
   const refreshOrders = useCallback(async () => {
     try {
@@ -4609,6 +4624,19 @@ function SettingsSection({
   const [savingConfig, setSavingConfig] = useState(false);
   const [saveError, setSaveError] = useState('');
   const blocosEditorRef = useRef<BlocosEditorHandle>(null);
+
+  // Logo/nome/cor publicados pelo editor visual: atualiza este formulário para "Salvar" não regravar o antigo.
+  useEffect(() => {
+    const onBranding = (e: Event) => {
+      const b = (e as CustomEvent).detail ?? {};
+      if (typeof b.storeName === 'string') setStore(b.storeName);
+      if (typeof b.themeColor === 'string') setThemeColor(b.themeColor);
+      if (typeof b.logoUrl === 'string') setLogoUrl(b.logoUrl);
+      if (b.logoStyle === 'icone_nome' || b.logoStyle === 'logo_direto') setLogoStyle(b.logoStyle);
+    };
+    window.addEventListener('admin:branding-updated', onBranding);
+    return () => window.removeEventListener('admin:branding-updated', onBranding);
+  }, []);
 
   useEffect(() => {
     (async () => {

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { AppleHome } from '@/components/apple-home'
-import { DEFAULT_SITE_CONTENT, type SiteContent } from '@/lib/site-content-defaults'
+import { DEFAULT_SITE_CONTENT, type Branding, type SiteContent } from '@/lib/site-content-defaults'
 
 // Cópia da loja usada pelo admin (Editar loja). Mostra a mesma home de app/page.tsx com o
 // rascunho do editor, que chega por postMessage a cada mudança.
@@ -22,6 +22,7 @@ const EDIT_CSS = `
 
 export default function PreviewPage() {
   const [content, setContent] = useState<SiteContent | null>(null)
+  const [branding, setBranding] = useState<Partial<Branding> | undefined>(undefined)
   const [edit, setEdit] = useState(false)
   const [mode, setMode] = useState<'edit' | 'browse'>('edit')
 
@@ -30,7 +31,7 @@ export default function PreviewPage() {
     function onMessage(e: MessageEvent) {
       if (e.origin !== window.location.origin) return
       const d = e.data
-      if (d?.type === 'STORE_PREVIEW_CONTENT' && d.content) setContent({ ...DEFAULT_SITE_CONTENT, ...d.content })
+      if (d?.type === 'STORE_PREVIEW_CONTENT' && d.content) { setContent({ ...DEFAULT_SITE_CONTENT, ...d.content }); if (d.branding) setBranding(d.branding) }
       if (d?.type === 'STORE_PREVIEW_MODE') setMode(d.mode === 'browse' ? 'browse' : 'edit')
       if (d?.type === 'STORE_PREVIEW_SELECT') {
         document.querySelectorAll('.edit-sel').forEach((el) => el.classList.remove('edit-sel'))
@@ -58,10 +59,15 @@ export default function PreviewPage() {
   useEffect(() => {
     if (!editing) return
     function onClick(e: MouseEvent) {
-      const el = (e.target as HTMLElement)?.closest?.('[data-edit]') as HTMLElement | null
+      const target = e.target as HTMLElement
+      const el = target?.closest?.('[data-edit]') as HTMLElement | null
+      const itemEl = target?.closest?.('[data-edit-item]') as HTMLElement | null
       e.preventDefault()
       e.stopPropagation()
-      if (el) window.parent?.postMessage({ type: 'STORE_PREVIEW_PICK', key: el.dataset.edit }, window.location.origin)
+      if (!el) return
+      // item clicado dentro da parte (story, seção, slide ou produto)
+      const item = itemEl && (itemEl === el || el.contains(itemEl)) ? itemEl.dataset.editItem : undefined
+      window.parent?.postMessage({ type: 'STORE_PREVIEW_PICK', key: el.dataset.edit, item, label: el.dataset.editLabel }, window.location.origin)
     }
     document.addEventListener('click', onClick, true)
     return () => document.removeEventListener('click', onClick, true)
@@ -76,14 +82,12 @@ export default function PreviewPage() {
           Prévia da loja (com as alterações ainda não publicadas)
         </div>
       )}
-      <div data-edit="topbar" data-edit-label="Faixa do topo">
-        <Header topbar={c.topbar} />
-      </div>
+      <Header topbar={c.topbar} cabecalho={c.cabecalho} branding={branding} />
       <main className="flex-1">
         <AppleHome content={c} editing={editing} />
       </main>
       <div data-edit="rodape" data-edit-label="Rodapé">
-        <Footer content={c.rodape} />
+        <Footer content={c.rodape} branding={branding} />
       </div>
     </div>
   )

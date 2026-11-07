@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { DEFAULT_TOPBAR, type TopbarContent } from '@/lib/site-content-defaults';
+import { DEFAULT_CABECALHO, DEFAULT_TOPBAR, type Branding, type CabecalhoContent, type TopbarContent } from '@/lib/site-content-defaults';
 import { useState, useEffect, useRef } from 'react';
 import { ShoppingCart, Menu, X, Smile } from 'lucide-react';
 import { ProductSearch } from '@/components/product-search';
@@ -44,7 +44,8 @@ function readCachedBranding() {
 }
 
 // Menu: Inicio + Colecciones (setores e colecoes do Admin).
-export function Header({ topbar: topbarOverride }: { topbar?: Partial<TopbarContent> } = {}) {
+// topbar/cabecalho/branding: só a cópia da loja no admin passa (rascunho ainda não publicado).
+export function Header({ topbar: topbarOverride, cabecalho: cabecalhoOverride, branding }: { topbar?: Partial<TopbarContent>; cabecalho?: Partial<CabecalhoContent>; branding?: Partial<Branding> } = {}) {
   const { sectors } = useSectors();
   const menuSectors = sectors.filter((s) => s.collections.length > 0);
   // Painel "Colecciones": abre no hover (desktop) ou clique; fecha com Esc,
@@ -79,7 +80,13 @@ export function Header({ topbar: topbarOverride }: { topbar?: Partial<TopbarCont
   const [logoUrl, setLogoUrl] = useState(cachedBranding?.logoUrl ?? '');
   const [logoStyle, setLogoStyle] = useState<'icone_nome' | 'logo_direto'>(cachedBranding?.logoStyle ?? 'logo_direto');
   const [themeColor, setThemeColor] = useState(cachedBranding?.themeColor ?? '#c2410c');
+  const bStoreName = branding?.storeName ?? storeName;
+  const bLogoUrl = branding?.logoUrl ?? logoUrl;
+  const bLogoStyle = branding?.logoStyle ?? logoStyle;
+  const bThemeColor = branding?.themeColor ?? themeColor;
   const [topbarSaved, setTopbarSaved] = useState<Partial<TopbarContent> | null>(null);
+  const [cabSaved, setCabSaved] = useState<Partial<CabecalhoContent> | null>(null);
+  const cab: CabecalhoContent = { ...DEFAULT_CABECALHO, ...(cabSaved ?? {}), ...(cabecalhoOverride ?? {}) };
   const topbar: TopbarContent = { ...DEFAULT_TOPBAR, text: '', ...(topbarSaved ?? {}), ...(topbarOverride ?? {}) };
   const announcement = topbar.enabled ? topbar.text.trim() : '';
 
@@ -103,7 +110,7 @@ export function Header({ topbar: topbarOverride }: { topbar?: Partial<TopbarCont
   useEffect(() => {
     fetch('/api/site-content', { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : null))
-      .then((data) => { if (data?.topbar) setTopbarSaved(data.topbar); })
+      .then((data) => { if (data?.topbar) setTopbarSaved(data.topbar); if (data?.cabecalho) setCabSaved(data.cabecalho); })
       .catch(() => {});
   }, []);
 
@@ -166,7 +173,7 @@ export function Header({ topbar: topbarOverride }: { topbar?: Partial<TopbarCont
     <>
       <div ref={topBarRef} className="fixed top-0 left-0 right-0 z-40">
         {announcement && (
-          <div className="px-4 py-2 text-center text-[12px]" style={{ background: topbar.bg, color: topbar.color, fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif' }}>
+          <div data-edit="topbar" data-edit-label="Faixa do topo" className="px-4 py-2 text-center text-[12px]" style={{ background: topbar.bg, color: topbar.color, fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif' }}>
             {topbar.href ? <a href={topbar.href} className="underline-offset-2 hover:underline">{announcement}</a> : announcement}
           </div>
         )}
@@ -183,35 +190,40 @@ export function Header({ topbar: topbarOverride }: { topbar?: Partial<TopbarCont
           <div className="flex flex-1 shrink-0 items-center justify-center md:flex-none md:justify-start">
             {/* Logo — "logo_direto" (padrao; Admin → Informações da Loja)
                 mostra a imagem do logo sozinha, do jeito que ela e. */}
-            {logoStyle === 'logo_direto' ? (
-              <Link href="/" onClick={goHome} className="flex shrink-0 items-center" aria-label={`${storeName} — Inicio`}>
+            <div data-edit="cabecalho" data-edit-label="Logo e cabeçalho" className="flex shrink-0">
+            {bLogoStyle === 'logo_direto' ? (
+              <Link href="/" onClick={goHome} className="flex shrink-0 items-center" aria-label={`${bStoreName} — Inicio`}>
+                {/* Logo enviado em Informações da Loja; sem logo, o da Kitoys. */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={DEFAULT_LOGO} alt="Kitoys 3D" className="h-[44px] w-auto object-contain md:h-[58px]" />
+                <img src={bLogoUrl || DEFAULT_LOGO} alt={bStoreName} className="h-[var(--logo-m)] w-auto object-contain md:h-[var(--logo-d)]" style={{ ['--logo-d' as string]: `${Math.max(28, Math.min(68, cab.logoHeight))}px`, ['--logo-m' as string]: `${Math.max(28, Math.min(52, Math.round(cab.logoHeight * 0.76)))}px` }} />
               </Link>
             ) : (
               <Link href="/" onClick={goHome} className="flex shrink-0 items-center gap-2">
-                <div className="flex h-[42px] w-[42px] items-center justify-center overflow-hidden rounded-xl" style={{ background: themeColor }}>
-                  {logoUrl ? (
+                <div className="flex h-[42px] w-[42px] items-center justify-center overflow-hidden rounded-xl" style={{ background: bThemeColor }}>
+                  {bLogoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={logoUrl} alt="Logo" className="h-full w-full object-cover" />
+                    <img src={bLogoUrl} alt="Logo" className="h-full w-full object-cover" />
                   ) : (
                     <Smile className="h-6 w-6 text-white" aria-hidden="true" />
                   )}
                 </div>
-                <span className="font-kids text-xl font-bold text-[#23263f]">{storeName}</span>
+                <span className="font-kids text-xl font-bold text-[#23263f]">{bStoreName}</span>
               </Link>
             )}
+            </div>
 
           </div>
 
           {/* Busca (desktop) */}
-          <ProductSearch className="hidden max-w-xl flex-1 md:block" />
+          <div data-edit="cabecalho" data-edit-label="Busca" className="hidden max-w-xl flex-1 md:block">
+            <ProductSearch placeholder={cab.searchPlaceholder} />
+          </div>
 
           {/* Right side: menu + carrinho */}
           <div className="contents md:flex md:shrink-0 md:items-center md:gap-2">
             {/* Menu: Inicio · Colecciones (painel com setores) */}
-            <nav className="hidden items-center gap-1 md:flex" aria-label="Principal">
-              <Link href="/" onClick={goHome} className={NAV_ITEM}><Tr t={UI.inicio} /></Link>
+            <nav data-edit="cabecalho" data-edit-label="Menu" className="hidden items-center gap-1 md:flex" aria-label="Principal">
+              <Link href="/" onClick={goHome} className={NAV_ITEM}>{cab.homeLabel || <Tr t={UI.inicio} />}</Link>
               <button
                 type="button"
                 className={`${NAV_ITEM} ${colOpen ? 'bg-[#FFF4E0]' : ''}`}
@@ -221,7 +233,7 @@ export function Header({ topbar: topbarOverride }: { topbar?: Partial<TopbarCont
                 onMouseEnter={openCols}
                 onMouseLeave={closeColsSoon}
               >
-                <Tr t={UI.colecciones} />
+                {cab.collectionsLabel || <Tr t={UI.colecciones} />}
               </button>
             </nav>
             <LanguageSwitcher className="order-last md:order-none" />
@@ -250,7 +262,7 @@ export function Header({ topbar: topbarOverride }: { topbar?: Partial<TopbarCont
         </div>
 
         <div className="px-4 pb-3 md:hidden" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif' }}>
-          <ProductSearch soft inputId="busqueda-movil" />
+          <div data-edit="cabecalho" data-edit-label="Busca"><ProductSearch soft inputId="busqueda-movil" placeholder={cab.searchPlaceholder} /></div>
         </div>
 
         {/* Painel "Colecciones": todas as colecoes lado a lado + categorias.

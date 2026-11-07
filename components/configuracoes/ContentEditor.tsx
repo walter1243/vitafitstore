@@ -5,22 +5,31 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ArrowLeft, BadgePercent, Check, CircleDot, Images, Loader2, Megaphone, Monitor, MousePointerClick,
-  PanelBottom, RotateCcw, Rows3, Smartphone, Undo2, UploadCloud, Hand,
+  PanelBottom, RotateCcw, Rows3, Smartphone, Undo2, UploadCloud, Hand, Store, Package, ExternalLink,
 } from 'lucide-react';
-import { DEFAULT_SITE_CONTENT, SITE_CONTENT_SECTIONS, type SiteContent } from '@/lib/site-content-defaults';
-import { BannerForm, CategoriasForm, PromoForm, RodapeForm, SecoesForm, TopbarForm, type SectorLite } from './content/VitrineForms';
+import { DEFAULT_SITE_CONTENT, SITE_CONTENT_SECTIONS, type Branding, type SiteContent } from '@/lib/site-content-defaults';
+import { BannerForm, CabecalhoForm, CategoriasForm, PromoForm, RodapeForm, SecoesForm, TopbarForm, type SectorLite } from './content/VitrineForms';
 
-export type EditableKey = 'topbar' | 'banner' | 'categorias' | 'secoes' | 'promo' | 'rodape';
+export type EditableKey = 'topbar' | 'cabecalho' | 'banner' | 'categorias' | 'secoes' | 'promo' | 'rodape';
+type Picked = EditableKey | 'produto';
 
 export const SECTION_META: Record<EditableKey, { label: string; desc: string; icon: typeof Images }> = {
   topbar: { label: 'Faixa do topo', desc: 'A linha fina acima do cabeçalho ("Envío gratis…").', icon: Megaphone },
+  cabecalho: { label: 'Cabeçalho e logo', desc: 'Logo, tamanho, nome da loja, cor, texto da busca e do menu.', icon: Store },
   banner: { label: 'Banner principal', desc: 'Os slides grandes do topo: texto, botão, foto e cores.', icon: Images },
   categorias: { label: 'Stories / categorias', desc: 'As bolinhas com foto embaixo do banner: ordem, nome, foto.', icon: CircleDot },
   secoes: { label: 'Seções de produtos', desc: 'Ordem, títulos e frases de cada seção (Infantil, Hogar, Navidad…).', icon: Rows3 },
   promo: { label: 'Banner promocional', desc: 'O banner "Con su nombre" no meio da home.', icon: BadgePercent },
   rodape: { label: 'Rodapé', desc: 'Marca, colunas de links, segurança, envio e direitos autorais.', icon: PanelBottom },
 };
-const SECTION_ORDER: EditableKey[] = ['topbar', 'banner', 'categorias', 'secoes', 'promo', 'rodape'];
+const SECTION_ORDER: EditableKey[] = ['topbar', 'cabecalho', 'banner', 'categorias', 'secoes', 'promo', 'rodape'];
+const BRANDING_DEFAULT: Branding = { storeName: 'Kitoys 3D', logoUrl: '', logoStyle: 'logo_direto', themeColor: '#c2410c' };
+const pickBranding = (d: any): Branding => ({
+  storeName: String(d?.storeName ?? BRANDING_DEFAULT.storeName),
+  logoUrl: String(d?.logoUrl ?? ''),
+  logoStyle: d?.logoStyle === 'icone_nome' ? 'icone_nome' : 'logo_direto',
+  themeColor: String(d?.themeColor ?? BRANDING_DEFAULT.themeColor),
+});
 const DRAFT_STORAGE_KEY = 'vitafit-admin-site-content-draft';
 
 // Rascunhos antigos com imagem embutida (data:) estouram o limite do servidor ao publicar.
@@ -43,7 +52,13 @@ export function ContentEditor() {
   const [content, setContent] = useState<SiteContent>(DEFAULT_SITE_CONTENT);
   const [loading, setLoading] = useState(true);
   const [restoredDraft, setRestoredDraft] = useState(false);
-  const [selected, setSelected] = useState<EditableKey | null>(null);
+  const [selected, setSelected] = useState<Picked | null>(null);
+  const [focusItem, setFocusItem] = useState<string | undefined>(undefined);
+  const [picked, setPicked] = useState<{ id: string; label: string } | null>(null);
+  // logo, nome e cor ficam em store_settings (Informações da Loja)
+  const [settingsRaw, setSettingsRaw] = useState<Record<string, unknown> | null>(null);
+  const [brandingPublished, setBrandingPublished] = useState<Branding>(BRANDING_DEFAULT);
+  const [branding, setBranding] = useState<Branding>(BRANDING_DEFAULT);
   const [publishing, setPublishing] = useState(false);
   const [publishError, setPublishError] = useState('');
   const [publishedJustNow, setPublishedJustNow] = useState(false);
@@ -53,7 +68,8 @@ export function ContentEditor() {
   const [frameReady, setFrameReady] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  const dirty = !same(content, published);
+  const brandingDirty = !same(branding, brandingPublished);
+  const dirty = !same(content, published) || brandingDirty;
 
   useEffect(() => {
     (async () => {
@@ -67,6 +83,10 @@ export function ContentEditor() {
         } else setContent(data);
       } catch { /* fica o padrão */ } finally { setLoading(false); }
     })();
+    fetch('/api/store-settings', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d) { setSettingsRaw(d); const b = pickBranding(d); setBrandingPublished(b); setBranding(b); } })
+      .catch(() => {});
     fetch('/api/sectors?all=1', { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : []))
       .then((d) => { if (Array.isArray(d)) setSectors(d.filter((s: any) => s?.enabled !== false).map((s: any) => ({ slug: s.slug, name: s.name, tagline: s.tagline ?? '', imageUrl: s.imageUrl ?? '' }))); })
@@ -86,7 +106,11 @@ export function ContentEditor() {
     function onMessage(e: MessageEvent) {
       if (e.origin !== window.location.origin) return;
       if (e.data?.type === 'STORE_PREVIEW_READY') setFrameReady(true);
-      if (e.data?.type === 'STORE_PREVIEW_PICK' && SECTION_ORDER.includes(e.data.key)) setSelected(e.data.key);
+      if (e.data?.type === 'STORE_PREVIEW_PICK') {
+        const key = e.data.key;
+        if (key === 'produto' && e.data.item) { setPicked({ id: String(e.data.item), label: String(e.data.label ?? '').replace(/^Produto:\s*/, '') }); setSelected('produto'); setFocusItem(undefined); }
+        else if (SECTION_ORDER.includes(key)) { setSelected(key); setFocusItem(e.data.item ? String(e.data.item) : undefined); }
+      }
     }
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
@@ -94,11 +118,11 @@ export function ContentEditor() {
   // cada mudança vai para a cópia da loja (com um pequeno atraso para não travar ao digitar)
   useEffect(() => {
     if (!frameReady) return;
-    const t = setTimeout(() => post({ type: 'STORE_PREVIEW_CONTENT', content }), 120);
+    const t = setTimeout(() => post({ type: 'STORE_PREVIEW_CONTENT', content, branding }), 120);
     return () => clearTimeout(t);
-  }, [content, frameReady, post]);
+  }, [content, branding, frameReady, post]);
   useEffect(() => { if (frameReady) post({ type: 'STORE_PREVIEW_MODE', mode }); }, [mode, frameReady, post]);
-  useEffect(() => { if (frameReady) post({ type: 'STORE_PREVIEW_SELECT', key: selected }); }, [selected, frameReady, post]);
+  useEffect(() => { if (frameReady) post({ type: 'STORE_PREVIEW_SELECT', key: selected === 'produto' ? null : selected }); }, [selected, frameReady, post]);
 
   function setSection<K extends EditableKey>(key: K, data: SiteContent[K]) {
     setContent((prev) => ({ ...prev, [key]: data }));
@@ -124,6 +148,20 @@ export function ContentEditor() {
           throw new Error(message || `Não foi possível publicar "${label}" (HTTP ${res.status}).`);
         }
       }
+      if (brandingDirty) {
+        const res = await fetch('/api/store-settings', {
+          method: 'POST', cache: 'no-store', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...(settingsRaw ?? {}), ...branding }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({} as any));
+          throw new Error(err?.error || `Não foi possível salvar o logo/nome da loja (HTTP ${res.status}).`);
+        }
+        setSettingsRaw((r) => ({ ...(r ?? {}), ...branding }));
+        setBrandingPublished(branding);
+        // avisa o formulário "Informações da Loja" desta página para não regravar o logo antigo
+        window.dispatchEvent(new CustomEvent('admin:branding-updated', { detail: branding }));
+      }
       setPublished(content);
       window.localStorage.removeItem(DRAFT_STORAGE_KEY);
       setRestoredDraft(false);
@@ -136,8 +174,8 @@ export function ContentEditor() {
     }
   }
 
-  const sectionDirty = (k: EditableKey) => !same(content[k], published[k]);
-  const meta = selected ? SECTION_META[selected] : null;
+  const sectionDirty = (k: EditableKey) => !same(content[k], published[k]) || (k === 'cabecalho' && brandingDirty);
+  const meta = selected && selected !== 'produto' ? SECTION_META[selected] : null;
   const btn = 'inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40';
 
   return (
@@ -161,7 +199,7 @@ export function ContentEditor() {
             <button type="button" onClick={() => setDevice('desktop')} aria-label="Computador" className={`${btn} px-2 ${device === 'desktop' ? 'bg-green-500/20 text-green-300' : 'text-white/60 hover:text-white'}`}><Monitor size={15} /></button>
             <button type="button" onClick={() => setDevice('mobile')} aria-label="Celular" className={`${btn} px-2 ${device === 'mobile' ? 'bg-green-500/20 text-green-300' : 'text-white/60 hover:text-white'}`}><Smartphone size={15} /></button>
           </div>
-          <button type="button" onClick={() => { setContent(published); setRestoredDraft(false); }} disabled={!dirty || publishing} className={`${btn} border border-white/10 text-white/70 hover:bg-white/5`}>
+          <button type="button" onClick={() => { setContent(published); setBranding(brandingPublished); setRestoredDraft(false); }} disabled={!dirty || publishing} className={`${btn} border border-white/10 text-white/70 hover:bg-white/5`}>
             <Undo2 size={14} /> Descartar
           </button>
           <button type="button" onClick={handlePublish} disabled={!dirty || publishing} className={`${btn} bg-green-600 text-white hover:bg-green-500`}>
@@ -179,7 +217,21 @@ export function ContentEditor() {
       <div className="grid lg:grid-cols-[380px_minmax(0,1fr)]">
         {/* painel lateral */}
         <aside className="flex max-h-[calc(100vh-170px)] min-h-[520px] flex-col border-b border-white/10 lg:border-b-0 lg:border-r">
-          {!selected || !meta ? (
+          {selected === 'produto' && picked ? (
+            <div className="flex-1 overflow-y-auto p-4">
+              <button type="button" onClick={() => setSelected(null)} className={`${btn} mb-3 px-2 text-white/70 hover:bg-white/5`}><ArrowLeft size={16} /> Voltar</button>
+              <div className="rounded-xl border border-white/10 bg-[#1c2236]/70 p-4">
+                <div className="mb-2 flex items-center gap-2 text-green-300"><Package size={16} /><span className="text-xs font-semibold uppercase tracking-wider">Produto</span></div>
+                <p className="text-sm font-semibold text-white">{picked.label || `Produto #${picked.id}`}</p>
+                <p className="mt-1 text-[12px] leading-relaxed text-white/50">Nome, preço, fotos, descrição, personalização e estoque são editados no editor de produtos. O rascunho da loja fica guardado.</p>
+                <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('admin:edit-product', { detail: { id: Number(picked.id) } }))}
+                  className={`${btn} mt-3 w-full justify-center bg-green-600 text-white hover:bg-green-500`}>
+                  <ExternalLink size={14} /> Abrir no editor de produtos
+                </button>
+                <p className="mt-3 text-[11px] text-white/40">Para mudar a ordem das seções ou esconder uma, clique no título da seção na loja.</p>
+              </div>
+            </div>
+          ) : !selected || !meta ? (
             <div className="flex-1 overflow-y-auto p-3">
               <p className="mb-3 rounded-lg bg-white/[0.04] px-3 py-2 text-[12px] text-white/55">
                 Passe o mouse na loja ao lado: cada parte fica marcada. <b className="text-white/80">Clique</b> para editar, ou escolha aqui:
@@ -188,7 +240,7 @@ export function ContentEditor() {
                 const m = SECTION_META[k];
                 const Icon = m.icon;
                 return (
-                  <button key={k} type="button" onClick={() => setSelected(k)}
+                  <button key={k} type="button" onClick={() => { setSelected(k); setFocusItem(undefined); }}
                     className="mb-2 flex w-full cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-[#1c2236]/70 p-3 text-left transition-colors hover:border-green-500/40 hover:bg-green-500/5">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5"><Icon size={16} className="text-green-400" /></span>
                     <span className="min-w-0 flex-1">
@@ -202,20 +254,21 @@ export function ContentEditor() {
           ) : (
             <>
               <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2.5">
-                <button type="button" onClick={() => setSelected(null)} className={`${btn} px-2 text-white/70 hover:bg-white/5`} aria-label="Voltar à lista"><ArrowLeft size={16} /></button>
+                <button type="button" onClick={() => { setSelected(null); setFocusItem(undefined); }} className={`${btn} px-2 text-white/70 hover:bg-white/5`} aria-label="Voltar à lista"><ArrowLeft size={16} /></button>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-white">{meta.label}</p>
                   <p className="truncate text-[11px] text-white/40">{meta.desc}</p>
                 </div>
-                <button type="button" title="Voltar ao padrão desta parte" onClick={() => setSection(selected, DEFAULT_SITE_CONTENT[selected] as any)} className={`${btn} px-2 text-white/50 hover:bg-white/5 hover:text-white`}><RotateCcw size={14} /></button>
+                <button type="button" title="Voltar ao padrão desta parte" onClick={() => { const k = selected as EditableKey; setSection(k, DEFAULT_SITE_CONTENT[k] as any); if (k === 'cabecalho') setBranding((b) => ({ ...b, logoUrl: '', logoStyle: 'logo_direto' })); }} className={`${btn} px-2 text-white/50 hover:bg-white/5 hover:text-white`}><RotateCcw size={14} /></button>
               </div>
               <div className="flex-1 overflow-y-auto p-4">
                 {loading ? <p className="flex items-center gap-2 text-xs text-white/60"><Loader2 size={14} className="animate-spin" /> Carregando…</p> : (
                   <>
                     {selected === 'topbar' && <TopbarForm data={content.topbar} onChange={(d) => setSection('topbar', d)} />}
-                    {selected === 'banner' && <BannerForm data={content.banner} onChange={(d) => setSection('banner', d)} sectors={sectors} />}
-                    {selected === 'categorias' && <CategoriasForm data={content.categorias} onChange={(d) => setSection('categorias', d)} sectors={sectors} />}
-                    {selected === 'secoes' && <SecoesForm data={content.secoes} onChange={(d) => setSection('secoes', d)} sectors={sectors} />}
+                    {selected === 'cabecalho' && <CabecalhoForm data={content.cabecalho} onChange={(d) => setSection('cabecalho', d)} branding={branding} onBranding={setBranding} />}
+                    {selected === 'banner' && <BannerForm data={content.banner} onChange={(d) => setSection('banner', d)} sectors={sectors} focus={focusItem} />}
+                    {selected === 'categorias' && <CategoriasForm data={content.categorias} onChange={(d) => setSection('categorias', d)} sectors={sectors} focus={focusItem} />}
+                    {selected === 'secoes' && <SecoesForm data={content.secoes} onChange={(d) => setSection('secoes', d)} sectors={sectors} focus={focusItem} />}
                     {selected === 'promo' && <PromoForm data={content.promo} onChange={(d) => setSection('promo', d)} sectionsCount={sectors.length} />}
                     {selected === 'rodape' && <RodapeForm data={content.rodape} onChange={(d) => setSection('rodape', d)} />}
                   </>

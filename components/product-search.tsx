@@ -34,7 +34,7 @@ export function useProductSearch(query: string) {
 }
 
 // soft: campo cinza claro (cabecalho do celular); inputId evita id repetido com 2 buscas na pagina.
-export function ProductSearch({ autoFocus, onDone, className = '', soft = false, inputId = 'busqueda-productos' }: { autoFocus?: boolean; onDone?: () => void; className?: string; soft?: boolean; inputId?: string }) {
+export function ProductSearch({ autoFocus, onDone, className = '', soft = false, inputId = 'busqueda-productos', placeholder = 'Buscar juguetes, llaveros, jarrones…' }: { autoFocus?: boolean; onDone?: () => void; className?: string; soft?: boolean; inputId?: string; placeholder?: string }) {
   const router = useRouter();
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
@@ -82,7 +82,7 @@ export function ProductSearch({ autoFocus, onDone, className = '', soft = false,
             if (e.key === 'ArrowUp') { e.preventDefault(); setActive((i) => Math.max(-1, i - 1)); }
             if (e.key === 'Escape') { setOpen(false); onDone?.(); }
           }}
-          placeholder="Buscar juguetes, llaveros, jarrones…"
+          placeholder={placeholder}
           className={soft
             ? 'h-11 w-full rounded-full border border-transparent bg-[#f2f2f4] pl-12 pr-11 text-base text-[#1d1d1f] outline-none transition-colors placeholder:text-[#8e8e93] focus:border-[#0071e3] focus:bg-white'
             : 'h-12 w-full rounded-full border-2 border-[#efe7da] bg-[#FFF8EF] pl-12 pr-11 text-base text-[#23263f] outline-none transition-colors placeholder:text-[#8a8ca6] focus:border-[#23263f] focus:bg-white'}

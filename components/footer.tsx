@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import { Instagram, Lock, Mail, MessageCircle, Truck } from 'lucide-react'
 import { PAYMENT_LOGOS } from '@/components/payment-logos'
 import { useSectors } from '@/components/kids/sectors-context'
-import { DEFAULT_RODAPE, type FooterLinkItem, type RodapeContent } from '@/lib/site-content-defaults'
+import { DEFAULT_RODAPE, type Branding, type FooterLinkItem, type RodapeContent } from '@/lib/site-content-defaults'
 
 // Contato: vem do Admin → Editar loja (WhatsApp, e-mail, Instagram); estes
 // valores so aparecem enquanto as configuracoes carregam ou se estiverem vazias.
@@ -72,10 +72,11 @@ function LinkList({ items }: { items: FooterLink[] }) {
 // Rodape da Kitoys 3D: marca, tres colunas (colecoes reais ou lista do admin,
 // ayuda e legal), seguranca/pagamentos e contato. Textos e links vem do
 // Admin -> Editar loja -> Rodape (sem conteudo salvo, usa DEFAULT_RODAPE).
-export function Footer({ content }: { content?: Partial<RodapeContent> } = {}) {
+export function Footer({ content, branding }: { content?: Partial<RodapeContent>; branding?: Partial<Branding> } = {}) {
   const R: RodapeContent = { ...DEFAULT_RODAPE, ...content }
   const { collections } = useSectors()
   const [instagram, setInstagram] = useState('')
+  const [savedLogo, setSavedLogo] = useState('')
   const [whatsapp, setWhatsapp] = useState(DEFAULT_WHATSAPP)
   const [EMAIL, setEmail] = useState(DEFAULT_EMAIL)
   const [payment, setPayment] = useState<{ methods: string[]; bizum: string } | null>(null)
@@ -85,6 +86,7 @@ export function Footer({ content }: { content?: Partial<RodapeContent> } = {}) {
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (d?.instagram) setInstagram(d.instagram)
+        if (d?.logoUrl && d?.logoStyle !== 'icone_nome') setSavedLogo(String(d.logoUrl))
         if (String(d?.whatsapp ?? '').replace(/\D/g, '')) setWhatsapp(String(d.whatsapp).replace(/\s+/g, ' ').trim())
         if (d?.email) setEmail(String(d.email).trim())
       })
@@ -113,7 +115,7 @@ export function Footer({ content }: { content?: Partial<RodapeContent> } = {}) {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
           <Link href="/" aria-label="Kitoys 3D — Inicio" className="shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={LOGO} alt="Kitoys 3D" className="h-16 w-auto object-contain" />
+            <img src={(branding?.logoStyle ?? 'logo_direto') === 'logo_direto' ? (branding?.logoUrl ?? savedLogo) || LOGO : LOGO} alt={branding?.storeName || 'Kitoys 3D'} className="h-16 w-auto object-contain" />
           </Link>
           {R.brandText && <p className="max-w-xl text-sm leading-relaxed text-[#565a78]">{R.brandText}</p>}
         </div>
