@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import { Instagram, Lock, Mail, MessageCircle, Truck } from 'lucide-react'
 import { PAYMENT_LOGOS } from '@/components/payment-logos'
 import { useSectors } from '@/components/kids/sectors-context'
-import { type FooterContent } from '@/lib/site-content-defaults'
+import { DEFAULT_RODAPE, type FooterLinkItem, type RodapeContent } from '@/lib/site-content-defaults'
 
 // Contato: vem do Admin → Editar loja (WhatsApp, e-mail, Instagram); estes
 // valores so aparecem enquanto as configuracoes carregam ou se estiverem vazias.
@@ -16,19 +16,17 @@ const LOGO = '/images/logo-kitoys-3d.png'
 
 type FooterLink = { title: string; description: string; href: string; external?: boolean }
 
-const ayuda = (whatsappHref: string): FooterLink[] => [
-  { title: 'Centro de ayuda y preguntas frecuentes', description: 'Montaje, uso de rotuladores lavables y mantenimiento.', href: whatsappHref, external: true },
-  { title: 'Mi pedido y seguimiento', description: 'Mira en qué paso está tu pedido con el número y tu e-mail.', href: '/pedido' },
-  { title: 'Cambios y devoluciones', description: '14 días naturales conforme a la normativa europea.', href: '/legal/devoluciones' },
-  { title: 'Garantía legal de 3 años', description: 'Cobertura ante cualquier defecto de fabricación.', href: '/legal/terminos' },
-]
-
-const LEGAL: FooterLink[] = [
-  { title: 'Aviso legal', description: 'Datos del titular y domicilio de operaciones (LSSI-CE).', href: '/legal/aviso-legal' },
-  { title: 'Política de privacidad', description: 'Tratamiento seguro de tus datos (RGPD UE 2016/679).', href: '/legal/privacidad' },
-  { title: 'Política de cookies', description: 'Preferencias de navegación y analítica web.', href: '/legal/cookies' },
-  { title: 'Condiciones generales de contratación', description: 'Términos de venta, pagos y resolución de litigios.', href: '/legal/terminos' },
-]
+// Link do admin -> link de verdade: "whatsapp" e "email" viram o contato da loja;
+// http(s) abre em outra aba.
+function resolveLinks(items: FooterLinkItem[], whatsappHref: string, email: string): FooterLink[] {
+  return items.filter((i) => i.title.trim()).map((i) => {
+    const h = i.href.trim()
+    if (h.toLowerCase() === 'whatsapp') return { ...i, href: whatsappHref, external: true }
+    if (h.toLowerCase() === 'email') return { ...i, href: `mailto:${email}`, external: true }
+    if (/^https?:\/\//i.test(h)) return { ...i, href: h, external: true }
+    return { ...i, href: h || '#' }
+  })
+}
 
 // Logo de pagamento so aparece se o metodo esta ATIVO na conta Stripe
 // (consulta /api/checkout/stripe-status): Bizum e PayPal entram sozinhos
@@ -71,10 +69,11 @@ function LinkList({ items }: { items: FooterLink[] }) {
   )
 }
 
-// Rodape da Kitoys 3D: marca, tres colunas (colecoes reais do Admin →
-// Setores e coleções, ayuda e legal), seguranca/pagamentos e contato.
-// `content` (do editor de conteudo) fica aceito por compatibilidade.
-export function Footer(_props: { content?: FooterContent }) {
+// Rodape da Kitoys 3D: marca, tres colunas (colecoes reais ou lista do admin,
+// ayuda e legal), seguranca/pagamentos e contato. Textos e links vem do
+// Admin -> Editar loja -> Rodape (sem conteudo salvo, usa DEFAULT_RODAPE).
+export function Footer({ content }: { content?: Partial<RodapeContent> } = {}) {
+  const R: RodapeContent = { ...DEFAULT_RODAPE, ...content }
   const { collections } = useSectors()
   const [instagram, setInstagram] = useState('')
   const [whatsapp, setWhatsapp] = useState(DEFAULT_WHATSAPP)
@@ -96,11 +95,9 @@ export function Footer(_props: { content?: FooterContent }) {
       .catch(() => {})
   }, [])
 
-  const productos: FooterLink[] = collections.map((c) => ({
-    title: c.name,
-    description: c.tagline || c.description,
-    href: `/coleccion/${c.slug}`,
-  }))
+  const productos: FooterLink[] = R.productsAuto
+    ? collections.map((c) => ({ title: c.name, description: c.tagline || c.description, href: `/coleccion/${c.slug}` }))
+    : resolveLinks(R.products, waHref(whatsapp), EMAIL)
   const logos = PAYMENT_LOGOS.filter(({ key }) => (payment ? LOGO_NEEDS[key]?.(payment.methods, payment.bizum) : key === 'visa' || key === 'mastercard'))
   const instagramHref = normalizeInstagramHref(instagram)
   const WHATSAPP_HREF = waHref(whatsapp)
@@ -118,9 +115,7 @@ export function Footer(_props: { content?: FooterContent }) {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={LOGO} alt="Kitoys 3D" className="h-16 w-auto object-contain" />
           </Link>
-          <p className="max-w-xl text-sm leading-relaxed text-[#565a78]">
-            Explora el universo creativo de kitoys3d: juguetes, puzzles y lámparas fabricados con tecnología de impresión 3D de alta precisión.
-          </p>
+          {R.brandText && <p className="max-w-xl text-sm leading-relaxed text-[#565a78]">{R.brandText}</p>}
         </div>
         <div className="flex items-center gap-2">
           {instagramHref && (
@@ -141,19 +136,19 @@ export function Footer(_props: { content?: FooterContent }) {
       <div className="border-y-[3px] border-[#1E1B4B]/10 bg-[#FFF4D6]">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 py-10 sm:px-6 md:grid-cols-3 lg:px-8">
           <div>
-            <h2 className="font-kids text-xl font-bold text-[#23263f]">Productos</h2>
-            <p className="mt-1 text-xs text-[#565a78]">Nuestras colecciones impresas en 3D.</p>
+            <h2 className="font-kids text-xl font-bold text-[#23263f]">{R.productsTitle}</h2>
+            {R.productsSubtitle && <p className="mt-1 text-xs text-[#565a78]">{R.productsSubtitle}</p>}
             <LinkList items={productos} />
           </div>
           <div id="ayuda-soporte" className="scroll-mt-24">
-            <h2 className="font-kids text-xl font-bold text-[#23263f]">Ayuda y atención al cliente</h2>
-            <p className="mt-1 text-xs text-[#565a78]">Atención personalizada desde España.</p>
-            <LinkList items={ayuda(WHATSAPP_HREF)} />
+            <h2 className="font-kids text-xl font-bold text-[#23263f]">{R.helpTitle}</h2>
+            {R.helpSubtitle && <p className="mt-1 text-xs text-[#565a78]">{R.helpSubtitle}</p>}
+            <LinkList items={resolveLinks(R.help, WHATSAPP_HREF, EMAIL)} />
           </div>
           <div>
-            <h2 className="font-kids text-xl font-bold text-[#23263f]">Legal y transparencia</h2>
-            <p className="mt-1 text-xs text-[#565a78]">Tus derechos como consumidor en la Unión Europea.</p>
-            <LinkList items={LEGAL} />
+            <h2 className="font-kids text-xl font-bold text-[#23263f]">{R.legalTitle}</h2>
+            {R.legalSubtitle && <p className="mt-1 text-xs text-[#565a78]">{R.legalSubtitle}</p>}
+            <LinkList items={resolveLinks(R.legal, WHATSAPP_HREF, EMAIL)} />
           </div>
         </div>
       </div>
@@ -161,22 +156,22 @@ export function Footer(_props: { content?: FooterContent }) {
       {/* Seguranca e pagamentos */}
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
         <div className="space-y-1.5 text-sm text-[#565a78]">
-          <p className="flex items-center gap-2"><Lock className="h-4 w-4 shrink-0 text-[#15803d]" aria-hidden="true" /> Pago 100% seguro y encriptado (SSL/TLS) con autenticación reforzada (SCA).</p>
-          <p className="flex items-center gap-2"><Truck className="h-4 w-4 shrink-0 text-[#15803d]" aria-hidden="true" /> Envíos con seguimiento a toda España peninsular y Baleares.</p>
+          {R.securityLine && <p className="flex items-center gap-2"><Lock className="h-4 w-4 shrink-0 text-[#15803d]" aria-hidden="true" /> {R.securityLine}</p>}
+          {R.shippingLine && <p className="flex items-center gap-2"><Truck className="h-4 w-4 shrink-0 text-[#15803d]" aria-hidden="true" /> {R.shippingLine}</p>}
         </div>
-        <div className="flex flex-wrap gap-1.5" aria-label="Métodos de pago aceptados">
+        {R.showPayments && <div className="flex flex-wrap gap-1.5" aria-label="Métodos de pago aceptados">
           {logos.map(({ key, label, Logo }) => (
             <span key={key} title={label} className="overflow-hidden rounded-md">
               <Logo />
             </span>
           ))}
-        </div>
+        </div>}
       </div>
 
       {/* Copyright e contato */}
       <div className="border-t border-[#efe7da]">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-6 text-sm text-[#565a78] sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
-          <p>© 2026 kitoys3d. Todos los derechos reservados.</p>
+          <p>{R.copyright.replace(/\{ano\}/gi, String(new Date().getFullYear()))}</p>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-5">
             <a href={WHATSAPP_HREF} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 hover:text-[#23263f]">
               <MessageCircle className="h-4 w-4" aria-hidden="true" /> WhatsApp {WHATSAPP_DISPLAY}
@@ -184,7 +179,7 @@ export function Footer(_props: { content?: FooterContent }) {
             <a href={`mailto:${EMAIL}`} className="inline-flex items-center gap-1.5 hover:text-[#23263f]">
               <Mail className="h-4 w-4" aria-hidden="true" /> {EMAIL}
             </a>
-            <span className="text-xs">Respuesta en menos de 24 h laborables</span>
+            {R.responseTime && <span className="text-xs">{R.responseTime}</span>}
           </div>
         </div>
       </div>

@@ -1,18 +1,12 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { Pencil, X, Check, Loader2, Snowflake, Video, Sparkles, Mail, PanelBottom, Users, Eye, UploadCloud, Smartphone, Monitor } from 'lucide-react';
+import { Pencil, X, Check, Loader2, Snowflake, Video, Eye, UploadCloud, Smartphone, Monitor, Megaphone, Images, CircleDot, Rows3, BadgePercent, PanelBottom } from 'lucide-react';
 import {
   DEFAULT_SITE_CONTENT,
   SITE_CONTENT_SECTIONS,
   type SiteContent,
 } from '@/lib/site-content-defaults';
-import { HeroForm } from './content/HeroForm';
-import { ProductsIntroForm } from './content/ProductsIntroForm';
-import { DestaquesForm } from './content/DestaquesForm';
-import { TrustBadgesForm } from './content/TrustBadgesForm';
-import { AboutForm } from './content/AboutForm';
-import { GiftBannerForm } from './content/GiftBannerForm';
-import { FooterForm } from './content/FooterForm';
+import { BannerForm, CategoriasForm, PromoForm, RodapeForm, SecoesForm, TopbarForm, type SectorLite } from './content/VitrineForms';
 import { PagePosition } from './content/PagePosition';
 
 type SectionKey = keyof SiteContent;
@@ -20,17 +14,18 @@ type SectionKey = keyof SiteContent;
 // desc says exactly where on the page this shows up — index feeds the
 // PagePosition dots (see that file for the full landmark list) so each
 // card also shows it visually, not just in words.
-const SECTION_META: Record<SectionKey, { label: string; desc: string; icon: typeof Video; pageIndex: number }> = {
-  hero: { label: 'Hero principal', desc: 'O vídeo/imagem grande do topo da loja, com título, subtítulo e botão.', icon: Video, pageIndex: 1 },
-  productsIntro: { label: 'Texto dos produtos', desc: 'A frase pequena que aparece acima de "Productos", repetida em cada categoria.', icon: Sparkles, pageIndex: 3 },
-  destaques: { label: 'Destacados', desc: 'Os 4 cards com ícone/selo que aparecem logo abaixo da lista de produtos.', icon: Sparkles, pageIndex: 4 },
-  trustBadges: { label: 'Selos de confiança', desc: 'A faixa com 4 selos (envio, devolução, pagamento...) acima dos produtos.', icon: PanelBottom, pageIndex: 2 },
-  about: { label: 'Sobre a loja', desc: 'Seção com o texto "Por que nos escolher", diferenciais e estatísticas, perto do fim da página.', icon: Users, pageIndex: 8 },
-  giftBanner: { label: 'Banner de presente', desc: 'O banner grande com a foto da cesta, depois das categorias em destaque.', icon: Mail, pageIndex: 6 },
-  footer: { label: 'Rodapé', desc: 'Descrição da marca, colunas e nota de direitos autorais, no final da página.', icon: PanelBottom, pageIndex: 9 },
+// Só as partes do modelo atual da vitrine (o modelo antigo continua salvo, mas não aparece mais na loja).
+type EditableKey = 'topbar' | 'banner' | 'categorias' | 'secoes' | 'promo' | 'rodape';
+const SECTION_META: Record<EditableKey, { label: string; desc: string; icon: typeof Video; pageIndex: number }> = {
+  topbar: { label: 'Faixa do topo', desc: 'A linha fina acima do cabeçalho (ex.: "Envío gratis en pedidos +50€").', icon: Megaphone, pageIndex: 0 },
+  banner: { label: 'Banner principal', desc: 'Os slides grandes do topo da home: texto, botão, foto e cores.', icon: Images, pageIndex: 1 },
+  categorias: { label: 'Categorias (bolinhas)', desc: 'As bolinhas com foto embaixo do banner que filtram os produtos.', icon: CircleDot, pageIndex: 2 },
+  secoes: { label: 'Seções de produtos', desc: 'Ordem, títulos e frases de cada seção (Infantil, Hogar, Navidad…) e o "Ver todo".', icon: Rows3, pageIndex: 3 },
+  promo: { label: 'Banner promocional', desc: 'O banner "Con su nombre" no meio da home: texto, botão, foto, cores e posição.', icon: BadgePercent, pageIndex: 4 },
+  rodape: { label: 'Rodapé', desc: 'Texto da marca, as três colunas de links, linhas de segurança e envio e direitos autorais.', icon: PanelBottom, pageIndex: 5 },
 };
 
-const SECTION_ORDER: SectionKey[] = ['hero', 'trustBadges', 'productsIntro', 'destaques', 'giftBanner', 'about', 'footer'];
+const SECTION_ORDER: EditableKey[] = ['topbar', 'banner', 'categorias', 'secoes', 'promo', 'rodape'];
 const DRAFT_STORAGE_KEY = 'vitafit-admin-site-content-draft';
 
 // Drafts saved to localStorage before media fields switched from
@@ -64,13 +59,22 @@ export function ContentEditor() {
   const [content, setContent] = useState<SiteContent>(DEFAULT_SITE_CONTENT);
   const [loading, setLoading] = useState(true);
   const [restoredDraft, setRestoredDraft] = useState(false);
-  const [editingSection, setEditingSection] = useState<SectionKey | null>(null);
+  const [editingSection, setEditingSection] = useState<EditableKey | null>(null);
   const [draft, setDraft] = useState<SiteContent[SectionKey] | null>(null);
   const [publishing, setPublishing] = useState(false);
   const [publishError, setPublishError] = useState('');
   const [publishedJustNow, setPublishedJustNow] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
+  const [sectors, setSectors] = useState<SectorLite[]>([]);
+
+  // Setores reais (para as listas do banner, categorias e seções).
+  useEffect(() => {
+    fetch('/api/sectors?all=1', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => { if (Array.isArray(d)) setSectors(d.filter((s: any) => s?.enabled !== false).map((s: any) => ({ slug: s.slug, name: s.name, tagline: s.tagline ?? '', imageUrl: s.imageUrl ?? '' }))); })
+      .catch(() => {});
+  }, []);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const dirty = JSON.stringify(content) !== JSON.stringify(published);
@@ -117,7 +121,7 @@ export function ContentEditor() {
     }
   }, [content, dirty, loading]);
 
-  function openEditor(section: SectionKey) {
+  function openEditor(section: EditableKey) {
     setEditingSection(section);
     setDraft(content[section]);
   }
@@ -141,7 +145,7 @@ export function ContentEditor() {
         const badField = findOversizedDataUrl(content[section]);
         if (badField) {
           throw new Error(
-            `"${SECTION_META[section].label}" tem um arquivo antigo salvo em formato pesado (${badField}) de antes da correção de upload. ` +
+            `"${SECTION_META[section as EditableKey]?.label ?? section}" tem um arquivo antigo salvo em formato pesado (${badField}) de antes da correção de upload. ` +
             `Abra essa seção, reenvie a imagem/vídeo pelo campo de mídia e publique de novo.`
           );
         }
@@ -158,7 +162,7 @@ export function ContentEditor() {
           try { message = JSON.parse(raw)?.error ?? ''; } catch { /* not JSON */ }
           throw new Error(
             message ||
-            `Não foi possível publicar "${SECTION_META[section].label}" (HTTP ${res.status}${res.statusText ? ` ${res.statusText}` : ''}).` +
+            `Não foi possível publicar "${SECTION_META[section as EditableKey]?.label ?? section}" (HTTP ${res.status}${res.statusText ? ` ${res.statusText}` : ''}).` +
             (raw ? ` ${raw.slice(0, 200)}` : '')
           );
         }
@@ -297,27 +301,12 @@ export function ContentEditor() {
               </button>
             </div>
 
-            {editingSection === 'hero' && (
-              <HeroForm data={draft as SiteContent['hero']} onChange={(d) => setDraft(d)} />
-            )}
-            {editingSection === 'productsIntro' && (
-              <ProductsIntroForm data={draft as SiteContent['productsIntro']} onChange={(d) => setDraft(d)} />
-            )}
-            {editingSection === 'destaques' && (
-              <DestaquesForm data={draft as SiteContent['destaques']} onChange={(d) => setDraft(d)} />
-            )}
-            {editingSection === 'trustBadges' && (
-              <TrustBadgesForm data={draft as SiteContent['trustBadges']} onChange={(d) => setDraft(d)} />
-            )}
-            {editingSection === 'about' && (
-              <AboutForm data={draft as SiteContent['about']} onChange={(d) => setDraft(d)} />
-            )}
-            {editingSection === 'giftBanner' && (
-              <GiftBannerForm data={draft as SiteContent['giftBanner']} onChange={(d) => setDraft(d)} />
-            )}
-            {editingSection === 'footer' && (
-              <FooterForm data={draft as SiteContent['footer']} onChange={(d) => setDraft(d)} />
-            )}
+            {editingSection === 'topbar' && <TopbarForm data={draft as SiteContent['topbar']} onChange={(d) => setDraft(d)} />}
+            {editingSection === 'banner' && <BannerForm data={draft as SiteContent['banner']} onChange={(d) => setDraft(d)} sectors={sectors} />}
+            {editingSection === 'categorias' && <CategoriasForm data={draft as SiteContent['categorias']} onChange={(d) => setDraft(d)} sectors={sectors} />}
+            {editingSection === 'secoes' && <SecoesForm data={draft as SiteContent['secoes']} onChange={(d) => setDraft(d)} sectors={sectors} />}
+            {editingSection === 'promo' && <PromoForm data={draft as SiteContent['promo']} onChange={(d) => setDraft(d)} sectionsCount={sectors.length} />}
+            {editingSection === 'rodape' && <RodapeForm data={draft as SiteContent['rodape']} onChange={(d) => setDraft(d)} />}
 
             <p className="mt-4 text-[11px] text-white/35">
               Isso só atualiza o rascunho. Depois use "Visualizar loja" pra conferir e "Publicar alterações" pra colocar no ar.

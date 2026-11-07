@@ -47,7 +47,7 @@ export default async function CollectionPage({ params }: PageProps) {
           </div>
           <KidsHowItsMade />
         </main>
-        <Footer content={content.footer} />
+        <Footer content={content.rodape} />
         <WhatsAppFloating />
         <CartSidebar />
         <UpsellPopup />

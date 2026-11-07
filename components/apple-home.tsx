@@ -11,25 +11,17 @@ import { useSectors } from '@/components/kids/sectors-context';
 import { useStoreProducts } from '@/components/kids/use-store-products';
 import { GO_HOME_EVENT } from '@/components/mobile-tab-bar';
 import { Tr, UI } from '@/components/language-switcher';
+import { DEFAULT_BANNER, DEFAULT_CATEGORIAS, DEFAULT_PROMO, DEFAULT_SECOES, SLIDE_COLORS, type SiteContent } from '@/lib/site-content-defaults';
 
 // Home no formato de app de loja: banner com slides, setores em cards que
 // filtram os produtos, cards com selo + botao de carrinho e uma faixa de
-// oferta no meio. A escolha de colecao detalhada continua no menu.
+// oferta no meio. Textos, imagens, ordem e cores vem do Admin -> Editar loja
+// (lib/site-content-defaults.ts); vazio = automatico pelos setores/produtos.
 
 const FONT = { fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif' };
 const INK = '#1d1d1f';
 const MUTED = '#6e6e73';
 const BLUE = '#0071e3';
-// Fundo de cada slide do banner (texto branco por cima: contraste alto).
-const SLIDE_BG: [string, string][] = [
-  ['#0b1730', '#12306b'],
-  ['#3b0a0a', '#8f1d1d'],
-  ['#0c2a1f', '#14594a'],
-  ['#2a0d3d', '#5b2a86'],
-  ['#2b1a0a', '#7a4a16'],
-];
-const slideBg = (k: number) => { const [a, b] = SLIDE_BG[k % SLIDE_BG.length]; return { a, b, css: `linear-gradient(120deg,${a} 0%,${b} 100%)` }; };
-
 type Block = { key: string; title: string; tagline: string; href: string; products: Product[] };
 
 function badgeOf(p: Product, off: number, sub: string) {
@@ -102,7 +94,7 @@ function ProductCard({ product }: { product: Product }) {
   );
 }
 
-function SectionHead({ title, tagline, href }: { title: string; tagline?: string; href?: string }) {
+function SectionHead({ title, tagline, href, viewAll = 'Ver todo' }: { title: string; tagline?: string; href?: string; viewAll?: string }) {
   return (
     <div className="mb-4 flex items-end justify-between gap-4">
       <div className="min-w-0">
@@ -111,7 +103,7 @@ function SectionHead({ title, tagline, href }: { title: string; tagline?: string
       </div>
       {href && (
         <Link href={href} className="inline-flex shrink-0 items-center gap-1 text-[15px] font-medium hover:underline" style={{ color: BLUE }}>
-          Ver todo <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          {viewAll} <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </Link>
       )}
     </div>
@@ -130,26 +122,45 @@ function Carousel({ products }: { products: Product[] }) {
   );
 }
 
-// Banner do topo: um slide por setor; passa sozinho (para no hover/foco e com
-// "reduzir movimento"), arrasta com o dedo e tem os pontinhos pra escolher.
-function HeroSlides({ blocks, onShop }: { blocks: Block[]; onShop: (key: string) => void }) {
-  const slides = blocks
-    .map((b) => ({ ...b, img: b.products.map((p) => p.mainImage ?? p.image).find(Boolean) as string | undefined }))
-    .filter((s) => s.img)
-    .slice(0, 5);
+// Um slide do banner já resolvido (automático por setor ou personalizado no admin).
+type Slide = {
+  key: string;
+  eyebrow: React.ReactNode;
+  title: string;
+  tagline: string;
+  img?: string;
+  cta: string;
+  href: string;       // '' = filtra o setor na própria home
+  sector: string;
+  a: string;
+  b: string;
+};
+
+// Banner do topo: passa sozinho (para no hover/foco e com "reduzir movimento"),
+// arrasta com o dedo e tem os pontinhos pra escolher.
+function HeroSlides({ slides, autoplay, onShop }: { slides: Slide[]; autoplay: number; onShop: (key: string) => void }) {
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
   const touchX = useRef<number | null>(null);
   const n = slides.length;
 
+  useEffect(() => { if (i >= n) setI(0); }, [i, n]);
   useEffect(() => {
-    if (n < 2 || paused) return;
+    if (n < 2 || paused || autoplay <= 0) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const t = setInterval(() => setI((v) => (v + 1) % n), 5500);
+    const t = setInterval(() => setI((v) => (v + 1) % n), autoplay * 1000);
     return () => clearInterval(t);
-  }, [n, paused]);
+  }, [n, paused, autoplay]);
 
   if (!n) return <div className="aspect-[16/9] rounded-[24px] bg-[#f5f5f7] sm:aspect-[21/8]" aria-hidden="true" />;
+
+  const ctaCls = 'mt-4 inline-flex min-h-11 cursor-pointer items-center gap-2 whitespace-nowrap rounded-full pl-4 pr-1.5 text-[12px] font-bold uppercase tracking-wide text-white transition-opacity hover:opacity-90 sm:mt-6 sm:text-[15px]';
+  const ctaInner = (text: string) => (
+    <>
+      {text}
+      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white" style={{ color: BLUE }}><ArrowRight className="h-4 w-4" aria-hidden="true" /></span>
+    </>
+  );
 
   return (
     <div
@@ -171,31 +182,28 @@ function HeroSlides({ blocks, onShop }: { blocks: Block[]; onShop: (key: string)
           <div
             key={s.key}
             className="relative flex min-h-[210px] w-full shrink-0 items-center sm:min-h-[340px]"
-            style={{ background: slideBg(k).css }}
+            style={{ background: `linear-gradient(120deg,${s.a} 0%,${s.b} 100%)` }}
             aria-hidden={k !== i}
             role="group"
             aria-label={`${k + 1} de ${n}`}
           >
             <div className="relative z-10 w-[60%] pb-10 pl-5 pr-2 pt-6 sm:w-1/2 sm:py-12 sm:pl-12">
-              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#7cc4ff] sm:text-[13px]"><Tr t={k === 0 ? UI.novedades : UI.coleccion} /></p>
+              {s.eyebrow && <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#7cc4ff] sm:text-[13px]">{s.eyebrow}</p>}
               <h1 className="mt-1.5 text-[24px] font-extrabold uppercase leading-[1.05] text-white sm:text-[46px]">{s.title}</h1>
               {s.tagline && <p className="mt-2 line-clamp-2 text-[13px] leading-snug text-white/85 sm:text-[18px]">{s.tagline}</p>}
-              <button
-                type="button"
-                tabIndex={k === i ? 0 : -1}
-                onClick={() => onShop(s.key)}
-                className="mt-4 inline-flex min-h-11 cursor-pointer items-center gap-2 whitespace-nowrap rounded-full pl-4 pr-1.5 text-[12px] font-bold uppercase tracking-wide text-white transition-opacity hover:opacity-90 sm:mt-6 sm:text-[15px]"
-                style={{ background: BLUE }}
-              >
-                Comprar ahora
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white" style={{ color: BLUE }}><ArrowRight className="h-4 w-4" aria-hidden="true" /></span>
-              </button>
+              {s.cta && (s.href ? (
+                <Link href={s.href} tabIndex={k === i ? 0 : -1} className={ctaCls} style={{ background: BLUE }}>{ctaInner(s.cta)}</Link>
+              ) : (
+                <button type="button" tabIndex={k === i ? 0 : -1} onClick={() => onShop(s.sector)} className={ctaCls} style={{ background: BLUE }}>{ctaInner(s.cta)}</button>
+              ))}
             </div>
-            <div className="absolute inset-y-0 right-0 w-[46%] sm:w-1/2">
-              <Image src={s.img!} alt="" fill priority={k === 0} sizes="(min-width: 1024px) 560px, 50vw" className="object-cover" />
-              {/* funde a foto no fundo do slide */}
-              <div className="absolute inset-y-0 left-0 w-1/3" style={{ background: `linear-gradient(90deg, ${slideBg(k).b} 0%, transparent 100%)` }} />
-            </div>
+            {s.img && (
+              <div className="absolute inset-y-0 right-0 w-[46%] sm:w-1/2">
+                <Image src={s.img} alt="" fill priority={k === 0} sizes="(min-width: 1024px) 560px, 50vw" className="object-cover" />
+                {/* funde a foto no fundo do slide */}
+                <div className="absolute inset-y-0 left-0 w-1/3" style={{ background: `linear-gradient(90deg, ${s.b} 0%, transparent 100%)` }} />
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -219,7 +227,23 @@ function HeroSlides({ blocks, onShop }: { blocks: Block[]; onShop: (key: string)
   );
 }
 
-export function AppleHome() {
+export type HomeContentProps = Partial<Pick<SiteContent, 'banner' | 'categorias' | 'secoes' | 'promo'>>;
+
+// Ordena a lista do admin pelos setores existentes; setor que não está na lista entra no fim.
+function orderBy<T extends { sector: string }>(slugs: string[], items: T[]): { slug: string; cfg?: T }[] {
+  const seen = new Set<string>();
+  const out: { slug: string; cfg?: T }[] = [];
+  for (const it of items) if (slugs.includes(it.sector) && !seen.has(it.sector)) { seen.add(it.sector); out.push({ slug: it.sector, cfg: it }); }
+  for (const s of slugs) if (!seen.has(s)) out.push({ slug: s });
+  return out;
+}
+
+export function AppleHome({ content }: { content?: HomeContentProps } = {}) {
+  const B = { ...DEFAULT_BANNER, ...content?.banner };
+  const C = { ...DEFAULT_CATEGORIAS, ...content?.categorias };
+  const S = { ...DEFAULT_SECOES, ...content?.secoes };
+  const P = { ...DEFAULT_PROMO, ...content?.promo };
+
   const { products } = useStoreProducts();
   const { sectors, collectionForProduct } = useSectors();
   const [active, setActive] = useState('todos');
@@ -230,7 +254,8 @@ export function AppleHome() {
     return () => window.removeEventListener(GO_HOME_EVENT, reset);
   }, []);
 
-  const blocks: Block[] = useMemo(() => {
+  // Produtos agrupados por setor (todos os setores com produto, na ordem do admin de setores).
+  const all: Block[] = useMemo(() => {
     const bySector: Record<string, Product[]> = {};
     const loose: Product[] = [];
     for (const p of products) {
@@ -242,45 +267,78 @@ export function AppleHome() {
     const list: Block[] = sectors
       .filter((s) => bySector[s.slug]?.length)
       .map((s) => ({ key: s.slug, title: s.name, tagline: s.tagline, href: `/sector/${s.slug}`, products: bySector[s.slug] }));
-    if (loose.length) list.push({ key: 'mas', title: 'Más productos', tagline: 'Detalles impresos en 3D para tu casa', href: '', products: loose });
+    if (loose.length) list.push({ key: 'mas', title: S.moreTitle, tagline: S.moreTagline, href: '', products: loose });
     return list;
-  }, [products, sectors, collectionForProduct]);
+  }, [products, sectors, collectionForProduct, S.moreTitle, S.moreTagline]);
+  const byKey = useMemo(() => Object.fromEntries(all.map((b) => [b.key, b])), [all]);
+  const firstImg = (b?: Block) => b?.products.map((p) => p.mainImage ?? p.image).find(Boolean) as string | undefined;
 
-  // Navidad primeiro no banner durante a temporada.
-  const heroBlocks = useMemo(() => {
-    const nav = blocks.find((b) => b.key === 'navidad');
-    return nav ? [nav, ...blocks.filter((b) => b !== nav && b.key !== 'mas')] : blocks.filter((b) => b.key !== 'mas');
-  }, [blocks]);
+  // Seções de produtos: ordem, textos e visibilidade do admin.
+  const blocks: Block[] = useMemo(() => {
+    const ordered = orderBy(all.filter((b) => b.key !== 'mas').map((b) => b.key), S.items)
+      .filter((x) => !x.cfg?.hidden)
+      .map((x) => ({ ...byKey[x.slug], title: x.cfg?.title || byKey[x.slug].title, tagline: x.cfg?.tagline || byKey[x.slug].tagline }));
+    if (S.showMore && byKey.mas) ordered.push(byKey.mas);
+    return ordered;
+  }, [all, byKey, S.items, S.showMore]);
+
+  // Slides do banner.
+  const slides: Slide[] = useMemo(() => {
+    if (!B.enabled) return [];
+    if (B.mode === 'custom') {
+      return B.slides.filter((s) => s.enabled).map((s, k) => {
+        const blk = byKey[s.sector];
+        const [a, b] = SLIDE_COLORS[k % SLIDE_COLORS.length];
+        return {
+          key: s.id || `s${k}`, eyebrow: s.eyebrow, title: s.title || blk?.title || '', tagline: s.subtitle || blk?.tagline || '',
+          img: s.image || firstImg(blk), cta: s.ctaText, href: s.ctaHref, sector: s.sector || 'todos', a: s.bgFrom || a, b: s.bgTo || b,
+        };
+      });
+    }
+    const base = blocks.filter((b) => b.key !== 'mas');
+    const nav = B.christmasFirst ? base.find((b) => b.key === 'navidad') : undefined;
+    const order = nav ? [nav, ...base.filter((b) => b !== nav)] : base;
+    return order
+      .map((b) => ({ b, img: firstImg(b) }))
+      .filter((x) => x.img)
+      .slice(0, Math.max(1, B.maxSlides))
+      .map(({ b, img }, k) => {
+        const [c1, c2] = SLIDE_COLORS[k % SLIDE_COLORS.length];
+        const eyebrow = k === 0 ? (B.firstEyebrow || <Tr t={UI.novedades} />) : (B.eyebrow || <Tr t={UI.coleccion} />);
+        return { key: b.key, eyebrow, title: b.title, tagline: b.tagline, img, cta: B.ctaText, href: '', sector: b.key, a: c1, b: c2 };
+      });
+  }, [B, blocks, byKey]);
 
   const personalizable = useMemo(() => products.map(toStoreProduct).filter((p) => p.personalize?.enabled), [products]);
-  const promoImg = personalizable.map((p) => p.mainImage ?? p.image).find(Boolean);
-  const selected = blocks.find((b) => b.key === active);
+  const promoImg = P.image || personalizable.map((p) => p.mainImage ?? p.image).find(Boolean);
+  const selected = blocks.find((b) => b.key === active) ?? byKey[active];
 
   function choose(key: string) {
     setActive(key);
     requestAnimationFrame(() => listRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   }
 
-  const promo = personalizable.length > 0 && (
-    <section className="my-10 overflow-hidden rounded-[24px] sm:my-14" style={{ background: 'linear-gradient(120deg,#0b1730 0%,#1b3f8f 100%)' }}>
+  const promoBtnCls = 'mt-4 inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-white px-5 text-[13px] font-bold uppercase tracking-wide transition-opacity hover:opacity-90 sm:text-[15px]';
+  const showPromo = P.enabled && (personalizable.length > 0 || !!P.ctaHref);
+  const promo = showPromo && (
+    <section className="my-10 overflow-hidden rounded-[24px] sm:my-14" style={{ background: `linear-gradient(120deg,${P.bgFrom} 0%,${P.bgTo} 100%)` }}>
       <div className="relative flex min-h-[170px] items-center sm:min-h-[240px]">
         <div className="relative z-10 w-[60%] py-6 pl-5 sm:w-1/2 sm:py-10 sm:pl-12">
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#7cc4ff] sm:text-[13px]">Hecho para ti</p>
-          <h2 className="mt-1 text-[22px] font-extrabold uppercase leading-[1.05] text-white sm:text-[38px]">Con su nombre</h2>
-          <p className="mt-1.5 text-[13px] leading-snug text-white/85 sm:text-[17px]">Escribe el nombre y míralo al instante antes de comprar.</p>
-          <button
-            type="button"
-            onClick={() => { setActive('personalizables'); requestAnimationFrame(() => listRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })); }}
-            className="mt-4 inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-white px-5 text-[13px] font-bold uppercase tracking-wide transition-opacity hover:opacity-90 sm:text-[15px]"
-            style={{ color: BLUE }}
-          >
-            Personalizar <ArrowRight className="h-4 w-4" aria-hidden="true" />
-          </button>
+          {P.eyebrow && <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#7cc4ff] sm:text-[13px]">{P.eyebrow}</p>}
+          <h2 className="mt-1 text-[22px] font-extrabold uppercase leading-[1.05] text-white sm:text-[38px]">{P.title}</h2>
+          {P.text && <p className="mt-1.5 text-[13px] leading-snug text-white/85 sm:text-[17px]">{P.text}</p>}
+          {P.ctaText && (P.ctaHref ? (
+            <Link href={P.ctaHref} className={promoBtnCls} style={{ color: BLUE }}>{P.ctaText} <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
+          ) : (
+            <button type="button" onClick={() => choose('personalizables')} className={promoBtnCls} style={{ color: BLUE }}>
+              {P.ctaText} <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </button>
+          ))}
         </div>
         {promoImg && (
           <div className="absolute inset-y-0 right-0 w-[44%] sm:w-[45%]">
             <Image src={promoImg} alt="" fill sizes="(min-width: 1024px) 500px, 45vw" className="object-cover" />
-            <div className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-[#1b3f8f] to-transparent" />
+            <div className="absolute inset-y-0 left-0 w-1/3" style={{ background: `linear-gradient(90deg, ${P.bgTo} 0%, transparent 100%)` }} />
           </div>
         )}
       </div>
@@ -288,51 +346,56 @@ export function AppleHome() {
   );
 
   const chips = [
-    { key: 'todos', label: 'Todo', img: undefined as string | undefined },
-    ...blocks.filter((b) => b.key !== 'mas').map((b) => ({ key: b.key, label: b.title.replace(/ personalizados?$/i, ''), img: b.products.map((p) => p.mainImage ?? p.image).find(Boolean) })),
-    ...(personalizable.length ? [{ key: 'personalizables', label: 'Con nombre', img: promoImg }] : []),
+    ...(C.showAll ? [{ key: 'todos', label: C.allLabel || 'Todo', img: undefined as string | undefined }] : []),
+    ...orderBy(all.filter((b) => b.key !== 'mas').map((b) => b.key), C.items)
+      .filter((x) => !x.cfg?.hidden)
+      .map((x) => ({ key: x.slug, label: x.cfg?.label || byKey[x.slug].title.replace(/ personalizados?$/i, ''), img: x.cfg?.image || firstImg(byKey[x.slug]) })),
+    ...(C.showPersonalized && personalizable.length ? [{ key: 'personalizables', label: C.personalizedLabel || 'Con nombre', img: C.personalizedImage || promoImg }] : []),
   ];
 
   const filtered = active === 'personalizables'
-    ? { key: 'personalizables', title: 'Con su nombre', tagline: 'Personaliza y míralo al instante', href: '', products: personalizable }
+    ? { key: 'personalizables', title: S.personalizedTitle, tagline: S.personalizedTagline, href: '', products: personalizable }
     : selected;
+  const promoAt = Math.max(0, Math.min(blocks.length - 1, (P.afterSection || 1) - 1));
 
   return (
     <div style={FONT} className="bg-[#f5f5f7] antialiased [&_h1]:[font-family:inherit] [&_h2]:[font-family:inherit] [&_h3]:[font-family:inherit]">
       <div className="mx-auto max-w-6xl px-4 pb-16 pt-[178px] sm:px-6 md:pt-[124px]">
-        <HeroSlides blocks={heroBlocks} onShop={choose} />
+        {B.enabled && <HeroSlides slides={slides} autoplay={B.autoplay} onShop={choose} />}
 
         {/* Setores em cards: tocar filtra os produtos logo abaixo */}
-        <nav aria-label="Categorías" className="mt-6 sm:mt-8">
-          <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:justify-center sm:gap-3 sm:px-0 [&::-webkit-scrollbar]:hidden">
-            {chips.map((c) => {
-              const on = active === c.key;
-              return (
-                <li key={c.key} className="shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => choose(c.key)}
-                    aria-pressed={on}
-                    className="flex w-[78px] cursor-pointer flex-col items-center gap-1.5 rounded-2xl py-1.5 transition-colors sm:w-[96px]"
-                  >
-                    <span
-                      className={`relative flex h-[60px] w-[60px] items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] ring-2 transition-all duration-200 sm:h-[72px] sm:w-[72px] ${on ? '' : 'ring-transparent hover:ring-black/10'}`}
-                      style={on ? { ['--tw-ring-color' as string]: BLUE } : undefined}
+        {C.enabled && chips.length > 0 && (
+          <nav aria-label="Categorías" className="mt-6 sm:mt-8">
+            <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:justify-center sm:gap-3 sm:px-0 [&::-webkit-scrollbar]:hidden">
+              {chips.map((c) => {
+                const on = active === c.key;
+                return (
+                  <li key={c.key} className="shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => choose(c.key)}
+                      aria-pressed={on}
+                      className="flex w-[78px] cursor-pointer flex-col items-center gap-1.5 rounded-2xl py-1.5 transition-colors sm:w-[96px]"
                     >
-                      {c.img ? <Image src={c.img} alt="" fill sizes="72px" className="object-cover" /> : <LayoutGrid className="h-6 w-6" style={{ color: on ? BLUE : INK }} aria-hidden="true" />}
-                    </span>
-                    <span className={`line-clamp-1 text-[12px] sm:text-[13px] ${on ? 'font-bold' : 'font-medium'}`} style={{ color: on ? BLUE : INK }}>{c.label}</span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
+                      <span
+                        className={`relative flex h-[60px] w-[60px] items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] ring-2 transition-all duration-200 sm:h-[72px] sm:w-[72px] ${on ? '' : 'ring-transparent hover:ring-black/10'}`}
+                        style={on ? { ['--tw-ring-color' as string]: BLUE } : undefined}
+                      >
+                        {c.img ? <Image src={c.img} alt="" fill sizes="72px" className="object-cover" /> : <LayoutGrid className="h-6 w-6" style={{ color: on ? BLUE : INK }} aria-hidden="true" />}
+                      </span>
+                      <span className={`line-clamp-1 text-[12px] sm:text-[13px] ${on ? 'font-bold' : 'font-medium'}`} style={{ color: on ? BLUE : INK }}>{c.label}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+        )}
 
         <div id="productos" ref={listRef} className="scroll-mt-28 pt-6 sm:pt-8">
           {filtered ? (
             <section aria-live="polite">
-              <SectionHead title={filtered.title} tagline={filtered.tagline} href={filtered.href || undefined} />
+              <SectionHead title={filtered.title} tagline={filtered.tagline} href={filtered.href || undefined} viewAll={S.viewAllText} />
               <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
                 {filtered.products.map((p) => <li key={p.id}><ProductCard product={p} /></li>)}
               </ul>
@@ -341,13 +404,18 @@ export function AppleHome() {
             blocks.map((b, k) => (
               <div key={b.key}>
                 <section id={b.key} className="scroll-mt-28 pt-6 first:pt-0 sm:pt-8">
-                  <SectionHead title={b.title} tagline={b.tagline} href={b.href || undefined} />
-                  <Carousel products={b.products} />
+                  <SectionHead title={b.title} tagline={b.tagline} href={b.href || undefined} viewAll={S.viewAllText} />
+                  {S.layout === 'grid' ? (
+                    <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+                      {b.products.map((p) => <li key={p.id}><ProductCard product={p} /></li>)}
+                    </ul>
+                  ) : <Carousel products={b.products} />}
                 </section>
-                {k === 0 && promo}
+                {k === promoAt && promo}
               </div>
             ))
           )}
+          {blocks.length === 0 && promo}
           {blocks.length === 0 && <div className="h-64" aria-hidden="true" />}
         </div>
       </div>

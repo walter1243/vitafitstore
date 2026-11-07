@@ -83,7 +83,7 @@ export default async function LegalPage({ params }: PageProps) {
           </div>
         </div>
       </main>
-      <Footer content={content.footer} />
+      <Footer content={content.rodape} />
     </div>
   )
 }

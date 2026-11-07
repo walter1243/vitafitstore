@@ -251,7 +251,204 @@ export const DEFAULT_ABOUT: AboutContent = {
   originBadgeSubtitle: 'Entrega en toda la Península',
 };
 
+// ---------------------------------------------------------------------------
+// Modelo atual da vitrine (components/apple-home.tsx + footer.tsx + header.tsx).
+// Texto vazio ('') = usar o automático (nome/descrição do setor, foto do
+// primeiro produto, frase traduzida pelo seletor de idioma).
+
+export type TopbarContent = {
+  enabled: boolean;
+  text: string;
+  href: string;
+  bg: string;
+  color: string;
+};
+
+export const DEFAULT_TOPBAR: TopbarContent = {
+  enabled: true,
+  text: 'Envío gratis en pedidos +50€ · España',
+  href: '',
+  bg: '#f5f5f7',
+  color: '#1d1d1f',
+};
+
+export type HomeSlide = {
+  id: string;
+  enabled: boolean;
+  sector: string;     // setor ligado ao slide ('' = nenhum)
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  ctaText: string;
+  ctaHref: string;    // '' = filtra os produtos do setor na própria home
+  image: string;      // '' = foto do primeiro produto do setor
+  bgFrom: string;
+  bgTo: string;
+};
+
+export type BannerContent = {
+  enabled: boolean;
+  mode: 'auto' | 'custom';  // auto = um slide por setor; custom = lista de slides
+  autoplay: number;         // segundos (0 = não passa sozinho)
+  maxSlides: number;
+  christmasFirst: boolean;  // setor "navidad" primeiro no modo automático
+  firstEyebrow: string;     // '' = "Novedades" (traduzido)
+  eyebrow: string;          // '' = "Colección" (traduzido)
+  ctaText: string;
+  slides: HomeSlide[];
+};
+
+export const SLIDE_COLORS: [string, string][] = [
+  ['#0b1730', '#12306b'],
+  ['#3b0a0a', '#8f1d1d'],
+  ['#0c2a1f', '#14594a'],
+  ['#2a0d3d', '#5b2a86'],
+  ['#2b1a0a', '#7a4a16'],
+];
+
+export const DEFAULT_BANNER: BannerContent = {
+  enabled: true,
+  mode: 'auto',
+  autoplay: 5.5,
+  maxSlides: 5,
+  christmasFirst: true,
+  firstEyebrow: '',
+  eyebrow: '',
+  ctaText: 'Comprar ahora',
+  slides: [],
+};
+
+export type HomeChip = { sector: string; label: string; image: string; hidden: boolean };
+
+export type CategoriasContent = {
+  enabled: boolean;
+  showAll: boolean;
+  allLabel: string;
+  showPersonalized: boolean;
+  personalizedLabel: string;
+  personalizedImage: string;
+  items: HomeChip[];        // ordem e ajustes por setor (setor fora da lista entra no fim)
+};
+
+export const DEFAULT_CATEGORIAS: CategoriasContent = {
+  enabled: true,
+  showAll: true,
+  allLabel: 'Todo',
+  showPersonalized: true,
+  personalizedLabel: 'Con nombre',
+  personalizedImage: '',
+  items: [],
+};
+
+export type HomeSectionCfg = { sector: string; title: string; tagline: string; hidden: boolean };
+
+export type SecoesContent = {
+  viewAllText: string;
+  layout: 'carousel' | 'grid';
+  items: HomeSectionCfg[];  // ordem e textos por setor
+  showMore: boolean;        // produtos sem setor
+  moreTitle: string;
+  moreTagline: string;
+  personalizedTitle: string;
+  personalizedTagline: string;
+};
+
+export const DEFAULT_SECOES: SecoesContent = {
+  viewAllText: 'Ver todo',
+  layout: 'carousel',
+  items: [],
+  showMore: true,
+  moreTitle: 'Más productos',
+  moreTagline: 'Detalles impresos en 3D para tu casa',
+  personalizedTitle: 'Con su nombre',
+  personalizedTagline: 'Personaliza y míralo al instante',
+};
+
+export type PromoContent = {
+  enabled: boolean;
+  eyebrow: string;
+  title: string;
+  text: string;
+  ctaText: string;
+  ctaHref: string;      // '' = mostra os produtos personalizáveis
+  image: string;        // '' = foto de um produto personalizável
+  bgFrom: string;
+  bgTo: string;
+  afterSection: number; // aparece depois da seção nº (1 = depois da primeira)
+};
+
+export const DEFAULT_PROMO: PromoContent = {
+  enabled: true,
+  eyebrow: 'Hecho para ti',
+  title: 'Con su nombre',
+  text: 'Escribe el nombre y míralo al instante antes de comprar.',
+  ctaText: 'Personalizar',
+  ctaHref: '',
+  image: '',
+  bgFrom: '#0b1730',
+  bgTo: '#1b3f8f',
+  afterSection: 1,
+};
+
+// href especiais no rodapé: "whatsapp" = abre o WhatsApp da loja; "email" = abre o e-mail.
+export type FooterLinkItem = { title: string; description: string; href: string };
+
+export type RodapeContent = {
+  brandText: string;
+  productsTitle: string;
+  productsSubtitle: string;
+  productsAuto: boolean;            // lista as coleções reais do admin
+  products: FooterLinkItem[];
+  helpTitle: string;
+  helpSubtitle: string;
+  help: FooterLinkItem[];
+  legalTitle: string;
+  legalSubtitle: string;
+  legal: FooterLinkItem[];
+  securityLine: string;
+  shippingLine: string;
+  copyright: string;                // {ano} vira o ano atual
+  responseTime: string;
+  showPayments: boolean;
+};
+
+export const DEFAULT_RODAPE: RodapeContent = {
+  brandText: 'Explora el universo creativo de kitoys3d: juguetes, puzzles y lámparas fabricados con tecnología de impresión 3D de alta precisión.',
+  productsTitle: 'Productos',
+  productsSubtitle: 'Nuestras colecciones impresas en 3D.',
+  productsAuto: true,
+  products: [],
+  helpTitle: 'Ayuda y atención al cliente',
+  helpSubtitle: 'Atención personalizada desde España.',
+  help: [
+    { title: 'Centro de ayuda y preguntas frecuentes', description: 'Montaje, uso de rotuladores lavables y mantenimiento.', href: 'whatsapp' },
+    { title: 'Mi pedido y seguimiento', description: 'Mira en qué paso está tu pedido con el número y tu e-mail.', href: '/pedido' },
+    { title: 'Cambios y devoluciones', description: '14 días naturales conforme a la normativa europea.', href: '/legal/devoluciones' },
+    { title: 'Garantía legal de 3 años', description: 'Cobertura ante cualquier defecto de fabricación.', href: '/legal/terminos' },
+  ],
+  legalTitle: 'Legal y transparencia',
+  legalSubtitle: 'Tus derechos como consumidor en la Unión Europea.',
+  legal: [
+    { title: 'Aviso legal', description: 'Datos del titular y domicilio de operaciones (LSSI-CE).', href: '/legal/aviso-legal' },
+    { title: 'Política de privacidad', description: 'Tratamiento seguro de tus datos (RGPD UE 2016/679).', href: '/legal/privacidad' },
+    { title: 'Política de cookies', description: 'Preferencias de navegación y analítica web.', href: '/legal/cookies' },
+    { title: 'Condiciones generales de contratación', description: 'Términos de venta, pagos y resolución de litigios.', href: '/legal/terminos' },
+  ],
+  securityLine: 'Pago 100% seguro y encriptado (SSL/TLS) con autenticación reforzada (SCA).',
+  shippingLine: 'Envíos con seguimiento a toda España peninsular y Baleares.',
+  copyright: '© {ano} kitoys3d. Todos los derechos reservados.',
+  responseTime: 'Respuesta en menos de 24 h laborables',
+  showPayments: true,
+};
+
 export type SiteContent = {
+  topbar: TopbarContent;
+  banner: BannerContent;
+  categorias: CategoriasContent;
+  secoes: SecoesContent;
+  promo: PromoContent;
+  rodape: RodapeContent;
+  // modelo antigo (não aparece mais na loja; mantido para não perder dados salvos)
   hero: HeroContent;
   productsIntro: ProductsIntroContent;
   destaques: DestaquesContent;
@@ -262,6 +459,12 @@ export type SiteContent = {
 };
 
 export const DEFAULT_SITE_CONTENT: SiteContent = {
+  topbar: DEFAULT_TOPBAR,
+  banner: DEFAULT_BANNER,
+  categorias: DEFAULT_CATEGORIAS,
+  secoes: DEFAULT_SECOES,
+  promo: DEFAULT_PROMO,
+  rodape: DEFAULT_RODAPE,
   hero: DEFAULT_HERO,
   productsIntro: DEFAULT_PRODUCTS_INTRO,
   destaques: DEFAULT_DESTAQUES,

@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { DEFAULT_TOPBAR, type TopbarContent } from '@/lib/site-content-defaults';
 import { useState, useEffect, useRef } from 'react';
 import { ShoppingCart, Menu, X, Smile } from 'lucide-react';
 import { ProductSearch } from '@/components/product-search';
@@ -43,7 +44,7 @@ function readCachedBranding() {
 }
 
 // Menu: Inicio + Colecciones (setores e colecoes do Admin).
-export function Header() {
+export function Header({ topbar: topbarOverride }: { topbar?: Partial<TopbarContent> } = {}) {
   const { sectors } = useSectors();
   const menuSectors = sectors.filter((s) => s.collections.length > 0);
   // Painel "Colecciones": abre no hover (desktop) ou clique; fecha com Esc,
@@ -78,7 +79,9 @@ export function Header() {
   const [logoUrl, setLogoUrl] = useState(cachedBranding?.logoUrl ?? '');
   const [logoStyle, setLogoStyle] = useState<'icone_nome' | 'logo_direto'>(cachedBranding?.logoStyle ?? 'logo_direto');
   const [themeColor, setThemeColor] = useState(cachedBranding?.themeColor ?? '#c2410c');
-  const [announcement, setAnnouncement] = useState('');
+  const [topbarSaved, setTopbarSaved] = useState<Partial<TopbarContent> | null>(null);
+  const topbar: TopbarContent = { ...DEFAULT_TOPBAR, text: '', ...(topbarSaved ?? {}), ...(topbarOverride ?? {}) };
+  const announcement = topbar.enabled ? topbar.text.trim() : '';
 
   // The header floats fixed below whatever stack of thin bars (free-shipping
   // announcement) is showing — it can appear
@@ -100,7 +103,7 @@ export function Header() {
   useEffect(() => {
     fetch('/api/site-content', { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : null))
-      .then((data) => { if (data?.hero?.badgeText) setAnnouncement(data.hero.badgeText); })
+      .then((data) => { if (data?.topbar) setTopbarSaved(data.topbar); })
       .catch(() => {});
   }, []);
 
@@ -163,8 +166,8 @@ export function Header() {
     <>
       <div ref={topBarRef} className="fixed top-0 left-0 right-0 z-40">
         {announcement && (
-          <div className="bg-[#f5f5f7] px-4 py-2 text-center text-[12px] text-[#1d1d1f]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif' }}>
-            {announcement}
+          <div className="px-4 py-2 text-center text-[12px]" style={{ background: topbar.bg, color: topbar.color, fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif' }}>
+            {topbar.href ? <a href={topbar.href} className="underline-offset-2 hover:underline">{announcement}</a> : announcement}
           </div>
         )}
       </div>

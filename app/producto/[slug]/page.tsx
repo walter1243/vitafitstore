@@ -54,7 +54,7 @@ export default async function ProductPage({ params }: PageProps) {
       <main className="flex-1">
         <ProductPageView product={product} />
       </main>
-      <Footer content={content.footer} />
+      <Footer content={content.rodape} />
       <WhatsAppFloating />
       <CartSidebar />
       <UpsellPopup />

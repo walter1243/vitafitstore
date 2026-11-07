@@ -4,15 +4,11 @@
 // common order — close enough to orient someone who has no idea which
 // card controls which part of the page.
 export const PAGE_LANDMARKS = [
-  'Cabeçalho',
-  'Vídeo principal',
-  'Selos de confiança',
-  'Produtos',
-  'Destacados',
-  'Categorias em destaque',
-  'Banner de presente',
-  'Mais vendidos',
-  'Sobre a loja',
+  'Faixa do topo',
+  'Banner principal',
+  'Categorias',
+  'Seções de produtos',
+  'Banner promocional',
   'Rodapé',
 ] as const;
 

@@ -27,9 +27,9 @@ export default async function HomePage() {
     <div className="flex min-h-screen flex-col bg-[#f5f5f7] pb-[76px] md:pb-0">
       <Header />
       <main className="flex-1">
-        <AppleHome />
+        <AppleHome content={content} />
       </main>
-      <Footer content={content.footer} />
+      <Footer content={content.rodape} />
       <WhatsAppFloating withTabBar />
       <MobileTabBar />
       <CartSidebar />

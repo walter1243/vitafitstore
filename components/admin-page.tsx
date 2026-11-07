@@ -4787,10 +4787,12 @@ function SettingsSection({
         </div>
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-[#161b28] p-5 shadow-none">
-        <h2 className="mb-4 font-semibold text-white">Blocos da Home (Fase 2)</h2>
-        <BlocosEditor ref={blocosEditorRef} />
-      </div>
+      {/* Modelo antigo: não aparece mais na home atual. Fica recolhido (e montado,
+          porque "Salvar" ainda grava esta lista junto com as informações da loja). */}
+      <details className="rounded-2xl border border-white/10 bg-[#161b28] p-5 shadow-none">
+        <summary className="cursor-pointer font-semibold text-white/60">Blocos da Home antigos (não aparecem na loja atual)</summary>
+        <div className="mt-4"><BlocosEditor ref={blocosEditorRef} /></div>
+      </details>
 
       <div className="rounded-2xl border border-white/10 bg-[#161b28] p-5 shadow-none">
         <h2 className="mb-1 font-semibold text-white">Categorias da Loja</h2>

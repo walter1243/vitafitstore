@@ -39,6 +39,7 @@ export async function getSiteContent(): Promise<SiteContent> {
     const rows = await sql`SELECT section, data FROM site_content`;
 
     const result: SiteContent = { ...DEFAULT_SITE_CONTENT };
+    const saved = new Set((rows as { section: string }[]).map((r) => r.section));
     for (const row of rows as { section: string; data: unknown }[]) {
       if ((SITE_CONTENT_SECTIONS as string[]).includes(row.section)) {
         (result as any)[row.section] = stripLegacyImages({
@@ -46,6 +47,11 @@ export async function getSiteContent(): Promise<SiteContent> {
           ...(row.data as object),
         });
       }
+    }
+    // A faixa do topo usava o "badgeText" do hero antigo: enquanto a faixa
+    // nova não for publicada, continua mostrando o texto que já estava no ar.
+    if (!saved.has('topbar') && saved.has('hero') && result.hero.badgeText) {
+      result.topbar = { ...result.topbar, text: result.hero.badgeText };
     }
     return result;
   } catch (err) {
