@@ -4720,7 +4720,8 @@ function SettingsSection({
   }
 
   return (
-    <form onSubmit={handleSave} className="mx-auto w-full max-w-2xl space-y-5">
+    <form onSubmit={handleSave} className="w-full space-y-5 [&>*:not(:first-child)]:mx-auto [&>*:not(:first-child)]:max-w-2xl">
+      {/* editor visual em largura total; o resto da página continua na coluna estreita */}
       <ContentEditor />
 
       <div className="rounded-2xl border border-white/10 bg-[#161b28] p-5 shadow-none">

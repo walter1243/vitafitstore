@@ -3,7 +3,7 @@
 // (faixa do topo, banner, categorias, seções de produtos, banner promocional e rodapé).
 // Campo vazio = automático (nome/descrição do setor, foto do primeiro produto).
 import { type ReactNode } from 'react';
-import { ArrowDown, ArrowUp, Plus, Trash2, Wand2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronsUp, Plus, Trash2, Wand2 } from 'lucide-react';
 import { Field, inputCls, textareaCls, MediaUploadField } from './shared';
 import {
   SLIDE_COLORS,
@@ -63,12 +63,17 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function ItemBar({ index, total, onMove, onRemove, children }: { index: number; total: number; onMove: (d: -1 | 1) => void; onRemove?: () => void; children?: ReactNode }) {
+function ItemBar({ index, total, onMove, onRemove, children }: { index: number; total: number; onMove: (d: -1 | 1 | 'top') => void; onRemove?: () => void; children?: ReactNode }) {
   const btn = 'flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-white/10 text-white/60 transition-colors hover:bg-white/5 hover:text-white disabled:cursor-not-allowed disabled:opacity-30';
   return (
     <div className="mb-3 flex items-center justify-between gap-2">
       <div className="min-w-0 flex-1 text-sm font-semibold text-white">{children}</div>
       <div className="flex shrink-0 gap-1">
+        {index > 0 && (
+          <button type="button" className={`${btn} w-auto gap-1 px-2 text-[11px] font-semibold`} onClick={() => onMove('top')} title="Colocar em primeiro">
+            <ChevronsUp size={14} /> 1º
+          </button>
+        )}
         <button type="button" className={btn} disabled={index === 0} onClick={() => onMove(-1)} aria-label="Subir"><ArrowUp size={14} /></button>
         <button type="button" className={btn} disabled={index === total - 1} onClick={() => onMove(1)} aria-label="Descer"><ArrowDown size={14} /></button>
         {onRemove && <button type="button" className={`${btn} hover:border-red-500/40 hover:text-red-300`} onClick={onRemove} aria-label="Remover"><Trash2 size={14} /></button>}
@@ -77,7 +82,8 @@ function ItemBar({ index, total, onMove, onRemove, children }: { index: number; 
   );
 }
 
-function move<T>(list: T[], i: number, d: -1 | 1): T[] {
+function move<T>(list: T[], i: number, d: -1 | 1 | 'top'): T[] {
+  if (d === 'top') return i <= 0 ? list : [list[i], ...list.slice(0, i), ...list.slice(i + 1)];
   const j = i + d;
   if (j < 0 || j >= list.length) return list;
   const out = list.slice();

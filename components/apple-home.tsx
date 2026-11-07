@@ -227,6 +227,14 @@ function HeroSlides({ slides, autoplay, onShop }: { slides: Slide[]; autoplay: n
   );
 }
 
+function Off({ k, label }: { k: string; label: string }) {
+  return (
+    <div data-edit={k} data-edit-label={label} className="my-4 flex min-h-14 items-center justify-center rounded-2xl border-2 border-dashed border-black/15 text-[13px] text-black/45">
+      {label} · clique para ligar
+    </div>
+  );
+}
+
 export type HomeContentProps = Partial<Pick<SiteContent, 'banner' | 'categorias' | 'secoes' | 'promo'>>;
 
 // Ordena a lista do admin pelos setores existentes; setor que não está na lista entra no fim.
@@ -238,7 +246,9 @@ function orderBy<T extends { sector: string }>(slugs: string[], items: T[]): { s
   return out;
 }
 
-export function AppleHome({ content }: { content?: HomeContentProps } = {}) {
+// `editing` (só no editor visual do admin): marca cada parte com data-edit para o clique abrir a
+// edição dela, e mostra um aviso no lugar das partes desligadas.
+export function AppleHome({ content, editing = false }: { content?: HomeContentProps; editing?: boolean } = {}) {
   const B = { ...DEFAULT_BANNER, ...content?.banner };
   const C = { ...DEFAULT_CATEGORIAS, ...content?.categorias };
   const S = { ...DEFAULT_SECOES, ...content?.secoes };
@@ -321,7 +331,7 @@ export function AppleHome({ content }: { content?: HomeContentProps } = {}) {
   const promoBtnCls = 'mt-4 inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-white px-5 text-[13px] font-bold uppercase tracking-wide transition-opacity hover:opacity-90 sm:text-[15px]';
   const showPromo = P.enabled && (personalizable.length > 0 || !!P.ctaHref);
   const promo = showPromo && (
-    <section className="my-10 overflow-hidden rounded-[24px] sm:my-14" style={{ background: `linear-gradient(120deg,${P.bgFrom} 0%,${P.bgTo} 100%)` }}>
+    <section data-edit="promo" data-edit-label="Banner promocional" className="my-10 overflow-hidden rounded-[24px] sm:my-14" style={{ background: `linear-gradient(120deg,${P.bgFrom} 0%,${P.bgTo} 100%)` }}>
       <div className="relative flex min-h-[170px] items-center sm:min-h-[240px]">
         <div className="relative z-10 w-[60%] py-6 pl-5 sm:w-1/2 sm:py-10 sm:pl-12">
           {P.eyebrow && <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#7cc4ff] sm:text-[13px]">{P.eyebrow}</p>}
@@ -361,11 +371,13 @@ export function AppleHome({ content }: { content?: HomeContentProps } = {}) {
   return (
     <div style={FONT} className="bg-[#f5f5f7] antialiased [&_h1]:[font-family:inherit] [&_h2]:[font-family:inherit] [&_h3]:[font-family:inherit]">
       <div className="mx-auto max-w-6xl px-4 pb-16 pt-[178px] sm:px-6 md:pt-[124px]">
-        {B.enabled && <HeroSlides slides={slides} autoplay={B.autoplay} onShop={choose} />}
+        {B.enabled
+          ? <div data-edit="banner" data-edit-label="Banner principal"><HeroSlides slides={slides} autoplay={B.autoplay} onShop={choose} /></div>
+          : editing && <Off k="banner" label="Banner principal desligado" />}
 
         {/* Setores em cards: tocar filtra os produtos logo abaixo */}
         {C.enabled && chips.length > 0 && (
-          <nav aria-label="Categorías" className="mt-6 sm:mt-8">
+          <nav data-edit="categorias" data-edit-label="Stories / categorias" aria-label="Categorías" className="mt-6 sm:mt-8">
             <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:justify-center sm:gap-3 sm:px-0 [&::-webkit-scrollbar]:hidden">
               {chips.map((c) => {
                 const on = active === c.key;
@@ -391,6 +403,7 @@ export function AppleHome({ content }: { content?: HomeContentProps } = {}) {
             </ul>
           </nav>
         )}
+        {editing && !C.enabled && <Off k="categorias" label="Stories / categorias desligadas" />}
 
         <div id="productos" ref={listRef} className="scroll-mt-28 pt-6 sm:pt-8">
           {filtered ? (
@@ -403,7 +416,7 @@ export function AppleHome({ content }: { content?: HomeContentProps } = {}) {
           ) : (
             blocks.map((b, k) => (
               <div key={b.key}>
-                <section id={b.key} className="scroll-mt-28 pt-6 first:pt-0 sm:pt-8">
+                <section id={b.key} data-edit="secoes" data-edit-label="Seções de produtos" className="scroll-mt-28 pt-6 first:pt-0 sm:pt-8">
                   <SectionHead title={b.title} tagline={b.tagline} href={b.href || undefined} viewAll={S.viewAllText} />
                   {S.layout === 'grid' ? (
                     <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
@@ -411,7 +424,7 @@ export function AppleHome({ content }: { content?: HomeContentProps } = {}) {
                     </ul>
                   ) : <Carousel products={b.products} />}
                 </section>
-                {k === promoAt && promo}
+                {k === promoAt && (promo || (editing && !P.enabled && <Off k="promo" label="Banner promocional desligado" />))}
               </div>
             ))
           )}

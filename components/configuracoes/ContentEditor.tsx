@@ -1,83 +1,59 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
-import { Pencil, X, Check, Loader2, Snowflake, Video, Eye, UploadCloud, Smartphone, Monitor, Megaphone, Images, CircleDot, Rows3, BadgePercent, PanelBottom } from 'lucide-react';
+// Editor visual da loja (Admin → Editar loja): a loja de verdade num iframe (/preview?edit=1)
+// ao lado de um painel. Clicar numa parte da loja abre os ajustes dela; cada mudança aparece
+// na hora na cópia da loja e só vai ao ar ao clicar em "Publicar".
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  DEFAULT_SITE_CONTENT,
-  SITE_CONTENT_SECTIONS,
-  type SiteContent,
-} from '@/lib/site-content-defaults';
+  ArrowLeft, BadgePercent, Check, CircleDot, Images, Loader2, Megaphone, Monitor, MousePointerClick,
+  PanelBottom, RotateCcw, Rows3, Smartphone, Undo2, UploadCloud, Hand,
+} from 'lucide-react';
+import { DEFAULT_SITE_CONTENT, SITE_CONTENT_SECTIONS, type SiteContent } from '@/lib/site-content-defaults';
 import { BannerForm, CategoriasForm, PromoForm, RodapeForm, SecoesForm, TopbarForm, type SectorLite } from './content/VitrineForms';
-import { PagePosition } from './content/PagePosition';
 
-type SectionKey = keyof SiteContent;
+export type EditableKey = 'topbar' | 'banner' | 'categorias' | 'secoes' | 'promo' | 'rodape';
 
-// desc says exactly where on the page this shows up — index feeds the
-// PagePosition dots (see that file for the full landmark list) so each
-// card also shows it visually, not just in words.
-// Só as partes do modelo atual da vitrine (o modelo antigo continua salvo, mas não aparece mais na loja).
-type EditableKey = 'topbar' | 'banner' | 'categorias' | 'secoes' | 'promo' | 'rodape';
-const SECTION_META: Record<EditableKey, { label: string; desc: string; icon: typeof Video; pageIndex: number }> = {
-  topbar: { label: 'Faixa do topo', desc: 'A linha fina acima do cabeçalho (ex.: "Envío gratis en pedidos +50€").', icon: Megaphone, pageIndex: 0 },
-  banner: { label: 'Banner principal', desc: 'Os slides grandes do topo da home: texto, botão, foto e cores.', icon: Images, pageIndex: 1 },
-  categorias: { label: 'Categorias (bolinhas)', desc: 'As bolinhas com foto embaixo do banner que filtram os produtos.', icon: CircleDot, pageIndex: 2 },
-  secoes: { label: 'Seções de produtos', desc: 'Ordem, títulos e frases de cada seção (Infantil, Hogar, Navidad…) e o "Ver todo".', icon: Rows3, pageIndex: 3 },
-  promo: { label: 'Banner promocional', desc: 'O banner "Con su nombre" no meio da home: texto, botão, foto, cores e posição.', icon: BadgePercent, pageIndex: 4 },
-  rodape: { label: 'Rodapé', desc: 'Texto da marca, as três colunas de links, linhas de segurança e envio e direitos autorais.', icon: PanelBottom, pageIndex: 5 },
+export const SECTION_META: Record<EditableKey, { label: string; desc: string; icon: typeof Images }> = {
+  topbar: { label: 'Faixa do topo', desc: 'A linha fina acima do cabeçalho ("Envío gratis…").', icon: Megaphone },
+  banner: { label: 'Banner principal', desc: 'Os slides grandes do topo: texto, botão, foto e cores.', icon: Images },
+  categorias: { label: 'Stories / categorias', desc: 'As bolinhas com foto embaixo do banner: ordem, nome, foto.', icon: CircleDot },
+  secoes: { label: 'Seções de produtos', desc: 'Ordem, títulos e frases de cada seção (Infantil, Hogar, Navidad…).', icon: Rows3 },
+  promo: { label: 'Banner promocional', desc: 'O banner "Con su nombre" no meio da home.', icon: BadgePercent },
+  rodape: { label: 'Rodapé', desc: 'Marca, colunas de links, segurança, envio e direitos autorais.', icon: PanelBottom },
 };
-
 const SECTION_ORDER: EditableKey[] = ['topbar', 'banner', 'categorias', 'secoes', 'promo', 'rodape'];
 const DRAFT_STORAGE_KEY = 'vitafit-admin-site-content-draft';
 
-// Drafts saved to localStorage before media fields switched from
-// base64-inline to real uploaded URLs can still be carrying a giant
-// "data:" string around. Publishing that blows past the server's request
-// size limit and used to fail with an opaque error — this catches it up
-// front with a message that actually says what to do.
+// Rascunhos antigos com imagem embutida (data:) estouram o limite do servidor ao publicar.
 function findOversizedDataUrl(value: unknown, path = ''): string | null {
-  if (typeof value === 'string') {
-    if (value.startsWith('data:') && value.length > 200_000) return path || '(campo)';
-    return null;
-  }
+  if (typeof value === 'string') return value.startsWith('data:') && value.length > 200_000 ? path || '(campo)' : null;
   if (Array.isArray(value)) {
-    for (let i = 0; i < value.length; i++) {
-      const hit = findOversizedDataUrl(value[i], `${path}[${i}]`);
-      if (hit) return hit;
-    }
+    for (let i = 0; i < value.length; i++) { const hit = findOversizedDataUrl(value[i], `${path}[${i}]`); if (hit) return hit; }
     return null;
   }
   if (value && typeof value === 'object') {
-    for (const [key, v] of Object.entries(value)) {
-      const hit = findOversizedDataUrl(v, path ? `${path}.${key}` : key);
-      if (hit) return hit;
-    }
+    for (const [key, v] of Object.entries(value)) { const hit = findOversizedDataUrl(v, path ? `${path}.${key}` : key); if (hit) return hit; }
   }
   return null;
 }
+
+const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
 export function ContentEditor() {
   const [published, setPublished] = useState<SiteContent>(DEFAULT_SITE_CONTENT);
   const [content, setContent] = useState<SiteContent>(DEFAULT_SITE_CONTENT);
   const [loading, setLoading] = useState(true);
   const [restoredDraft, setRestoredDraft] = useState(false);
-  const [editingSection, setEditingSection] = useState<EditableKey | null>(null);
-  const [draft, setDraft] = useState<SiteContent[SectionKey] | null>(null);
+  const [selected, setSelected] = useState<EditableKey | null>(null);
   const [publishing, setPublishing] = useState(false);
   const [publishError, setPublishError] = useState('');
   const [publishedJustNow, setPublishedJustNow] = useState(false);
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
+  const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop');
+  const [mode, setMode] = useState<'edit' | 'browse'>('edit');
   const [sectors, setSectors] = useState<SectorLite[]>([]);
-
-  // Setores reais (para as listas do banner, categorias e seções).
-  useEffect(() => {
-    fetch('/api/sectors?all=1', { cache: 'no-store' })
-      .then((r) => (r.ok ? r.json() : []))
-      .then((d) => { if (Array.isArray(d)) setSectors(d.filter((s: any) => s?.enabled !== false).map((s: any) => ({ slug: s.slug, name: s.name, tagline: s.tagline ?? '', imageUrl: s.imageUrl ?? '' }))); })
-      .catch(() => {});
-  }, []);
+  const [frameReady, setFrameReady] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  const dirty = JSON.stringify(content) !== JSON.stringify(published);
+  const dirty = !same(content, published);
 
   useEffect(() => {
     (async () => {
@@ -85,56 +61,47 @@ export function ContentEditor() {
         const res = await fetch('/api/site-content', { cache: 'no-store' });
         const data = res.ok ? await res.json() : DEFAULT_SITE_CONTENT;
         setPublished(data);
-
-        const savedDraft = typeof window !== 'undefined' ? window.localStorage.getItem(DRAFT_STORAGE_KEY) : null;
-        if (savedDraft) {
-          try {
-            // A draft saved before a new content section existed (e.g.
-            // "Texto dos produtos") won't have that key at all — publishing
-            // it as-is sends `data: undefined` for that section and the API
-            // rejects it with "Dados inválidos.". Layering the draft over
-            // the freshly fetched published content fills in anything the
-            // old draft is missing instead of leaving it undefined.
-            setContent({ ...data, ...JSON.parse(savedDraft) });
-            setRestoredDraft(true);
-          } catch {
-            setContent(data);
-          }
-        } else {
-          setContent(data);
-        }
-      } catch {
-        // keep defaults
-      } finally {
-        setLoading(false);
-      }
+        const saved = typeof window !== 'undefined' ? window.localStorage.getItem(DRAFT_STORAGE_KEY) : null;
+        if (saved) {
+          try { setContent({ ...data, ...JSON.parse(saved) }); setRestoredDraft(true); } catch { setContent(data); }
+        } else setContent(data);
+      } catch { /* fica o padrão */ } finally { setLoading(false); }
     })();
+    fetch('/api/sectors?all=1', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => { if (Array.isArray(d)) setSectors(d.filter((s: any) => s?.enabled !== false).map((s: any) => ({ slug: s.slug, name: s.name, tagline: s.tagline ?? '', imageUrl: s.imageUrl ?? '' }))); })
+      .catch(() => {});
   }, []);
 
-  // Persist in-progress edits locally so a refresh doesn't lose unpublished work.
+  // guarda o rascunho no navegador para não perder ao recarregar
   useEffect(() => {
     if (loading) return;
-    if (dirty) {
-      window.localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(content));
-    } else {
-      window.localStorage.removeItem(DRAFT_STORAGE_KEY);
-    }
+    if (dirty) window.localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(content));
+    else window.localStorage.removeItem(DRAFT_STORAGE_KEY);
   }, [content, dirty, loading]);
 
-  function openEditor(section: EditableKey) {
-    setEditingSection(section);
-    setDraft(content[section]);
-  }
+  // ---------------------------------------------------------- conversa com a cópia da loja
+  const post = useCallback((msg: unknown) => { iframeRef.current?.contentWindow?.postMessage(msg, window.location.origin); }, []);
+  useEffect(() => {
+    function onMessage(e: MessageEvent) {
+      if (e.origin !== window.location.origin) return;
+      if (e.data?.type === 'STORE_PREVIEW_READY') setFrameReady(true);
+      if (e.data?.type === 'STORE_PREVIEW_PICK' && SECTION_ORDER.includes(e.data.key)) setSelected(e.data.key);
+    }
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, []);
+  // cada mudança vai para a cópia da loja (com um pequeno atraso para não travar ao digitar)
+  useEffect(() => {
+    if (!frameReady) return;
+    const t = setTimeout(() => post({ type: 'STORE_PREVIEW_CONTENT', content }), 120);
+    return () => clearTimeout(t);
+  }, [content, frameReady, post]);
+  useEffect(() => { if (frameReady) post({ type: 'STORE_PREVIEW_MODE', mode }); }, [mode, frameReady, post]);
+  useEffect(() => { if (frameReady) post({ type: 'STORE_PREVIEW_SELECT', key: selected }); }, [selected, frameReady, post]);
 
-  function closeEditor() {
-    setEditingSection(null);
-    setDraft(null);
-  }
-
-  function applySectionDraft() {
-    if (!editingSection || !draft) return;
-    setContent((prev) => ({ ...prev, [editingSection]: draft }));
-    closeEditor();
+  function setSection<K extends EditableKey>(key: K, data: SiteContent[K]) {
+    setContent((prev) => ({ ...prev, [key]: data }));
   }
 
   async function handlePublish() {
@@ -142,35 +109,26 @@ export function ContentEditor() {
     setPublishError('');
     try {
       for (const section of SITE_CONTENT_SECTIONS) {
-        const badField = findOversizedDataUrl(content[section]);
-        if (badField) {
-          throw new Error(
-            `"${SECTION_META[section as EditableKey]?.label ?? section}" tem um arquivo antigo salvo em formato pesado (${badField}) de antes da correção de upload. ` +
-            `Abra essa seção, reenvie a imagem/vídeo pelo campo de mídia e publique de novo.`
-          );
-        }
-
+        const label = SECTION_META[section as EditableKey]?.label ?? section;
+        const bad = findOversizedDataUrl(content[section]);
+        if (bad) throw new Error(`"${label}" tem um arquivo antigo em formato pesado (${bad}). Reenvie a imagem pelo campo de mídia e publique de novo.`);
+        if (same(content[section], published[section])) continue;
         const res = await fetch('/api/site-content', {
-          method: 'POST',
-          cache: 'no-store',
-          headers: { 'Content-Type': 'application/json' },
+          method: 'POST', cache: 'no-store', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ section, data: content[section] }),
         });
         if (!res.ok) {
           const raw = await res.text().catch(() => '');
           let message = '';
-          try { message = JSON.parse(raw)?.error ?? ''; } catch { /* not JSON */ }
-          throw new Error(
-            message ||
-            `Não foi possível publicar "${SECTION_META[section as EditableKey]?.label ?? section}" (HTTP ${res.status}${res.statusText ? ` ${res.statusText}` : ''}).` +
-            (raw ? ` ${raw.slice(0, 200)}` : '')
-          );
+          try { message = JSON.parse(raw)?.error ?? ''; } catch { /* não é JSON */ }
+          throw new Error(message || `Não foi possível publicar "${label}" (HTTP ${res.status}).`);
         }
       }
       setPublished(content);
       window.localStorage.removeItem(DRAFT_STORAGE_KEY);
+      setRestoredDraft(false);
       setPublishedJustNow(true);
-      setTimeout(() => setPublishedJustNow(false), 3000);
+      setTimeout(() => setPublishedJustNow(false), 4000);
     } catch (err: any) {
       setPublishError(err?.message || 'Erro de conexão ao publicar.');
     } finally {
@@ -178,205 +136,109 @@ export function ContentEditor() {
     }
   }
 
-  function sendPreviewContent() {
-    iframeRef.current?.contentWindow?.postMessage({ type: 'STORE_PREVIEW_CONTENT', content }, '*');
-  }
-
-  useEffect(() => {
-    if (!previewOpen) return;
-    function onMessage(e: MessageEvent) {
-      if (e.data?.type === 'STORE_PREVIEW_READY') sendPreviewContent();
-    }
-    window.addEventListener('message', onMessage);
-    return () => window.removeEventListener('message', onMessage);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [previewOpen, content]);
+  const sectionDirty = (k: EditableKey) => !same(content[k], published[k]);
+  const meta = selected ? SECTION_META[selected] : null;
+  const btn = 'inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40';
 
   return (
-    <div className="rounded-2xl border border-green-500/15 glass-panel-admin p-5">
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-center gap-2">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-green-500/25 bg-green-500/10">
-            <Snowflake size={16} className="text-green-400" />
-          </span>
-          <div>
-            <h2 className="font-semibold text-white">Conteúdo da Vitrine</h2>
-            <p className="text-xs text-white/45">
-              Edite os textos e imagens da loja, veja como fica antes e publique quando estiver pronto.
-            </p>
-          </div>
+    <div
+      className="overflow-hidden rounded-2xl border border-white/10 bg-[#11151f]"
+      // as caixas de texto ficam dentro do formulário da loja: Enter não pode salvar a loja inteira
+      onKeyDown={(e) => { if (e.key === 'Enter' && (e.target as HTMLElement).tagName === 'INPUT') e.preventDefault(); }}
+    >
+      {/* barra do editor */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-[#161b28] px-4 py-3">
+        <div className="min-w-0">
+          <h2 className="font-semibold text-white">Editor visual da loja</h2>
+          <p className="text-xs text-white/45">Clique em qualquer parte da loja para editar. Só vai ao ar quando você publicar.</p>
         </div>
-
-        <div className="flex shrink-0 items-center gap-2">
-          <button
-            type="button"
-            onClick={() => { setPreviewOpen(true); setTimeout(sendPreviewContent, 400); }}
-            className="inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-white/80 transition-colors hover:border-green-500/30 hover:bg-green-500/10"
-          >
-            <Eye size={14} /> Visualizar loja
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex rounded-lg border border-white/10 p-0.5" role="group" aria-label="Modo">
+            <button type="button" onClick={() => setMode('edit')} className={`${btn} ${mode === 'edit' ? 'bg-green-500/20 text-green-300' : 'text-white/60 hover:text-white'}`} title="Clicar numa parte da loja abre a edição"><MousePointerClick size={14} /> Editar</button>
+            <button type="button" onClick={() => setMode('browse')} className={`${btn} ${mode === 'browse' ? 'bg-green-500/20 text-green-300' : 'text-white/60 hover:text-white'}`} title="Usar a loja normalmente (filtros, slides…)"><Hand size={14} /> Navegar</button>
+          </div>
+          <div className="flex rounded-lg border border-white/10 p-0.5" role="group" aria-label="Tamanho da tela">
+            <button type="button" onClick={() => setDevice('desktop')} aria-label="Computador" className={`${btn} px-2 ${device === 'desktop' ? 'bg-green-500/20 text-green-300' : 'text-white/60 hover:text-white'}`}><Monitor size={15} /></button>
+            <button type="button" onClick={() => setDevice('mobile')} aria-label="Celular" className={`${btn} px-2 ${device === 'mobile' ? 'bg-green-500/20 text-green-300' : 'text-white/60 hover:text-white'}`}><Smartphone size={15} /></button>
+          </div>
+          <button type="button" onClick={() => { setContent(published); setRestoredDraft(false); }} disabled={!dirty || publishing} className={`${btn} border border-white/10 text-white/70 hover:bg-white/5`}>
+            <Undo2 size={14} /> Descartar
           </button>
-          <button
-            type="button"
-            onClick={handlePublish}
-            disabled={!dirty || publishing}
-            className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {publishing ? <Loader2 size={14} className="animate-spin" /> : <UploadCloud size={14} />}
-            Publicar{dirty ? ' alterações' : ''}
+          <button type="button" onClick={handlePublish} disabled={!dirty || publishing} className={`${btn} bg-green-600 text-white hover:bg-green-500`}>
+            {publishing ? <Loader2 size={14} className="animate-spin" /> : <UploadCloud size={14} />} Publicar{dirty ? ' alterações' : ''}
           </button>
         </div>
       </div>
 
-      {(dirty || publishedJustNow || restoredDraft) && (
-        <div className={`mb-4 rounded-xl border px-3 py-2 text-xs font-medium ${
-          publishedJustNow
-            ? 'border-green-500/30 bg-green-500/10 text-green-300'
-            : 'border-amber-500/30 bg-amber-500/10 text-amber-300'
-        }`}>
-          {publishedJustNow
-            ? '✓ Alterações publicadas — já estão no ar.'
-            : restoredDraft && dirty
-              ? 'Rascunho não publicado recuperado. Clique em "Visualizar loja" para conferir ou "Publicar alterações" para colocar no ar.'
-              : 'Você tem alterações não publicadas. O cliente só vê depois de clicar em "Publicar alterações".'}
+      {(dirty || publishedJustNow || publishError) && (
+        <div className={`border-b px-4 py-2 text-xs font-medium ${publishError ? 'border-red-500/30 bg-red-500/10 text-red-300' : publishedJustNow ? 'border-green-500/30 bg-green-500/10 text-green-300' : 'border-amber-500/30 bg-amber-500/10 text-amber-300'}`}>
+          {publishError || (publishedJustNow ? '✓ Publicado. Já está no ar (recarregue a loja para ver).' : restoredDraft ? 'Rascunho não publicado recuperado. Publique para colocar no ar ou descarte.' : 'Alterações ainda não publicadas: o cliente só vê depois de "Publicar alterações".')}
         </div>
       )}
 
-      {publishError && (
-        <p className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">{publishError}</p>
-      )}
-
-      {loading ? (
-        <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-xs text-white/60">
-          <Loader2 size={14} className="animate-spin" /> Carregando conteúdo atual da loja...
-        </div>
-      ) : (
-        <div className="grid gap-3 sm:grid-cols-2">
-          {SECTION_ORDER.map((key) => {
-            const meta = SECTION_META[key];
-            const Icon = meta.icon;
-            const sectionDirty = JSON.stringify(content[key]) !== JSON.stringify(published[key]);
-            return (
-              <div key={key} className="rounded-2xl border border-white/10 bg-[#1c2236]/80 p-4 transition-colors hover:border-green-500/25">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3">
-                    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5">
-                      <Icon size={16} className="text-green-400" />
+      <div className="grid lg:grid-cols-[380px_minmax(0,1fr)]">
+        {/* painel lateral */}
+        <aside className="flex max-h-[calc(100vh-170px)] min-h-[520px] flex-col border-b border-white/10 lg:border-b-0 lg:border-r">
+          {!selected || !meta ? (
+            <div className="flex-1 overflow-y-auto p-3">
+              <p className="mb-3 rounded-lg bg-white/[0.04] px-3 py-2 text-[12px] text-white/55">
+                Passe o mouse na loja ao lado: cada parte fica marcada. <b className="text-white/80">Clique</b> para editar, ou escolha aqui:
+              </p>
+              {SECTION_ORDER.map((k) => {
+                const m = SECTION_META[k];
+                const Icon = m.icon;
+                return (
+                  <button key={k} type="button" onClick={() => setSelected(k)}
+                    className="mb-2 flex w-full cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-[#1c2236]/70 p-3 text-left transition-colors hover:border-green-500/40 hover:bg-green-500/5">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5"><Icon size={16} className="text-green-400" /></span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center gap-2 text-sm font-semibold text-white">{m.label}{sectionDirty(k) && <span className="h-2 w-2 rounded-full bg-amber-400" title="Alterado, não publicado" />}</span>
+                      <span className="block text-[11px] text-white/45">{m.desc}</span>
                     </span>
-                    <div>
-                      <h3 className="text-sm font-semibold text-white">{meta.label}</h3>
-                      <p className="mt-0.5 text-xs text-white/45">{meta.desc}</p>
-                      <PagePosition index={meta.pageIndex} />
-                    </div>
-                  </div>
-                  {sectionDirty && (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
-                      Não publicado
-                    </span>
-                  )}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => openEditor(key)}
-                  className="mt-3 inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-semibold text-white/80 transition-colors hover:border-green-500/30 hover:bg-green-500/10"
-                >
-                  <Pencil size={12} /> Editar seção
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {editingSection && draft && (
-        <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/70 p-4" onClick={closeEditor}>
-          <div
-            className="glass-panel-admin max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-green-500/30 bg-[#161b28] p-5"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-base font-semibold text-white">Editar: {SECTION_META[editingSection].label}</h3>
-              <button type="button" onClick={closeEditor} className="rounded-lg border border-white/10 p-2 text-white/70 hover:bg-white/5">
-                <X size={14} />
-              </button>
-            </div>
-
-            {editingSection === 'topbar' && <TopbarForm data={draft as SiteContent['topbar']} onChange={(d) => setDraft(d)} />}
-            {editingSection === 'banner' && <BannerForm data={draft as SiteContent['banner']} onChange={(d) => setDraft(d)} sectors={sectors} />}
-            {editingSection === 'categorias' && <CategoriasForm data={draft as SiteContent['categorias']} onChange={(d) => setDraft(d)} sectors={sectors} />}
-            {editingSection === 'secoes' && <SecoesForm data={draft as SiteContent['secoes']} onChange={(d) => setDraft(d)} sectors={sectors} />}
-            {editingSection === 'promo' && <PromoForm data={draft as SiteContent['promo']} onChange={(d) => setDraft(d)} sectionsCount={sectors.length} />}
-            {editingSection === 'rodape' && <RodapeForm data={draft as SiteContent['rodape']} onChange={(d) => setDraft(d)} />}
-
-            <p className="mt-4 text-[11px] text-white/35">
-              Isso só atualiza o rascunho. Depois use "Visualizar loja" pra conferir e "Publicar alterações" pra colocar no ar.
-            </p>
-
-            <div className="mt-3 flex justify-end gap-2">
-              <button type="button" onClick={closeEditor} className="rounded-lg border border-white/10 px-4 py-2 text-xs font-semibold text-white/70 hover:bg-white/5">
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={applySectionDraft}
-                className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-xs font-semibold text-white hover:bg-green-700"
-              >
-                <Check size={12} /> Aplicar ao rascunho
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {previewOpen && (
-        <div className="fixed inset-0 z-[260] flex flex-col bg-black/80 p-3 sm:p-6" onClick={() => setPreviewOpen(false)}>
-          <div
-            className="mx-auto flex h-full w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0f1117]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-4 py-3">
-              <div className="flex items-center gap-2">
-                <Eye size={14} className="text-green-400" />
-                <span className="text-sm font-semibold text-white">Prévia da loja</span>
-                {dirty && <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-300">com alterações não publicadas</span>}
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 rounded-lg border border-white/10 p-1">
-                  <button
-                    type="button"
-                    onClick={() => setPreviewDevice('desktop')}
-                    className={`rounded-md p-1.5 transition-colors ${previewDevice === 'desktop' ? 'bg-green-500/20 text-green-300' : 'text-white/50 hover:text-white'}`}
-                    aria-label="Ver como desktop"
-                  >
-                    <Monitor size={14} />
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setPreviewDevice('mobile')}
-                    className={`rounded-md p-1.5 transition-colors ${previewDevice === 'mobile' ? 'bg-green-500/20 text-green-300' : 'text-white/50 hover:text-white'}`}
-                    aria-label="Ver como mobile"
-                  >
-                    <Smartphone size={14} />
-                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2.5">
+                <button type="button" onClick={() => setSelected(null)} className={`${btn} px-2 text-white/70 hover:bg-white/5`} aria-label="Voltar à lista"><ArrowLeft size={16} /></button>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-white">{meta.label}</p>
+                  <p className="truncate text-[11px] text-white/40">{meta.desc}</p>
                 </div>
-                <button type="button" onClick={() => setPreviewOpen(false)} className="rounded-lg border border-white/10 p-2 text-white/70 hover:bg-white/5">
-                  <X size={14} />
-                </button>
+                <button type="button" title="Voltar ao padrão desta parte" onClick={() => setSection(selected, DEFAULT_SITE_CONTENT[selected] as any)} className={`${btn} px-2 text-white/50 hover:bg-white/5 hover:text-white`}><RotateCcw size={14} /></button>
               </div>
-            </div>
+              <div className="flex-1 overflow-y-auto p-4">
+                {loading ? <p className="flex items-center gap-2 text-xs text-white/60"><Loader2 size={14} className="animate-spin" /> Carregando…</p> : (
+                  <>
+                    {selected === 'topbar' && <TopbarForm data={content.topbar} onChange={(d) => setSection('topbar', d)} />}
+                    {selected === 'banner' && <BannerForm data={content.banner} onChange={(d) => setSection('banner', d)} sectors={sectors} />}
+                    {selected === 'categorias' && <CategoriasForm data={content.categorias} onChange={(d) => setSection('categorias', d)} sectors={sectors} />}
+                    {selected === 'secoes' && <SecoesForm data={content.secoes} onChange={(d) => setSection('secoes', d)} sectors={sectors} />}
+                    {selected === 'promo' && <PromoForm data={content.promo} onChange={(d) => setSection('promo', d)} sectionsCount={sectors.length} />}
+                    {selected === 'rodape' && <RodapeForm data={content.rodape} onChange={(d) => setSection('rodape', d)} />}
+                  </>
+                )}
+              </div>
+              <div className="border-t border-white/10 px-3 py-2 text-[11px] text-white/40">
+                <Check size={12} className="mr-1 inline text-green-400" />As mudanças aparecem na loja ao lado na hora.
+              </div>
+            </>
+          )}
+        </aside>
 
-            <div className="flex flex-1 items-center justify-center overflow-auto bg-black/30 p-3">
-              <iframe
-                ref={iframeRef}
-                src="/preview"
-                onLoad={sendPreviewContent}
-                className={`h-full rounded-xl border border-white/10 bg-white transition-all ${previewDevice === 'mobile' ? 'w-[390px]' : 'w-full'}`}
-                title="Prévia da loja"
-              />
-            </div>
-          </div>
+        {/* cópia da loja */}
+        <div className="relative flex min-h-[520px] justify-center bg-[repeating-conic-gradient(#0d1017_0%_25%,#11151f_0%_50%)] bg-[length:24px_24px] p-3">
+          {!frameReady && <div className="absolute inset-0 flex items-center justify-center gap-2 text-xs text-white/50"><Loader2 size={14} className="animate-spin" /> Abrindo a loja…</div>}
+          <iframe
+            ref={iframeRef}
+            src="/preview?edit=1"
+            title="Cópia da loja para edição"
+            className={`h-[calc(100vh-200px)] min-h-[500px] rounded-xl border border-white/10 bg-white shadow-2xl transition-all duration-300 ${device === 'mobile' ? 'w-[390px]' : 'w-full'}`}
+          />
         </div>
-      )}
+      </div>
     </div>
   );
 }
