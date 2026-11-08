@@ -3,8 +3,10 @@
 import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { getCookieConsent } from '@/components/cookie-consent'
+import { currentVariant } from '@/lib/ab-test'
 
 export const ADD_TO_CART_EVENT = 'kitoys:add-to-cart'
+export const PURCHASE_EVENT = 'kitoys:purchase'
 
 // Estatisticas proprias da loja (Admin → Dashboard): visitas, cliques em
 // produtos e "adicionar ao carrinho". Nao usa cookies nem guarda nada no
@@ -12,7 +14,7 @@ export const ADD_TO_CART_EVENT = 'kitoys:add-to-cart'
 function send(data: { type: string; path: string; productId?: number }) {
   try {
     // Quem recusou no aviso de cookies conta como visita, mas sem localizacao.
-    const body = JSON.stringify({ ...data, noGeo: getCookieConsent() === 'rejected' })
+    const body = JSON.stringify({ ...data, noGeo: getCookieConsent() === 'rejected', variant: currentVariant() })
     if (navigator.sendBeacon?.('/api/track', new Blob([body], { type: 'application/json' }))) return
     fetch('/api/track', { method: 'POST', body, headers: { 'Content-Type': 'application/json' }, keepalive: true }).catch(() => {})
   } catch {}
@@ -39,11 +41,14 @@ export function SiteTracker() {
       const id = Number((e as CustomEvent).detail?.productId)
       if (id) send({ type: 'add_to_cart', path: location.pathname, productId: id })
     }
+    const onBuy = () => send({ type: 'purchase', path: location.pathname })
     document.addEventListener('click', onClick, true)
     window.addEventListener(ADD_TO_CART_EVENT, onAdd)
+    window.addEventListener(PURCHASE_EVENT, onBuy)
     return () => {
       document.removeEventListener('click', onClick, true)
       window.removeEventListener(ADD_TO_CART_EVENT, onAdd)
+      window.removeEventListener(PURCHASE_EVENT, onBuy)
     }
   }, [])
 

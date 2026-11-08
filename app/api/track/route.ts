@@ -30,11 +30,12 @@ export async function POST(req: NextRequest) {
     const salt = process.env.ADMIN_SESSION_SECRET || process.env.DATABASE_URL || 'kitoys';
     const visitor = createHash('sha256').update(`${day}|${ip}|${ua}|${salt}`).digest('hex').slice(0, 20);
 
+    const variant = body?.variant === 'grid' || body?.variant === 'carousel' ? body.variant : null;
     await ensureSiteEvents();
     const geo = body?.noGeo ? { country: null, city: null, lat: null, lng: null } : geoFromHeaders(req.headers);
     await sql`
-      INSERT INTO site_events (type, path, product_id, visitor, country, city, lat, lng)
-      VALUES (${type}, ${path}, ${productId}, ${visitor}, ${geo.country}, ${geo.city}, ${geo.lat}, ${geo.lng})
+      INSERT INTO site_events (type, path, product_id, visitor, country, city, lat, lng, variant)
+      VALUES (${type}, ${path}, ${productId}, ${visitor}, ${geo.country}, ${geo.city}, ${geo.lat}, ${geo.lng}, ${variant})
     `;
   } catch (err) {
     console.error('[POST /api/track]', err);

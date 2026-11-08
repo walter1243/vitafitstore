@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, LayoutGrid, MessageCircle, Search, ShoppingBag } from 'lucide-react';
@@ -29,6 +29,15 @@ export function MobileTabBar() {
   const { totalItems, setIsCartOpen } = useCart();
   const [wa, setWa] = useState('');
   const home = usePathname() === '/';
+  // Fica transparente (40%) para não tapar a loja; ao tocar fica 100% e volta depois de 4 s.
+  const [awake, setAwake] = useState(false);
+  const sleepTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wake = () => {
+    setAwake(true);
+    if (sleepTimer.current) clearTimeout(sleepTimer.current);
+    sleepTimer.current = setTimeout(() => setAwake(false), 4000);
+  };
+  useEffect(() => () => { if (sleepTimer.current) clearTimeout(sleepTimer.current); }, []);
 
   useEffect(() => {
     fetch('/api/store-settings')
@@ -43,7 +52,9 @@ export function MobileTabBar() {
   return (
     <nav
       aria-label="Navegación"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-black/[0.06] bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-6px_24px_rgba(0,0,0,0.06)] backdrop-blur md:hidden"
+      onPointerDown={wake}
+      onFocusCapture={wake}
+      className={`fixed inset-x-0 bottom-0 z-40 transition-opacity duration-200 ${awake ? 'opacity-100' : 'opacity-40'} border-t border-black/[0.06] bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-6px_24px_rgba(0,0,0,0.06)] backdrop-blur md:hidden`}
       style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif' }}
     >
       <div className="mx-auto flex max-w-md items-end px-2">

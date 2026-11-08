@@ -11,6 +11,7 @@ import { useSectors } from '@/components/kids/sectors-context';
 import { useStoreProducts } from '@/components/kids/use-store-products';
 import { GO_HOME_EVENT } from '@/components/mobile-tab-bar';
 import { Tr, UI } from '@/components/language-switcher';
+import { assignLayoutVariant, setAbActive, type LayoutVariant } from '@/lib/ab-test';
 import { DEFAULT_BANNER, DEFAULT_CATEGORIAS, DEFAULT_CONFIANCA, DEFAULT_PROMO, DEFAULT_SECOES, SLIDE_COLORS, type SiteContent, type TrustIcon } from '@/lib/site-content-defaults';
 
 // Home no formato de app de loja: banner com slides, setores em cards que
@@ -260,6 +261,14 @@ export function AppleHome({ content, editing = false, initialProducts }: { conte
   const S = { ...DEFAULT_SECOES, ...content?.secoes };
   const P = { ...DEFAULT_PROMO, ...content?.promo };
   const T = { ...DEFAULT_CONFIANCA, ...content?.confianca };
+  // Teste A/B: cada visitante fica numa versão (grade ou carrossel) e os eventos levam a versão.
+  const [abVariant, setAbVariant] = useState<LayoutVariant | null>(null);
+  useEffect(() => {
+    if (editing) return;
+    if (S.layout === 'ab') { setAbVariant(assignLayoutVariant()); setAbActive(true); }
+    else setAbActive(false);
+  }, [S.layout, editing]);
+  const layout: 'carousel' | 'grid' = S.layout === 'ab' ? (abVariant ?? 'carousel') : S.layout;
 
   const { products } = useStoreProducts(initialProducts as any);
   const { sectors, collectionForProduct } = useSectors();
@@ -435,7 +444,7 @@ export function AppleHome({ content, editing = false, initialProducts }: { conte
           {filtered ? (
             <section aria-live="polite">
               <SectionHead title={filtered.title} tagline={filtered.tagline} href={filtered.href || undefined} viewAll={S.viewAllText} />
-              <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+              <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
                 {filtered.products.map((p) => <li key={p.id}><ProductCard product={p} /></li>)}
               </ul>
             </section>
@@ -444,8 +453,8 @@ export function AppleHome({ content, editing = false, initialProducts }: { conte
               <div key={b.key}>
                 <section id={b.key} data-edit="secoes" data-edit-item={b.key} data-edit-label="Seções de produtos" className="scroll-mt-28 pt-6 first:pt-0 sm:pt-8">
                   <SectionHead title={b.title} tagline={b.tagline} href={b.href || undefined} viewAll={S.viewAllText} />
-                  {S.layout === 'grid' ? (
-                    <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+                  {layout === 'grid' ? (
+                    <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
                       {b.products.map((p) => <li key={p.id}><ProductCard product={p} /></li>)}
                     </ul>
                   ) : <Carousel products={b.products} />}

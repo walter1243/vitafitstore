@@ -370,7 +370,7 @@ export type HomeSectionCfg = { sector: string; title: string; tagline: string; h
 
 export type SecoesContent = {
   viewAllText: string;
-  layout: 'carousel' | 'grid';
+  layout: 'carousel' | 'grid' | 'ab';  // ab = metade dos visitantes vê cada um (teste)
   items: HomeSectionCfg[];  // ordem e textos por setor
   showMore: boolean;        // produtos sem setor
   moreTitle: string;

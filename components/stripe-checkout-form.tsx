@@ -420,6 +420,7 @@ function PaymentStepInner({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ paymentIntentId: result.paymentIntent.id }),
         }).catch(() => {});
+        window.dispatchEvent(new Event('kitoys:purchase'));
         clearCart();
         setSuccess(true);
         return;
@@ -640,6 +641,7 @@ function CheckoutFormInner() {
           await new Promise((res) => setTimeout(res, 3000));
         }
       })();
+      window.dispatchEvent(new Event('kitoys:purchase'));
       clearCart();
       setSuccess(true);
     } else {

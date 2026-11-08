@@ -8,7 +8,6 @@ import { HumanCheck } from '@/components/human-check'
 import { EntryStart } from '@/components/entry-start'
 import { AnalyticsLoader } from '@/components/analytics-loader'
 import { SiteTracker } from '@/components/site-tracker'
-import { PageTurn } from '@/components/page-turn'
 import { TranslateLoader } from '@/components/language-switcher'
 import './globals.css'
 
@@ -125,7 +124,6 @@ export default function RootLayout({
         <CookieConsent />
         <AnalyticsLoader />
         <SiteTracker />
-        <PageTurn />
         <TranslateLoader />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

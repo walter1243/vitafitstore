@@ -181,9 +181,9 @@ export function CookieConsent() {
           </ul>
         )}
 
-        <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-          {/* "Rechazar todo" com o mesmo peso visual de "Aceptar todo" (exigência da AEPD) */}
-          <button type="button" onClick={() => save({ analytics: false, marketing: false })} className={solid}>
+        {/* Azul = Aceptar todo. "Rechazar todo" fica do mesmo tamanho e na mesma tela (sem esconder). */}
+        <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row">
+          <button type="button" onClick={() => save({ analytics: false, marketing: false })} className={ghost}>
             <Tr t={UI.rechazarTodo} />
           </button>
           {configuring ? (

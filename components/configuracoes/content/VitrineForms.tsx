@@ -2,7 +2,7 @@
 // Formulários do Admin → Editar loja para o modelo atual da vitrine
 // (faixa do topo, banner, categorias, seções de produtos, banner promocional e rodapé).
 // Campo vazio = automático (nome/descrição do setor, foto do primeiro produto).
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { ArrowDown, ArrowUp, ChevronsUp, Plus, Trash2, Wand2 } from 'lucide-react';
 import { Field, inputCls, textareaCls, MediaUploadField } from './shared';
 import {
@@ -400,6 +400,60 @@ export function CategoriasForm({ data, onChange, sectors, focus }: { data: Categ
   );
 }
 
+// ------------------------------------------------------------------ resultado do teste A/B
+
+type AbRow = { visitors: number; clicked: number; carted: number; bought: number; purchases: number } | null;
+
+function AbResults() {
+  const [days, setDays] = useState(30);
+  const [data, setData] = useState<{ grid: AbRow; carousel: AbRow } | null>(null);
+  const [err, setErr] = useState('');
+  useEffect(() => {
+    setErr('');
+    fetch(`/api/analytics/ab?days=${days}`, { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then((d) => setData({ grid: d.grid, carousel: d.carousel }))
+      .catch((e) => setErr(e?.message || 'Erro'));
+  }, [days]);
+  const pct = (a: number, b: number) => (b > 0 ? `${((a / b) * 100).toFixed(1)}%` : '—');
+  const col = (name: string, r: AbRow) => (
+    <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
+      <p className="mb-2 text-sm font-semibold text-white">{name}</p>
+      <dl className="space-y-1 text-[12px] text-white/70">
+        <div className="flex justify-between"><dt>Visitantes</dt><dd className="font-semibold text-white">{r?.visitors ?? 0}</dd></div>
+        <div className="flex justify-between"><dt>Clicaram num produto</dt><dd>{pct(r?.clicked ?? 0, r?.visitors ?? 0)}</dd></div>
+        <div className="flex justify-between"><dt>Puseram no carrinho</dt><dd>{pct(r?.carted ?? 0, r?.visitors ?? 0)}</dd></div>
+        <div className="flex justify-between"><dt>Compraram</dt><dd className="font-semibold text-green-300">{pct(r?.bought ?? 0, r?.visitors ?? 0)} ({r?.purchases ?? 0})</dd></div>
+      </dl>
+    </div>
+  );
+  const g = data?.grid, c = data?.carousel;
+  const minV = Math.min(g?.visitors ?? 0, c?.visitors ?? 0);
+  const rate = (r: AbRow) => (r && r.visitors ? (r.bought || r.carted) / r.visitors : 0);
+  const leader = !g || !c ? '' : rate(g) === rate(c) ? '' : rate(g) > rate(c) ? 'Grade' : 'Carrossel';
+  return (
+    <div className="mb-4 rounded-xl border border-green-500/20 bg-green-500/[0.04] p-3">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <p className="text-xs font-semibold uppercase tracking-wider text-green-300/90">Resultado do teste</p>
+        <select className="cursor-pointer rounded-md border border-white/10 bg-[#1c2236] px-2 py-1 text-xs text-white" value={days} onChange={(e) => setDays(+e.target.value)}>
+          {[7, 14, 30, 60, 90].map((d) => <option key={d} value={d}>últimos {d} dias</option>)}
+        </select>
+      </div>
+      {err ? <p className="text-xs text-red-300">Não consegui carregar ({err}).</p> : !data ? <p className="text-xs text-white/50">Carregando…</p> : (
+        <>
+          <div className="grid grid-cols-2 gap-2">{col('Grade', g ?? null)}{col('Carrossel', c ?? null)}</div>
+          <p className="mt-2 text-[11px] leading-relaxed text-white/50">
+            {minV < 100
+              ? `Ainda é cedo: espere pelo menos 100 visitantes em cada versão (hoje: ${minV}) antes de decidir.`
+              : leader ? `Por enquanto a ${leader} converte mais. Quando a diferença se mantiver por 1–2 semanas, escolha ela e desligue o teste.` : 'Empate por enquanto.'}
+            {' '}Só conta quem passou pela home com o teste ligado. As compras contam quando o pagamento é aprovado.
+          </p>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ------------------------------------------------------------------ seções de produtos
 
 export function SecoesForm({ data, onChange, sectors, focus }: { data: SecoesContent; onChange: (d: SecoesContent) => void; sectors: SectorLite[]; focus?: string }) {
@@ -411,8 +465,8 @@ export function SecoesForm({ data, onChange, sectors, focus }: { data: SecoesCon
     <div>
       <Group title="Aparência">
         <Field label="Como mostrar os produtos de cada seção">
-          <div className="grid grid-cols-2 gap-2">
-            {([['carousel', 'Carrossel', 'uma linha que arrasta para o lado'], ['grid', 'Grade', 'todos os produtos em linhas']] as const).map(([id, t, d]) => (
+          <div className="grid grid-cols-3 gap-2">
+            {([['carousel', 'Carrossel', 'uma linha que arrasta para o lado'], ['grid', 'Grade', '2 por linha no celular, 3 no computador'], ['ab', 'Teste A/B', 'metade vê grade, metade carrossel']] as const).map(([id, t, d]) => (
               <button key={id} type="button" onClick={() => set({ layout: id })}
                 className={`cursor-pointer rounded-lg border px-3 py-2.5 text-left transition-colors ${data.layout === id ? 'border-green-500/60 bg-green-500/10' : 'border-white/10 hover:border-white/25'}`}>
                 <span className="block text-sm font-semibold text-white">{t}</span>
@@ -421,6 +475,7 @@ export function SecoesForm({ data, onChange, sectors, focus }: { data: SecoesCon
             ))}
           </div>
         </Field>
+        {data.layout === 'ab' && <AbResults />}
         <Txt label="Texto do link de cada seção" value={data.viewAllText} onChange={(v) => set({ viewAllText: v })} placeholder="Ver todo" />
       </Group>
       <Group title="Seções (uma por setor, nesta ordem)">
