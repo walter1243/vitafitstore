@@ -28,7 +28,15 @@ const ITEM = 'flex min-h-[52px] flex-1 cursor-pointer flex-col items-center just
 export function MobileTabBar() {
   const { totalItems, setIsCartOpen } = useCart();
   const [wa, setWa] = useState('');
-  const home = usePathname() === '/';
+  const pathname = usePathname() || '/';
+  const home = pathname === '/';
+  const hidden = pathname.startsWith('/checkout') || pathname.startsWith('/admin');
+  // espaço no fim da página para o conteúdo não ficar embaixo da barra (só no celular)
+  useEffect(() => {
+    if (hidden) return;
+    document.body.classList.add('has-tabbar');
+    return () => document.body.classList.remove('has-tabbar');
+  }, [hidden]);
   // Fica transparente (40%) para não tapar a loja; ao tocar fica 100% e volta depois de 4 s.
   const [awake, setAwake] = useState(false);
   const sleepTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -48,6 +56,8 @@ export function MobileTabBar() {
       })
       .catch(() => {});
   }, []);
+
+  if (hidden) return null;
 
   return (
     <nav

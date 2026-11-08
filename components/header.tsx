@@ -7,7 +7,7 @@ import { ProductSearch } from '@/components/product-search';
 import { useCart } from '@/lib/cart-context';
 import { useSectors } from '@/components/kids/sectors-context';
 import { LanguageSwitcher, Tr, UI } from '@/components/language-switcher';
-import { OPEN_MENU_EVENT, OPEN_SEARCH_EVENT, goHome } from '@/components/mobile-tab-bar';
+import { OPEN_MENU_EVENT, OPEN_SEARCH_EVENT, goHome, MobileTabBar } from '@/components/mobile-tab-bar';
 import { CollectionsMenuPanel, homeCategoryHref, selectHomeCategory, useHomeCategories } from '@/components/kids/menu-panel';
 
 
@@ -238,7 +238,7 @@ export function Header({ topbar: topbarOverride, cabecalho: cabecalhoOverride, b
             <LanguageSwitcher className="order-last md:order-none" />
             <button
               onClick={() => setIsCartOpen(true)}
-              className="relative order-last flex h-11 w-11 cursor-pointer items-center justify-center rounded-full transition-colors duration-200 hover:bg-[#FFE8C2] md:order-none md:bg-[#FFF4E0]"
+              className="relative hidden h-11 w-11 cursor-pointer items-center justify-center rounded-full transition-colors duration-200 hover:bg-[#FFE8C2] md:flex md:bg-[#FFF4E0]"
               aria-label="Abrir carrito"
             >
               <ShoppingCart className="h-6 w-6 text-[#1d1d1f] md:h-5 md:w-5 md:text-[#23263f]" />
@@ -358,6 +358,8 @@ export function Header({ topbar: topbarOverride, cabecalho: cabecalhoOverride, b
           </div>
         </>
       )}
+      {/* barra de baixo estilo app (celular), em todas as páginas da loja */}
+      <MobileTabBar />
     </>
   );
 }

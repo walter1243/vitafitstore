@@ -17,7 +17,7 @@ function buildWhatsAppUrl(rawPhone: string, greeting: string) {
 }
 
 // withTabBar: no celular o WhatsApp ja esta na barra de baixo (Ayuda).
-export function WhatsAppFloating({ withTabBar = false }: { withTabBar?: boolean }) {
+export function WhatsAppFloating({ withTabBar = true }: { withTabBar?: boolean }) {
   const [settings, setSettings] = useState<StoreSettings | null>(null);
 
   useEffect(() => {

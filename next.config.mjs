@@ -50,8 +50,13 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Otimização de imagens da Vercel LIGADA: cada foto sai em WebP/AVIF no tamanho em que
+  // aparece (antes a home baixava ~44 MB de PNG original, inclusive 1,5 MB por bolinha de
+  // 72 px). As fotos do Vercel Blob têm nome único, então o cache pode durar 1 ano.
   images: {
-    unoptimized: true,
+    formats: ['image/avif', 'image/webp'],
+    remotePatterns: [{ protocol: 'https', hostname: '**' }],
+    minimumCacheTTL: 31536000,
   },
   // Pre-visualizacao local sem o banco: com PREVIEW_API_FROM definido (so em
   // .env.development.local, nunca na Vercel), a vitrine local le produtos,

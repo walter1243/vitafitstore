@@ -4,7 +4,6 @@ import { CartSidebar } from '@/components/cart-sidebar'
 import { UpsellPopup } from '@/components/upsell-popup'
 import { WhatsAppFloating } from '@/components/whatsapp-floating'
 import { AppleHome } from '@/components/apple-home'
-import { MobileTabBar } from '@/components/mobile-tab-bar'
 import { getSiteContent } from '@/lib/site-content'
 import { getSectors } from '@/lib/sectors'
 import { SectorsProvider } from '@/components/kids/sectors-context'
@@ -30,14 +29,13 @@ export default async function HomePage() {
 
   return (
     <SectorsProvider sectors={sectors}>
-    <div className="flex min-h-screen flex-col bg-[#f5f5f7] pb-[76px] md:pb-0">
+    <div className="flex min-h-screen flex-col bg-[#f5f5f7]">
       <Header />
       <main className="flex-1">
         <AppleHome content={content} initialProducts={products} />
       </main>
       <Footer content={content.rodape} logo={content.cabecalho.logoImage} />
       <WhatsAppFloating withTabBar />
-      <MobileTabBar />
       <CartSidebar />
       <UpsellPopup />
     </div>
