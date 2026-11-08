@@ -5,6 +5,7 @@ import { CartProvider } from '@/lib/cart-context'
 import SchemaOrg from '@/components/SchemaOrg'
 import { CookieConsent } from '@/components/cookie-consent'
 import { HumanCheck } from '@/components/human-check'
+import { EntryStart } from '@/components/entry-start'
 import { AnalyticsLoader } from '@/components/analytics-loader'
 import { SiteTracker } from '@/components/site-tracker'
 import { PageTurn } from '@/components/page-turn'
@@ -120,6 +121,7 @@ export default function RootLayout({
            here again. */}
         {/* Cloudflare Turnstile na entrada (só com as chaves configuradas) — components/human-check.tsx */}
         <HumanCheck />
+        <EntryStart />
         <CookieConsent />
         <AnalyticsLoader />
         <SiteTracker />
