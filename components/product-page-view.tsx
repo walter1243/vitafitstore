@@ -1,6 +1,8 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { deliveryText } from '@/lib/delivery'
+import { DEFAULT_ENTREGA, type EntregaContent } from '@/lib/site-content-defaults'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -16,7 +18,10 @@ import { NamePersonalizer, NamePreview, type PersonalizerLook } from '@/componen
 import { DEFAULT_NAME_COLORS, cleanCustomText, lineTotalFor, minQtyFor, packOf, parsePersonalize, sizeRange, sizedPrice } from '@/lib/personalize'
 import { ProductShipping } from '@/components/shipping/shipping-options'
 
-export function ProductPageView({ product }: { product: Product }) {
+export function ProductPageView({ product, entrega }: { product: Product; entrega?: Partial<EntregaContent> }) {
+  // previsão calculada no navegador (data de hoje do cliente, sem diferença entre servidor e tela)
+  const [eta, setEta] = useState('')
+  useEffect(() => { if ({ ...DEFAULT_ENTREGA, ...entrega }.enabled) setEta(deliveryText(entrega, Boolean(product.personalize?.enabled))) }, [entrega, product.personalize?.enabled])
   const { addItem } = useCart()
   const { collectionForProduct, getSector } = useSectors()
   const collection = collectionForProduct(product)
@@ -249,9 +254,16 @@ export function ProductPageView({ product }: { product: Product }) {
                 <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-700">-{discountPct}%</span>
               )}
             </div>
-            <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
-              <Truck size={13} /> Envío con seguimiento
-            </p>
+            {eta ? (
+              <div className="mt-3 rounded-xl bg-emerald-50 px-3 py-2.5 text-emerald-800">
+                <p className="flex items-center gap-1.5 text-sm font-bold"><Truck size={15} aria-hidden="true" /> {eta}</p>
+                <p className="mt-0.5 text-xs text-emerald-700">{{ ...DEFAULT_ENTREGA, ...entrega }.madeText} · Envío con seguimiento</p>
+              </div>
+            ) : (
+              <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+                <Truck size={13} /> Envío con seguimiento
+              </p>
+            )}
           </div>
 
           {/* Cores (Admin → Produtos → Cores do produto): trocar a cor troca a foto. */}

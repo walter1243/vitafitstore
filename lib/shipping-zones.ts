@@ -123,7 +123,7 @@ export async function saveZones(list: unknown): Promise<ShippingZone[]> {
   await sql`DELETE FROM shipping_zones WHERE NOT (code = ANY(${clean.map((z) => z.code)}))`;
   for (const z of clean) {
     await sql`INSERT INTO shipping_zones (code, name, mode, price_light, price_heavy, free_over, embed_pct, enabled, position)
-      VALUES (${z.code}, ${z.name}, ${z.mode}, ${z.priceLight}, ${z.priceHeavy}, ${z.freeOver}, ${z.code === 'ES' ? 0 : z.embedPct}, ${z.enabled}, ${z.position})
+      VALUES (${z.code}, ${z.name}, ${z.mode}, ${z.priceLight}, ${z.priceHeavy}, ${z.freeOver}, ${z.embedPct}, ${z.enabled}, ${z.position})
       ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name, mode = EXCLUDED.mode, price_light = EXCLUDED.price_light,
         price_heavy = EXCLUDED.price_heavy, free_over = EXCLUDED.free_over, embed_pct = EXCLUDED.embed_pct, enabled = EXCLUDED.enabled, position = EXCLUDED.position`;
   }

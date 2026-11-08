@@ -14,7 +14,7 @@ type Zone = {
 };
 
 // Igual a lib/country-price: acrescimo por unidade e o frete que sobra.
-const surchargeOf = (z: Zone) => (z.code === 'ES' ? 0 : Math.ceil((Number(z.embedPct) || 0) / 100 * (Number(z.priceLight) || 0)));
+const surchargeOf = (z: Zone) => Math.ceil((Number(z.embedPct) || 0) / 100 * (Number(z.priceLight) || 0));
 
 const INPUT = 'w-full rounded-lg border border-white/10 bg-[#1c2236] px-2.5 py-2 text-sm text-white outline-none placeholder:text-white/30 focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40';
 
@@ -73,7 +73,8 @@ export function ShippingZonesSection({ notify }: { notify: (type: 'success' | 'e
           <li><strong className="text-white/80">Packlink</strong>: o frete é calculado na hora pela Packlink. Se ela não tiver envio para o endereço, o site usa os preços da tabela.</li>
           <li><strong className="text-white/80">Correos</strong>: preço fixo da tabela (você despacha nos Correos). O cliente só tem entrega a domicílio.</li>
           <li>Até 2 kg = Paquete Internacional Light. Acima de 2 kg = Estándar. O peso vem da caixa de envio de cada produto.</li>
-          <li><strong className="text-white/80">% no produto</strong>: quem é desse país (pela localização ou pelo país escolhido no checkout) vê cada produto mais caro, e o frete cai o mesmo valor. Ex.: EUA €22 com 60% → produto +€14 e frete €8. Na Espanha não muda nada.</li>
+          <li><strong className="text-white/80">% no produto</strong>: quem é desse país (pela localização ou pelo país escolhido no checkout) vê cada produto mais caro, e o frete cai o mesmo valor. Ex.: EUA €22 com 60% → produto +€14 e frete €8. <strong className="text-white/80">A loja nunca paga frete:</strong> o que vai no preço só desconta do frete real, e o frete cobrado nunca fica abaixo de €0.</li>
+          <li><strong className="text-white/80">Espanha (recomendado):</strong> no &quot;Até 2 kg&quot; coloque o frete real mais comum da Packlink (ex.: €4) e em &quot;% no produto&quot; 75%. Cada produto sobe +€3 e o frete cai €3: ponto de recogida fica perto de €0–1 e a domicílio perto de €2–3. Quem leva 2 ou mais produtos quase sempre não paga frete. O total que a loja recebe não muda.</li>
         </ul>
 
         <div className="overflow-x-auto">
@@ -114,7 +115,7 @@ export function ShippingZonesSection({ notify }: { notify: (type: 'success' | 'e
                   <td className="px-2 py-2"><input className={INPUT} type="number" min={0} step="0.01" value={z.priceHeavy} onChange={(e) => set(i, { priceHeavy: e.target.value })} aria-label="Preço acima de 2 kg" /></td>
                   <td className="px-2 py-2"><input className={INPUT} type="number" min={0} step="0.01" placeholder="Nunca" value={z.freeOver ?? ''} onChange={(e) => set(i, { freeOver: e.target.value })} aria-label="Frete grátis a partir de" /></td>
                   <td className="px-2 py-2">
-                    {z.code === 'ES' ? <span className="text-xs text-white/40">—</span> : (
+                    {(
                       <div>
                         <input className={INPUT} type="number" min={0} max={100} step="5" value={z.embedPct} onChange={(e) => set(i, { embedPct: e.target.value })} aria-label="Porcentagem do frete no produto" />
                         {surchargeOf(z) > 0 && <p className="mt-1 whitespace-nowrap text-[11px] text-green-400">+€{surchargeOf(z)} no produto · frete €{Math.max(0, (Number(z.priceLight) || 0) - surchargeOf(z)).toFixed(2)}</p>}

@@ -1,6 +1,7 @@
-// Frete embutido no preco (paises fora da Espanha): parte do frete do pais
-// (Admin → Envio por país, "% no produto") sobe pro preco de cada unidade
-// vendida e sai do frete cobrado. Espanha: sem mudanca.
+// Frete embutido no preco: parte do frete do pais (Admin → Envio por país,
+// "% no produto") sobe pro preco de cada unidade vendida e sai do frete cobrado.
+// Vale para a Espanha tambem. A loja nunca paga frete: o que vai no preco so
+// desconta do frete real, e o frete cobrado nunca fica abaixo de 0.
 //   acrescimo por unidade = arredonda pra cima(% × preco ate 2 kg)
 //   frete cobrado = frete − acrescimo × unidades (nunca abaixo de 0)
 // Um pack conta como 1 unidade.
@@ -11,7 +12,6 @@ export const COUNTRY_COOKIE = 'kt_country';
 
 export async function countrySurcharge(country: string | null | undefined): Promise<number> {
   const code = String(country || 'ES').toUpperCase();
-  if (code === 'ES') return 0;
   const zone = await getZone(code).catch(() => null);
   if (!zone || !zone.enabled || !(zone.embedPct > 0)) return 0;
   return Math.ceil((zone.embedPct / 100) * zone.priceLight);

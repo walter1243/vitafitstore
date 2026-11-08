@@ -12,7 +12,10 @@ const PickupMapModal = dynamic(() => import('./pickup-map').then((m) => m.Pickup
 // sao usados no carrinho e no checkout.
 export type ShipMethod = 'home' | 'pickup';
 type Opt = { serviceId: string; carrier: string; service: string; price: number; charged: number; type: ShipMethod } | null;
-export type ShipQuote = { free: boolean; home: Opt; pickup: Opt; error?: string };
+export type ShipQuote = { free: boolean; home: Opt; pickup: Opt; error?: string; freeOver?: number | null };
+
+// "Envío gratis desde X€" pelo valor do país (Admin → Envio por país); null = sem frete grátis.
+export const freeShipText = (q: ShipQuote | null | undefined) => (q?.freeOver != null ? ` Envío gratis desde ${Number(q.freeOver).toFixed(Number(q.freeOver) % 1 ? 2 : 0)}€.` : '');
 
 const ZIP_KEY = 'kitoys_zip';
 const METHOD_KEY = 'kitoys_ship_method';
@@ -172,7 +175,7 @@ export function ProductShipping({ productId, quantity, size, onShipping }: { pro
       {geoError && <p className="-mt-1 mb-2 text-xs font-medium text-red-600">{geoError}</p>}
       <ShipOptionsList quote={quote} method={method} onMethod={(m) => { setMethod(m); saveMethod(m); }} loading={loading} />
       <p className="mt-2 text-[11px] text-slate-500">
-        {z.length === 5 ? `Precio para ${z}.` : `Precio de referencia (${SAMPLE_ZIP}). Escribe tu código postal para el tuyo.`} Envío gratis en pedidos +50€.
+        {z.length === 5 ? `Precio para ${z}.` : `Precio orientativo. Escribe tu código postal para ver el tuyo.`}{freeShipText(quote)}
       </p>
     </div>
   );

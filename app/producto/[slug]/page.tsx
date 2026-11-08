@@ -52,7 +52,7 @@ export default async function ProductPage({ params }: PageProps) {
     <div className="flex min-h-screen flex-col bg-[#FAF8F5]">
       <Header />
       <main className="flex-1">
-        <ProductPageView product={product} />
+        <ProductPageView product={product} entrega={content.entrega} />
       </main>
       <Footer content={content.rodape} logo={content.cabecalho.logoImage} />
       <WhatsAppFloating />

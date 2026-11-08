@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Check, LayoutGrid, PenLine, ShoppingCart, SlidersHorizontal } from 'lucide-react';
+import { ArrowRight, Check, Gift, LayoutGrid, MessageCircle, PenLine, RotateCcw, ShieldCheck, ShoppingCart, SlidersHorizontal, Truck, Wrench } from 'lucide-react';
 import { type Product } from '@/lib/products';
 import { toStoreProduct } from '@/lib/store-product';
 import { useCart } from '@/lib/cart-context';
@@ -11,7 +11,7 @@ import { useSectors } from '@/components/kids/sectors-context';
 import { useStoreProducts } from '@/components/kids/use-store-products';
 import { GO_HOME_EVENT } from '@/components/mobile-tab-bar';
 import { Tr, UI } from '@/components/language-switcher';
-import { DEFAULT_BANNER, DEFAULT_CATEGORIAS, DEFAULT_PROMO, DEFAULT_SECOES, SLIDE_COLORS, type SiteContent } from '@/lib/site-content-defaults';
+import { DEFAULT_BANNER, DEFAULT_CATEGORIAS, DEFAULT_CONFIANCA, DEFAULT_PROMO, DEFAULT_SECOES, SLIDE_COLORS, type SiteContent, type TrustIcon } from '@/lib/site-content-defaults';
 
 // Home no formato de app de loja: banner com slides, setores em cards que
 // filtram os produtos, cards com selo + botao de carrinho e uma faixa de
@@ -239,7 +239,9 @@ function Off({ k, label }: { k: string; label: string }) {
   );
 }
 
-export type HomeContentProps = Partial<Pick<SiteContent, 'banner' | 'categorias' | 'secoes' | 'promo'>>;
+export type HomeContentProps = Partial<Pick<SiteContent, 'banner' | 'categorias' | 'secoes' | 'promo' | 'confianca'>>;
+
+const TRUST_ICONS: Record<TrustIcon, typeof Truck> = { made: Wrench, pay: ShieldCheck, truck: Truck, return: RotateCcw, chat: MessageCircle, gift: Gift };
 
 // Ordena a lista do admin pelos setores existentes; setor que não está na lista entra no fim.
 function orderBy<T extends { sector: string }>(slugs: string[], items: T[]): { slug: string; cfg?: T }[] {
@@ -252,13 +254,14 @@ function orderBy<T extends { sector: string }>(slugs: string[], items: T[]): { s
 
 // `editing` (só no editor visual do admin): marca cada parte com data-edit para o clique abrir a
 // edição dela, e mostra um aviso no lugar das partes desligadas.
-export function AppleHome({ content, editing = false }: { content?: HomeContentProps; editing?: boolean } = {}) {
+export function AppleHome({ content, editing = false, initialProducts }: { content?: HomeContentProps; editing?: boolean; initialProducts?: Product[] } = {}) {
   const B = { ...DEFAULT_BANNER, ...content?.banner };
   const C = { ...DEFAULT_CATEGORIAS, ...content?.categorias };
   const S = { ...DEFAULT_SECOES, ...content?.secoes };
   const P = { ...DEFAULT_PROMO, ...content?.promo };
+  const T = { ...DEFAULT_CONFIANCA, ...content?.confianca };
 
-  const { products } = useStoreProducts();
+  const { products } = useStoreProducts(initialProducts as any);
   const { sectors, collectionForProduct } = useSectors();
   const [active, setActive] = useState('todos');
   const listRef = useRef<HTMLDivElement>(null);
@@ -409,6 +412,24 @@ export function AppleHome({ content, editing = false }: { content?: HomeContentP
           </nav>
         )}
         {editing && !C.enabled && <Off k="categorias" label="Stories / categorias desligadas" />}
+
+        {/* Faixa de confiança: o que um cliente novo precisa saber antes de comprar */}
+        {T.enabled && T.items.length > 0 ? (
+          <ul data-edit="confianca" data-edit-label="Faixa de confiança" className="mt-6 grid grid-cols-2 gap-2 sm:mt-8 sm:gap-3 lg:grid-cols-4">
+            {T.items.filter((it) => it.title.trim()).map((it, k) => {
+              const Icon = TRUST_ICONS[it.icon] ?? ShieldCheck;
+              return (
+                <li key={k} className="flex items-start gap-2.5 rounded-2xl bg-white p-3 shadow-[0_2px_10px_rgba(0,0,0,0.04)] sm:p-4">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ background: '#e8f1fd', color: BLUE }}><Icon className="h-[18px] w-[18px]" aria-hidden="true" /></span>
+                  <span className="min-w-0">
+                    <span className="block text-[13px] font-semibold leading-tight sm:text-[14px]" style={{ color: INK }}>{it.title}</span>
+                    {it.text && <span className="mt-0.5 block text-[12px] leading-snug sm:text-[13px]" style={{ color: MUTED }}>{it.text}</span>}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        ) : editing && <Off k="confianca" label="Faixa de confiança desligada" />}
 
         <div id="productos" ref={listRef} className="scroll-mt-28 pt-6 sm:pt-8">
           {filtered ? (

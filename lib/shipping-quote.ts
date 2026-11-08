@@ -15,6 +15,8 @@ import { countrySurcharge, saleUnits, withSurcharge } from '@/lib/country-price'
 export type ShipMethod = 'home' | 'pickup';
 export type ShippingQuote = {
   free: boolean;
+  freeOver?: number | null;   // frete grátis a partir deste subtotal (Admin → Envio por país)
+  embedded?: number;          // parte do frete que já está no preço dos produtos
   home: (ShipOption & { charged: number }) | null;
   pickup: (ShipOption & { charged: number }) | null;
   subtotal: number;
@@ -53,6 +55,7 @@ export async function quoteShipping(items: { productId: number; quantity: number
   }
   subtotal = Math.round(subtotal * 100) / 100;
   if (!zone || !zone.enabled) return { free: false, home: null, pickup: null, subtotal, unsupported: true, error: 'Todavía no enviamos a este país.' };
+  const freeOver = zone.freeOver;
   const free = (zone.freeOver != null && subtotal >= zone.freeOver) || (code === 'ES' && freeByQty);
   const embedded = surcharge * saleUnits(items.map((it) => ({ quantity: Number(it.quantity || 0), personalize: byId.get(Number(it.productId))?.personalize })));
   const wrap = (o: ShipOption | null) => (o ? { ...o, charged: free ? 0 : Math.max(0, Math.round((o.price - embedded) * 100) / 100) } : null);
@@ -68,12 +71,12 @@ export async function quoteShipping(items: { productId: number; quantity: number
       price,
       type: 'home',
     };
-    return { free, home: wrap(home), pickup: null, subtotal, mode: 'correos' };
+    return { free, freeOver, embedded, home: wrap(home), pickup: null, subtotal, mode: 'correos' };
   };
   if (zone.mode === 'correos') return correos();
 
   const z = cleanPostal(code, zip);
-  if (!z || (code === 'ES' && z.length !== 5)) return code === 'ES' ? { free, home: null, pickup: null, subtotal, mode: 'packlink' } : correos();
+  if (!z || (code === 'ES' && z.length !== 5)) return code === 'ES' ? { free, freeOver, embedded, home: null, pickup: null, subtotal, mode: 'packlink' } : correos();
   try {
     const opts = await packlinkServices(z, parcel, code);
     const { home, pickup } = cheapestByType(opts);
@@ -81,10 +84,10 @@ export async function quoteShipping(items: { productId: number; quantity: number
     const pk = code === 'ES' ? pickup : null;
     const hm = home ?? (code === 'ES' ? null : pickup && { ...pickup, type: 'home' as const });
     if (!hm && !pk) return code === 'ES' ? { free, home: null, pickup: null, subtotal, mode: 'packlink', error: 'Packlink sin opciones' } : correos();
-    return { free, home: wrap(hm), pickup: wrap(pk), subtotal, mode: 'packlink' };
+    return { free, freeOver, embedded, home: wrap(hm), pickup: wrap(pk), subtotal, mode: 'packlink' };
   } catch (e: any) {
     if (code !== 'ES') return correos();
-    return { free, home: null, pickup: null, subtotal, mode: 'packlink', error: e?.message || 'Packlink no disponible' };
+    return { free, freeOver, embedded, home: null, pickup: null, subtotal, mode: 'packlink', error: e?.message || 'Packlink no disponible' };
   }
 }
 
@@ -100,7 +103,16 @@ export async function chargeShipping(
   const code = String(country || 'ES').toUpperCase();
   const cleanZip = cleanPostal(code, zip);
   if (code === 'ES' && cleanZip.length !== 5) {
-    return { shipping: fallback(), quote: null as ShippingQuote | null, chosen: null as (ShipOption & { charged: number }) | null, method, error: '' };
+    // sem CP: tabela antiga, menos o que já foi embutido no preço (nunca abaixo de 0)
+    const surcharge = await countrySurcharge(code);
+    let embeddedNoZip = 0;
+    if (surcharge > 0) {
+      const rows = await sql`SELECT id, personalize FROM products WHERE id = ANY(${[...new Set(items.map((i) => Number(i.productId)))]})`;
+      const pers = new Map<number, unknown>((rows as any[]).map((r) => [Number(r.id), r.personalize]));
+      embeddedNoZip = surcharge * saleUnits(items.map((it) => ({ quantity: Number(it.quantity || 0), personalize: pers.get(Number(it.productId)) })));
+    }
+    const shipping = Math.max(0, Math.round((fallback() - embeddedNoZip) * 100) / 100);
+    return { shipping, quote: null as ShippingQuote | null, chosen: null as (ShipOption & { charged: number }) | null, method, error: '' };
   }
   const quote = await quoteShipping(items, cleanZip, code);
   if (quote.unsupported || (code !== 'ES' && !quote.home && !quote.pickup)) {

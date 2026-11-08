@@ -5,12 +5,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ArrowLeft, BadgePercent, Check, CircleDot, Images, Loader2, Megaphone, Monitor, MousePointerClick,
-  PanelBottom, RotateCcw, Rows3, Smartphone, Undo2, UploadCloud, Hand, Store, Package, ExternalLink,
+  PanelBottom, RotateCcw, Rows3, Smartphone, Undo2, UploadCloud, Hand, Store, Package, ExternalLink, ShieldCheck, CalendarClock,
 } from 'lucide-react';
 import { DEFAULT_SITE_CONTENT, SITE_CONTENT_SECTIONS, type Branding, type SiteContent } from '@/lib/site-content-defaults';
-import { BannerForm, CabecalhoForm, CategoriasForm, PromoForm, RodapeForm, SecoesForm, TopbarForm, type SectorLite } from './content/VitrineForms';
+import { BannerForm, CabecalhoForm, CategoriasForm, ConfiancaForm, EntregaForm, PromoForm, RodapeForm, SecoesForm, TopbarForm, type SectorLite } from './content/VitrineForms';
 
-export type EditableKey = 'topbar' | 'cabecalho' | 'banner' | 'categorias' | 'secoes' | 'promo' | 'rodape';
+export type EditableKey = 'topbar' | 'cabecalho' | 'banner' | 'categorias' | 'confianca' | 'secoes' | 'promo' | 'rodape' | 'entrega';
 type Picked = EditableKey | 'produto';
 
 export const SECTION_META: Record<EditableKey, { label: string; desc: string; icon: typeof Images }> = {
@@ -18,11 +18,13 @@ export const SECTION_META: Record<EditableKey, { label: string; desc: string; ic
   cabecalho: { label: 'Cabeçalho e logo', desc: 'Logo, tamanho, nome da loja, cor, texto da busca e do menu.', icon: Store },
   banner: { label: 'Banner principal', desc: 'Os slides grandes do topo: texto, botão, foto e cores.', icon: Images },
   categorias: { label: 'Stories / categorias', desc: 'As bolinhas com foto embaixo do banner: ordem, nome, foto.', icon: CircleDot },
+  confianca: { label: 'Faixa de confiança', desc: 'Os 4 quadrinhos embaixo dos stories: feito na Espanha, Bizum, envio, devolução.', icon: ShieldCheck },
+  entrega: { label: 'Prazo de entrega', desc: 'As datas "Recíbelo entre…" embaixo do preço de cada produto.', icon: CalendarClock },
   secoes: { label: 'Seções de produtos', desc: 'Ordem, títulos e frases de cada seção (Infantil, Hogar, Navidad…).', icon: Rows3 },
   promo: { label: 'Banner promocional', desc: 'O banner "Con su nombre" no meio da home.', icon: BadgePercent },
   rodape: { label: 'Rodapé', desc: 'Marca, colunas de links, segurança, envio e direitos autorais.', icon: PanelBottom },
 };
-const SECTION_ORDER: EditableKey[] = ['topbar', 'cabecalho', 'banner', 'categorias', 'secoes', 'promo', 'rodape'];
+const SECTION_ORDER: EditableKey[] = ['topbar', 'cabecalho', 'banner', 'categorias', 'confianca', 'secoes', 'promo', 'rodape', 'entrega'];
 const BRANDING_DEFAULT: Branding = { storeName: 'Kitoys 3D', logoUrl: '', logoStyle: 'logo_direto', themeColor: '#c2410c' };
 const pickBranding = (d: any): Branding => ({
   storeName: String(d?.storeName ?? BRANDING_DEFAULT.storeName),
@@ -271,6 +273,8 @@ export function ContentEditor() {
                     {selected === 'secoes' && <SecoesForm data={content.secoes} onChange={(d) => setSection('secoes', d)} sectors={sectors} focus={focusItem} />}
                     {selected === 'promo' && <PromoForm data={content.promo} onChange={(d) => setSection('promo', d)} sectionsCount={sectors.length} />}
                     {selected === 'rodape' && <RodapeForm data={content.rodape} onChange={(d) => setSection('rodape', d)} />}
+                    {selected === 'confianca' && <ConfiancaForm data={content.confianca} onChange={(d) => setSection('confianca', d)} />}
+                    {selected === 'entrega' && <EntregaForm data={content.entrega} onChange={(d) => setSection('entrega', d)} />}
                   </>
                 )}
               </div>

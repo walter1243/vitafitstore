@@ -416,6 +416,42 @@ export const DEFAULT_PROMO: PromoContent = {
   afterSection: 1,
 };
 
+// Faixa de confiança da home (embaixo dos stories). Só fatos verdadeiros da loja.
+export type TrustIcon = 'made' | 'pay' | 'truck' | 'return' | 'chat' | 'gift';
+export type ConfiancaItem = { icon: TrustIcon; title: string; text: string };
+export type ConfiancaContent = { enabled: boolean; items: ConfiancaItem[] };
+
+export const DEFAULT_CONFIANCA: ConfiancaContent = {
+  enabled: true,
+  items: [
+    { icon: 'made', title: 'Hecho en España', text: 'Lo imprimimos en 3D en nuestro taller de Elche' },
+    { icon: 'pay', title: 'Paga con Bizum o tarjeta', text: 'También Apple Pay y Google Pay, 100% seguro' },
+    { icon: 'truck', title: 'Envío con seguimiento', text: 'A domicilio o en un punto de recogida' },
+    { icon: 'return', title: 'Devolución en 14 días', text: 'Y garantía legal de 3 años' },
+  ],
+};
+
+// Prazo de entrega mostrado embaixo do preço (página do produto). Dias úteis (seg–sex).
+export type EntregaContent = {
+  enabled: boolean;
+  productionDays: number;        // dias para imprimir e embalar
+  productionDaysCustom: number;  // produtos personalizados (com nome)
+  transitMin: number;            // dias da transportadora (mínimo)
+  transitMax: number;            // dias da transportadora (máximo)
+  cutoffHour: number;            // pedido até esta hora conta o dia (hora de Madrid)
+  madeText: string;              // frase sobre a fabricação
+};
+
+export const DEFAULT_ENTREGA: EntregaContent = {
+  enabled: true,
+  productionDays: 2,
+  productionDaysCustom: 3,
+  transitMin: 2,
+  transitMax: 4,
+  cutoffHour: 14,
+  madeText: 'Lo fabricamos para ti en nuestro taller de Elche',
+};
+
 // href especiais no rodapé: "whatsapp" = abre o WhatsApp da loja; "email" = abre o e-mail.
 export type FooterLinkItem = { title: string; description: string; href: string };
 
@@ -475,6 +511,8 @@ export type SiteContent = {
   secoes: SecoesContent;
   promo: PromoContent;
   rodape: RodapeContent;
+  entrega: EntregaContent;
+  confianca: ConfiancaContent;
   // modelo antigo (não aparece mais na loja; mantido para não perder dados salvos)
   hero: HeroContent;
   productsIntro: ProductsIntroContent;
@@ -493,6 +531,8 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
   secoes: DEFAULT_SECOES,
   promo: DEFAULT_PROMO,
   rodape: DEFAULT_RODAPE,
+  entrega: DEFAULT_ENTREGA,
+  confianca: DEFAULT_CONFIANCA,
   hero: DEFAULT_HERO,
   productsIntro: DEFAULT_PRODUCTS_INTRO,
   destaques: DEFAULT_DESTAQUES,

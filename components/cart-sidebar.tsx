@@ -22,7 +22,6 @@ export function CartSidebar() {
   const { items, isCartOpen, setIsCartOpen, updateQuantity, removeItem, totalPrice, lineTotal, totalItems } = useCart()
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({})
 
-  const hasFreeShipping = totalPrice >= FREE_SHIPPING
   // Mesma regra do checkout: maior frete entre os produtos (ou a tabela padrao).
   const qtyOf = (id: number) => items.reduce((n, it) => n + (it.product.id === id ? it.quantity : 0), 0)
   const fallbackShipping = resolveShipping(totalPrice, 'ES', items.map((i) => itemShipping(i.product.shippingCost, i.product.personalize, qtyOf(i.product.id))))
@@ -36,8 +35,11 @@ export function CartSidebar() {
   const chosen = quote ? (quote[method] ?? quote.pickup ?? quote.home) : null
   const shipping = chosen ? chosen.charged : fallbackShipping
   const total = totalPrice + shipping
-  const remaining = FREE_SHIPPING - totalPrice
-  const progress = Math.min(100, (totalPrice / FREE_SHIPPING) * 100)
+  // "grátis a partir de" vem do país (Admin → Envio por país); sem cotação ainda, o padrão
+  const freeFrom = quote ? (quote.freeOver ?? null) : FREE_SHIPPING
+  const hasFreeShipping = (freeFrom != null && totalPrice >= freeFrom) || Boolean(quote?.free)
+  const remaining = freeFrom != null ? freeFrom - totalPrice : 0
+  const progress = freeFrom != null ? Math.min(100, (totalPrice / freeFrom) * 100) : 0
 
   return (
     <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
@@ -91,7 +93,7 @@ export function CartSidebar() {
           <>
             {/* ── Shipping progress ──────────────────────── */}
             <div className="shrink-0 px-5 py-4">
-              {hasFreeShipping ? (
+              {freeFrom == null && !hasFreeShipping ? null : hasFreeShipping ? (
                 <div className="flex items-center gap-2 rounded-2xl bg-[#EAF6EF] px-4 py-3">
                   <Truck className="h-5 w-5 shrink-0 text-[#15803d]" />
                   <span className="text-sm font-extrabold text-[#15803d]">¡Tu envío es gratis!</span>
@@ -244,8 +246,7 @@ export function CartSidebar() {
 
               <div className="flex items-center justify-center gap-3 text-[11px] font-semibold text-[#565a78]">
                 <span className="flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" /> Pago seguro</span>
-                <span>·</span>
-                <span className="flex items-center gap-1"><Truck className="h-3.5 w-3.5" /> Envío gratis +50€</span>
+                {freeFrom != null && <><span>·</span><span className="flex items-center gap-1"><Truck className="h-3.5 w-3.5" /> Envío gratis +{freeFrom}€</span></>}
               </div>
             </div>
           </>

@@ -11,6 +11,9 @@ import {
   type Branding,
   type CabecalhoContent,
   type CategoriasContent,
+  type ConfiancaContent,
+  type EntregaContent,
+  type TrustIcon,
   type FooterLinkItem,
   type HomeSlide,
   type PromoContent,
@@ -164,6 +167,69 @@ export function CabecalhoForm({ data, onChange, branding, onBranding }: { data: 
           <Txt label="Menu: coleções" hint="Vazio = &quot;Colecciones&quot;" value={data.collectionsLabel} onChange={(v) => set({ collectionsLabel: v })} placeholder="Colecciones" />
         </div>
       </Group>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------ faixa de confiança
+
+const TRUST_ICON_LABEL: Record<TrustIcon, string> = { made: 'Fabricação / oficina', pay: 'Pagamento seguro', truck: 'Envio', return: 'Devolução', chat: 'Atendimento', gift: 'Presente' };
+
+export function ConfiancaForm({ data, onChange }: { data: ConfiancaContent; onChange: (d: ConfiancaContent) => void }) {
+  const set = (p: Partial<ConfiancaContent>) => onChange({ ...data, ...p });
+  const setItem = (i: number, p: Partial<ConfiancaContent['items'][number]>) => set({ items: data.items.map((it, k) => (k === i ? { ...it, ...p } : it)) });
+  return (
+    <div>
+      <Toggle label="Mostrar a faixa de confiança embaixo dos stories" hint="Para o cliente novo: quem somos, como paga, como recebe e como devolve. Use só o que é verdade." checked={data.enabled} onChange={(v) => set({ enabled: v })} />
+      {data.items.map((it, i) => (
+        <div key={i} className="mb-3 rounded-xl border border-white/10 bg-white/[0.02] p-3">
+          <ItemBar index={i} total={data.items.length} onMove={(d) => set({ items: move(data.items, i, d) })} onRemove={() => set({ items: data.items.filter((_, k) => k !== i) })}>{it.title || `Item ${i + 1}`}</ItemBar>
+          <Field label="Ícone">
+            <select className={`${inputCls} cursor-pointer`} value={it.icon} onChange={(e) => setItem(i, { icon: e.target.value as TrustIcon })}>
+              {(Object.keys(TRUST_ICON_LABEL) as TrustIcon[]).map((k) => <option key={k} value={k}>{TRUST_ICON_LABEL[k]}</option>)}
+            </select>
+          </Field>
+          <Txt label="Título" value={it.title} onChange={(v) => setItem(i, { title: v })} />
+          <Txt label="Frase" value={it.text} onChange={(v) => setItem(i, { text: v })} />
+        </div>
+      ))}
+      {data.items.length < 6 && (
+        <button type="button" onClick={() => set({ items: [...data.items, { icon: 'gift', title: '', text: '' }] })}
+          className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-green-500/30 px-3 py-2 text-xs font-semibold text-green-300 hover:bg-green-500/10">
+          <Plus size={14} /> Adicionar item
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------ prazo de entrega (página do produto)
+
+export function EntregaForm({ data, onChange }: { data: EntregaContent; onChange: (d: EntregaContent) => void }) {
+  const set = (p: Partial<EntregaContent>) => onChange({ ...data, ...p });
+  const n = (label: string, hint: string, v: number, k: keyof EntregaContent, max = 30) => (
+    <Field label={label} hint={hint}>
+      <input type="number" min={0} max={max} className={inputCls} value={v} onChange={(e) => set({ [k]: Math.max(0, Math.min(max, parseInt(e.target.value) || 0)) } as Partial<EntregaContent>)} />
+    </Field>
+  );
+  const days = data.productionDays + data.transitMin;
+  const daysMax = data.productionDays + Math.max(data.transitMin, data.transitMax);
+  return (
+    <div>
+      <div className="mb-4 rounded-lg bg-emerald-50 px-3 py-2.5 text-emerald-800">
+        <p className="text-sm font-bold">Recíbelo entre el … y el …</p>
+        <p className="text-xs text-emerald-700">{data.madeText} · Envío con seguimiento</p>
+      </div>
+      <Toggle label="Mostrar a previsão de entrega embaixo do preço" hint="Aparece na página de cada produto com as datas calculadas (dias úteis, seg–sex)." checked={data.enabled} onChange={(v) => set({ enabled: v })} />
+      <div className="grid grid-cols-2 gap-3">
+        {n('Fabricação (dias úteis)', 'imprimir e embalar', data.productionDays, 'productionDays')}
+        {n('Fabricação personalizados', 'produtos com nome', data.productionDaysCustom, 'productionDaysCustom')}
+        {n('Transporte mínimo', 'dias úteis', data.transitMin, 'transitMin')}
+        {n('Transporte máximo', 'dias úteis', data.transitMax, 'transitMax')}
+      </div>
+      {n('Hora de corte (Madrid)', 'pedido depois desta hora começa no dia útil seguinte', data.cutoffHour, 'cutoffHour', 23)}
+      <Txt label="Frase embaixo das datas" value={data.madeText} onChange={(v) => set({ madeText: v })} />
+      <p className="text-[11px] text-white/40">Hoje: entre {days} e {daysMax} dias úteis. Prometa só o que dá para cumprir — atraso vira reclamação.</p>
     </div>
   );
 }

@@ -27,9 +27,11 @@ function load(force = false): Promise<DbProduct[]> {
   return inflight;
 }
 
-export function useStoreProducts() {
-  const [products, setProducts] = useState<DbProduct[]>(cache ?? []);
-  const [loaded, setLoaded] = useState(Boolean(cache));
+// `initial`: produtos que a página já trouxe do servidor (a home aparece pronta, sem esperar
+// a API). A busca no navegador continua e substitui pela lista completa.
+export function useStoreProducts(initial?: DbProduct[]) {
+  const [products, setProducts] = useState<DbProduct[]>(cache ?? initial ?? []);
+  const [loaded, setLoaded] = useState(Boolean(cache || initial?.length));
 
   useEffect(() => {
     let alive = true;

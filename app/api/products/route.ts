@@ -3,6 +3,7 @@ import { sql } from "@/lib/db";
 import { parsePersonalize } from '@/lib/personalize';
 import { getAdminSessionFromRequest, requireAdmin } from "@/lib/admin-auth";
 import { COUNTRY_COOKIE, countrySurcharge, viewerCountry, withSurcharge } from "@/lib/country-price";
+import { DEMO_TYPES, normalizeProduct, parseAdditionalImages, parseColorOptions, parseJsonArray, parseSizes, publicProduct } from "@/lib/products-db";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -11,54 +12,7 @@ const noStoreHeaders = {
   'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
 };
 
-function parseAdditionalImages(value: unknown): string[] {
-  if (Array.isArray(value)) {
-    return value.map(item => String(item).trim()).filter(Boolean);
-  }
-  if (typeof value === 'string' && value.trim()) {
-    try {
-      const parsed = JSON.parse(value);
-      if (Array.isArray(parsed)) {
-        return parsed.map(item => String(item).trim()).filter(Boolean);
-      }
-    } catch {
-      return value.split(',').map(item => item.trim()).filter(Boolean);
-    }
-  }
-  return [];
-}
-
-function parseJsonArray(value: unknown): any[] {
-  if (Array.isArray(value)) return value;
-  if (typeof value === 'string' && value.trim()) {
-    try {
-      const parsed = JSON.parse(value);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  }
-  return [];
-}
-
-function parseColorOptions(value: unknown): { label: string; image: string; hex: string }[] {
-  return parseJsonArray(value)
-    .map((c: any) => ({
-      label: String(c?.label ?? '').trim(),
-      image: String(c?.image ?? '').trim(),
-      hex: String(c?.hex ?? '').trim(),
-    }))
-    .filter(c => c.label && (c.image || c.hex))
-    .slice(0, 5);
-}
-
-function parseSizes(value: unknown): string[] {
-  return parseJsonArray(value).map((s: any) => String(s).trim()).filter(Boolean).slice(0, 20);
-}
-
 const VALID_PRODUCT_TYPES = ['estandar', 'tamanho', 'ropa', 'calzado'];
-const DEMO_TYPES = ['none', 'rompecabezas', 'colorear', 'encender', 'encender_simple'];
-
 // Frete do produto em euros; vazio/invalido = null (usa a tabela padrao).
 function parseShipping(value: unknown): number | null {
   if (value === null || value === undefined || String(value).trim() === '') return null;
@@ -85,30 +39,6 @@ async function ensureVariantColumns() {
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS parcel TEXT`;
 }
 
-function normalizeProduct(row: any) {
-  return {
-    ...row,
-    price: row.price != null ? Number(row.price) : 0,
-    stock: row.stock != null ? Number(row.stock) : 0,
-    costPrice: row.cost_price != null ? Number(row.cost_price) : null,
-    shippingCost: row.shipping_cost != null ? Number(row.shipping_cost) : null,
-    demoType: DEMO_TYPES.includes(row.demo_type) ? row.demo_type : 'none',
-    demoImage: row.demo_image ?? '',
-    collectionSlug: row.collection_slug ?? '',
-    personalize: parsePersonalize(row.personalize),
-    parcel: (() => { try { return row.parcel ? JSON.parse(row.parcel) : null; } catch { return null; } })(),
-    additionalImages: parseAdditionalImages(row.additional_images ?? row.additionalImages),
-    mainImage: row.image ?? row.mainImage ?? '',
-    videoUrl: row.video ?? row.videoUrl ?? '',
-    sourceStoreUrl: row.source_store_url ?? null,
-    sourceProductUrl: row.source_product_url ?? null,
-    productType: row.product_type ?? 'estandar',
-    colorOptions: parseColorOptions(row.color_options),
-    sizes: parseSizes(row.sizes),
-    isCategoryCover: Boolean(row.is_category_cover),
-  };
-}
-
 export async function GET(req: NextRequest) {
   try {
     await ensureVariantColumns();
@@ -125,7 +55,9 @@ export async function GET(req: NextRequest) {
       FROM products
       ORDER BY COALESCE(position, 999999), created_at DESC
     `;
-    return NextResponse.json(rows.map((p: any) => normalizeProduct(withSurcharge(p, surcharge))), { headers: noStoreHeaders });
+    const isAdmin = Boolean(getAdminSessionFromRequest(req));
+    // custo e fornecedor só para o painel
+    return NextResponse.json(rows.map((p: any) => { const n = normalizeProduct(withSurcharge(p, surcharge)); return isAdmin ? n : publicProduct(n); }), { headers: noStoreHeaders });
   } catch (err: any) {
     console.error('[GET /api/products]', err);
     return NextResponse.json({ error: err?.message ?? 'Database error' }, { status: 500, headers: noStoreHeaders });
