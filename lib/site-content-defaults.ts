@@ -422,7 +422,7 @@ export type ConfiancaItem = { icon: TrustIcon; title: string; text: string };
 export type ConfiancaContent = { enabled: boolean; items: ConfiancaItem[] };
 
 export const DEFAULT_CONFIANCA: ConfiancaContent = {
-  enabled: true,
+  enabled: false, // desligada a pedido; dá para ligar em Editar loja → Faixa de confiança
   items: [
     { icon: 'made', title: 'Hecho en España', text: 'Lo imprimimos en 3D en nuestro taller de Elche' },
     { icon: 'pay', title: 'Paga con Bizum o tarjeta', text: 'También Apple Pay y Google Pay, 100% seguro' },
