@@ -171,7 +171,7 @@ export function Header({ topbar: topbarOverride, cabecalho: cabecalhoOverride, b
     <>
       <div ref={topBarRef} className="fixed top-0 left-0 right-0 z-40">
         {announcement && (
-          <div data-edit="topbar" data-edit-label="Faixa do topo" className="px-4 py-2 text-center text-[12px]" style={{ background: topbar.bg, color: topbar.color, fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif' }}>
+          <div data-edit="topbar" data-edit-label="Faixa do topo" title={announcement} className="overflow-hidden text-ellipsis whitespace-nowrap px-3 py-1 text-center text-[clamp(10px,2.9vw,12px)] leading-[1.4] sm:py-1.5" style={{ background: topbar.bg, color: topbar.color, fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif' }}>
             {topbar.href ? <a href={topbar.href} className="underline-offset-2 hover:underline">{announcement}</a> : announcement}
           </div>
         )}
