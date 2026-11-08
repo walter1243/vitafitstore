@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getCookieConsent, COOKIE_CONSENT_EVENT } from './cookie-consent'
+import { getConsentPrefs, COOKIE_CONSENT_EVENT, type ConsentPrefs } from './cookie-consent'
 
 const GA_ID = 'G-7HYXPMV30R'
 
@@ -15,8 +15,19 @@ declare global {
   }
 }
 
-function injectGA() {
-  if (window.__gaLoaded) return
+// Google Consent Mode v2 (obrigatório para tráfego europeu): tudo negado por padrão e
+// liberado só na categoria que o visitante aceitou.
+function consentState(p: ConsentPrefs) {
+  return {
+    analytics_storage: p.analytics ? 'granted' : 'denied',
+    ad_storage: p.marketing ? 'granted' : 'denied',
+    ad_user_data: p.marketing ? 'granted' : 'denied',
+    ad_personalization: p.marketing ? 'granted' : 'denied',
+  }
+}
+
+function injectGA(p: ConsentPrefs) {
+  if (window.__gaLoaded) { window.gtag?.('consent', 'update', consentState(p)); return }
   window.__gaLoaded = true
 
   const s = document.createElement('script')
@@ -25,9 +36,12 @@ function injectGA() {
   document.head.appendChild(s)
 
   window.dataLayer = window.dataLayer || []
-  window.gtag = function gtag(...args: unknown[]) { window.dataLayer!.push(args) }
-  window.gtag('js', new Date())
-  window.gtag('config', GA_ID, { page_path: window.location.pathname })
+  // gtag precisa receber o objeto "arguments" original
+  window.gtag = function gtag() { window.dataLayer!.push(arguments) } as any
+  window.gtag!('consent', 'default', { analytics_storage: 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied', wait_for_update: 500 })
+  window.gtag!('consent', 'update', consentState(p))
+  window.gtag!('js', new Date())
+  window.gtag!('config', GA_ID, { page_path: window.location.pathname })
 }
 
 function injectMetaPixel(pixelId: string) {
@@ -71,9 +85,11 @@ export function AnalyticsLoader() {
 
   useEffect(() => {
     function apply() {
-      if (getCookieConsent() !== 'accepted') return
-      injectGA()
-      if (pixelId) injectMetaPixel(pixelId)
+      const p = getConsentPrefs()
+      if (!p) return
+      if (p.analytics) injectGA(p)
+      else if (window.__gaLoaded) window.gtag?.('consent', 'update', consentState(p))
+      if (p.marketing && pixelId) injectMetaPixel(pixelId)
     }
     apply()
     window.addEventListener(COOKIE_CONSENT_EVENT, apply)

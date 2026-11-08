@@ -6,13 +6,13 @@ const isDev = process.env.NODE_ENV === 'development'
 // 'Content-Security-Policy'.
 const cspReportOnly = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://js.stripe.com https://*.js.stripe.com https://maps.googleapis.com https://www.googletagmanager.com https://connect.facebook.net https://widget.trustpilot.com https://va.vercel-scripts.com`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://js.stripe.com https://*.js.stripe.com https://maps.googleapis.com https://www.googletagmanager.com https://connect.facebook.net https://widget.trustpilot.com https://va.vercel-scripts.com https://challenges.cloudflare.com`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com",
   "img-src 'self' data: blob: https:",
   "media-src 'self' blob: https:",
-  "connect-src 'self' https://api.stripe.com https://maps.googleapis.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://www.facebook.com https://vercel.com https://*.public.blob.vercel-storage.com https://nominatim.openstreetmap.org https://*.trustpilot.com",
-  "frame-src 'self' https://js.stripe.com https://*.js.stripe.com https://hooks.stripe.com https://widget.trustpilot.com https://*.trustpilot.com https://www.google.com",
+  "connect-src 'self' https://api.stripe.com https://maps.googleapis.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://www.facebook.com https://vercel.com https://*.public.blob.vercel-storage.com https://nominatim.openstreetmap.org https://*.trustpilot.com https://challenges.cloudflare.com",
+  "frame-src 'self' https://js.stripe.com https://*.js.stripe.com https://hooks.stripe.com https://widget.trustpilot.com https://*.trustpilot.com https://www.google.com https://challenges.cloudflare.com",
   "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",

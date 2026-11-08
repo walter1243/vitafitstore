@@ -45,7 +45,11 @@ export const UI = {
   novedades: { es: 'Novedades', fr: 'Nouveautés', en: 'New in', 'pt-PT': 'Novidades' },
   coleccion: { es: 'Colección', fr: 'Collection', en: 'Collection', 'pt-PT': 'Coleção' },
   rechazar: { es: 'Rechazar', fr: 'Refuser', en: 'Reject', 'pt-PT': 'Recusar' },
-  aceptar: { es: 'Aceptar todas', fr: 'Tout accepter', en: 'Accept all', 'pt-PT': 'Aceitar todas' },
+  aceptar: { es: 'Aceptar todo', fr: 'Tout accepter', en: 'Accept all', 'pt-PT': 'Aceitar tudo' },
+  rechazarTodo: { es: 'Rechazar todo', fr: 'Tout refuser', en: 'Reject all', 'pt-PT': 'Recusar tudo' },
+  configurar: { es: 'Configurar', fr: 'Personnaliser', en: 'Customize', 'pt-PT': 'Configurar' },
+  guardarPreferencias: { es: 'Guardar mi elección', fr: 'Enregistrer mes choix', en: 'Save my choices', 'pt-PT': 'Guardar a minha escolha' },
+  configurarCookies: { es: 'Configurar cookies', fr: 'Gérer les cookies', en: 'Cookie settings', 'pt-PT': 'Configurar cookies' },
 } as const;
 
 // Caixa de pagamento da Stripe (iframe, o Google nao alcanca) no mesmo idioma.

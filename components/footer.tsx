@@ -6,6 +6,8 @@ import { Instagram, Lock, Mail, MessageCircle, Truck } from 'lucide-react'
 import { PAYMENT_LOGOS } from '@/components/payment-logos'
 import { useSectors } from '@/components/kids/sectors-context'
 import { DEFAULT_RODAPE, type FooterLinkItem, type RodapeContent } from '@/lib/site-content-defaults'
+import { openCookieSettings } from '@/components/cookie-consent'
+import { Tr, UI } from '@/components/language-switcher'
 
 // Contato: vem do Admin → Editar loja (WhatsApp, e-mail, Instagram); estes
 // valores so aparecem enquanto as configuracoes carregam ou se estiverem vazias.
@@ -180,6 +182,9 @@ export function Footer({ content, logo }: { content?: Partial<RodapeContent>; lo
               <Mail className="h-4 w-4" aria-hidden="true" /> {EMAIL}
             </a>
             {R.responseTime && <span className="text-xs">{R.responseTime}</span>}
+            <button type="button" onClick={openCookieSettings} className="cursor-pointer text-left text-xs underline underline-offset-2 hover:text-[#23263f]">
+              <Tr t={UI.configurarCookies} />
+            </button>
           </div>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { CartProvider } from '@/lib/cart-context'
 import SchemaOrg from '@/components/SchemaOrg'
 import { CookieConsent } from '@/components/cookie-consent'
+import { HumanCheck } from '@/components/human-check'
 import { AnalyticsLoader } from '@/components/analytics-loader'
 import { SiteTracker } from '@/components/site-tracker'
 import { PageTurn } from '@/components/page-turn'
@@ -117,6 +118,8 @@ export default function RootLayout({
            cookie consent — see components/cookie-consent.tsx and
            components/analytics-loader.tsx. Never load them unconditionally
            here again. */}
+        {/* Cloudflare Turnstile na entrada (só com as chaves configuradas) — components/human-check.tsx */}
+        <HumanCheck />
         <CookieConsent />
         <AnalyticsLoader />
         <SiteTracker />
