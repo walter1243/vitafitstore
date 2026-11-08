@@ -6,7 +6,6 @@ import { ShoppingCart, Menu, X, Smile } from 'lucide-react';
 import { ProductSearch } from '@/components/product-search';
 import { useCart } from '@/lib/cart-context';
 import { useSectors } from '@/components/kids/sectors-context';
-import { softOf } from '@/lib/sectors-shared';
 import { LanguageSwitcher, Tr, UI } from '@/components/language-switcher';
 import { OPEN_MENU_EVENT, OPEN_SEARCH_EVENT, goHome } from '@/components/mobile-tab-bar';
 import { CollectionsMenuPanel, homeCategoryHref, selectHomeCategory, useHomeCategories } from '@/components/kids/menu-panel';
@@ -23,7 +22,6 @@ const MENU_ART: Record<string, string> = {
   navidad: '/images/worlds/navidad-arbol.png',
 };
 const NAV_ITEM = 'whitespace-nowrap rounded-full px-3 py-2 font-kids text-base font-semibold text-[#23263f] transition-colors duration-200 hover:bg-[#FFF4E0] cursor-pointer lg:px-4 lg:text-lg';
-const MOBILE_ITEM = 'block rounded-xl px-4 py-3 font-kids text-xl font-bold text-[#23263f] transition-colors hover:bg-[#FFF4E0]';
 
 const BRANDING_CACHE_KEY = 'store_branding_cache';
 
@@ -280,7 +278,7 @@ export function Header({ topbar: topbarOverride, cabecalho: cabecalhoOverride, b
         </div>
       </header>
 
-      {/* Mobile drawer: Inicio e setores com as colecoes */}
+      {/* Mobile drawer: setores com as colecoes (Inicio fica na barra de baixo) */}
       {mobileOpen && (
         <>
           {/* Abre ABAIXO da faixa do cabecalho (logo, carrinho e o X de
@@ -294,52 +292,67 @@ export function Header({ topbar: topbarOverride, cabecalho: cabecalhoOverride, b
             className="kids fixed bottom-0 left-0 z-40 flex w-full max-w-[320px] flex-col border-r border-[#efe7da] bg-white shadow-[12px_0_32px_rgba(35,38,63,0.12)] md:hidden"
             style={{ top: topBarHeight + 117 }}
           >
-            <nav className="flex flex-1 flex-col overflow-y-auto p-3 pb-24" aria-label="Principal">
-              <Link href="/" onClick={(e) => { setMobileOpen(false); goHome(e); }} className={MOBILE_ITEM}><Tr t={UI.inicio} /></Link>
-              <Link href="/pedido" onClick={() => setMobileOpen(false)} className={MOBILE_ITEM}>Mi pedido</Link>
+            <nav className="flex flex-1 flex-col overflow-y-auto px-4 pb-28 pt-4" aria-label="Colecciones" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif' }}>
+              <p className="px-1 pb-2 text-[12px] font-semibold uppercase tracking-[0.08em] text-[#86868b]"><Tr t={UI.colecciones} /></p>
+              {/* Um bloco por setor: nome + "Ver todo" e as coleções com foto */}
               {menuSectors.map((sector) => (
-                <div key={sector.id || sector.slug} className="mt-2">
-                  <Link href={`/sector/${sector.slug}`} onClick={() => setMobileOpen(false)} className={MOBILE_ITEM}>
-                    {sector.name}
-                  </Link>
-                  {sector.collections.map((c) => (
-                    <Link
-                      key={c.slug}
-                      href={`/coleccion/${c.slug}`}
-                      onClick={() => setMobileOpen(false)}
-                      className="ml-3 flex items-center gap-3 rounded-xl px-3 py-2 text-base font-semibold text-[#565a78] transition-colors hover:bg-[#FFF4E0] hover:text-[#23263f]"
-                    >
-                      <span className="h-9 w-9 shrink-0 overflow-hidden rounded-lg" style={{ background: sector.style === 'infantil' ? softOf(c) : '#F3ECE2' }}>
-                        {/* sem arte propria: a ilustracao do mundo */}
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={c.imageUrl || c.photoUrl || MENU_ART[sector.style] || ''} alt="" className="h-full w-full object-contain p-0.5" />
-                      </span>
-                      {c.name}
+                <section key={sector.id || sector.slug} className="border-t border-black/[0.06] py-3 first-of-type:border-t-0">
+                  <div className="flex items-center justify-between px-1 pb-1.5">
+                    <h3 className="text-[17px] font-bold text-[#1d1d1f]">{sector.name}</h3>
+                    <Link href={`/sector/${sector.slug}`} onClick={() => setMobileOpen(false)} className="inline-flex min-h-9 items-center gap-1 rounded-full px-2 text-[13px] font-medium text-[#0071e3]">
+                      Ver todo <span aria-hidden="true">→</span>
                     </Link>
-                  ))}
-                </div>
+                  </div>
+                  <ul>
+                    {sector.collections.map((c) => (
+                      <li key={c.slug}>
+                        <Link
+                          href={`/coleccion/${c.slug}`}
+                          onClick={() => setMobileOpen(false)}
+                          className="flex min-h-12 items-center gap-3 rounded-xl px-1 py-1.5 text-[15px] text-[#1d1d1f] transition-colors active:bg-black/[0.04]"
+                        >
+                          <span className="h-10 w-10 shrink-0 overflow-hidden rounded-[10px] bg-[#f5f5f7]">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={c.imageUrl || c.photoUrl || MENU_ART[sector.style] || ''} alt="" className="h-full w-full object-cover" />
+                          </span>
+                          <span className="min-w-0 flex-1 truncate">{c.name}</span>
+                          <span className="text-[#c7c7cc]" aria-hidden="true">›</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
               ))}
               {/* Hogar: categorias de casa (sem colecao) — mesmo jeito das colecoes */}
               {mobileHomeCats.length > 0 && !menuSectors.some((s) => s.style === 'hogar') && (
-                <div className="mt-2">
-                  <Link href="/hogar" onClick={() => setMobileOpen(false)} className={MOBILE_ITEM}>Hogar</Link>
-                  {mobileHomeCats.map((cat) => (
-                    <Link
-                      key={cat.name}
-                      href={homeCategoryHref(cat.name)}
-                      onClick={() => { selectHomeCategory(cat.name); setMobileOpen(false); }}
-                      className="ml-3 flex items-center gap-3 rounded-xl px-3 py-2 text-base font-semibold text-[#565a78] transition-colors hover:bg-[#f3ece2] hover:text-[#2b2620]"
-                    >
-                      <span className="h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-[#ece3d6]">
-                        {cat.image && (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={cat.image} alt="" className="h-full w-full object-cover" />
-                        )}
-                      </span>
-                      {cat.name}
+                <section className="border-t border-black/[0.06] py-3">
+                  <div className="flex items-center justify-between px-1 pb-1.5">
+                    <h3 className="text-[17px] font-bold text-[#1d1d1f]">Hogar</h3>
+                    <Link href="/hogar" onClick={() => setMobileOpen(false)} className="inline-flex min-h-9 items-center gap-1 rounded-full px-2 text-[13px] font-medium text-[#0071e3]">
+                      Ver todo <span aria-hidden="true">→</span>
                     </Link>
-                  ))}
-                </div>
+                  </div>
+                  <ul>
+                    {mobileHomeCats.map((cat) => (
+                      <li key={cat.name}>
+                        <Link
+                          href={homeCategoryHref(cat.name)}
+                          onClick={() => { selectHomeCategory(cat.name); setMobileOpen(false); }}
+                          className="flex min-h-12 items-center gap-3 rounded-xl px-1 py-1.5 text-[15px] text-[#1d1d1f] transition-colors active:bg-black/[0.04]"
+                        >
+                          <span className="h-10 w-10 shrink-0 overflow-hidden rounded-[10px] bg-[#f5f5f7]">
+                            {cat.image && (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={cat.image} alt="" className="h-full w-full object-cover" />
+                            )}
+                          </span>
+                          <span className="min-w-0 flex-1 truncate">{cat.name}</span>
+                          <span className="text-[#c7c7cc]" aria-hidden="true">›</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
               )}
             </nav>
           </div>
