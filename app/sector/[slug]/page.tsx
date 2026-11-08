@@ -49,7 +49,7 @@ export default async function SectorPage({ params }: PageProps) {
           )}
           <KidsHowItsMade />
         </main>
-        <Footer content={content.rodape} />
+        <Footer content={content.rodape} logo={content.cabecalho.logoImage} />
         <WhatsAppFloating />
         <CartSidebar />
         <UpsellPopup />

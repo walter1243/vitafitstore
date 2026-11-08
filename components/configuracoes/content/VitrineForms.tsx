@@ -139,7 +139,16 @@ export function CabecalhoForm({ data, onChange, branding, onBranding }: { data: 
             ))}
           </div>
         </Field>
-        <MediaUploadField label="Imagem do logo" hint="PNG sem fundo fica melhor. Vazio = logo padrão da Kitoys." value={branding.logoUrl} onChange={(v) => setB({ logoUrl: v })} kind="image" />
+        {branding.logoStyle === 'logo_direto' ? (
+          <>
+            <MediaUploadField label="Logo da loja (cabeçalho e rodapé)" hint="PNG sem fundo fica melhor. Vazio = logo original da Kitoys." value={data.logoImage} onChange={(v) => set({ logoImage: v })} kind="image" />
+            {data.logoImage && (
+              <button type="button" onClick={() => set({ logoImage: '' })} className="-mt-2 mb-4 cursor-pointer text-[12px] font-semibold text-green-300 hover:underline">Voltar ao logo original da Kitoys</button>
+            )}
+          </>
+        ) : (
+          <MediaUploadField label="Ícone (quadradinho ao lado do nome)" hint="Vazio = carinha sorrindo na cor principal." value={branding.logoUrl} onChange={(v) => setB({ logoUrl: v })} kind="image" />
+        )}
         {branding.logoStyle === 'logo_direto' && (
           <Field label={`Tamanho do logo: ${data.logoHeight}px no computador`} hint="No celular fica um pouco menor sozinho.">
             <input type="range" min={28} max={68} step={1} value={data.logoHeight} onChange={(e) => set({ logoHeight: +e.target.value })} className="w-full cursor-pointer accent-green-500" />

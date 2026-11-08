@@ -259,7 +259,7 @@ export function ContentEditor() {
                   <p className="truncate text-sm font-semibold text-white">{meta.label}</p>
                   <p className="truncate text-[11px] text-white/40">{meta.desc}</p>
                 </div>
-                <button type="button" title="Voltar ao padrão desta parte" onClick={() => { const k = selected as EditableKey; setSection(k, DEFAULT_SITE_CONTENT[k] as any); if (k === 'cabecalho') setBranding((b) => ({ ...b, logoUrl: '', logoStyle: 'logo_direto' })); }} className={`${btn} px-2 text-white/50 hover:bg-white/5 hover:text-white`}><RotateCcw size={14} /></button>
+                <button type="button" title="Voltar ao padrão desta parte" onClick={() => { const k = selected as EditableKey; setSection(k, DEFAULT_SITE_CONTENT[k] as any); if (k === 'cabecalho') setBranding((b) => ({ ...b, logoStyle: 'logo_direto' })); }} className={`${btn} px-2 text-white/50 hover:bg-white/5 hover:text-white`}><RotateCcw size={14} /></button>
               </div>
               <div className="flex-1 overflow-y-auto p-4">
                 {loading ? <p className="flex items-center gap-2 text-xs text-white/60"><Loader2 size={14} className="animate-spin" /> Carregando…</p> : (

@@ -193,9 +193,10 @@ export function Header({ topbar: topbarOverride, cabecalho: cabecalhoOverride, b
             <div data-edit="cabecalho" data-edit-label="Logo e cabeçalho" className="flex shrink-0">
             {bLogoStyle === 'logo_direto' ? (
               <Link href="/" onClick={goHome} className="flex shrink-0 items-center" aria-label={`${bStoreName} — Inicio`}>
-                {/* Logo enviado em Informações da Loja; sem logo, o da Kitoys. */}
+                {/* Logo principal do editor visual (Cabeçalho e logo); vazio = logo original da Kitoys.
+                    A imagem de Informações da Loja é o ícone do modo "Ícone + nome". */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={bLogoUrl || DEFAULT_LOGO} alt={bStoreName} className="h-[var(--logo-m)] w-auto object-contain md:h-[var(--logo-d)]" style={{ ['--logo-d' as string]: `${Math.max(28, Math.min(68, cab.logoHeight))}px`, ['--logo-m' as string]: `${Math.max(28, Math.min(52, Math.round(cab.logoHeight * 0.76)))}px` }} />
+                <img src={cab.logoImage || DEFAULT_LOGO} alt={bStoreName} className="h-[var(--logo-m)] w-auto object-contain md:h-[var(--logo-d)]" style={{ ['--logo-d' as string]: `${Math.max(28, Math.min(68, cab.logoHeight))}px`, ['--logo-m' as string]: `${Math.max(28, Math.min(52, Math.round(cab.logoHeight * 0.76)))}px` }} />
               </Link>
             ) : (
               <Link href="/" onClick={goHome} className="flex shrink-0 items-center gap-2">

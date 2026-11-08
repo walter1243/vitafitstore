@@ -29,7 +29,7 @@ export default async function HomePage() {
       <main className="flex-1">
         <AppleHome content={content} />
       </main>
-      <Footer content={content.rodape} />
+      <Footer content={content.rodape} logo={content.cabecalho.logoImage} />
       <WhatsAppFloating withTabBar />
       <MobileTabBar />
       <CartSidebar />

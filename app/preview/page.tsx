@@ -87,7 +87,7 @@ export default function PreviewPage() {
         <AppleHome content={c} editing={editing} />
       </main>
       <div data-edit="rodape" data-edit-label="Rodapé">
-        <Footer content={c.rodape} branding={branding} />
+        <Footer content={c.rodape} logo={c.cabecalho.logoImage} />
       </div>
     </div>
   )

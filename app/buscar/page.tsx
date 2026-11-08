@@ -29,7 +29,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
         <main className="kids flex-1">
           <SearchResults query={q} />
         </main>
-        <Footer content={content.rodape} />
+        <Footer content={content.rodape} logo={content.cabecalho.logoImage} />
         <WhatsAppFloating />
         <CartSidebar />
         <UpsellPopup />

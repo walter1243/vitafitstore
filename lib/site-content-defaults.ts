@@ -279,6 +279,7 @@ export type CabecalhoContent = {
   homeLabel: string;         // '' = "Inicio" (traduzido)
   collectionsLabel: string;  // '' = "Colecciones" (traduzido)
   logoHeight: number;        // altura do logo no computador (px)
+  logoImage: string;         // logo principal (modo "só a imagem"); '' = logo original da Kitoys
 };
 
 export const DEFAULT_CABECALHO: CabecalhoContent = {
@@ -286,6 +287,7 @@ export const DEFAULT_CABECALHO: CabecalhoContent = {
   homeLabel: '',
   collectionsLabel: '',
   logoHeight: 58,
+  logoImage: '',
 };
 
 // Marca (tabela store_settings, Admin → Informações da Loja).
