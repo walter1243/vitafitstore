@@ -13,7 +13,8 @@ export const COUNTRY_COOKIE = 'kt_country';
 export async function countrySurcharge(country: string | null | undefined): Promise<number> {
   const code = String(country || 'ES').toUpperCase();
   const zone = await getZone(code).catch(() => null);
-  if (!zone || !zone.enabled || !(zone.embedPct > 0)) return 0;
+  // caixa "Embutir no preço" desmarcada = preço normal e frete real
+  if (!zone || !zone.enabled || !zone.embedOn || !(zone.embedPct > 0)) return 0;
   return Math.ceil((zone.embedPct / 100) * zone.priceLight);
 }
 
