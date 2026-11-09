@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { ProductLayoutProvider } from '@/components/product-layout'
 import { notFound } from 'next/navigation'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
@@ -37,6 +38,7 @@ export default async function SectorPage({ params }: PageProps) {
 
   return (
     <SectorsProvider sectors={sectors}>
+    <ProductLayoutProvider layout={content.secoes.layout}>
       <div className="flex min-h-screen flex-col bg-white">
         <Header />
         <main className="kids flex-1">
@@ -54,6 +56,7 @@ export default async function SectorPage({ params }: PageProps) {
         <CartSidebar />
         <UpsellPopup />
       </div>
+    </ProductLayoutProvider>
     </SectorsProvider>
   )
 }

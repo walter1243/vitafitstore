@@ -5,6 +5,7 @@ import { ThemedProductCard } from '@/components/themes/themed-product-card';
 import { type SectorTheme } from '@/components/themes/sector-themes';
 import { KidsProductCard } from './kids-product-card';
 import { type Accent } from './palette';
+import { useProductLayout } from '@/components/product-layout';
 
 // Carrossel horizontal de produtos (sem setas): desliza com o dedo, com o
 // trackpad/roda do mouse ou arrastando com o mouse; as bolinhas embaixo
@@ -12,6 +13,7 @@ import { type Accent } from './palette';
 // `theme` = visual do setor (Casa, Chaveiros, Pet...); sem theme = Infantil.
 export function ProductCarousel({ products, accent, theme }: { products: Product[]; accent: Accent; theme?: SectorTheme | null }) {
   const hogar = Boolean(theme);
+  const layout = useProductLayout();
   const trackRef = useRef<HTMLDivElement>(null);
   const drag = useRef<{ x: number; left: number; moved: boolean } | null>(null);
   const [pages, setPages] = useState(1);
@@ -55,6 +57,19 @@ export function ProductCarousel({ products, accent, theme }: { products: Product
   function endDrag() {
     // Mantem o "moved" ate o click seguinte, pra arrastar nao abrir o produto.
     setTimeout(() => { drag.current = null; }, 0);
+  }
+
+  // Admin escolheu grade: os produtos ficam em linhas (2 no celular, 3 no computador).
+  if (layout === 'grid') {
+    return (
+      <ul className="products-grid">
+        {products.map((p) => (
+          <li key={p.id} className="min-w-0">
+            {theme ? <ThemedProductCard product={p} theme={theme} /> : <KidsProductCard product={p} accent={accent} />}
+          </li>
+        ))}
+      </ul>
+    );
   }
 
   return (

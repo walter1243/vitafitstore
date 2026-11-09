@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { ProductLayoutProvider } from '@/components/product-layout'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { CartSidebar } from '@/components/cart-sidebar'
@@ -24,6 +25,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
   const [sectors, content] = await Promise.all([getSectors(), getSiteContent()])
   return (
     <SectorsProvider sectors={sectors}>
+    <ProductLayoutProvider layout={content.secoes.layout}>
       <div className="flex min-h-screen flex-col bg-[#FFF8EF]">
         <Header />
         <main className="kids flex-1">
@@ -34,6 +36,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
         <CartSidebar />
         <UpsellPopup />
       </div>
+    </ProductLayoutProvider>
     </SectorsProvider>
   )
 }

@@ -12,6 +12,7 @@ import { ThemedProductCard } from '@/components/themes/themed-product-card';
 import { themeFor } from '@/components/themes/sector-themes';
 import { NavidadSnow } from '@/components/themes/navidad-decor';
 import { useStoreProducts } from './use-store-products';
+import { productListClass, useProductLayout } from '@/components/product-layout';
 
 type Sort = 'destacados' | 'precio-asc' | 'precio-desc';
 
@@ -28,6 +29,7 @@ export function CollectionCatalog({ slug }: { slug: string }) {
   const { getCollection, getSector, collectionForProduct } = useSectors();
   const collection = getCollection(slug)!;
   const { products, loaded } = useStoreProducts();
+  const layout = useProductLayout();
   const [group, setGroup] = useState<string>('todo');
   const [sort, setSort] = useState<Sort>('destacados');
 
@@ -122,7 +124,7 @@ export function CollectionCatalog({ slug }: { slug: string }) {
       </div>
 
       {visible.length > 0 ? (
-        <div className="swipe-products">
+        <div className={productListClass(layout)}>
           {visible.map((p) => (
             sectorTheme ? <ThemedProductCard key={p.id} product={p} theme={sectorTheme} /> : <KidsProductCard
               key={p.id}

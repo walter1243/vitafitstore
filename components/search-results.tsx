@@ -1,4 +1,5 @@
 'use client';
+import { productListClass, useProductLayout } from '@/components/product-layout';
 import Link from 'next/link';
 import { Search } from 'lucide-react';
 import { KidsProductCard } from '@/components/kids/kids-product-card';
@@ -15,6 +16,7 @@ export function SearchResults({ query }: { query: string }) {
   const results = useProductSearch(query);
   const { loaded } = useStoreProducts();
   const { getSector, collectionForProduct } = useSectors();
+  const layout = useProductLayout();
 
   return (
     <section className="px-4 pb-24 pt-44 sm:px-6 sm:pt-40 lg:px-8">
@@ -35,7 +37,7 @@ export function SearchResults({ query }: { query: string }) {
             <Link href="/#productos" className="mt-6 inline-flex min-h-12 items-center rounded-full bg-[#1E1B4B] px-6 font-bold text-white">Ver productos</Link>
           </div>
         ) : (
-          <div className="swipe-products mt-10">
+          <div className={`${productListClass(layout)} mt-10`}>
             {results.map(({ product }) => {
               const col = collectionForProduct(product);
               const theme = themeFor(col ? getSector(col.sectorId)?.style : undefined);
