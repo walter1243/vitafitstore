@@ -29,11 +29,12 @@ function load(force = false): Promise<DbProduct[]> {
 
 // `initial`: produtos que a página já trouxe do servidor (a home aparece pronta, sem esperar
 // a API). A busca no navegador continua e substitui pela lista completa.
-export function useStoreProducts(initial?: DbProduct[]) {
+export function useStoreProducts(initial?: DbProduct[], enabled = true) {
   const [products, setProducts] = useState<DbProduct[]>(cache ?? initial ?? []);
   const [loaded, setLoaded] = useState(Boolean(cache || initial?.length));
 
   useEffect(() => {
+    if (!enabled) return;
     let alive = true;
     const onData = (p: DbProduct[]) => { if (alive) { setProducts(p); setLoaded(true); } };
     listeners.add(onData);
@@ -45,7 +46,7 @@ export function useStoreProducts(initial?: DbProduct[]) {
       listeners.delete(onData);
       document.removeEventListener('visibilitychange', onVisible);
     };
-  }, []);
+  }, [enabled]);
 
   return { products, loaded };
 }

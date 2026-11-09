@@ -1,9 +1,10 @@
 'use client';
 import Link from 'next/link';
 import { DEFAULT_CABECALHO, DEFAULT_TOPBAR, type Branding, type CabecalhoContent, type TopbarContent } from '@/lib/site-content-defaults';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { ShoppingCart, Menu, X, Smile } from 'lucide-react';
 import { ProductSearch } from '@/components/product-search';
+import { useStoreProducts } from '@/components/kids/use-store-products';
 import { useCart } from '@/lib/cart-context';
 import { useSectors } from '@/components/kids/sectors-context';
 import { LanguageSwitcher, Tr, UI } from '@/components/language-switcher';
@@ -15,12 +16,6 @@ import { CollectionsMenuPanel, homeCategoryHref, selectHomeCategory, useHomeCate
 // enviada no admin continua sendo usada no modo "icone + nome".
 const DEFAULT_LOGO = '/images/logo-kitoys-3d.png';
 
-const MENU_ART: Record<string, string> = {
-  hogar: '/images/worlds/hogar-vaso.png',
-  llaveros: '/images/worlds/pers-llavero.png',
-  mascotas: '/images/worlds/pet-bol.png',
-  navidad: '/images/worlds/navidad-arbol.png',
-};
 const NAV_ITEM = 'whitespace-nowrap rounded-full px-3 py-2 font-kids text-base font-semibold text-[#23263f] transition-colors duration-200 hover:bg-[#FFF4E0] cursor-pointer lg:px-4 lg:text-lg';
 
 const BRANDING_CACHE_KEY = 'store_branding_cache';
@@ -44,8 +39,18 @@ function readCachedBranding() {
 // Menu: Inicio + Colecciones (setores e colecoes do Admin).
 // topbar/cabecalho/branding: só a cópia da loja no admin passa (rascunho ainda não publicado).
 export function Header({ topbar: topbarOverride, cabecalho: cabecalhoOverride, branding }: { topbar?: Partial<TopbarContent>; cabecalho?: Partial<CabecalhoContent>; branding?: Partial<Branding> } = {}) {
-  const { sectors } = useSectors();
-  const menuSectors = sectors.filter((s) => s.collections.length > 0);
+  const { sectors, collectionForProduct } = useSectors();
+  const [menuWanted, setMenuWanted] = useState(false);
+  const { products: menuProducts, loaded: menuLoaded } = useStoreProducts(undefined, menuWanted);
+  // Só coleções com pelo menos um produto (sem "nenhum produto" ao tocar); setor vazio some.
+  const filledSlugs = useMemo(() => {
+    const set = new Set<string>();
+    for (const p of menuProducts) { const c = collectionForProduct(p as any); if (c) set.add(c.slug); }
+    return set;
+  }, [menuProducts, collectionForProduct]);
+  const menuSectors = sectors
+    .map((s) => ({ ...s, collections: menuLoaded ? s.collections.filter((c) => filledSlugs.has(c.slug)) : s.collections }))
+    .filter((s) => s.collections.length > 0);
   // Painel "Colecciones": abre no hover (desktop) ou clique; fecha com Esc,
   // clique fora ou ao escolher um link.
   const [colOpen, setColOpen] = useState(false);
@@ -63,6 +68,7 @@ export function Header({ topbar: topbarOverride, cabecalho: cabecalhoOverride, b
   }, [colOpen]);
   const { totalItems, setIsCartOpen } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
+  useEffect(() => { if (mobileOpen) setMenuWanted(true); }, [mobileOpen]);
   const mobileHomeCats = useHomeCategories(mobileOpen);
   const [scrolled, setScrolled] = useState(false);
   // Barra de baixo do celular (MobileTabBar) abre o menu e a busca daqui.
@@ -309,12 +315,8 @@ export function Header({ topbar: topbarOverride, cabecalho: cabecalhoOverride, b
                         <Link
                           href={`/coleccion/${c.slug}`}
                           onClick={() => setMobileOpen(false)}
-                          className="flex min-h-12 items-center gap-3 rounded-xl px-1 py-1.5 text-[15px] text-[#1d1d1f] transition-colors active:bg-black/[0.04]"
+                          className="flex min-h-11 items-center gap-3 rounded-xl px-1 py-1.5 text-[15px] text-[#1d1d1f] transition-colors active:bg-black/[0.04]"
                         >
-                          <span className="h-10 w-10 shrink-0 overflow-hidden rounded-[10px] bg-[#f5f5f7]">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={c.imageUrl || c.photoUrl || MENU_ART[sector.style] || ''} alt="" className="h-full w-full object-cover" />
-                          </span>
                           <span className="min-w-0 flex-1 truncate">{c.name}</span>
                           <span className="text-[#c7c7cc]" aria-hidden="true">›</span>
                         </Link>
@@ -338,14 +340,8 @@ export function Header({ topbar: topbarOverride, cabecalho: cabecalhoOverride, b
                         <Link
                           href={homeCategoryHref(cat.name)}
                           onClick={() => { selectHomeCategory(cat.name); setMobileOpen(false); }}
-                          className="flex min-h-12 items-center gap-3 rounded-xl px-1 py-1.5 text-[15px] text-[#1d1d1f] transition-colors active:bg-black/[0.04]"
+                          className="flex min-h-11 items-center gap-3 rounded-xl px-1 py-1.5 text-[15px] text-[#1d1d1f] transition-colors active:bg-black/[0.04]"
                         >
-                          <span className="h-10 w-10 shrink-0 overflow-hidden rounded-[10px] bg-[#f5f5f7]">
-                            {cat.image && (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={cat.image} alt="" className="h-full w-full object-cover" />
-                            )}
-                          </span>
                           <span className="min-w-0 flex-1 truncate">{cat.name}</span>
                           <span className="text-[#c7c7cc]" aria-hidden="true">›</span>
                         </Link>
