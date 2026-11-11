@@ -99,6 +99,19 @@ export function Header({ topbar: topbarOverride, cabecalho: cabecalhoOverride, b
   // independently, so the offset is measured instead of hardcoded, and
   // updates itself whenever the bar is added/removed.
   const topBarRef = useRef<HTMLDivElement>(null);
+  // Altura real (faixa + cabeçalho) em --hdr-h: as páginas começam logo abaixo, sem buraco.
+  const headerRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const set = () => {
+      const h = (topBarRef.current?.offsetHeight ?? 0) + (headerRef.current?.offsetHeight ?? 0);
+      if (h > 0) document.documentElement.style.setProperty('--hdr-h', `${h}px`);
+    };
+    set();
+    const ro = new ResizeObserver(set);
+    if (topBarRef.current) ro.observe(topBarRef.current);
+    if (headerRef.current) ro.observe(headerRef.current);
+    return () => ro.disconnect();
+  }, []);
   const [topBarHeight, setTopBarHeight] = useState(0);
 
   useEffect(() => {
@@ -183,6 +196,7 @@ export function Header({ topbar: topbarOverride, cabecalho: cabecalhoOverride, b
         )}
       </div>
       <header
+        ref={headerRef}
         className={`kids fixed left-0 right-0 z-50 border-b bg-white transition-shadow duration-300 ${scrolled ? 'border-transparent shadow-[0_4px_20px_rgba(35,38,63,0.08)]' : 'border-[#efe7da]'}`}
         style={{ top: topBarHeight }}
       >

@@ -368,12 +368,15 @@ function PaymentStepInner({
 
   const [loading,  setLoading]  = useState(false);
   const [apiError, setApiError] = useState('');
+  // método escolhido no Payment Element (card, bizum, paypal…) para o funil do Dashboard
+  const [payMethod, setPayMethod] = useState('');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!stripe || !elements) return;
     setLoading(true);
     setApiError('');
+    window.dispatchEvent(new CustomEvent('kitoys:payment-start', { detail: { method: payMethod || 'card' } }));
 
     try {
       const { error: submitError } = await elements.submit();
@@ -446,6 +449,7 @@ function PaymentStepInner({
         </div>
 
         <PaymentElement
+          onChange={(ev) => setPayMethod(String((ev as any)?.value?.type ?? ''))}
           options={{
             layout: 'tabs',
             // Stripe only ever shows a method here if it's both listed and

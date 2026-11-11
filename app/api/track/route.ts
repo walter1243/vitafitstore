@@ -31,11 +31,15 @@ export async function POST(req: NextRequest) {
     const visitor = createHash('sha256').update(`${day}|${ip}|${ua}|${salt}`).digest('hex').slice(0, 20);
 
     const variant = body?.variant === 'grid' || body?.variant === 'carousel' ? body.variant : null;
+    const device = /mobi|android|iphone|ipod/i.test(ua) ? 'mobile' : /ipad|tablet/i.test(ua) ? 'tablet' : 'desktop';
+    const clean = (v: unknown, n: number) => String(v ?? '').toLowerCase().replace(/[^a-z0-9._ -]/g, '').trim().slice(0, n) || null;
+    const source = clean(body?.source, 40);
+    const meta = clean(body?.meta, 40);
     await ensureSiteEvents();
     const geo = body?.noGeo ? { country: null, city: null, lat: null, lng: null } : geoFromHeaders(req.headers);
     await sql`
-      INSERT INTO site_events (type, path, product_id, visitor, country, city, lat, lng, variant)
-      VALUES (${type}, ${path}, ${productId}, ${visitor}, ${geo.country}, ${geo.city}, ${geo.lat}, ${geo.lng}, ${variant})
+      INSERT INTO site_events (type, path, product_id, visitor, country, city, lat, lng, variant, device, source, meta)
+      VALUES (${type}, ${path}, ${productId}, ${visitor}, ${geo.country}, ${geo.city}, ${geo.lat}, ${geo.lng}, ${variant}, ${device}, ${source}, ${meta})
     `;
   } catch (err) {
     console.error('[POST /api/track]', err);

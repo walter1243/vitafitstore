@@ -1,4 +1,5 @@
 'use client';
+import { FunnelPanel } from '@/components/admin-funnel';
 import { useEffect, useState } from 'react';
 import { BarChart3, Eye, EyeOff, MousePointerClick, RotateCcw, ShoppingCart, Users } from 'lucide-react';
 import { GeoHeatPanel, type GeoRow, type HourRow, type PurchaseRow, type RecentRow } from '@/components/admin-geo-map';
@@ -113,6 +114,9 @@ export function AnalyticsPanel() {
           </div>
         ))}
       </div>
+
+      {/* Funil de compra: onde as pessoas desistem */}
+      <FunnelPanel days={days} />
 
       {stats && (
         <div className="mt-5 grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">

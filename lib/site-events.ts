@@ -4,7 +4,7 @@ import { sql } from '@/lib/db';
 // adicionados ao carrinho). Sem cookies: o "visitante" e um hash diario de
 // IP + navegador, que muda todo dia e nao identifica ninguem.
 
-export const EVENT_TYPES = ['page_view', 'product_click', 'add_to_cart', 'purchase'] as const;
+export const EVENT_TYPES = ['page_view', 'product_click', 'add_to_cart', 'payment_start', 'purchase'] as const;
 export type EventType = (typeof EVENT_TYPES)[number];
 
 // Cookie gravado quando o admin abre o Dashboard: esse aparelho nunca mais
@@ -42,6 +42,10 @@ export function ensureSiteEvents() {
     await sql`ALTER TABLE site_events ADD COLUMN IF NOT EXISTS lng DOUBLE PRECISION`;
     // versão do teste A/B que o visitante viu (grid | carousel), quando o teste está ligado
     await sql`ALTER TABLE site_events ADD COLUMN IF NOT EXISTS variant TEXT`;
+    // funil: aparelho (mobile|desktop), origem da visita (google, instagram, utm…) e detalhe (ex.: método de pagamento)
+    await sql`ALTER TABLE site_events ADD COLUMN IF NOT EXISTS device TEXT`;
+    await sql`ALTER TABLE site_events ADD COLUMN IF NOT EXISTS source TEXT`;
+    await sql`ALTER TABLE site_events ADD COLUMN IF NOT EXISTS meta TEXT`;
   })().catch((e) => { ready = null; throw e; });
   return ready;
 }

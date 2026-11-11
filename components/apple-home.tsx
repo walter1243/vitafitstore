@@ -386,7 +386,7 @@ export function AppleHome({ content, editing = false, initialProducts }: { conte
 
   return (
     <div style={FONT} className="bg-[#f5f5f7] antialiased [&_h1]:[font-family:inherit] [&_h2]:[font-family:inherit] [&_h3]:[font-family:inherit]">
-      <div className="mx-auto max-w-6xl px-4 pb-16 pt-[178px] sm:px-6 md:pt-[124px]">
+      <div className="mx-auto max-w-6xl px-4 pb-16 pt-[calc(var(--hdr-h,178px)+12px)] sm:px-6 md:pt-[calc(var(--hdr-h,124px)+20px)]">
         {B.enabled
           ? <div data-edit="banner" data-edit-label="Banner principal"><HeroSlides slides={slides} autoplay={B.autoplay} onShop={choose} /></div>
           : editing && <Off k="banner" label="Banner principal desligado" />}
