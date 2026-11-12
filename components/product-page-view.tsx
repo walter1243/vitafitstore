@@ -22,7 +22,7 @@ export function ProductPageView({ product, entrega }: { product: Product; entreg
   // previsão calculada no navegador (data de hoje do cliente, sem diferença entre servidor e tela)
   const [eta, setEta] = useState('')
   useEffect(() => { if ({ ...DEFAULT_ENTREGA, ...entrega }.enabled) setEta(deliveryText(entrega, Boolean(product.personalize?.enabled))) }, [entrega, product.personalize?.enabled])
-  const { addItem, setIsCartOpen } = useCart()
+  const { addItem } = useCart()
   const { collectionForProduct, getSector } = useSectors()
   const collection = collectionForProduct(product)
   // Produto com nome personalizado (chaveiro, placa de pet): o personalizador
@@ -104,32 +104,6 @@ export function ProductPageView({ product, entrega }: { product: Product; entreg
     size: needsSize ? selectedSize : undefined,
     note: obsNote,
   }
-
-  // Barra fixa de compra (celular): aparece quando o quadro de compra/personalizador sai da tela.
-  const buyRef = useRef<HTMLDivElement>(null)
-  const persRef = useRef<HTMLDivElement>(null)
-  const sizeRef = useRef<HTMLDivElement>(null)
-  const [showBar, setShowBar] = useState(false)
-  useEffect(() => {
-    const el = personalized ? persRef.current : buyRef.current
-    if (!el || typeof IntersectionObserver === 'undefined') return
-    const io = new IntersectionObserver(([e]) => setShowBar(!e.isIntersecting), { rootMargin: '0px 0px -60px 0px' })
-    io.observe(el)
-    return () => io.disconnect()
-  }, [personalized])
-  const goTo = (el: HTMLElement | null) => el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  function stickyAction() {
-    if (personalized) { goTo(persRef.current); return }
-    if (needsSize && !selectedSize) { goTo(sizeRef.current); return }
-    if (obsMissing) { goTo(document.getElementById('obs-cliente')); document.getElementById('obs-cliente')?.focus(); return }
-    if (added) { setIsCartOpen(true); return }
-    handleAdd()
-  }
-  const stickyLabel = personalized ? 'Personalizar'
-    : needsSize && !selectedSize ? `Elegir ${product.productType === 'tamanho' ? 'tamaño' : 'talla'}`
-    : obsMissing ? 'Escribir observaciones'
-    : added ? 'Ver carrito'
-    : 'Añadir al carrito'
 
   function handleAdd() {
     if (!canBuy) return
@@ -325,7 +299,7 @@ export function ProductPageView({ product, entrega }: { product: Product; entreg
 
           {/* Size selector */}
           {needsSize && (
-            <div ref={sizeRef} className="mt-6 scroll-mt-40">
+            <div className="mt-6">
               <p className="mb-2 text-sm font-medium text-slate-700">
                 {product.productType === 'tamanho' ? 'Tamaño' : 'Talla'}: <span className="font-semibold text-slate-900">{selectedSize || 'Elige'}</span>
               </p>
@@ -375,7 +349,7 @@ export function ProductPageView({ product, entrega }: { product: Product; entreg
           <ProductShipping productId={product.id} quantity={quantity} size={selectedSize || undefined} onShipping={setShipCost} />
 
           {personalized && (
-            <div ref={persRef} className="mt-6 scroll-mt-40 rounded-2xl border border-slate-200 bg-white p-4">
+            <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4">
               <p className="mb-3 text-base font-bold text-slate-900">{personalizeTitle}</p>
               <NamePersonalizer
                 product={product}
@@ -394,7 +368,7 @@ export function ProductPageView({ product, entrega }: { product: Product; entreg
           )}
 
           {/* Buy box */}
-          <div ref={buyRef} className={`mt-6 rounded-2xl border border-slate-200 bg-white p-4 ${personalized ? 'hidden' : ''}`}>
+          <div className={`mt-6 rounded-2xl border border-slate-200 bg-white p-4 ${personalized ? 'hidden' : ''}`}>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               <span className="text-sm font-medium text-slate-500">Cantidad</span>
               <div className="flex items-center rounded-xl border border-slate-200 bg-white">
@@ -484,32 +458,6 @@ export function ProductPageView({ product, entrega }: { product: Product; entreg
       {/* Opinioes no celular/tablet: embaixo da descricao (metade do numero do painel) */}
       <ProductReviews productId={product.id} half className="mt-12 max-w-3xl lg:hidden" />
 
-      {/* Barra fixa de compra (celular), logo acima da barra de baixo da loja.
-          Nunca adiciona sem a escolha obrigatória: leva até o campo que falta. */}
-      <div
-        className={`fixed inset-x-0 z-[45] border-t border-slate-200 bg-white/95 px-4 py-2.5 shadow-[0_-8px_24px_rgba(0,0,0,0.08)] backdrop-blur transition-transform duration-200 md:hidden ${showBar ? 'translate-y-0' : 'pointer-events-none translate-y-[200%]'}`}
-        style={{ bottom: 'calc(58px + env(safe-area-inset-bottom))' }}
-        aria-hidden={!showBar}
-      >
-        <div className="flex items-center gap-3">
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-medium text-slate-700">{product.name}</p>
-            <p className="text-lg font-extrabold leading-tight text-slate-900">
-              {(selectedSize ? sizedPrice(product.price, product.personalize, selectedSize) : sizeRangeView?.min ?? (pack ? pack.price : product.price)).toFixed(2)}€
-              {quantity > 1 && !personalized && <span className="ml-1 text-xs font-medium text-slate-500">× {pack ? quantity / step : quantity}</span>}
-            </p>
-          </div>
-          <button
-            type="button"
-            tabIndex={showBar ? 0 : -1}
-            onClick={stickyAction}
-            className={`flex min-h-12 shrink-0 cursor-pointer items-center gap-2 rounded-xl px-5 text-sm font-bold text-white transition-colors ${added ? 'bg-emerald-600' : 'bg-orange-700 active:bg-orange-800'}`}
-          >
-            {added ? <Check className="h-4 w-4" aria-hidden="true" /> : <ShoppingCart className="h-4 w-4" aria-hidden="true" />}
-            {stickyLabel}
-          </button>
-        </div>
-      </div>
     </div>
   )
 }

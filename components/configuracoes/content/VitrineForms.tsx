@@ -274,9 +274,59 @@ function SlidePreview({ s, sector }: { s: HomeSlide; sector?: SectorLite }) {
   );
 }
 
+// Escolha dos produtos do banner (modo Produtos): busca, marca e ordena.
+type PickProduct = { id: number; name: string; price: number; image: string };
+function ProductPicker({ ids, onChange }: { ids: number[]; onChange: (ids: number[]) => void }) {
+  const [all, setAll] = useState<PickProduct[] | null>(null);
+  const [q, setQ] = useState('');
+  useEffect(() => {
+    fetch('/api/products', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => setAll(Array.isArray(d) ? d.map((p: any) => ({ id: Number(p.id), name: String(p.name ?? ''), price: Number(p.price) || 0, image: String(p.mainImage || p.image || '') })) : []))
+      .catch(() => setAll([]));
+  }, []);
+  const byId = new Map((all ?? []).map((p) => [p.id, p]));
+  const chosen = ids.map((id) => byId.get(id)).filter(Boolean) as PickProduct[];
+  const rest = (all ?? []).filter((p) => !ids.includes(p.id) && p.name.toLowerCase().includes(q.trim().toLowerCase()));
+  const thumb = (p: PickProduct) => (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={p.image} alt="" className="h-10 w-10 shrink-0 rounded-md bg-white/5 object-cover" />
+  );
+  return (
+    <div>
+      <p className="mb-2 text-xs font-medium text-white/60">No banner ({chosen.length}) — na ordem em que passam</p>
+      {chosen.length === 0 && <p className="mb-3 rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-200">Escolha pelo menos um produto na lista abaixo.</p>}
+      {chosen.map((p, i) => (
+        <div key={p.id} className="mb-2 flex items-center gap-2 rounded-lg border border-green-500/30 bg-green-500/[0.06] p-2">
+          {thumb(p)}
+          <span className="min-w-0 flex-1 truncate text-sm text-white">{p.name}<span className="ml-2 text-xs text-white/50">{p.price.toFixed(2)}€</span></span>
+          <ItemBar index={i} total={chosen.length} onMove={(d) => onChange(move(ids, i, d))} onRemove={() => onChange(ids.filter((x) => x !== p.id))} />
+        </div>
+      ))}
+      <input className={`${inputCls} mt-2`} placeholder="Buscar produto para adicionar…" value={q} onChange={(e) => setQ(e.target.value)} />
+      <div className="mt-2 max-h-64 space-y-1 overflow-y-auto pr-1">
+        {all === null && <p className="text-xs text-white/50">Carregando produtos…</p>}
+        {rest.map((p) => (
+          <button key={p.id} type="button" onClick={() => onChange([...ids, p.id])}
+            className="flex w-full cursor-pointer items-center gap-2 rounded-lg border border-white/10 p-2 text-left transition-colors hover:border-green-500/40 hover:bg-green-500/5">
+            {thumb(p)}
+            <span className="min-w-0 flex-1 truncate text-sm text-white/85">{p.name}</span>
+            <span className="text-xs text-white/50">{p.price.toFixed(2)}€</span>
+            <Plus size={14} className="text-green-300" />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function BannerForm({ data, onChange, sectors, focus }: { data: BannerContent; onChange: (d: BannerContent) => void; sectors: SectorLite[]; focus?: string }) {
   useFocusItem(focus);
   const set = (p: Partial<BannerContent>) => onChange({ ...data, ...p });
+  // configuração salva antes do modo Produtos não tem este campo
+  const PS: BannerContent['productSlides'] = { enabled: true, ids: [], eyebrow: 'Más vendido', cta: 'Comprar ahora', ...(data.productSlides as Partial<BannerContent['productSlides']> | undefined) };
+  const setPS = (p: Partial<typeof PS>) => set({ productSlides: { ...PS, ...p } });
+  const current: 'products' | 'auto' | 'custom' = PS.enabled ? 'products' : data.mode;
   const setSlide = (i: number, p: Partial<HomeSlide>) => set({ slides: data.slides.map((s, k) => (k === i ? { ...s, ...p } : s)) });
   const newSlide = (sector: SectorLite | undefined, k: number): HomeSlide => ({
     id: `s${Date.now().toString(36)}${k}`, enabled: true, sector: sector?.slug ?? '', eyebrow: k === 0 ? 'Novedades' : 'Colección',
@@ -286,10 +336,12 @@ export function BannerForm({ data, onChange, sectors, focus }: { data: BannerCon
     <div>
       <Toggle label="Mostrar o banner no topo da home" checked={data.enabled} onChange={(v) => set({ enabled: v })} />
       <Field label="Como montar os slides">
-        <div className="grid grid-cols-2 gap-2">
-          {([['auto', 'Automático', 'um slide por setor, com a foto dos produtos'], ['custom', 'Personalizado', 'você escolhe cada slide, texto e foto']] as const).map(([id, t, d]) => (
-            <button key={id} type="button" onClick={() => set({ mode: id, slides: id === 'custom' && !data.slides.length ? sectors.slice(0, 5).map((s, k) => newSlide(s, k)) : data.slides })}
-              className={`cursor-pointer rounded-lg border px-3 py-2.5 text-left transition-colors ${data.mode === id ? 'border-green-500/60 bg-green-500/10' : 'border-white/10 hover:border-white/25'}`}>
+        <div className="grid grid-cols-3 gap-2">
+          {([['products', 'Produtos', 'os produtos que você escolher (mais vendidos)'], ['auto', 'Coleções', 'um slide por setor, automático'], ['custom', 'Personalizado', 'você escolhe cada slide, texto e foto']] as const).map(([id, t, d]) => (
+            <button key={id} type="button" onClick={() => id === 'products'
+              ? setPS({ enabled: true })
+              : onChange({ ...data, mode: id, productSlides: { ...PS, enabled: false }, slides: id === 'custom' && !data.slides.length ? sectors.slice(0, 5).map((s, k) => newSlide(s, k)) : data.slides })}
+              className={`cursor-pointer rounded-lg border px-3 py-2.5 text-left transition-colors ${current === id ? 'border-green-500/60 bg-green-500/10' : 'border-white/10 hover:border-white/25'}`}>
               <span className="block text-sm font-semibold text-white">{t}</span>
               <span className="block text-[11px] text-white/45">{d}</span>
             </button>
@@ -300,7 +352,16 @@ export function BannerForm({ data, onChange, sectors, focus }: { data: BannerCon
         <input type="number" min={0} step={0.5} className={inputCls} value={data.autoplay} onChange={(e) => set({ autoplay: Math.max(0, parseFloat(e.target.value) || 0) })} />
       </Field>
 
-      {data.mode === 'auto' ? (
+      {current === 'products' ? (
+        <Group title="Produtos do banner">
+          <ProductPicker ids={PS.ids} onChange={(ids) => setPS({ ids })} />
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <Txt label="Texto pequeno" value={PS.eyebrow} onChange={(v) => setPS({ eyebrow: v })} placeholder="Más vendido" />
+            <Txt label="Texto do botão" value={PS.cta} onChange={(v) => setPS({ cta: v })} placeholder="Comprar ahora" />
+          </div>
+          <p className="text-[11px] text-white/40">Cada slide mostra a foto, o nome e o preço do produto; o botão abre a página dele. Bom para anúncios: quem chega já vê o produto.</p>
+        </Group>
+      ) : data.mode === 'auto' ? (
         <Group title="Slides automáticos">
           <Txt label="Texto pequeno do 1º slide" hint="Vazio = &quot;Novedades&quot; (traduzido no seletor de idioma)" value={data.firstEyebrow} onChange={(v) => set({ firstEyebrow: v })} placeholder="Novedades" />
           <Txt label="Texto pequeno dos outros slides" hint="Vazio = &quot;Colección&quot;" value={data.eyebrow} onChange={(v) => set({ eyebrow: v })} placeholder="Colección" />

@@ -10,6 +10,7 @@ import { useStoreProducts } from '@/components/kids/use-store-products';
 import { GO_HOME_EVENT } from '@/components/mobile-tab-bar';
 import { Tr, UI } from '@/components/language-switcher';
 import { StoreProductCard } from '@/components/store-product-card';
+import { cardPrice } from '@/lib/personalize';
 import { assignLayoutVariant, setAbActive, type LayoutVariant } from '@/lib/ab-test';
 import { DEFAULT_BANNER, DEFAULT_CATEGORIAS, DEFAULT_CONFIANCA, DEFAULT_PROMO, DEFAULT_SECOES, SLIDE_COLORS, type SiteContent, type TrustIcon } from '@/lib/site-content-defaults';
 
@@ -55,6 +56,7 @@ function Carousel({ products }: { products: Product[] }) {
 // Um slide do banner já resolvido (automático por setor ou personalizado no admin).
 type Slide = {
   key: string;
+  price?: string;
   eyebrow: React.ReactNode;
   title: string;
   tagline: string;
@@ -120,7 +122,8 @@ function HeroSlides({ slides, autoplay, onShop }: { slides: Slide[]; autoplay: n
           >
             <div className="relative z-10 w-[60%] pb-8 pl-4 pr-2 pt-4 sm:w-1/2 sm:py-12 sm:pl-12">
               {s.eyebrow && <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#7cc4ff] sm:text-[13px]">{s.eyebrow}</p>}
-              <h1 className="mt-1 text-[21px] font-extrabold uppercase leading-[1.05] text-white sm:text-[46px]">{s.title}</h1>
+              <h1 className={`mt-1 font-extrabold leading-[1.05] text-white ${s.price ? 'line-clamp-2 text-[19px] sm:text-[38px]' : 'text-[21px] uppercase sm:text-[46px]'}`}>{s.title}</h1>
+              {s.price && <p className="mt-1.5 text-[22px] font-extrabold leading-none text-white sm:text-[34px]">{s.price}</p>}
               {s.tagline && <p className="mt-1.5 line-clamp-1 text-[12px] leading-snug text-white/85 sm:line-clamp-2 sm:text-[18px]">{s.tagline}</p>}
               {s.cta && (s.href ? (
                 <Link href={s.href} tabIndex={k === i ? 0 : -1} className={ctaCls} style={{ background: BLUE }}>{ctaInner(s.cta)}</Link>
@@ -235,8 +238,23 @@ export function AppleHome({ content, editing = false, initialProducts }: { conte
   }, [all, byKey, S.items, S.showMore]);
 
   // Slides do banner.
+  const PS = { ...DEFAULT_BANNER.productSlides, ...B.productSlides };
   const slides: Slide[] = useMemo(() => {
     if (!B.enabled) return [];
+    // Banner de produtos escolhidos no admin (ex.: o mais vendido)
+    if (PS.enabled && PS.ids.length) {
+      const byId = new Map(products.map((p) => [Number(p.id), toStoreProduct(p)]));
+      const chosen = PS.ids.map((id) => byId.get(Number(id))).filter(Boolean) as Product[];
+      if (chosen.length) {
+        return chosen.map((p, k) => {
+          const [a, b] = SLIDE_COLORS[k % SLIDE_COLORS.length];
+          return {
+            key: `p${p.id}`, eyebrow: PS.eyebrow, title: p.name, tagline: '', price: cardPrice(p.price, p.personalize, p.sizes).main,
+            img: p.mainImage ?? p.image, cta: PS.cta, href: `/producto/${p.id}-${p.slug}`, sector: 'todos', a, b,
+          };
+        });
+      }
+    }
     if (B.mode === 'custom') {
       return B.slides.filter((s) => s.enabled).map((s, k) => {
         const blk = byKey[s.sector];
@@ -259,7 +277,7 @@ export function AppleHome({ content, editing = false, initialProducts }: { conte
         const eyebrow = k === 0 ? (B.firstEyebrow || <Tr t={UI.novedades} />) : (B.eyebrow || <Tr t={UI.coleccion} />);
         return { key: b.key, eyebrow, title: b.title, tagline: b.tagline, img, cta: B.ctaText, href: '', sector: b.key, a: c1, b: c2 };
       });
-  }, [B, blocks, byKey]);
+  }, [B, PS.enabled, PS.ids, PS.eyebrow, PS.cta, products, blocks, byKey]);
 
   const personalizable = useMemo(() => products.map(toStoreProduct).filter((p) => p.personalize?.enabled), [products]);
   const promoImg = P.image || personalizable.map((p) => p.mainImage ?? p.image).find(Boolean);

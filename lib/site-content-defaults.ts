@@ -322,6 +322,9 @@ export type BannerContent = {
   eyebrow: string;          // '' = "Colección" (traduzido)
   ctaText: string;
   slides: HomeSlide[];
+  // Banner de PRODUTOS (padrão): um slide por produto escolhido no admin, com foto, nome,
+  // preço e botão para a página do produto. Ligado, vale no lugar dos modos auto/custom.
+  productSlides: { enabled: boolean; ids: number[]; eyebrow: string; cta: string };
 };
 
 export const SLIDE_COLORS: [string, string][] = [
@@ -342,6 +345,7 @@ export const DEFAULT_BANNER: BannerContent = {
   eyebrow: '',
   ctaText: 'Comprar ahora',
   slides: [],
+  productSlides: { enabled: true, ids: [11], eyebrow: 'Más vendido', cta: 'Comprar ahora' },
 };
 
 export type HomeChip = { sector: string; label: string; image: string; hidden: boolean };

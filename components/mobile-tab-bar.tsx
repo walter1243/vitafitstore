@@ -64,17 +64,18 @@ export function MobileTabBar() {
       aria-label="Navegación"
       onPointerDown={wake}
       onFocusCapture={wake}
-      className={`fixed inset-x-0 bottom-0 z-40 transition-opacity duration-200 ${awake ? 'opacity-100' : 'opacity-40'} border-t border-black/[0.06] bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-6px_24px_rgba(0,0,0,0.06)] backdrop-blur md:hidden`}
+      className={`fixed inset-x-0 bottom-0 z-40 border-t border-black/[0.06] pb-[env(safe-area-inset-bottom)] shadow-[0_-6px_24px_rgba(0,0,0,0.06)] backdrop-blur transition-colors duration-200 md:hidden ${awake ? 'bg-white/95' : 'bg-white/60'}`}
       style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif' }}
     >
-      <div className="mx-auto flex max-w-md items-end px-2">
+      {/* Botões a 60% (não tapam a loja); o carrinho com produto fica a 95%; tocar deixa tudo 100%. */}
+      <div className={`mx-auto flex max-w-md items-end px-2 [&>*]:transition-opacity [&>*]:duration-200 ${awake ? '' : '[&>*]:opacity-60'}`}>
         <Link href="/" onClick={goHome} className={`${ITEM} ${home ? '!text-[#0071e3]' : ''}`} aria-current={home ? 'page' : undefined}>
           <Home className="h-[22px] w-[22px]" aria-hidden="true" /><Tr t={UI.inicio} />
         </Link>
         <button type="button" onClick={() => window.dispatchEvent(new Event(OPEN_MENU_EVENT))} className={ITEM}>
           <LayoutGrid className="h-[22px] w-[22px]" aria-hidden="true" /><Tr t={UI.colecciones} />
         </button>
-        <div className="flex flex-1 justify-center">
+        <div className={`flex flex-1 justify-center ${!awake && totalItems > 0 ? '!opacity-95' : ''}`}>
           <button
             type="button"
             onClick={() => setIsCartOpen(true)}
