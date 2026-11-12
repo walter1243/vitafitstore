@@ -345,8 +345,6 @@ export function ProductPageView({ product, entrega }: { product: Product; entreg
             </div>
           )}
 
-          {/* Envio Packlink (antes da compra): ponto de recogida x domicilio, com preco atual */}
-          <ProductShipping productId={product.id} quantity={quantity} size={selectedSize || undefined} onShipping={setShipCost} />
 
           {personalized && (
             <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4">
@@ -423,6 +421,12 @@ export function ProductPageView({ product, entrega }: { product: Product; entreg
 
             {/* Amostra gratis interativa (Admin → Produtos → Amostra interativa) */}
             <ProductDemo product={product} />
+          </div>
+
+          {/* Envio Packlink DEPOIS da escolha e do preço: ponto de recogida x domicilio,
+              recalculado com a quantidade escolhida */}
+          <div className="mt-4">
+            <ProductShipping productId={product.id} quantity={quantity} size={selectedSize || undefined} onShipping={setShipCost} />
           </div>
 
           {sizeGuideOpen && product.productType && product.productType !== 'tamanho' && (
