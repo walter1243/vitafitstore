@@ -23,6 +23,9 @@ const FONT = { fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display",
 const INK = '#1d1d1f';
 const MUTED = '#6e6e73';
 const BLUE = '#0071e3';
+// Máscara da foto do banner: transparente à esquerda e cheia a partir de ~55%, em degradê suave.
+const FADE_MASK = 'linear-gradient(90deg, transparent 0%, rgba(0,0,0,.25) 18%, rgba(0,0,0,.7) 38%, #000 58%)';
+
 type Block = { key: string; title: string; tagline: string; href: string; products: Product[] };
 
 function SectionHead({ title, tagline, href, viewAll = 'Ver todo' }: { title: string; tagline?: string; href?: string; viewAll?: string }) {
@@ -132,10 +135,11 @@ function HeroSlides({ slides, autoplay, onShop }: { slides: Slide[]; autoplay: n
               ))}
             </div>
             {s.img && (
-              <div className="absolute inset-y-0 right-0 w-[46%] sm:w-1/2">
-                <Image src={s.img} alt="" fill priority={k === 0} sizes="(min-width: 1024px) 560px, 50vw" className="object-cover" />
-                {/* funde a foto no fundo do slide */}
-                <div className="absolute inset-y-0 left-0 w-1/3" style={{ background: `linear-gradient(90deg, ${s.b} 0%, transparent 100%)` }} />
+              <div className="absolute inset-y-0 right-0 w-[55%] sm:w-[58%]">
+                {/* a foto some aos poucos no fundo do slide (sem emenda) */}
+                <div className="absolute inset-0" style={{ WebkitMaskImage: FADE_MASK, maskImage: FADE_MASK }}>
+                  <Image src={s.img} alt="" fill priority={k === 0} sizes="(min-width: 1024px) 560px, 50vw" className="object-cover" />
+                </div>
               </div>
             )}
           </div>
@@ -307,8 +311,9 @@ export function AppleHome({ content, editing = false, initialProducts }: { conte
         </div>
         {promoImg && (
           <div className="absolute inset-y-0 right-0 w-[44%] sm:w-[45%]">
-            <Image src={promoImg} alt="" fill sizes="(min-width: 1024px) 500px, 45vw" className="object-cover" />
-            <div className="absolute inset-y-0 left-0 w-1/3" style={{ background: `linear-gradient(90deg, ${P.bgTo} 0%, transparent 100%)` }} />
+            <div className="absolute inset-0" style={{ WebkitMaskImage: FADE_MASK, maskImage: FADE_MASK }}>
+              <Image src={promoImg} alt="" fill sizes="(min-width: 1024px) 500px, 45vw" className="object-cover" />
+            </div>
           </div>
         )}
       </div>
@@ -327,6 +332,37 @@ export function AppleHome({ content, editing = false, initialProducts }: { conte
     ? { key: 'personalizables', title: S.personalizedTitle, tagline: S.personalizedTagline, href: '', products: personalizable }
     : selected;
   const promoAt = Math.max(0, Math.min(blocks.length - 1, (P.afterSection || 1) - 1));
+  // Categorias no meio: entram no lugar do banner promocional (o retângulo some).
+  const catPos = C.position === 'top' ? 'top' : 'middle';
+  const storiesNav = C.visible && chips.length > 0 ? (
+          <nav data-edit="categorias" data-edit-label="Stories / categorias" aria-label="Categorías" className={catPos === 'top' ? 'mt-6 sm:mt-8' : 'my-8 sm:my-12'}>
+              <ul className="grid grid-cols-4 gap-x-1 gap-y-2 sm:flex sm:flex-wrap sm:justify-center sm:gap-3">
+                {chips.map((c) => {
+                  const on = active === c.key;
+                  return (
+                    <li key={c.key} className="min-w-0">
+                      <button
+                        type="button"
+                        onClick={() => choose(c.key)}
+                        data-edit-item={c.key}
+                        aria-pressed={on}
+                        className="flex w-full cursor-pointer flex-col items-center gap-1.5 rounded-2xl py-1.5 transition-colors sm:w-[96px]"
+                      >
+                        <span
+                          className={`relative flex h-[60px] w-[60px] items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] ring-2 transition-all duration-200 sm:h-[72px] sm:w-[72px] ${on ? '' : 'ring-transparent hover:ring-black/10'}`}
+                          style={on ? { ['--tw-ring-color' as string]: BLUE } : undefined}
+                        >
+                          {c.img ? <Image src={c.img} alt="" fill sizes="72px" className="object-cover" /> : <LayoutGrid className="h-6 w-6" style={{ color: on ? BLUE : INK }} aria-hidden="true" />}
+                        </span>
+                        <span className={`line-clamp-1 text-[12px] sm:text-[13px] ${on ? 'font-bold' : 'font-medium'}`} style={{ color: on ? BLUE : INK }}>{c.label}</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
+  ) : null;
+  const midSlot = catPos === 'middle' ? storiesNav : (promo || (editing && !P.enabled && <Off k="promo" label="Banner promocional desligado" />));
 
   return (
     <div style={FONT} className="bg-[#f5f5f7] antialiased [&_h1]:[font-family:inherit] [&_h2]:[font-family:inherit] [&_h3]:[font-family:inherit]">
@@ -335,35 +371,8 @@ export function AppleHome({ content, editing = false, initialProducts }: { conte
           ? <div data-edit="banner" data-edit-label="Banner principal"><HeroSlides slides={slides} autoplay={B.autoplay} onShop={choose} /></div>
           : editing && <Off k="banner" label="Banner principal desligado" />}
 
-        {/* Setores em cards: tocar filtra os produtos logo abaixo */}
-        {C.visible && chips.length > 0 && (
-          <nav data-edit="categorias" data-edit-label="Stories / categorias" aria-label="Categorías" className="mt-6 sm:mt-8">
-            <ul className="grid grid-cols-4 gap-x-1 gap-y-2 sm:flex sm:flex-wrap sm:justify-center sm:gap-3">
-              {chips.map((c) => {
-                const on = active === c.key;
-                return (
-                  <li key={c.key} className="min-w-0">
-                    <button
-                      type="button"
-                      onClick={() => choose(c.key)}
-                      data-edit-item={c.key}
-                      aria-pressed={on}
-                      className="flex w-full cursor-pointer flex-col items-center gap-1.5 rounded-2xl py-1.5 transition-colors sm:w-[96px]"
-                    >
-                      <span
-                        className={`relative flex h-[60px] w-[60px] items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] ring-2 transition-all duration-200 sm:h-[72px] sm:w-[72px] ${on ? '' : 'ring-transparent hover:ring-black/10'}`}
-                        style={on ? { ['--tw-ring-color' as string]: BLUE } : undefined}
-                      >
-                        {c.img ? <Image src={c.img} alt="" fill sizes="72px" className="object-cover" /> : <LayoutGrid className="h-6 w-6" style={{ color: on ? BLUE : INK }} aria-hidden="true" />}
-                      </span>
-                      <span className={`line-clamp-1 text-[12px] sm:text-[13px] ${on ? 'font-bold' : 'font-medium'}`} style={{ color: on ? BLUE : INK }}>{c.label}</span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
-        )}
+        {/* Categorias (bolinhas): embaixo do banner ou no meio da página */}
+        {catPos === 'top' && storiesNav}
         {editing && !C.visible && <Off k="categorias" label="Categorias desligadas" />}
 
         {/* Faixa de confiança: o que um cliente novo precisa saber antes de comprar */}
@@ -403,11 +412,11 @@ export function AppleHome({ content, editing = false, initialProducts }: { conte
                     </ul>
                   ) : <Carousel products={b.products} />}
                 </section>
-                {k === promoAt && (promo || (editing && !P.enabled && <Off k="promo" label="Banner promocional desligado" />))}
+                {k === promoAt && midSlot}
               </div>
             ))
           )}
-          {blocks.length === 0 && promo}
+          {blocks.length === 0 && midSlot}
           {blocks.length === 0 && <div className="h-64" aria-hidden="true" />}
         </div>
       </div>

@@ -358,12 +358,15 @@ export type CategoriasContent = {
   showPersonalized: boolean;
   personalizedLabel: string;
   personalizedImage: string;
+  // onde aparecem: embaixo do banner ou no meio, NO LUGAR do banner promocional (retângulo)
+  position: 'top' | 'middle';
   items: HomeChip[];        // ordem e ajustes por setor (setor fora da lista entra no fim)
 };
 
 export const DEFAULT_CATEGORIAS: CategoriasContent = {
   enabled: true,
   visible: true,
+  position: 'middle',
   showAll: true,
   allLabel: 'Todo',
   showPersonalized: true,

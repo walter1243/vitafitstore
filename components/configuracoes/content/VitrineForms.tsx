@@ -426,7 +426,20 @@ export function CategoriasForm({ data, onChange, sectors, focus }: { data: Categ
   const setRow = (i: number, p: Partial<CategoriasContent['items'][number]>) => set({ items: rows.map((r, k) => (k === i ? { ...r, ...p } : r)) });
   return (
     <div>
-      <Toggle label="Mostrar as categorias embaixo do banner" hint="Todas aparecem de uma vez (sem deslizar); tocar filtra os produtos." checked={data.visible} onChange={(v) => set({ visible: v })} />
+      <Toggle label="Mostrar as categorias (bolinhas)" hint="Todas aparecem de uma vez (sem deslizar); tocar filtra os produtos." checked={data.visible} onChange={(v) => set({ visible: v })} />
+      {data.visible && (
+        <Field label="Onde aparecem">
+          <div className="grid grid-cols-2 gap-2">
+            {([['top', 'Embaixo do banner', 'logo no começo da home'], ['middle', 'No meio', 'no lugar do banner promocional (retângulo)']] as const).map(([id, t, d]) => (
+              <button key={id} type="button" onClick={() => set({ position: id })}
+                className={`cursor-pointer rounded-lg border px-3 py-2.5 text-left transition-colors ${(data.position ?? 'middle') === id ? 'border-green-500/60 bg-green-500/10' : 'border-white/10 hover:border-white/25'}`}>
+                <span className="block text-sm font-semibold text-white">{t}</span>
+                <span className="block text-[11px] text-white/45">{d}</span>
+              </button>
+            ))}
+          </div>
+        </Field>
+      )}
       <Group title="Primeira bolinha">
         <Toggle label="Mostrar a bolinha &quot;Todo&quot;" checked={data.showAll} onChange={(v) => set({ showAll: v })} />
         {data.showAll && <Txt label="Nome" value={data.allLabel} onChange={(v) => set({ allLabel: v })} placeholder="Todo" />}
