@@ -347,7 +347,8 @@ export const DEFAULT_BANNER: BannerContent = {
 export type HomeChip = { sector: string; label: string; image: string; hidden: boolean };
 
 export type CategoriasContent = {
-  enabled: boolean;
+  enabled: boolean;          // (antigo — não usado mais)
+  visible: boolean;          // mostrar os stories na home (desligado: teste de conversão, produtos mais à vista)
   showAll: boolean;
   allLabel: string;
   showPersonalized: boolean;
@@ -358,6 +359,7 @@ export type CategoriasContent = {
 
 export const DEFAULT_CATEGORIAS: CategoriasContent = {
   enabled: true,
+  visible: false,
   showAll: true,
   allLabel: 'Todo',
   showPersonalized: true,

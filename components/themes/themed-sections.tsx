@@ -40,7 +40,7 @@ export function ThemedSectorBand({ sector, theme, first, asTitle }: { sector: Se
   return (
     <section
       id={`setor-${sector.slug}`}
-      className={`relative scroll-mt-24 overflow-hidden px-4 sm:px-6 lg:px-8 ${first ? 'pb-16 pt-36 sm:pt-40' : 'py-20 sm:py-24'}`}
+      className={`relative scroll-mt-24 overflow-hidden px-4 sm:px-6 lg:px-8 ${first ? 'pb-10 pt-[calc(var(--hdr-h,160px)+20px)]' : 'py-20 sm:py-24'}`}
       style={{ background: theme.bg, color: theme.ink }}
     >
       {theme.key === 'navidad' && <><NavidadSnow /><NavidadSleigh /></>}
@@ -87,7 +87,7 @@ export function ThemedCollection({ collection, theme, products = [], showCarouse
   const label = primaryLabel ?? `Ver ${products.length ? `los ${products.length}` : 'colección'}`;
 
   return (
-    <section className={`relative overflow-hidden px-4 sm:px-6 lg:px-8 ${theme.key === 'navidad' ? (first ? 'pb-10 pt-44 md:pt-36' : 'py-12 sm:py-16') : first ? 'pb-10 pt-44 md:pt-36' : 'py-12 sm:py-16'}`} style={{ background: theme.bgAlt }}>
+    <section className={`relative overflow-hidden px-4 sm:px-6 lg:px-8 ${first ? 'pb-10 pt-[calc(var(--hdr-h,176px)+20px)]' : 'py-12 sm:py-16'}`} style={{ background: theme.bgAlt }}>
       {/* Cabecalho da pagina da colecao (first): so a neve; os enfeites ficam no catalogo. */}
       {theme.key === 'navidad' && <><NavidadSnow />{!first && <NavidadSleigh />}</>}
       <div className="relative mx-auto max-w-6xl">

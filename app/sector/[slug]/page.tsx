@@ -10,6 +10,12 @@ import { CollectionSpotlight } from '@/components/kids/collection-spotlight'
 import { SectorBand } from '@/components/kids/sector-band'
 import { SectorsProvider } from '@/components/kids/sectors-context'
 import { getSectors } from '@/lib/sectors'
+import { collectionForProduct, enabledCollections } from '@/lib/sectors-shared'
+import { getStoreProductsServer } from '@/lib/products-db'
+import { toStoreProduct } from '@/lib/store-product'
+import { cookies, headers } from 'next/headers'
+import { COUNTRY_COOKIE, countrySurcharge, viewerCountry } from '@/lib/country-price'
+import type { Product } from '@/lib/products'
 import { getSiteContent } from '@/lib/site-content'
 import { KidsHowItsMade } from '@/components/kids/kids-how-its-made'
 
@@ -36,6 +42,19 @@ export default async function SectorPage({ params }: PageProps) {
   const sector = sectors.find((s) => s.slug === slug)
   if (!sector) notFound()
 
+  // Só as coleções que têm produto: coleção vazia some e volta sozinha quando
+  // ganhar um produto (Admin → Produtos). Os produtos já vêm no HTML.
+  const [ck, hd] = await Promise.all([cookies(), headers()])
+  const surcharge = await countrySurcharge(viewerCountry(ck.get(COUNTRY_COOKIE)?.value, hd.get('x-vercel-ip-country'))).catch(() => 0)
+  const all = await getStoreProductsServer(surcharge)
+  const cols = enabledCollections(sectors)
+  const byCol = new Map<string, Product[]>()
+  for (const p of all) {
+    const c = collectionForProduct(cols, p)
+    if (c) byCol.set(c.slug, [...(byCol.get(c.slug) ?? []), toStoreProduct(p)])
+  }
+  const shown = sector.collections.filter((c) => (byCol.get(c.slug)?.length ?? 0) > 0)
+
   return (
     <SectorsProvider sectors={sectors}>
     <ProductLayoutProvider layout={content.secoes.layout}>
@@ -43,10 +62,10 @@ export default async function SectorPage({ params }: PageProps) {
         <Header />
         <main className="kids flex-1">
           <SectorBand sector={sector} first asTitle />
-          {sector.collections.map((c, i) => (
-            <CollectionSpotlight key={c.slug} slug={c.slug} priority={i === 0} />
+          {shown.map((c, i) => (
+            <CollectionSpotlight key={c.slug} slug={c.slug} products={byCol.get(c.slug)} priority={i === 0} />
           ))}
-          {sector.collections.length === 0 && (
+          {shown.length === 0 && (
             <p className="px-4 pb-24 text-center text-lg text-[#565a78]">Muy pronto habrá colecciones en esta sección.</p>
           )}
           <KidsHowItsMade />

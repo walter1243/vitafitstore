@@ -123,14 +123,22 @@ const ROW = '-mx-2 flex snap-x gap-4 overflow-x-auto px-2 pb-3 pt-1 [scrollbar-w
 // setor: Infantil (cards coloridos com brincadeira), Casa, Chaveiros, Pet...
 // Setores novos so aparecem quando tiverem produto.
 export function CollectionsMenuPanel({ open, onNavigate }: { open: boolean; onNavigate: () => void }) {
-  const { sectors } = useSectors();
+  const { sectors, collectionForProduct } = useSectors();
   const [opened, setOpened] = useState(false);
   useEffect(() => { if (open) setOpened(true); }, [open]);
   const homeCats = useHomeCategories(opened);
+  const { products: menuProducts, loaded } = useStoreProducts(undefined, opened);
 
-  // Todas as colecoes de todos os setores aparecem (as novas tambem), so com
-  // o nome — os produtos ficam pra pagina da colecao.
-  const groups = sectors.filter((s) => s.collections.length > 0);
+  // Só as coleções que têm produto (some quando fica vazia e volta quando ganhar
+  // produto), só com o nome — os produtos ficam pra página da coleção.
+  const filled = useMemo(() => {
+    const set = new Set<string>();
+    for (const p of menuProducts) { const c = collectionForProduct(p as any); if (c) set.add(c.slug); }
+    return set;
+  }, [menuProducts, collectionForProduct]);
+  const groups = sectors
+    .map((s) => ({ ...s, collections: loaded ? s.collections.filter((c) => filled.has(c.slug)) : s.collections }))
+    .filter((s) => s.collections.length > 0);
 
   return (
     <div className="mx-auto max-w-7xl space-y-2 px-8 py-6">

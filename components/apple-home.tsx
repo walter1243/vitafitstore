@@ -158,7 +158,7 @@ function HeroSlides({ slides, autoplay, onShop }: { slides: Slide[]; autoplay: n
 
   if (!n) return <div className="aspect-[16/9] rounded-[24px] bg-[#f5f5f7] sm:aspect-[21/8]" aria-hidden="true" />;
 
-  const ctaCls = 'mt-4 inline-flex min-h-11 cursor-pointer items-center gap-2 whitespace-nowrap rounded-full pl-4 pr-1.5 text-[12px] font-bold uppercase tracking-wide text-white transition-opacity hover:opacity-90 sm:mt-6 sm:text-[15px]';
+  const ctaCls = 'mt-3 inline-flex min-h-11 cursor-pointer items-center gap-2 whitespace-nowrap rounded-full pl-4 pr-1.5 text-[12px] font-bold uppercase tracking-wide text-white transition-opacity hover:opacity-90 sm:mt-6 sm:text-[15px]';
   const ctaInner = (text: string) => (
     <>
       {text}
@@ -186,16 +186,16 @@ function HeroSlides({ slides, autoplay, onShop }: { slides: Slide[]; autoplay: n
           <div
             key={s.key}
             data-edit-item={s.key}
-            className="relative flex min-h-[210px] w-full shrink-0 items-center sm:min-h-[340px]"
+            className="relative flex min-h-[160px] w-full shrink-0 items-center sm:min-h-[320px]"
             style={{ background: `linear-gradient(120deg,${s.a} 0%,${s.b} 100%)` }}
             aria-hidden={k !== i}
             role="group"
             aria-label={`${k + 1} de ${n}`}
           >
-            <div className="relative z-10 w-[60%] pb-10 pl-5 pr-2 pt-6 sm:w-1/2 sm:py-12 sm:pl-12">
+            <div className="relative z-10 w-[60%] pb-8 pl-4 pr-2 pt-4 sm:w-1/2 sm:py-12 sm:pl-12">
               {s.eyebrow && <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#7cc4ff] sm:text-[13px]">{s.eyebrow}</p>}
-              <h1 className="mt-1.5 text-[24px] font-extrabold uppercase leading-[1.05] text-white sm:text-[46px]">{s.title}</h1>
-              {s.tagline && <p className="mt-2 line-clamp-2 text-[13px] leading-snug text-white/85 sm:text-[18px]">{s.tagline}</p>}
+              <h1 className="mt-1 text-[21px] font-extrabold uppercase leading-[1.05] text-white sm:text-[46px]">{s.title}</h1>
+              {s.tagline && <p className="mt-1.5 line-clamp-1 text-[12px] leading-snug text-white/85 sm:line-clamp-2 sm:text-[18px]">{s.tagline}</p>}
               {s.cta && (s.href ? (
                 <Link href={s.href} tabIndex={k === i ? 0 : -1} className={ctaCls} style={{ background: BLUE }}>{ctaInner(s.cta)}</Link>
               ) : (
@@ -213,7 +213,7 @@ function HeroSlides({ slides, autoplay, onShop }: { slides: Slide[]; autoplay: n
         ))}
       </div>
       {n > 1 && (
-        <div className="absolute bottom-3 left-5 z-20 flex gap-1.5 sm:bottom-5 sm:left-12">
+        <div className="absolute bottom-1 left-4 z-20 flex gap-1.5 sm:bottom-5 sm:left-12">
           {slides.map((s, k) => (
             <button
               key={s.key}
@@ -392,7 +392,7 @@ export function AppleHome({ content, editing = false, initialProducts }: { conte
           : editing && <Off k="banner" label="Banner principal desligado" />}
 
         {/* Setores em cards: tocar filtra os produtos logo abaixo */}
-        {C.enabled && chips.length > 0 && (
+        {C.visible && chips.length > 0 && (
           <nav data-edit="categorias" data-edit-label="Stories / categorias" aria-label="Categorías" className="mt-6 sm:mt-8">
             <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:justify-center sm:gap-3 sm:px-0 [&::-webkit-scrollbar]:hidden">
               {chips.map((c) => {
@@ -420,7 +420,7 @@ export function AppleHome({ content, editing = false, initialProducts }: { conte
             </ul>
           </nav>
         )}
-        {editing && !C.enabled && <Off k="categorias" label="Stories / categorias desligadas" />}
+        {editing && !C.visible && <Off k="categorias" label="Stories ocultos (teste: produtos mais à vista)" />}
 
         {/* Faixa de confiança: o que um cliente novo precisa saber antes de comprar */}
         {T.enabled && T.items.length > 0 ? (
@@ -440,7 +440,7 @@ export function AppleHome({ content, editing = false, initialProducts }: { conte
           </ul>
         ) : editing && <Off k="confianca" label="Faixa de confiança desligada" />}
 
-        <div id="productos" ref={listRef} className="scroll-mt-28 pt-6 sm:pt-8">
+        <div id="productos" ref={listRef} className="scroll-mt-28 pt-5 sm:pt-8">
           {filtered ? (
             <section aria-live="polite">
               <SectionHead title={filtered.title} tagline={filtered.tagline} href={filtered.href || undefined} viewAll={S.viewAllText} />

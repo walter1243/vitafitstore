@@ -46,7 +46,7 @@ export function CollectionSpotlight({ slug, count, products, hideProducts, prima
 }) {
   const ref = useRef<HTMLElement>(null);
   const { getCollection, getSector, collectionForProduct } = useSectors();
-  const { products: allProducts } = useStoreProducts();
+  const { products: allProducts, loaded } = useStoreProducts();
   const collection = getCollection(slug);
   const [ratio, setRatio] = useState('4 / 3');
 
@@ -72,6 +72,8 @@ export function CollectionSpotlight({ slug, count, products, hideProducts, prima
   // Setor com visual Casa / Hogar: layout editorial em vez do destaque infantil.
   // Sem lista vinda da home (pagina do setor/colecao): pega os produtos dela.
   const list = products ?? allProducts.filter((p) => collectionForProduct(p)?.slug === slug).map(toStoreProduct);
+  // Coleção sem produto não aparece (volta sozinha quando ganhar um produto).
+  if (!hideProducts && list.length === 0 && (products || loaded)) return null;
   // Setor com visual proprio (Casa, Chaveiros, Pet): layout do tema.
   const theme = themeFor(getSector(collection.sectorId)?.style);
   if (theme) {
@@ -85,7 +87,7 @@ export function CollectionSpotlight({ slug, count, products, hideProducts, prima
   // Infantil com cara de loja: cabecalho compacto e os produtos logo embaixo.
   // As brincadeiras (montar, pintar, acender) ficam na pagina de cada produto.
   return (
-    <section ref={ref} className={`px-4 sm:px-6 lg:px-8 ${first ? 'pb-10 pt-44 sm:pt-36' : 'py-12 sm:py-16'}`} style={{ background: bg ?? accent.tint }}>
+    <section ref={ref} className={`px-4 sm:px-6 lg:px-8 ${first ? 'pb-10 pt-[calc(var(--hdr-h,176px)+20px)]' : 'py-12 sm:py-16'}`} style={{ background: bg ?? accent.tint }}>
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-wrap items-end justify-between gap-4 pb-6" style={{ borderBottom: `2px solid ${darkBg ? '#ffffff33' : '#1E1B4B1a'}` }}>
           <div>

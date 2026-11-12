@@ -365,7 +365,7 @@ export function CategoriasForm({ data, onChange, sectors, focus }: { data: Categ
   const setRow = (i: number, p: Partial<CategoriasContent['items'][number]>) => set({ items: rows.map((r, k) => (k === i ? { ...r, ...p } : r)) });
   return (
     <div>
-      <Toggle label="Mostrar as categorias (bolinhas) embaixo do banner" checked={data.enabled} onChange={(v) => set({ enabled: v })} />
+      <Toggle label="Mostrar os stories (bolinhas) embaixo do banner" hint="Desligados por padrão para deixar os produtos mais à vista. Ligue para testar se convertem mais." checked={data.visible} onChange={(v) => set({ visible: v })} />
       <Group title="Primeira bolinha">
         <Toggle label="Mostrar a bolinha &quot;Todo&quot;" checked={data.showAll} onChange={(v) => set({ showAll: v })} />
         {data.showAll && <Txt label="Nome" value={data.allLabel} onChange={(v) => set({ allLabel: v })} placeholder="Todo" />}
