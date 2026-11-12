@@ -367,9 +367,10 @@ export function AppleHome({ content, editing = false, initialProducts }: { conte
   return (
     <div style={FONT} className="bg-[#f5f5f7] antialiased [&_h1]:[font-family:inherit] [&_h2]:[font-family:inherit] [&_h3]:[font-family:inherit]">
       <div className="mx-auto max-w-6xl px-4 pb-16 pt-[calc(var(--hdr-h,178px)+12px)] sm:px-6 md:pt-[calc(var(--hdr-h,124px)+20px)]">
-        {B.enabled
+        {/* Banner (gancho de compra) só na página inicial: some quando o cliente escolhe uma categoria */}
+        {!filtered && (B.enabled
           ? <div data-edit="banner" data-edit-label="Banner principal"><HeroSlides slides={slides} autoplay={B.autoplay} onShop={choose} /></div>
-          : editing && <Off k="banner" label="Banner principal desligado" />}
+          : editing && <Off k="banner" label="Banner principal desligado" />)}
 
         {/* Categorias (bolinhas): embaixo do banner ou no meio da página */}
         {catPos === 'top' && storiesNav}
@@ -396,6 +397,8 @@ export function AppleHome({ content, editing = false, initialProducts }: { conte
         <div id="productos" ref={listRef} className="scroll-mt-28 pt-5 sm:pt-8">
           {filtered ? (
             <section aria-live="polite">
+              {/* categoria escolhida: as bolinhas ficam no topo para trocar ou voltar a "Todo" */}
+              {catPos === 'middle' && storiesNav && <div className="-mt-2 mb-6 sm:mb-8">{storiesNav}</div>}
               <SectionHead title={filtered.title} tagline={filtered.tagline} href={filtered.href || undefined} viewAll={S.viewAllText} />
               <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
                 {filtered.products.map((p) => <li key={p.id}><StoreProductCard product={p} /></li>)}
