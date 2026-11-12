@@ -73,6 +73,11 @@ export function ensureZonesTable() {
       await sql`ALTER TABLE shipping_zones ADD COLUMN IF NOT EXISTS embed_on BOOLEAN NOT NULL DEFAULT TRUE`;
       await sql`UPDATE shipping_zones SET embed_on = FALSE WHERE code = 'ES'`;
     }
+    // Uma vez só (nov/2026): todos os países voltam ao preço real, sem frete embutido.
+    // As % ficam guardadas; para testar de novo, marque "Embutir no preço" no admin.
+    await sql`CREATE TABLE IF NOT EXISTS app_migrations (name TEXT PRIMARY KEY, done_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`;
+    const done = await sql`INSERT INTO app_migrations (name) VALUES ('embed_off_all_2026_11') ON CONFLICT (name) DO NOTHING RETURNING name`;
+    if ((done as any[]).length > 0) await sql`UPDATE shipping_zones SET embed_on = FALSE`;
     const rows = await sql`SELECT COUNT(*)::int AS n FROM shipping_zones`;
     if (Number((rows as any[])[0]?.n ?? 0) === 0) {
       let i = 0;
