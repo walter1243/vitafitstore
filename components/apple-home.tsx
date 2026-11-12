@@ -336,25 +336,25 @@ export function AppleHome({ content, editing = false, initialProducts }: { conte
   const catPos = C.position === 'top' ? 'top' : 'middle';
   const storiesNav = C.visible && chips.length > 0 ? (
           <nav data-edit="categorias" data-edit-label="Stories / categorias" aria-label="Categorías" className={catPos === 'top' ? 'mt-6 sm:mt-8' : 'my-8 sm:my-12'}>
-              <ul className="grid grid-cols-4 gap-x-1 gap-y-2 sm:flex sm:flex-wrap sm:justify-center sm:gap-3">
+              <ul className="grid grid-cols-4 gap-x-2 gap-y-3 sm:flex sm:justify-between sm:gap-4">
                 {chips.map((c) => {
                   const on = active === c.key;
                   return (
-                    <li key={c.key} className="min-w-0">
+                    <li key={c.key} className="min-w-0 sm:flex-1">
                       <button
                         type="button"
                         onClick={() => choose(c.key)}
                         data-edit-item={c.key}
                         aria-pressed={on}
-                        className="flex w-full cursor-pointer flex-col items-center gap-1.5 rounded-2xl py-1.5 transition-colors sm:w-[96px]"
+                        className="flex w-full cursor-pointer flex-col items-center gap-1.5 rounded-2xl py-1.5 transition-colors sm:gap-2.5"
                       >
                         <span
-                          className={`relative flex h-[60px] w-[60px] items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] ring-2 transition-all duration-200 sm:h-[72px] sm:w-[72px] ${on ? '' : 'ring-transparent hover:ring-black/10'}`}
+                          className={`relative flex aspect-square w-[68px] items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] ring-2 transition-all duration-200 sm:w-full sm:max-w-[132px] sm:ring-[3px] ${on ? '' : 'ring-transparent hover:ring-black/10'}`}
                           style={on ? { ['--tw-ring-color' as string]: BLUE } : undefined}
                         >
-                          {c.img ? <Image src={c.img} alt="" fill sizes="72px" className="object-cover" /> : <LayoutGrid className="h-6 w-6" style={{ color: on ? BLUE : INK }} aria-hidden="true" />}
+                          {c.img ? <Image src={c.img} alt="" fill sizes="(min-width: 640px) 132px, 68px" className="object-cover" /> : <LayoutGrid className="h-7 w-7 sm:h-9 sm:w-9" style={{ color: on ? BLUE : INK }} aria-hidden="true" />}
                         </span>
-                        <span className={`line-clamp-1 text-[12px] sm:text-[13px] ${on ? 'font-bold' : 'font-medium'}`} style={{ color: on ? BLUE : INK }}>{c.label}</span>
+                        <span className={`line-clamp-1 text-[12px] sm:text-[15px] ${on ? 'font-bold' : 'font-medium'}`} style={{ color: on ? BLUE : INK }}>{c.label}</span>
                       </button>
                     </li>
                   );
