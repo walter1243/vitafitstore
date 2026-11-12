@@ -1,9 +1,8 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { type Product } from '@/lib/products';
-import { ThemedProductCard } from '@/components/themes/themed-product-card';
+import { StoreProductCard } from '@/components/store-product-card';
 import { type SectorTheme } from '@/components/themes/sector-themes';
-import { KidsProductCard } from './kids-product-card';
 import { type Accent } from './palette';
 import { useProductLayout } from '@/components/product-layout';
 
@@ -65,7 +64,7 @@ export function ProductCarousel({ products, accent, theme }: { products: Product
       <ul className="products-grid">
         {products.map((p) => (
           <li key={p.id} className="min-w-0">
-            {theme ? <ThemedProductCard product={p} theme={theme} /> : <KidsProductCard product={p} accent={accent} />}
+            <StoreProductCard product={p} />
           </li>
         ))}
       </ul>
@@ -91,8 +90,8 @@ export function ProductCarousel({ products, accent, theme }: { products: Product
         {/* w-max + mx-auto: centraliza quando cabe, rola quando nao cabe. */}
         <ul className="mx-auto flex w-max gap-4 sm:gap-6">
           {products.map((p) => (
-            <li key={p.id} className={`shrink-0 snap-start ${hogar ? 'w-[250px] sm:w-[310px]' : 'w-[240px] sm:w-[300px]'}`}>
-              {theme ? <ThemedProductCard product={p} theme={theme} /> : <KidsProductCard product={p} accent={accent} />}
+            <li key={p.id} className="w-[44vw] max-w-[240px] shrink-0 snap-start sm:w-[240px]">
+              <StoreProductCard product={p} />
             </li>
           ))}
         </ul>

@@ -1,14 +1,11 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
-import { Home, Printer } from 'lucide-react';
+import { Printer } from 'lucide-react';
 import { softOf } from '@/lib/sectors-shared';
-import { iconFor } from './collection-play';
 import { useSectors } from './sectors-context';
 import { toStoreProduct } from '@/lib/store-product';
-import { KidsProductCard } from './kids-product-card';
 import { accentFor } from './palette';
-import { ThemedProductCard } from '@/components/themes/themed-product-card';
+import { StoreProductCard } from '@/components/store-product-card';
 import { themeFor } from '@/components/themes/sector-themes';
 import { NavidadSnow } from '@/components/themes/navidad-decor';
 import { useStoreProducts } from './use-store-products';
@@ -65,46 +62,18 @@ export function CollectionCatalog({ slug }: { slug: string }) {
   // Outras colecoes do MESMO setor pra continuar navegando.
   const sector = getSector(collection.sectorId);
   const sectorTheme = themeFor(sector?.style);
-  const others = (sector?.collections ?? []).filter((c) => c.slug !== slug && c.enabled);
   const soft = softOf(collection);
-  const chip = (active: boolean) =>
-    `min-h-10 shrink-0 cursor-pointer whitespace-nowrap rounded-full px-4 text-sm font-bold transition-colors duration-200 sm:min-h-11 sm:px-5 sm:text-base ${
-      active ? 'bg-[var(--k-ink)] text-white' : 'bg-[#F2F4FA] text-[var(--k-ink)] hover:bg-[#E6E9F3]'
-    }`;
 
   const navidad = sectorTheme?.key === 'navidad';
   return (
     <div className={navidad ? 'kids-navidad relative min-h-[560px] overflow-hidden' : ''} style={navidad ? { background: sectorTheme!.bgAlt } : undefined}>
     {navidad && <NavidadSnow />}
-    <div className="relative mx-auto max-w-7xl px-4 pb-20 pt-10 sm:px-6 lg:px-8">
+    <div className="relative mx-auto max-w-6xl px-4 pb-20 pt-5 sm:px-6 sm:pt-8">
       {/* Topo: atalhos pras outras colecoes do mundo (desliza no celular). */}
-      {(others.length > 0 || sector) && (
-        <nav aria-label="Otras colecciones" className="swipe-row -mx-1 mb-4 px-1 py-1">
-          <Link
-            href={sector ? `/sector/${sector.slug}` : '/#productos'}
-            className="inline-flex min-h-10 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#F2F4FA] px-4 text-sm font-bold text-[var(--k-ink)] transition-colors hover:bg-[#E6E9F3]"
-          >
-            <Home className="h-4 w-4" aria-hidden="true" /> {sector ? `Todo ${sector.name.toLowerCase()}` : 'Colecciones'}
-          </Link>
-          {others.map((c) => {
-            const Icon = iconFor(c.interactive);
-            return (
-              <Link
-                key={c.slug}
-                href={`/coleccion/${c.slug}`}
-                className="inline-flex min-h-10 items-center gap-1.5 whitespace-nowrap rounded-full px-4 text-sm font-bold text-[var(--k-ink)] transition-opacity hover:opacity-80"
-                style={{ background: softOf(c) }}
-              >
-                <Icon className="h-4 w-4" aria-hidden="true" /> {c.name}
-              </Link>
-            );
-          })}
-        </nav>
-      )}
 
       {/* Um seletor de categoria (sem chips nem "ordenar por"). */}
       <div className="mb-6 flex items-center justify-between gap-3">
-        <p className="text-base font-semibold text-[var(--k-muted)]">
+        <p className="text-[14px] font-medium text-[#6e6e73]">
           {loaded ? `${visible.length} ${visible.length === 1 ? 'producto' : 'productos'}` : 'Cargando…'}
         </p>
         {groups.length > 1 && (
@@ -125,14 +94,7 @@ export function CollectionCatalog({ slug }: { slug: string }) {
 
       {visible.length > 0 ? (
         <div className={productListClass(layout)}>
-          {visible.map((p) => (
-            sectorTheme ? <ThemedProductCard key={p.id} product={p} theme={sectorTheme} /> : <KidsProductCard
-              key={p.id}
-              product={p}
-              accent={accentFor(collection)}
-              tag={groups.length > 1 && group === 'todo' ? p.categoryLabel : undefined}
-            />
-          ))}
+          {visible.map((p) => <StoreProductCard key={p.id} product={p} />)}
         </div>
       ) : loaded ? (
         <div className="rounded-[32px] px-6 py-14 text-center" style={{ background: soft }}>

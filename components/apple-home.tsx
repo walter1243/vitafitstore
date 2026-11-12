@@ -2,15 +2,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Check, Gift, LayoutGrid, MessageCircle, PenLine, RotateCcw, ShieldCheck, ShoppingCart, SlidersHorizontal, Truck, Wrench } from 'lucide-react';
+import { ArrowRight, Gift, LayoutGrid, MessageCircle, RotateCcw, ShieldCheck, Truck, Wrench } from 'lucide-react';
 import { type Product } from '@/lib/products';
 import { toStoreProduct } from '@/lib/store-product';
-import { useCart } from '@/lib/cart-context';
-import { cardPrice } from '@/lib/personalize';
 import { useSectors } from '@/components/kids/sectors-context';
 import { useStoreProducts } from '@/components/kids/use-store-products';
 import { GO_HOME_EVENT } from '@/components/mobile-tab-bar';
 import { Tr, UI } from '@/components/language-switcher';
+import { StoreProductCard } from '@/components/store-product-card';
 import { assignLayoutVariant, setAbActive, type LayoutVariant } from '@/lib/ab-test';
 import { DEFAULT_BANNER, DEFAULT_CATEGORIAS, DEFAULT_CONFIANCA, DEFAULT_PROMO, DEFAULT_SECOES, SLIDE_COLORS, type SiteContent, type TrustIcon } from '@/lib/site-content-defaults';
 
@@ -24,79 +23,6 @@ const INK = '#1d1d1f';
 const MUTED = '#6e6e73';
 const BLUE = '#0071e3';
 type Block = { key: string; title: string; tagline: string; href: string; products: Product[] };
-
-function badgeOf(p: Product, off: number, sub: string) {
-  if (off > 0) return { text: `-${off}%`, bg: '#d70015' };
-  if (sub) return { text: sub.toUpperCase(), bg: '#1d8a3a' };
-  if (p.personalize?.enabled) return { text: 'PERSONALIZABLE', bg: '#6e3cbc' };
-  return null;
-}
-
-function ProductCard({ product }: { product: Product }) {
-  const { addItem } = useCart();
-  const [added, setAdded] = useState(false);
-  const cp = cardPrice(product.price, product.personalize, product.sizes);
-  const href = `/producto/${product.id}-${product.slug}`;
-  // Com cor/tamanho/nome a escolha e na pagina do produto.
-  const personal = Boolean(product.personalize?.enabled);
-  const needsChoice = Boolean(personal || product.colorOptions?.length || product.sizes?.length);
-  const img = product.mainImage ?? product.image;
-  const badge = badgeOf(product, cp.off, cp.sub);
-
-  function add(e: React.MouseEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    addItem(product);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1800);
-  }
-
-  return (
-    <Link
-      href={href}
-      data-edit="produto"
-      data-edit-item={String(product.id)}
-      data-edit-label={`Produto: ${product.name}`}
-      className="group flex h-full flex-col rounded-[20px] border border-black/[0.06] bg-white p-2.5 shadow-[0_2px_10px_rgba(0,0,0,0.04)] transition-shadow duration-200 hover:shadow-[0_12px_32px_rgba(0,0,0,0.10)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 sm:p-3"
-      style={{ outlineColor: BLUE }}
-    >
-      <div className="relative aspect-square overflow-hidden rounded-[14px] bg-[#f5f5f7]">
-        {img && <Image src={img} alt={product.name} fill sizes="(min-width: 1024px) 260px, (min-width: 640px) 33vw, 50vw" className="object-cover transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none" />}
-        {badge && (
-          <span className="absolute left-2 top-2 rounded-md px-2 py-0.5 text-[10px] font-bold tracking-wide text-white" style={{ background: badge.bg }}>
-            {badge.text}
-          </span>
-        )}
-      </div>
-      <div className="flex flex-1 flex-col px-1 pt-3">
-        <h3 className="line-clamp-2 text-[14px] font-medium leading-snug sm:text-[15px]" style={{ color: INK }}>{product.name}</h3>
-        <div className="mt-auto flex items-end justify-between gap-2 pt-2">
-          <p className="whitespace-nowrap text-[18px] font-bold leading-none sm:text-[20px]" style={{ color: INK }}>{cp.main}</p>
-          {needsChoice ? (
-            <span
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white"
-              style={{ background: BLUE }}
-              aria-label={personal ? 'Personalizar' : 'Elegir opciones'}
-              title={personal ? 'Personalizar' : 'Elegir opciones'}
-            >
-              {personal ? <PenLine className="h-[18px] w-[18px]" aria-hidden="true" /> : <SlidersHorizontal className="h-[18px] w-[18px]" aria-hidden="true" />}
-            </span>
-          ) : (
-            <button
-              type="button"
-              onClick={add}
-              className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-white transition-colors"
-              style={{ background: added ? '#1d8a3a' : BLUE }}
-              aria-label={`Añadir ${product.name} al carrito`}
-            >
-              {added ? <Check className="h-5 w-5" aria-hidden="true" /> : <ShoppingCart className="h-[18px] w-[18px]" aria-hidden="true" />}
-            </button>
-          )}
-        </div>
-      </div>
-    </Link>
-  );
-}
 
 function SectionHead({ title, tagline, href, viewAll = 'Ver todo' }: { title: string; tagline?: string; href?: string; viewAll?: string }) {
   return (
@@ -119,7 +45,7 @@ function Carousel({ products }: { products: Product[] }) {
     <ul className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 pb-3 [scrollbar-width:none] sm:-mx-6 sm:scroll-px-6 sm:gap-4 sm:px-6 [&::-webkit-scrollbar]:hidden">
       {products.map((p) => (
         <li key={p.id} className="w-[44vw] max-w-[230px] shrink-0 snap-start sm:w-[230px]">
-          <ProductCard product={p} />
+          <StoreProductCard product={p} />
         </li>
       ))}
     </ul>
@@ -445,7 +371,7 @@ export function AppleHome({ content, editing = false, initialProducts }: { conte
             <section aria-live="polite">
               <SectionHead title={filtered.title} tagline={filtered.tagline} href={filtered.href || undefined} viewAll={S.viewAllText} />
               <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
-                {filtered.products.map((p) => <li key={p.id}><ProductCard product={p} /></li>)}
+                {filtered.products.map((p) => <li key={p.id}><StoreProductCard product={p} /></li>)}
               </ul>
             </section>
           ) : (
@@ -455,7 +381,7 @@ export function AppleHome({ content, editing = false, initialProducts }: { conte
                   <SectionHead title={b.title} tagline={b.tagline} href={b.href || undefined} viewAll={S.viewAllText} />
                   {layout === 'grid' ? (
                     <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
-                      {b.products.map((p) => <li key={p.id}><ProductCard product={p} /></li>)}
+                      {b.products.map((p) => <li key={p.id}><StoreProductCard product={p} /></li>)}
                     </ul>
                   ) : <Carousel products={b.products} />}
                 </section>

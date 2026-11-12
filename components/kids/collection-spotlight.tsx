@@ -87,11 +87,11 @@ export function CollectionSpotlight({ slug, count, products, hideProducts, prima
   // Infantil com cara de loja: cabecalho compacto e os produtos logo embaixo.
   // As brincadeiras (montar, pintar, acender) ficam na pagina de cada produto.
   return (
-    <section ref={ref} className={`px-4 sm:px-6 lg:px-8 ${first ? 'pb-10 pt-[calc(var(--hdr-h,176px)+20px)]' : 'py-12 sm:py-16'}`} style={{ background: bg ?? accent.tint }}>
+    <section ref={ref} className={`px-4 sm:px-6 lg:px-8 ${first ? 'pb-6 pt-[calc(var(--hdr-h,176px)+16px)]' : 'py-10 sm:py-14'}`} style={{ background: bg ?? accent.tint }}>
       <div className="mx-auto max-w-6xl">
-        <div className="flex flex-wrap items-end justify-between gap-4 pb-6" style={{ borderBottom: `2px solid ${darkBg ? '#ffffff33' : '#1E1B4B1a'}` }}>
+        <div className={`flex flex-wrap items-end justify-between gap-4 ${first ? '' : 'pb-6'}`} style={first ? undefined : { borderBottom: `2px solid ${darkBg ? '#ffffff33' : '#1E1B4B1a'}` }}>
           <div>
-            <Heading className={`text-3xl font-bold sm:text-4xl ${darkBg ? 'text-white' : 'text-[#1E1B4B]'}`}>{collection.name}</Heading>
+            <Heading className={`text-[26px] font-bold leading-tight sm:text-4xl ${darkBg ? 'text-white' : 'text-[#1E1B4B]'}`}>{collection.name}</Heading>
             {collection.tagline && <p className={`mt-1 text-base ${darkBg ? 'text-white/85' : 'text-[#3F3D6B]'}`}>{collection.tagline}</p>}
           </div>
           {!first && list.length > 0 && (
