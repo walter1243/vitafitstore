@@ -15,7 +15,7 @@ import { ProductReviews, ReviewSummary } from '@/components/product-reviews'
 import { useSectors } from '@/components/kids/sectors-context'
 import { ProductDemo } from '@/components/kids/product-demo'
 import { NamePersonalizer, NamePreview, type PersonalizerLook } from '@/components/personalize/name-personalizer'
-import { DEFAULT_NAME_COLORS, cleanCustomText, lineTotalFor, minQtyFor, packOf, parsePersonalize, sizeRange, sizedPrice } from '@/lib/personalize'
+import { DEFAULT_NAME_COLORS, nameRequiredFor, cleanCustomText, lineTotalFor, minQtyFor, packOf, parsePersonalize, sizeRange, sizedPrice } from '@/lib/personalize'
 import { ProductShipping } from '@/components/shipping/shipping-options'
 
 export function ProductPageView({ product, entrega }: { product: Product; entrega?: Partial<EntregaContent> }) {
@@ -33,7 +33,8 @@ export function ProductPageView({ product, entrega }: { product: Product; entreg
   const [customName, setCustomName] = useState('')
   const [customColor, setCustomColor] = useState((pcfg.colors[0] ?? DEFAULT_NAME_COLORS[0]).hex)
   const sample = look === 'mascotas' ? 'Toby' : 'Lucía'
-  const personalizeTitle = look === 'mascotas' ? 'Personaliza el nombre de tu mascota' : look === 'llaveros' ? 'Personaliza tu llavero' : 'Personalízalo con un nombre'
+  const nameOptional = !nameRequiredFor(pcfg, look)
+  const personalizeTitle = look === 'mascotas' ? 'Personaliza el nombre de tu mascota' : look === 'llaveros' ? 'Personaliza tu llavero' : nameOptional ? 'Personalízalo con un nombre (opcional)' : 'Personalízalo con un nombre'
   const router = useRouter()
   const pBase = product.personalize?.enabled ? (product.personalize.previewImage || '') : ''
   // Fotos das cores entram na galeria: escolher a cor mostra a foto dela.
@@ -360,6 +361,8 @@ export function ProductPageView({ product, entrega }: { product: Product; entreg
                 onColor={(hex) => { setCustomColor(hex); if (activeIndex !== previewIndex) goToIndex(previewIndex) }}
                 variant={{ color: product.colorOptions?.length ? selectedColor : undefined, size: needsSize ? selectedSize : undefined, note: obsNote }}
                 basePrice={sizedPrice(product.price, product.personalize, selectedSize)}
+                optional={nameOptional}
+                onBuyNow={() => router.push('/checkout')}
                 blocked={needsSize && !selectedSize ? `Elige ${product.productType === 'tamanho' ? 'un tamaño' : 'una talla'} arriba` : obsMissing ? 'Escribe las observaciones' : undefined}
               />
             </div>

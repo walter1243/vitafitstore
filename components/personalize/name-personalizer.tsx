@@ -17,7 +17,7 @@ const LOOK: Record<PersonalizerLook, { ink: string; muted: string; field: string
 // "Ponle su nombre": o cliente escreve e ve o nome no MESMO modelo do
 // produto na hora (o chaveiro balanca, as letras "pulam"), escolhe a
 // quantidade e adiciona. Cada nome vira uma linha no carrinho/pedido.
-export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded, name: nameProp, onName, color: colorProp, onColor, showPreview = true, variant, basePrice, blocked }: {
+export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded, name: nameProp, onName, color: colorProp, onColor, showPreview = true, variant, basePrice, blocked, optional = false, onBuyNow }: {
   product: Product;
   look?: PersonalizerLook;
   compact?: boolean;
@@ -35,6 +35,10 @@ export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded,
   variant?: { color?: string; size?: string; note?: string };
   basePrice?: number;
   blocked?: string;
+  // Nome opcional: dá para comprar sem escrever nada (porta-fotos, decoração…).
+  optional?: boolean;
+  // Mostra também o "Comprar ahora" (adiciona e vai direto ao checkout).
+  onBuyNow?: () => void;
 }) {
   const base = parsePersonalize(product.personalize);
   // Sem cores cadastradas: oferece as cores padrao de filamento.
@@ -69,12 +73,14 @@ export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded,
   // A cada letra, o chaveiro balanca de novo.
   useEffect(() => { setSwing((n) => n + 1); }, [text]);
 
-  function add() {
-    if (!text || blocked) return;
+  const ready = (optional || Boolean(text)) && !blocked;
+  function add(buyNow = false) {
+    if (!ready) return;
     // A cor escolhida vai junto (carrinho, checkout e pedido: "Color: Negro").
     // Produto com cores proprias: a cor e a do produto; a das letras vai na nota.
     const letters = variant?.color && chosen ? `Letras: ${chosen.name}` : '';
-    addItem(product, { text, color: variant?.color || chosen?.name, size: variant?.size, note: [letters, variant?.note, note].filter(Boolean).join(' · ') || undefined }, qty);
+    addItem(product, { text: text || undefined, color: variant?.color || chosen?.name, size: variant?.size, note: [letters, variant?.note, note].filter(Boolean).join(' · ') || undefined }, qty);
+    if (buyNow && onBuyNow) { onBuyNow(); return; }
     setAdded(true);
     onAdded?.();
     setTimeout(() => { setAdded(false); setName(''); setQty(minQty); }, 1600);
@@ -225,18 +231,29 @@ export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded,
           </div>
           <button
             type="button"
-            onClick={add}
-            disabled={!text || Boolean(blocked)}
+            onClick={() => add()}
+            disabled={!ready}
             className="inline-flex min-h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full px-6 text-base font-extrabold transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-50"
             style={{ background: added ? '#15803d' : L.cta, color: L.ctaText }}
-            onMouseEnter={(e) => { if (!added && text) e.currentTarget.style.background = L.ctaHover; }}
+            onMouseEnter={(e) => { if (!added && ready) e.currentTarget.style.background = L.ctaHover; }}
             onMouseLeave={(e) => { if (!added) e.currentTarget.style.background = L.cta; }}
           >
             {added ? <Check className="h-5 w-5" /> : <ShoppingCart className="h-5 w-5" />}
             {added ? '¡Añadido!' : blocked && text ? blocked : `Añadir · ${lineTotalFor(basePrice ?? product.price, base, qty).toFixed(2)}€`}
           </button>
         </div>
-        {!text && <p className="mt-3 text-sm" style={{ color: L.muted }}>Escribe el nombre para poder añadirlo.</p>}
+        {onBuyNow && (
+          <button
+            type="button"
+            onClick={() => add(true)}
+            disabled={!ready}
+            className="mt-3 inline-flex min-h-12 w-full cursor-pointer items-center justify-center rounded-full border-2 px-6 text-base font-extrabold transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-50"
+            style={{ borderColor: L.cta, color: L.cta, background: '#fff' }}
+          >
+            Comprar ahora
+          </button>
+        )}
+        {!text && <p className="mt-3 text-sm" style={{ color: L.muted }}>{optional ? 'El nombre es opcional: déjalo vacío si lo quieres sin nombre.' : 'Escribe el nombre para poder añadirlo.'}</p>}
       </div>
     </div>
   );

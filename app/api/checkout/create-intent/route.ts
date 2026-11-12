@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: `Elige el color de «${nm}».` }, { status: 400 });
       }
       const pers = parsePersonalize(r?.personalize);
-      if (pers.enabled && !it.text) {
+      if (pers.enabled && pers.nameMode === 'required' && !it.text) {
         return NextResponse.json({ error: `Escribe el nombre para «${nm}».` }, { status: 400 });
       }
       if (it.text) it.text = cleanCustomText(it.text, pers.maxLength);

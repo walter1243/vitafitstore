@@ -42,6 +42,8 @@ export type Personalize = {
   packPercent: number;
   // Dados extras pedidos ao cliente (ex: chaveiro NFC): telefone e links.
   askPhone: boolean;
+  // Nome obrigatório? 'auto' = só nos chaveiros e mascotas; nos outros o cliente pode comprar sem nome.
+  nameMode: 'auto' | 'required' | 'optional';
   askLinks: boolean;
   // Observacao livre do cliente (ex: "verde com o nome Max, azul com Toby").
   askNote: boolean;
@@ -88,6 +90,7 @@ export const DEFAULT_PERSONALIZE: Personalize = {
   minQty: 1,
   packPercent: 0,
   askPhone: false,
+  nameMode: 'auto',
   askLinks: false,
   askNote: false,
   noteRequired: false,
@@ -135,6 +138,7 @@ export function parsePersonalize(raw: unknown): Personalize {
     minQty: Math.round(clamp(o.minQty, 1, 100, 1)),
     packPercent: clamp(o.packPercent, 0, 90, 0),
     askPhone: o.askPhone === true,
+    nameMode: o.nameMode === 'required' || o.nameMode === 'optional' ? o.nameMode : 'auto',
     askLinks: o.askLinks === true,
     askNote: o.askNote === true,
     noteRequired: o.noteRequired === true,
@@ -255,4 +259,11 @@ export function cardPrice(price: number, personalizeRaw: unknown, sizes?: string
   if (!pack) return { main: `${price.toFixed(2)}€`, sub: '', off: 0 };
   const full = price * pack.qty;
   return { main: `${pack.price.toFixed(2)}€`, sub: `Pack ${pack.qty} uds`, off: full > pack.price ? Math.round((1 - pack.price / full) * 100) : 0 };
+}
+
+// O cliente precisa escrever o nome para comprar? (chaveiro com nome: sim; porta-fotos: não)
+export function nameRequiredFor(cfg: Personalize, look?: string): boolean {
+  if (cfg.nameMode === 'required') return true;
+  if (cfg.nameMode === 'optional') return false;
+  return look === 'llaveros' || look === 'mascotas';
 }
