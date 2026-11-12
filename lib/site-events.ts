@@ -4,7 +4,7 @@ import { sql } from '@/lib/db';
 // adicionados ao carrinho). Sem cookies: o "visitante" e um hash diario de
 // IP + navegador, que muda todo dia e nao identifica ninguem.
 
-export const EVENT_TYPES = ['page_view', 'product_click', 'add_to_cart', 'payment_start', 'purchase'] as const;
+export const EVENT_TYPES = ['page_view', 'product_click', 'add_to_cart', 'payment_start', 'purchase', 'coupon_view', 'coupon_copy', 'coupon_buy', 'coupon_close'] as const;
 export type EventType = (typeof EVENT_TYPES)[number];
 
 // Cookie gravado quando o admin abre o Dashboard: esse aparelho nunca mais

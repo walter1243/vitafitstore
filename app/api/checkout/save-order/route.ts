@@ -51,6 +51,9 @@ export async function POST(req: NextRequest) {
       await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS geo_city TEXT`;
       await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS geo_lat DOUBLE PRECISION`;
       await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS geo_lng DOUBLE PRECISION`;
+      // Cupom usado (ex.: BIENVENIDOS15) e quanto foi descontado.
+      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS coupon_code TEXT`;
+      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount_amount NUMERIC`;
       const ids = [...new Set(items.map((i) => i.productId))];
       const names = ids.length ? await sql`SELECT id, name FROM products WHERE id = ANY(${ids})` : [];
       const nameById = new Map((names as any[]).map((r) => [Number(r.id), String(r.name)]));
@@ -62,7 +65,7 @@ export async function POST(req: NextRequest) {
           product_id, total_amount, status, stripe_payment_id,
           selected_color, selected_size, items_json, custom_text,
           shipping_method, shipping_service, pickup_point, shipping_cost,
-          geo_city, geo_lat, geo_lng
+          geo_city, geo_lat, geo_lng, coupon_code, discount_amount
         ) VALUES (
           ${meta.customerName  || 'Anônimo'},
           ${meta.customerEmail || null},
@@ -85,7 +88,9 @@ export async function POST(req: NextRequest) {
           ${meta.shipping ? Number(meta.shipping) : null},
           ${meta.geoCity || null},
           ${meta.geoLat ? Number(meta.geoLat) : null},
-          ${meta.geoLng ? Number(meta.geoLng) : null}
+          ${meta.geoLng ? Number(meta.geoLng) : null},
+          ${meta.couponCode || null},
+          ${meta.couponCode && meta.discount ? Number(meta.discount) : null}
         )
       `;
     } catch (dbErr) {

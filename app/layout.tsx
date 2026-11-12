@@ -9,6 +9,7 @@ import { EntryStart } from '@/components/entry-start'
 import { AnalyticsLoader } from '@/components/analytics-loader'
 import { SiteTracker } from '@/components/site-tracker'
 import { TranslateLoader } from '@/components/language-switcher'
+import { CouponPopup } from '@/components/coupon-popup'
 import './globals.css'
 
 const geistSans = Geist({
@@ -124,6 +125,8 @@ export default function RootLayout({
         <CookieConsent />
         <AnalyticsLoader />
         <SiteTracker />
+        {/* Pop-up de boas-vindas com cupom (Admin → Editar loja → Pop-up de cupom) */}
+        <CouponPopup />
         <TranslateLoader />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

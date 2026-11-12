@@ -4,8 +4,9 @@ import { PickupPoints, ShipOptionsList, resetViewerCountry, loadMethod, loadZip,
 import {
   ShieldCheck, Lock, Truck, RotateCcw,
   Package, ChevronRight, ChevronLeft,
-  Loader2, User, MapPin,
+  Loader2, User, MapPin, Tag, X, Check,
 } from 'lucide-react';
+import { clearPendingCoupon, getPendingCoupon, markCouponUsedIfPending, savePendingCoupon } from '@/lib/coupon-client';
 import { useCart } from '@/lib/cart-context';
 import { AddressFinder, type FoundAddress } from '@/components/shipping/address-finder';
 import { packOf, qtyLabel } from '@/lib/personalize';
@@ -229,8 +230,9 @@ const inputCls = [
 
 // ─── Order Summary ────────────────────────────────────────────────────────────
 
-function OrderSummary({ items, totalPrice, shipping, total, shipLabel }: {
+function OrderSummary({ items, totalPrice, shipping, total, shipLabel, discount = 0, couponLabel, couponSlot }: {
   items:any[]; totalPrice:number; shipping:number; total:number; shipLabel?:string;
+  discount?:number; couponLabel?:string; couponSlot?:React.ReactNode;
 }) {
   const { lineTotal, totalItems } = useCart();
   return (
@@ -270,11 +272,18 @@ function OrderSummary({ items, totalPrice, shipping, total, shipLabel }: {
             </div>
           ))}
         </div>
+        {couponSlot}
         <div className="border-t pt-3 space-y-2" style={{ borderColor:'rgba(194,65,12,0.1)' }}>
           <div className="flex justify-between text-xs">
             <span className="text-slate-500">Subtotal</span>
             <span className="text-slate-900">€{totalPrice.toFixed(2)}</span>
           </div>
+          {discount > 0 && (
+            <div className="flex justify-between text-xs font-semibold text-green-700">
+              <span className="flex items-center gap-1"><Tag size={11}/> Descuento{couponLabel ? ` · ${couponLabel}` : ''}</span>
+              <span>−€{discount.toFixed(2)}</span>
+            </div>
+          )}
           <div className="flex justify-between text-xs">
             <span className="text-slate-500">Envío{shipLabel ? ` · ${shipLabel}` : ''}</span>
             {shipping===0
@@ -424,6 +433,7 @@ function PaymentStepInner({
           body: JSON.stringify({ paymentIntentId: result.paymentIntent.id }),
         }).catch(() => {});
         window.dispatchEvent(new Event('kitoys:purchase'));
+        markCouponUsedIfPending();
         clearCart();
         setSuccess(true);
         return;
@@ -610,12 +620,21 @@ function CheckoutFormInner() {
 
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quoteError,   setQuoteError]   = useState('');
-  const [quote, setQuote] = useState<{ subtotal:number; shipping:number; total:number; method?:ShipMethod; options?:ShipQuote|null }|null>(null);
+  const [quote, setQuote] = useState<{ subtotal:number; shipping:number; total:number; discount:number; coupon?:{ code:string; percent:number }|null; method?:ShipMethod; options?:ShipQuote|null }|null>(null);
   // Envio Packlink: ponto de recogida (padrao, mais barato) ou domicilio.
   const [shipMethod, setShipMethod] = useState<ShipMethod>('pickup');
   const [pickupPoint, setPickupPoint] = useState<PickupPoint | null>(null);
   useEffect(() => { setShipMethod(loadMethod()); const z = loadZip(); if (z) setPostal((p) => p || z); }, []);
 
+  // Cupom: vem guardado do pop-up (copiou / "¡Compra ahora!") ou digitado aqui.
+  const [couponCode,  setCouponCode]  = useState('');
+  const [couponInput, setCouponInput] = useState('');
+  const [couponMsg,   setCouponMsg]   = useState('');
+  const [couponOpen,  setCouponOpen]  = useState(false);
+  useEffect(() => {
+    const pending = getPendingCoupon();
+    if (pending) { setCouponCode(pending); setCouponInput(pending); }
+  }, []);
   const [errors,  setErrors]  = useState<Record<string,string>>({});
   const [success, setSuccess] = useState(false);
   const [returnMsg, setReturnMsg] = useState('');
@@ -646,6 +665,7 @@ function CheckoutFormInner() {
         }
       })();
       window.dispatchEvent(new Event('kitoys:purchase'));
+      markCouponUsedIfPending();
       clearCart();
       setSuccess(true);
     } else {
@@ -673,22 +693,37 @@ function CheckoutFormInner() {
         const res = await fetch('/api/checkout/quote', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items: checkoutItems, country, postalCode: postal, shippingMethod: shipMethod }),
+          body: JSON.stringify({ items: checkoutItems, country, postalCode: postal, shippingMethod: shipMethod, couponCode }),
           signal: ctrl.signal,
         });
         const data = await res.json();
         if (!res.ok) { setQuote(null); setQuoteError(data?.error ?? 'No se pudo calcular el checkout.'); return; }
         setQuoteError('');
-        setQuote({ subtotal:Number(data.subtotal??0), shipping:Number(data.shipping??0), total:Number(data.total??0), method:data.shippingMethod, options:data.shippingOptions ?? null });
+        setQuote({ subtotal:Number(data.subtotal??0), shipping:Number(data.shipping??0), total:Number(data.total??0), discount:Number(data.discount??0), coupon:data.coupon ?? null, method:data.shippingMethod, options:data.shippingOptions ?? null });
+        if (couponCode) {
+          if (data.coupon?.code) { savePendingCoupon(data.coupon.code); setCouponMsg(''); }
+          else if (data.couponError) { setCouponMsg(data.couponError); setCouponCode(''); clearPendingCoupon(); }
+        }
       } catch (err:any) {
         if (err?.name==='AbortError') return;
         setQuote(null); setQuoteError('No se pudo calcular el checkout.');
       } finally { setQuoteLoading(false); }
     }, 150);
     return () => { ctrl.abort(); clearTimeout(timer); };
-  }, [country, postal, items, shipMethod]);
+  }, [country, postal, items, shipMethod, couponCode]);
 
   const shipping = quote?.shipping ?? 0;
+  const discount = quote?.discount ?? 0;
+  const appliedCoupon = quote?.coupon ?? null;
+  function applyCoupon() {
+    const code = couponInput.toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+    if (!code) { setCouponMsg('Escribe el código del cupón.'); return; }
+    setCouponMsg('');
+    setCouponCode(code);
+  }
+  function removeCoupon() {
+    setCouponCode(''); setCouponInput(''); setCouponMsg(''); clearPendingCoupon();
+  }
   const total    = quote?.total    ?? totalPrice;
   const subtotal = quote?.subtotal ?? totalPrice;
   const zip5 = postal.replace(/\D/g, '');
@@ -733,9 +768,15 @@ function CheckoutFormInner() {
           city:          city.trim(),
           shippingMethod: activeMethod,
           pickupPoint:    needsPoint ? pickupPoint : null,
+          couponCode:     appliedCoupon?.code ?? '',
         }),
       });
       const data = await res.json();
+      if (!res.ok && data?.couponError) {
+        // ex.: cupom so de 1a compra e este e-mail ja comprou -> tira o cupom
+        setCouponMsg(data.error); setCouponCode(''); clearPendingCoupon();
+        throw new Error(`${data.error} Hemos quitado el cupón: pulsa de nuevo para continuar.`);
+      }
       if (!res.ok) throw new Error(data?.error ?? 'No se pudo iniciar el pago.');
       setClientSecret(data.clientSecret);
       setStep(2);
@@ -903,6 +944,48 @@ function CheckoutFormInner() {
     </div>
   );
 
+  // ── Cupom de desconto (no resumo do pedido) ─────────────────────────────
+  // No passo 2 o valor do pagamento ja foi criado: para trocar o cupom, volta.
+  const couponBox = appliedCoupon ? (
+    <div className="flex items-center gap-2 rounded-2xl border border-green-200 bg-green-50 px-3 py-2.5">
+      <Check size={16} className="shrink-0 text-green-700" aria-hidden />
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-bold text-green-800">{appliedCoupon.code} aplicado</p>
+        <p className="text-[11px] text-green-700">−{appliedCoupon.percent}% en los productos · ahorras €{discount.toFixed(2)}</p>
+      </div>
+      {step === 1 && (
+        <button type="button" onClick={removeCoupon} aria-label="Quitar cupón"
+          className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-green-800 hover:bg-green-100">
+          <X size={16} aria-hidden />
+        </button>
+      )}
+    </div>
+  ) : step === 1 ? (
+    <div>
+      {!couponOpen && !couponMsg ? (
+        <button type="button" onClick={() => setCouponOpen(true)}
+          className="flex min-h-10 cursor-pointer items-center gap-1.5 text-sm font-bold text-[#c2410c] hover:underline">
+          <Tag size={14} aria-hidden /> ¿Tienes un cupón de descuento?
+        </button>
+      ) : (
+        <div className="space-y-1.5">
+          <label htmlFor="coupon" className="block text-xs font-bold text-[#23263f]">Cupón de descuento</label>
+          <div className="flex gap-2">
+            <input id="coupon" className={`${inputCls} uppercase`} placeholder="Escribe tu código" value={couponInput}
+              autoComplete="off" autoCapitalize="characters"
+              onChange={e => setCouponInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); } }} />
+            <button type="button" onClick={applyCoupon} disabled={quoteLoading && !!couponCode}
+              className="shrink-0 cursor-pointer rounded-2xl bg-[#23263f] px-4 text-sm font-bold text-white hover:bg-[#15172a] disabled:opacity-60">
+              {quoteLoading && !!couponCode ? <Loader2 size={16} className="animate-spin" /> : 'Aplicar'}
+            </button>
+          </div>
+          {couponMsg && <p role="alert" className="text-xs font-semibold text-red-600">{couponMsg}</p>}
+        </div>
+      )}
+    </div>
+  ) : null;
+
   // ── Step 2 — nested Elements with clientSecret ───────────────────────────
   const step2 = clientSecret ? (
     <Elements
@@ -948,7 +1031,9 @@ function CheckoutFormInner() {
             {step===1 ? step1 : step2}
           </div>
           <div className="lg:sticky lg:top-8 lg:self-start">
-            <OrderSummary items={items} totalPrice={subtotal} shipping={shipping} total={total} shipLabel={shipLabel} />
+            <OrderSummary items={items} totalPrice={subtotal} shipping={shipping} total={total} shipLabel={shipLabel}
+              discount={discount} couponLabel={appliedCoupon ? `${appliedCoupon.code} (−${appliedCoupon.percent}%)` : ''}
+              couponSlot={couponBox} />
             {quoteLoading && <p className="mt-2 text-center text-xs text-slate-500">Actualizando total...</p>}
           </div>
         </div>

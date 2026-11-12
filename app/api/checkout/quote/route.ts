@@ -4,6 +4,7 @@ import { countrySurcharge, withSurcharge } from '@/lib/country-price';
 import { itemShipping, lineTotalFor, packOf, sizedPrice, unitPriceFor } from '@/lib/personalize';
 import { sql } from '@/lib/db';
 import { resolveShipping } from '@/lib/checkout-pricing';
+import { checkCoupon } from '@/lib/coupons';
 
 type CheckoutItemInput = {
   productId: number;
@@ -80,13 +81,20 @@ export async function POST(req: NextRequest) {
       resolveShipping(subtotal, country, items.map((item: any) => itemShipping(shippingById.get(Number(item.productId)), persById.get(Number(item.productId)), qtyById.get(Number(item.productId)) ?? 0))));
     if (ship.error) return NextResponse.json({ error: ship.error }, { status: 400 });
     const shipping = ship.shipping;
-    const total = subtotal + shipping;
+    // Cupom (so sobre os produtos). Invalido = sem desconto + aviso.
+    const couponCode = String(body?.couponCode ?? '').trim();
+    const coupon = couponCode ? await checkCoupon(couponCode, Number(subtotal.toFixed(2)), body?.email) : null;
+    const discount = coupon?.ok ? coupon.discount : 0;
+    const total = subtotal - discount + shipping;
 
     return NextResponse.json({
       shippingMethod: ship.method,
       shippingOptions: ship.quote ? { home: ship.quote.home, pickup: ship.quote.pickup, free: ship.quote.free } : null,
       subtotal: Number(subtotal.toFixed(2)),
       shipping: Number(shipping.toFixed(2)),
+      discount: Number(discount.toFixed(2)),
+      coupon: coupon?.ok ? { code: coupon.code, percent: coupon.percent } : null,
+      couponError: coupon && !coupon.ok ? coupon.error : null,
       total: Number(total.toFixed(2)),
       currency: 'EUR',
     });

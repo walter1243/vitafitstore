@@ -7,6 +7,7 @@ import { geoFromHeaders } from '@/lib/site-events';
 import Stripe from 'stripe';
 import { sql } from '@/lib/db';
 import { resolveShipping } from '@/lib/checkout-pricing';
+import { checkCoupon } from '@/lib/coupons';
 
 // Colunas JSON (sizes, color_options) podem vir como texto ou ja como array.
 function jsonList(v: unknown): any[] {
@@ -101,7 +102,18 @@ export async function POST(req: NextRequest) {
     if (ship.chosen?.type === 'pickup' && !point?.id) {
       return NextResponse.json({ error: 'Elige el punto de recogida.' }, { status: 400 });
     }
-    const amount = Math.round((subtotal + shipping) * 100);
+    // Cupom conferido de novo aqui, agora com o e-mail (regra "so 1a compra").
+    let discount = 0;
+    let couponCode = '';
+    if (body?.couponCode) {
+      const coupon = await checkCoupon(body.couponCode, subtotal, customerEmail);
+      if (!coupon.ok) {
+        return NextResponse.json({ error: coupon.error, couponError: true }, { status: 400 });
+      }
+      discount = coupon.discount;
+      couponCode = coupon.code;
+    }
+    const amount = Math.round((subtotal - discount + shipping) * 100);
 
     if (!amount || amount <= 0) {
       return NextResponse.json({ error: 'Importe inválido.' }, { status: 400 });
@@ -124,6 +136,8 @@ export async function POST(req: NextRequest) {
         ...packItems(items),
         subtotal:      subtotal.toFixed(2),
         shipping:      shipping.toFixed(2),
+        couponCode,
+        discount:      discount.toFixed(2),
         geoCity:       geo.city ?? '',
         geoLat:        geo.lat != null ? String(geo.lat) : '',
         geoLng:        geo.lng != null ? String(geo.lng) : '',
@@ -139,6 +153,7 @@ export async function POST(req: NextRequest) {
       amount,
       subtotal,
       shipping,
+      discount,
     });
   } catch (err: any) {
     console.error('[create-intent]', err);

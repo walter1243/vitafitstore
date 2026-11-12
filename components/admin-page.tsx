@@ -9,6 +9,7 @@ import { AdminWorlds } from '@/components/admin-worlds';
 import { AdminNfc } from '@/components/admin-nfc';
 import SignageCad from '@/components/signage-cad';
 import { ShippingZonesSection } from '@/components/admin-shipping-zones';
+import AdminCouponPopup from '@/components/admin-coupon-popup';
 import { CategoryCollections, NoteFields, ParcelFields, PersonalizeEditor, ProductPlacement, SaleModeFields } from '@/components/admin-product-extras';
 import { TrackingSection, needsTracking, isNewAlert } from '@/components/admin-tracking';
 import { AnalyticsPanel } from '@/components/admin-analytics';
@@ -4814,6 +4815,12 @@ function SettingsSection({
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Pop-up de boas-vindas com cupom: mais largo que a coluna, para as
+          imagens do computador e do celular ficarem lado a lado. */}
+      <div className="max-w-5xl!">
+        <AdminCouponPopup />
       </div>
 
       {/* Modelo antigo: não aparece mais na home atual. Fica recolhido (e montado,

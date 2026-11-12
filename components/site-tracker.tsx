@@ -37,7 +37,7 @@ function visitSource(): string {
 // Estatisticas proprias da loja (Admin → Dashboard): visitas, cliques em
 // produtos e "adicionar ao carrinho". Nao usa cookies nem guarda nada no
 // aparelho — ver app/api/track/route.ts.
-function send(data: { type: string; path: string; productId?: number; meta?: string }) {
+export function send(data: { type: string; path: string; productId?: number; meta?: string }) {
   try {
     // Quem recusou no aviso de cookies conta como visita, mas sem localizacao.
     const body = JSON.stringify({ ...data, noGeo: getCookieConsent() === 'rejected', variant: currentVariant(), source: visitSource() })
