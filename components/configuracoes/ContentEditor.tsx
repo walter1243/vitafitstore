@@ -17,7 +17,7 @@ export const SECTION_META: Record<EditableKey, { label: string; desc: string; ic
   topbar: { label: 'Faixa do topo', desc: 'A linha fina acima do cabeçalho ("Envío gratis…").', icon: Megaphone },
   cabecalho: { label: 'Cabeçalho e logo', desc: 'Logo, tamanho, nome da loja, cor, texto da busca e do menu.', icon: Store },
   banner: { label: 'Banner principal', desc: 'Os slides grandes do topo: texto, botão, foto e cores.', icon: Images },
-  categorias: { label: 'Stories / categorias', desc: 'As bolinhas com foto embaixo do banner: ordem, nome, foto.', icon: CircleDot },
+  categorias: { label: 'Categorias (filtro)', desc: 'As bolinhas embaixo do banner que filtram os produtos: ordem, nome, foto, mostrar ou não.', icon: CircleDot },
   confianca: { label: 'Faixa de confiança', desc: 'Os 4 quadrinhos embaixo dos stories: feito na Espanha, Bizum, envio, devolução.', icon: ShieldCheck },
   entrega: { label: 'Prazo de entrega', desc: 'As datas "Recíbelo entre…" embaixo do preço de cada produto.', icon: CalendarClock },
   secoes: { label: 'Seções de produtos', desc: 'Ordem, títulos e frases de cada seção (Infantil, Hogar, Navidad…).', icon: Rows3 },
@@ -238,6 +238,15 @@ export function ContentEditor() {
               <p className="mb-3 rounded-lg bg-white/[0.04] px-3 py-2 text-[12px] text-white/55">
                 Passe o mouse na loja ao lado: cada parte fica marcada. <b className="text-white/80">Clique</b> para editar, ou escolha aqui:
               </p>
+              {/* Atalho em destaque: produtos que passam no banner (mais vendidos) */}
+              <button type="button" onClick={() => { setSelected('banner'); setFocusItem(undefined); }}
+                className="mb-3 flex w-full cursor-pointer items-start gap-3 rounded-xl border-2 border-green-500/60 bg-green-500/10 p-3 text-left transition-colors hover:bg-green-500/15">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-green-500/20"><Images size={16} className="text-green-300" /></span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold text-white">Produtos do banner (mais vendidos)</span>
+                  <span className="block text-[11px] text-white/60">Escolha quais produtos passam no topo da home e a ordem.</span>
+                </span>
+              </button>
               {SECTION_ORDER.map((k) => {
                 const m = SECTION_META[k];
                 const Icon = m.icon;

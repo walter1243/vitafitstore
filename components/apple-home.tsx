@@ -338,17 +338,17 @@ export function AppleHome({ content, editing = false, initialProducts }: { conte
         {/* Setores em cards: tocar filtra os produtos logo abaixo */}
         {C.visible && chips.length > 0 && (
           <nav data-edit="categorias" data-edit-label="Stories / categorias" aria-label="Categorías" className="mt-6 sm:mt-8">
-            <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:justify-center sm:gap-3 sm:px-0 [&::-webkit-scrollbar]:hidden">
+            <ul className="grid grid-cols-4 gap-x-1 gap-y-2 sm:flex sm:flex-wrap sm:justify-center sm:gap-3">
               {chips.map((c) => {
                 const on = active === c.key;
                 return (
-                  <li key={c.key} className="shrink-0">
+                  <li key={c.key} className="min-w-0">
                     <button
                       type="button"
                       onClick={() => choose(c.key)}
                       data-edit-item={c.key}
                       aria-pressed={on}
-                      className="flex w-[78px] cursor-pointer flex-col items-center gap-1.5 rounded-2xl py-1.5 transition-colors sm:w-[96px]"
+                      className="flex w-full cursor-pointer flex-col items-center gap-1.5 rounded-2xl py-1.5 transition-colors sm:w-[96px]"
                     >
                       <span
                         className={`relative flex h-[60px] w-[60px] items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] ring-2 transition-all duration-200 sm:h-[72px] sm:w-[72px] ${on ? '' : 'ring-transparent hover:ring-black/10'}`}
@@ -364,7 +364,7 @@ export function AppleHome({ content, editing = false, initialProducts }: { conte
             </ul>
           </nav>
         )}
-        {editing && !C.visible && <Off k="categorias" label="Stories ocultos (teste: produtos mais à vista)" />}
+        {editing && !C.visible && <Off k="categorias" label="Categorias desligadas" />}
 
         {/* Faixa de confiança: o que um cliente novo precisa saber antes de comprar */}
         {T.enabled && T.items.length > 0 ? (

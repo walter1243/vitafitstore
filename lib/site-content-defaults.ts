@@ -352,7 +352,7 @@ export type HomeChip = { sector: string; label: string; image: string; hidden: b
 
 export type CategoriasContent = {
   enabled: boolean;          // (antigo — não usado mais)
-  visible: boolean;          // mostrar os stories na home (desligado: teste de conversão, produtos mais à vista)
+  visible: boolean;          // mostrar as categorias (filtro) embaixo do banner
   showAll: boolean;
   allLabel: string;
   showPersonalized: boolean;
@@ -363,7 +363,7 @@ export type CategoriasContent = {
 
 export const DEFAULT_CATEGORIAS: CategoriasContent = {
   enabled: true,
-  visible: false,
+  visible: true,
   showAll: true,
   allLabel: 'Todo',
   showPersonalized: true,
