@@ -1,9 +1,20 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { getConsentPrefs, COOKIE_CONSENT_EVENT, type ConsentPrefs } from './cookie-consent'
 
 const GA_ID = 'G-7HYXPMV30R'
+// Pixel da Meta da Kitoys 3D. O campo "Meta Pixel ID" do painel (Editar loja)
+// tem prioridade; este e o padrao quando o campo esta vazio.
+const DEFAULT_PIXEL_ID = '1495587405798171'
+
+// Eventos padrao da Meta, so quando o Pixel ja carregou (= visitante aceitou
+// cookies de marketing). Sem consentimento, nada sai daqui.
+function pixel(event: string, data?: Record<string, unknown>) {
+  if (!window.__pixelLoaded || typeof window.fbq !== 'function') return
+  data ? window.fbq('track', event, data) : window.fbq('track', event)
+}
 
 declare global {
   interface Window {
@@ -75,12 +86,44 @@ function injectMetaPixel(pixelId: string) {
 // cookie banner — never on page load. See components/cookie-consent.tsx.
 export function AnalyticsLoader() {
   const [pixelId, setPixelId] = useState('')
+  const pathname = usePathname()
+  const lastPath = useRef<string | null>(null)
 
   useEffect(() => {
     fetch('/api/store-settings', { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (d?.metaPixelId) setPixelId(d.metaPixelId) })
-      .catch(() => {})
+      .then((d) => setPixelId(String(d?.metaPixelId || '').trim() || DEFAULT_PIXEL_ID))
+      .catch(() => setPixelId(DEFAULT_PIXEL_ID))
+  }, [])
+
+  // Navegacao dentro do site (sem recarregar): PageView de novo. O primeiro
+  // PageView sai no init do Pixel. Painel/admin nao conta.
+  useEffect(() => {
+    if (!pathname) return
+    if (lastPath.current !== null && lastPath.current !== pathname && !pathname.startsWith('/admin')) pixel('PageView')
+    lastPath.current = pathname
+    if (pathname.startsWith('/checkout')) pixel('InitiateCheckout', { currency: 'EUR' })
+  }, [pathname])
+
+  // Carrinho, pagamento e compra (eventos disparados pela loja).
+  useEffect(() => {
+    const onAdd = (e: Event) => {
+      const d = (e as CustomEvent).detail ?? {}
+      pixel('AddToCart', { content_ids: [String(d.productId ?? '')], content_name: d.name, content_type: 'product', value: Number(d.value) || 0, currency: 'EUR' })
+    }
+    const onPay = () => pixel('AddPaymentInfo', { currency: 'EUR' })
+    const onBuy = (e: Event) => {
+      const v = Number((e as CustomEvent).detail?.value) || 0
+      pixel('Purchase', { value: Math.round(v * 100) / 100, currency: 'EUR' })
+    }
+    window.addEventListener('kitoys:add-to-cart', onAdd)
+    window.addEventListener('kitoys:payment-start', onPay)
+    window.addEventListener('kitoys:purchase', onBuy)
+    return () => {
+      window.removeEventListener('kitoys:add-to-cart', onAdd)
+      window.removeEventListener('kitoys:payment-start', onPay)
+      window.removeEventListener('kitoys:purchase', onBuy)
+    }
   }, [])
 
   useEffect(() => {

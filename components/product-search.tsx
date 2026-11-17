@@ -34,7 +34,7 @@ export function useProductSearch(query: string) {
 }
 
 // soft: campo cinza claro (cabecalho do celular); inputId evita id repetido com 2 buscas na pagina.
-export function ProductSearch({ autoFocus, onDone, className = '', soft = false, inputId = 'busqueda-productos', placeholder = 'Buscar juguetes, llaveros, jarrones…' }: { autoFocus?: boolean; onDone?: () => void; className?: string; soft?: boolean; inputId?: string; placeholder?: string }) {
+export function ProductSearch({ autoFocus, onDone, className = '', soft = false, inputId = 'busqueda-productos', placeholder = 'Buscar regalos, lámparas, decoración…' }: { autoFocus?: boolean; onDone?: () => void; className?: string; soft?: boolean; inputId?: string; placeholder?: string }) {
   const router = useRouter();
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);

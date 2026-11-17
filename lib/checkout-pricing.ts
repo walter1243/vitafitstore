@@ -14,7 +14,7 @@ const SHIPPING_TABLE_ES: ShippingBand[] = [
 
 const DEFAULT_LOGISTIC_COST = 4.8;
 
-export const FREE_SHIPPING_FROM = 50;
+export const FREE_SHIPPING_FROM = 25;
 
 // Frete do pedido. Cada produto pode ter o seu frete (Admin → Produtos →
 // "Frete (€)"); tudo vai num pacote so, entao o pedido paga o MAIOR frete

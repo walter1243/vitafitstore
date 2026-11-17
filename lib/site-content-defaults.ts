@@ -55,10 +55,10 @@ export type HeroContent = {
 };
 
 export const DEFAULT_HERO: HeroContent = {
-  badgeText: 'Envío gratis en pedidos +50€ · España',
-  titleLine1: 'Juguetes y lámparas',
+  badgeText: 'Envío gratis en pedidos +25€ · España',
+  titleLine1: 'Regalos personalizados',
   titleLine2: 'impresos en 3D',
-  subtitle: 'Juegos para montar y compartir, y lámparas con formas divertidas para la habitación de los peques.',
+  subtitle: 'Con nombre, foto o fecha: regalos únicos y decoración para casa, hechos en nuestro taller en España.',
   ctaText: 'Ver colecciones',
   ctaHref: '#colecciones',
   videoPosition: 'center',
@@ -136,7 +136,7 @@ export type TrustBadgesContent = {
 
 export const DEFAULT_TRUST_BADGES: TrustBadgesContent = {
   badges: [
-    { icon: 'truck', title: 'Envío gratis +50€', desc: 'En todos los pedidos' },
+    { icon: 'truck', title: 'Envío gratis +25€', desc: 'En toda España' },
     { icon: 'rotate', title: 'Devolución 14 días', desc: 'Derecho de desistimiento UE' },
     { icon: 'shield', title: 'Pago seguro SSL', desc: '100% protegido' },
     { icon: 'clock', title: 'Envío con seguimiento', desc: 'En toda España' },
@@ -266,7 +266,7 @@ export type TopbarContent = {
 
 export const DEFAULT_TOPBAR: TopbarContent = {
   enabled: true,
-  text: 'Envío gratis en pedidos +50€ · España',
+  text: 'Envío gratis en pedidos +25€ · España',
   href: '',
   bg: '#f5f5f7',
   color: '#1d1d1f',
@@ -283,7 +283,7 @@ export type CabecalhoContent = {
 };
 
 export const DEFAULT_CABECALHO: CabecalhoContent = {
-  searchPlaceholder: 'Buscar juguetes, llaveros, jarrones…',
+  searchPlaceholder: 'Buscar regalos, lámparas, decoración…',
   homeLabel: '',
   collectionsLabel: '',
   logoHeight: 58,
@@ -484,7 +484,7 @@ export type RodapeContent = {
 };
 
 export const DEFAULT_RODAPE: RodapeContent = {
-  brandText: 'Explora el universo creativo de kitoys3d: juguetes, puzzles y lámparas fabricados con tecnología de impresión 3D de alta precisión.',
+  brandText: 'Kitoys 3D: regalos personalizados y decoración para casa, impresos en 3D en nuestro taller en España.',
   productsTitle: 'Productos',
   productsSubtitle: 'Nuestras colecciones impresas en 3D.',
   productsAuto: true,

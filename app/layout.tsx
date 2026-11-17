@@ -4,7 +4,6 @@ import { Analytics } from '@vercel/analytics/next'
 import { CartProvider } from '@/lib/cart-context'
 import SchemaOrg from '@/components/SchemaOrg'
 import { CookieConsent } from '@/components/cookie-consent'
-import { HumanCheck } from '@/components/human-check'
 import { EntryStart } from '@/components/entry-start'
 import { AnalyticsLoader } from '@/components/analytics-loader'
 import { SiteTracker } from '@/components/site-tracker'
@@ -24,22 +23,22 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Juegos y lámparas infantiles impresos en 3D | Kitoys 3D',
+    default: 'Regalos personalizados y decoración impresos en 3D | Kitoys 3D',
     template: '%s | Kitoys 3D',
   },
   description:
-    'Juegos, puzzles y lámparas para habitaciones infantiles impresos en 3D, capa a capa. Elige tu colección y recíbelo en casa en toda España.',
+    'Regalos personalizados con nombre, decoración para casa y Navidad impresos en 3D en España: placas de nacimiento, lámparas con foto, llaveros y más. Envío gratis desde 25 €.',
   keywords: [
-    'juguetes impresos en 3D',
-    'juegos infantiles impresión 3D',
-    'puzzles 3D para niños',
-    'juegos de mesa impresos en 3D',
-    'lámparas infantiles',
-    'lámpara habitación niños',
-    'lámpara quitamiedos 3D',
-    'decoración habitación infantil',
-    'regalos originales para niños',
-    'juguetes 3D España',
+    'regalos personalizados',
+    'regalos personalizados con nombre',
+    'placa de nacimiento personalizada',
+    'lámpara personalizada con foto',
+    'llaveros personalizados',
+    'decoración impresa en 3D',
+    'decoración navideña 3D',
+    'organizadores de cocina 3D',
+    'regalos originales España',
+    'impresión 3D España',
   ],
   authors: [{ name: 'Kitoys 3D' }],
   alternates: {
@@ -58,8 +57,8 @@ export const metadata: Metadata = {
     apple: [{ url: '/apple-icon-kitoys.png', sizes: '180x180', type: 'image/png' }],
   },
   openGraph: {
-    title: 'Juegos y lámparas infantiles impresos en 3D | Kitoys 3D',
-    description: 'Juegos, puzzles y lámparas para habitaciones infantiles impresos en 3D, capa a capa. Elige tu colección y recíbelo en casa en toda España.',
+    title: 'Regalos personalizados y decoración impresos en 3D | Kitoys 3D',
+    description: 'Regalos personalizados con nombre, decoración para casa y Navidad impresos en 3D en España: placas de nacimiento, lámparas con foto, llaveros y más. Envío gratis desde 25 €.',
     url: 'https://www.kitoys3d.com/',
     siteName: 'Kitoys 3D',
     locale: 'es_ES',
@@ -69,14 +68,14 @@ export const metadata: Metadata = {
         url: 'https://www.kitoys3d.com/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'Juegos y lámparas infantiles impresos en 3D — Kitoys 3D',
+        alt: 'Regalos personalizados y decoración impresos en 3D — Kitoys 3D',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Juegos y lámparas infantiles impresos en 3D | Kitoys 3D',
-    description: 'Juegos, puzzles y lámparas para habitaciones infantiles impresos en 3D, capa a capa. Elige tu colección y recíbelo en casa en toda España.',
+    title: 'Regalos personalizados y decoración impresos en 3D | Kitoys 3D',
+    description: 'Regalos personalizados con nombre, decoración para casa y Navidad impresos en 3D en España: placas de nacimiento, lámparas con foto, llaveros y más. Envío gratis desde 25 €.',
     images: ['https://www.kitoys3d.com/og-image.jpg'],
   },
   robots: {
@@ -119,8 +118,8 @@ export default function RootLayout({
            cookie consent — see components/cookie-consent.tsx and
            components/analytics-loader.tsx. Never load them unconditionally
            here again. */}
-        {/* Cloudflare Turnstile na entrada (só com as chaves configuradas) — components/human-check.tsx */}
-        <HumanCheck />
+        {/* Tela do Cloudflare Turnstile na entrada desligada (nov/2026): era mais uma barreira
+           para quem chega pelo anúncio. Para voltar: <HumanCheck /> de components/human-check.tsx. */}
         <EntryStart />
         <CookieConsent />
         <AnalyticsLoader />

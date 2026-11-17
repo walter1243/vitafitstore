@@ -24,7 +24,7 @@ const DEFAULT_BLOCOS: BlocoItem[] = [
     label: 'Faixa de Aviso',
     enabled: true,
     data: {
-      text: 'Frete grátis em pedidos acima de €50',
+      text: 'Frete grátis em pedidos acima de €25',
       bgColor: '#10b981',
       textColor: '#ffffff',
       animated: true,

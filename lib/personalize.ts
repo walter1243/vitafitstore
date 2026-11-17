@@ -254,11 +254,13 @@ export function sizeRange(price: number, personalizeRaw: unknown, sizes?: string
 export function cardPrice(price: number, personalizeRaw: unknown, sizes?: string[]) {
   const pack = packOf(personalizeRaw);
   const range = pack ? null : sizeRange(price, personalizeRaw, sizes);
-  if (range && range.min !== range.max) return { main: `desde ${range.min.toFixed(2)}€`, sub: '', off: 0 };
-  if (range) return { main: `${range.min.toFixed(2)}€`, sub: '', off: 0 };
-  if (!pack) return { main: `${price.toFixed(2)}€`, sub: '', off: 0 };
+  if (range && range.min !== range.max) return { main: `desde ${range.min.toFixed(2)}€`, sub: '', off: 0, was: '' };
+  if (range) return { main: `${range.min.toFixed(2)}€`, sub: '', off: 0, was: '' };
+  if (!pack) return { main: `${price.toFixed(2)}€`, sub: '', off: 0, was: '' };
   const full = price * pack.qty;
-  return { main: `${pack.price.toFixed(2)}€`, sub: `Pack ${pack.qty} uds`, off: full > pack.price ? Math.round((1 - pack.price / full) * 100) : 0 };
+  const off = full > pack.price ? Math.round((1 - pack.price / full) * 100) : 0;
+  // was = preco das unidades compradas separadas (riscado no card, ao lado do -X%)
+  return { main: `${pack.price.toFixed(2)}€`, sub: `Pack ${pack.qty} uds`, off, was: off > 0 ? `${full.toFixed(2)}€` : '' };
 }
 
 // O cliente precisa escrever o nome para comprar? (chaveiro com nome: sim; porta-fotos: não)

@@ -113,7 +113,7 @@ export function trackingEmail({ name, orderId, productName, trackingUrl, email }
           </p>
         </td></tr>
         <tr><td align="center" style="background:#F2F4FA;padding:16px 24px;font-size:12px;color:#565a78;">
-          Kitoys 3D · Juguetes y lámparas impresos en 3D · <a href="https://www.kitoys3d.com" style="color:#565a78;">kitoys3d.com</a>
+          Kitoys 3D · Regalos personalizados y decoración impresos en 3D · <a href="https://www.kitoys3d.com" style="color:#565a78;">kitoys3d.com</a>
         </td></tr>
       </table>
     </td></tr>
@@ -184,7 +184,7 @@ export function pickupEmail({ name, orderId, pickupPoint, email }: { name: strin
           </p>
         </td></tr>
         <tr><td align="center" style="background:#F2F4FA;padding:16px 24px;font-size:12px;color:#565a78;">
-          Kitoys 3D · Juguetes y lámparas impresos en 3D · <a href="https://www.kitoys3d.com" style="color:#565a78;">kitoys3d.com</a>
+          Kitoys 3D · Regalos personalizados y decoración impresos en 3D · <a href="https://www.kitoys3d.com" style="color:#565a78;">kitoys3d.com</a>
         </td></tr>
       </table>
     </td></tr>
@@ -250,7 +250,7 @@ export function readyEmail({ name, orderId, pickupPoint, email }: { name: string
           <p style="margin:0;font-size:13px;line-height:1.6;color:#565a78;">¿Alguna duda? Responde a este correo o escríbenos por WhatsApp al +34 678 68 4704.</p>
         </td></tr>
         <tr><td align="center" style="background:#F2F4FA;padding:16px 24px;font-size:12px;color:#565a78;">
-          Kitoys 3D · Juguetes y lámparas impresos en 3D · <a href="https://www.kitoys3d.com" style="color:#565a78;">kitoys3d.com</a>
+          Kitoys 3D · Regalos personalizados y decoración impresos en 3D · <a href="https://www.kitoys3d.com" style="color:#565a78;">kitoys3d.com</a>
         </td></tr>
       </table>
     </td></tr>

@@ -86,7 +86,7 @@ export function CartSidebar() {
               onClick={() => setIsCartOpen(false)}
               className="min-h-12 cursor-pointer rounded-2xl bg-[#c2410c] px-7 text-base font-extrabold text-white transition-colors hover:bg-[#9a3412]"
             >
-              Ver juguetes
+              Ver productos
             </button>
           </div>
         ) : (

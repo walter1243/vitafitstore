@@ -26,7 +26,7 @@ export default function SchemaOrg() {
         '@id': `${SITE}/#website`,
         url: SITE,
         name: 'Kitoys 3D',
-        description: 'Juguetes, rompecabezas y lámparas infantiles impresos en 3D en España.',
+        description: 'Regalos personalizados, decoración para casa y Navidad impresos en 3D en España.',
         inLanguage: 'es-ES',
         publisher: { '@id': `${SITE}/#organization` },
       },

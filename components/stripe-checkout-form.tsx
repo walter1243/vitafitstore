@@ -394,7 +394,7 @@ function PaymentStepInner({
         return;
       }
 
-      try { sessionStorage.setItem('kitoys_checkout_name', name.trim()); } catch {}
+      try { sessionStorage.setItem('kitoys_checkout_name', name.trim()); sessionStorage.setItem('kitoys_checkout_total', String(total)); } catch {}
       const result = await stripe.confirmPayment({
         elements,
         confirmParams: {
@@ -432,7 +432,7 @@ function PaymentStepInner({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ paymentIntentId: result.paymentIntent.id }),
         }).catch(() => {});
-        window.dispatchEvent(new Event('kitoys:purchase'));
+        window.dispatchEvent(new CustomEvent('kitoys:purchase', { detail: { value: total } }));
         markCouponUsedIfPending();
         clearCart();
         setSuccess(true);
@@ -664,7 +664,10 @@ function CheckoutFormInner() {
           await new Promise((res) => setTimeout(res, 3000));
         }
       })();
-      window.dispatchEvent(new Event('kitoys:purchase'));
+      // valor guardado antes de sair para o Bizum/banco (Pixel da Meta: Purchase com valor)
+      let paid = 0;
+      try { paid = Number(sessionStorage.getItem('kitoys_checkout_total')) || 0; } catch {}
+      window.dispatchEvent(new CustomEvent('kitoys:purchase', { detail: { value: paid } }));
       markCouponUsedIfPending();
       clearCart();
       setSuccess(true);
@@ -808,7 +811,7 @@ function CheckoutFormInner() {
         <p className="text-slate-500 text-sm max-w-xs">Añade productos antes de finalizar la compra.</p>
         <Link href="/#productos"
           className="inline-flex min-h-12 items-center gap-2 px-7 rounded-2xl font-extrabold text-base text-white bg-[#c2410c] hover:bg-[#9a3412]">
-          Ver juguetes
+          Ver productos
         </Link>
       </div>
     );

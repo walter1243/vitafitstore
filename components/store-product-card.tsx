@@ -59,7 +59,14 @@ export function StoreProductCard({ product }: { product: Product }) {
       <div className="flex flex-1 flex-col px-1 pt-3">
         <h3 className="line-clamp-2 text-[14px] font-medium leading-snug sm:text-[15px]" style={{ color: INK }}>{product.name}</h3>
         <div className="mt-auto flex items-end justify-between gap-2 pt-2">
-          <p className="whitespace-nowrap text-[18px] font-bold leading-none sm:text-[20px]" style={{ color: INK }}>{cp.main}</p>
+          <div className="min-w-0">
+            {cp.was && (
+              <p className="text-[11px] leading-tight text-[#6e6e73]">
+                <s>{cp.was}</s> · {cp.sub}
+              </p>
+            )}
+            <p className="whitespace-nowrap text-[18px] font-bold leading-none sm:text-[20px]" style={{ color: INK }}>{cp.main}</p>
+          </div>
           {needsChoice ? (
             <span
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white"

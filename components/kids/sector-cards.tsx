@@ -36,7 +36,7 @@ export function SectorCards({ sectors, active, onSelect, extraHome }: { sectors:
       <div className="relative mx-auto max-w-6xl">
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold text-[#1E1B4B] sm:text-6xl">Elige tu mundo</h1>
-          <p className="mx-auto mt-3 max-w-2xl text-lg text-[#1E1B4B]/80 sm:text-xl">Juguetes, llaveros, cosas para tu mascota y para casa, impresos en 3D en nuestro taller.</p>
+          <p className="mx-auto mt-3 max-w-2xl text-lg text-[#1E1B4B]/80 sm:text-xl">Regalos personalizados, decoración para casa, llaveros y cosas para tu mascota, impresos en 3D en nuestro taller.</p>
         </div>
         <ul role="tablist" aria-label="Mundos" className={`grid gap-x-4 gap-y-8 ${worlds.length <= 2 ? 'mx-auto max-w-xl grid-cols-2' : worlds.length === 3 ? 'grid-cols-3' : worlds.length >= 5 ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5' : 'grid-cols-2 lg:grid-cols-4'}`}>
           {worlds.map((w) => (

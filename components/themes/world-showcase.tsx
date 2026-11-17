@@ -40,7 +40,7 @@ const KIDS_THEME: SectorTheme = {
 
 const TRUST = [
   { Icon: Printer, title: 'Impreso en Elche', text: 'Diseñado e impreso en nuestro taller.' },
-  { Icon: Truck, title: 'Envío con seguimiento', text: 'Gratis a partir de 50 €.' },
+  { Icon: Truck, title: 'Envío con seguimiento', text: 'Gratis a partir de 25 €.' },
   { Icon: ShieldCheck, title: 'Garantía de 3 años', text: 'Ante cualquier defecto de fabricación.' },
   { Icon: Lock, title: 'Pago seguro', text: 'Tarjeta, Apple Pay y Google Pay.' },
 ];

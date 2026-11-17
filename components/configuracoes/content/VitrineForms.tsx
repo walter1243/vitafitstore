@@ -161,7 +161,7 @@ export function CabecalhoForm({ data, onChange, branding, onBranding }: { data: 
         <Color label="Cor principal (fundo do ícone)" value={branding.themeColor} onChange={(v) => setB({ themeColor: v })} />
       </Group>
       <Group title="Busca e menu">
-        <Txt label="Texto dentro da busca" value={data.searchPlaceholder} onChange={(v) => set({ searchPlaceholder: v })} placeholder="Buscar juguetes, llaveros, jarrones…" />
+        <Txt label="Texto dentro da busca" value={data.searchPlaceholder} onChange={(v) => set({ searchPlaceholder: v })} placeholder="Buscar regalos, lámparas, decoración…" />
         <div className="grid grid-cols-2 gap-3">
           <Txt label="Menu: início" hint="Vazio = &quot;Inicio&quot; (traduzido)" value={data.homeLabel} onChange={(v) => set({ homeLabel: v })} placeholder="Inicio" />
           <Txt label="Menu: coleções" hint="Vazio = &quot;Colecciones&quot;" value={data.collectionsLabel} onChange={(v) => set({ collectionsLabel: v })} placeholder="Colecciones" />
@@ -244,7 +244,7 @@ export function TopbarForm({ data, onChange }: { data: TopbarContent; onChange: 
         <div className="px-4 py-2 text-center text-[12px]" style={{ background: data.bg, color: data.color }}>{data.enabled ? data.text || '(vazio)' : '(faixa desligada)'}</div>
       </div>
       <Toggle label="Mostrar a faixa no topo do site" checked={data.enabled} onChange={(v) => set({ enabled: v })} />
-      <Txt label="Texto" value={data.text} onChange={(v) => set({ text: v })} placeholder="Envío gratis en pedidos +50€ · España" />
+      <Txt label="Texto" value={data.text} onChange={(v) => set({ text: v })} placeholder="Envío gratis en pedidos +25€ · España" />
       <Txt label="Link (opcional)" hint="Ao clicar na faixa. Ex.: /legal/envios" value={data.href} onChange={(v) => set({ href: v })} />
       <div className="grid grid-cols-2 gap-3">
         <Color label="Cor de fundo" value={data.bg} onChange={(v) => set({ bg: v })} />

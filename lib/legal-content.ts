@@ -39,7 +39,7 @@ export const LEGAL_PAGES: Record<string, LegalPage> = {
       {
         heading: 'Objeto',
         body: [
-          'Este sitio web tiene como finalidad la venta online de productos impresos en 3D: juguetes, rompecabezas y lámparas infantiles, entre otros.',
+          'Este sitio web tiene como finalidad la venta online de productos impresos en 3D: regalos personalizados, decoración para el hogar, artículos navideños y lámparas, entre otros.',
         ],
       },
       {
@@ -119,7 +119,7 @@ export const LEGAL_PAGES: Record<string, LegalPage> = {
       },
       {
         heading: 'Gastos de envío',
-        body: ['Envío gratuito en pedidos a partir de 50 €. Por debajo de ese importe se aplican los gastos de envío de cada producto, indicados en el carrito y en el checkout.'],
+        body: ['Envío gratuito en pedidos a partir de 25 €. Por debajo de ese importe se aplican los gastos de envío de cada producto, indicados en el carrito y en el checkout.'],
       },
     ],
   },
@@ -211,8 +211,6 @@ export const LEGAL_PAGES: Record<string, LegalPage> = {
           rows: [
             ['__stripe_mid, __stripe_sid', 'Stripe (tercero)', 'Pago seguro y prevención del fraude en el checkout', '1 año / 30 minutos'],
             ['cookie_consent, cookie_consent_v2', 'Kitoys 3D', 'Recordar qué cookies aceptaste o rechazaste (te lo volvemos a preguntar pasado ese tiempo)', '6 meses'],
-            ['kt_hv, kt_hv_ok', 'Kitoys 3D', 'Recordar que ya pasaste la verificación de seguridad de Cloudflare Turnstile en esta visita', 'Hasta cerrar el navegador (máx. 12 horas)'],
-            ['Cloudflare Turnstile', 'Cloudflare, Inc. (tercero)', 'Comprobar que la visita la hace una persona y no un robot, para proteger la tienda. Cloudflare trata datos técnicos de la conexión y del navegador', 'Solo durante la verificación'],
             ['kitoys_zip, kitoys_ship_method', 'Kitoys 3D', 'Recordar tu código postal y la forma de envío elegida', 'Hasta que las borres'],
             ['kt_country', 'Kitoys 3D', 'Recordar el país de envío elegido para mostrar los precios y el envío de ese país', '1 año'],
             ['googtrans', 'Kitoys 3D / Google', 'Recordar el idioma que elegiste (francés, inglés o portugués). Solo existe si cambias el idioma', '1 año'],

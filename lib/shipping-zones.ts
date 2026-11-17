@@ -26,7 +26,7 @@ export type ShippingZone = {
 export const LIGHT_MAX_KG = 2;
 
 const SEED: Omit<ShippingZone, 'position' | 'embedOn'>[] = [
-  { code: 'ES', name: 'España', mode: 'packlink', priceLight: 6, priceHeavy: 9, freeOver: 50, embedPct: 0, enabled: true },
+  { code: 'ES', name: 'España', mode: 'packlink', priceLight: 6, priceHeavy: 9, freeOver: 25, embedPct: 0, enabled: true },
   { code: 'PT', name: 'Portugal', mode: 'packlink', priceLight: 7, priceHeavy: 32, freeOver: null, embedPct: 60, enabled: true },
   { code: 'FR', name: 'Francia', mode: 'packlink', priceLight: 10, priceHeavy: 32, freeOver: null, embedPct: 60, enabled: true },
   { code: 'DE', name: 'Alemania', mode: 'packlink', priceLight: 10, priceHeavy: 32, freeOver: null, embedPct: 60, enabled: true },

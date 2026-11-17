@@ -66,7 +66,7 @@ export function FaixaBloco({ data, onChange }: Props) {
           type="text"
           value={data.text}
           onChange={e => onChange({ ...data, text: e.target.value })}
-          placeholder="Ex: Frete grátis em pedidos acima de €50"
+          placeholder="Ex: Frete grátis em pedidos acima de €25"
           className="w-full rounded-lg border border-white/15 bg-[#161b28] px-3 py-2 text-sm text-white placeholder:text-white/35 focus:border-green-500/40 focus:outline-none focus:ring-2 focus:ring-green-500/30"
         />
       </div>
