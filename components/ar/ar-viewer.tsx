@@ -6,7 +6,7 @@
 // toca na mesa/parede para colocar o produto em tamanho real. No computador o
 // modelo gira com o mouse. ArModel3D também é usado na prévia do painel.
 
-import { createElement, useEffect, useState } from 'react';
+import { createElement, useCallback, useEffect, useRef, useState } from 'react';
 import { arDepthCm, buildArGlb, loadArBitmap, type ArConfig } from '@/lib/ar';
 
 const MODEL_VIEWER_SRC = 'https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js';
@@ -110,8 +110,168 @@ function CameraDot() {
   );
 }
 
+// ─── Câmera do navegador com o produto por cima ──────────────────────────────
+// Abre a câmera traseira direto no navegador (pede a permissão do próprio
+// navegador) e mostra o produto recortado sobre a imagem ao vivo. O cliente
+// arrasta para posicionar, faz pinça para aumentar/girar e pode tirar uma foto.
+// Funciona em qualquer celular com câmera (inclusive iPhone e o navegador do
+// Instagram, quando ele libera a câmera); não depende de ARCore/ARKit.
+type Pose = { x: number; y: number; s: number; r: number };
+
+function cameraError(e: any): string {
+  const n = e?.name || '';
+  if (typeof window !== 'undefined' && !window.isSecureContext) return 'La cámara solo funciona en una conexión segura (https).';
+  if (n === 'NotAllowedError' || n === 'SecurityError') return 'Permiso de cámara denegado. Actívalo en los ajustes del navegador para este sitio y vuelve a intentarlo.';
+  if (n === 'NotFoundError' || n === 'OverconstrainedError') return 'No encontramos ninguna cámara en este dispositivo.';
+  if (n === 'NotReadableError') return 'La cámara está siendo usada por otra aplicación. Ciérrala y vuelve a intentarlo.';
+  if (!navigator.mediaDevices?.getUserMedia) return 'Este navegador no permite abrir la cámara. Abre la página en Chrome o Safari.';
+  return 'No se pudo abrir la cámara. Inténtalo de nuevo.';
+}
+
+function CameraTryOn({ name, ar, onClose, onOpen3d }: { name: string; ar: ArConfig; onClose: () => void; onOpen3d: () => void }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+  const [error, setError] = useState('');
+  const [live, setLive] = useState(false);
+  const [pose, setPose] = useState<Pose>({ x: 0, y: 40, s: 1, r: 0 });
+  const [flash, setFlash] = useState(false);
+  const pointers = useRef(new Map<number, { x: number; y: number }>());
+  const start = useRef<{ pose: Pose; dist: number; ang: number; cx: number; cy: number } | null>(null);
+
+  useEffect(() => {
+    let stream: MediaStream | null = null;
+    let alive = true;
+    (async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false });
+        if (!alive) { stream.getTracks().forEach((t) => t.stop()); return; }
+        const v = videoRef.current!;
+        v.srcObject = stream;
+        await v.play().catch(() => {});
+        setLive(true);
+      } catch (e) { if (alive) setError(cameraError(e)); }
+    })();
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      alive = false;
+      stream?.getTracks().forEach((t) => t.stop());
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [onClose]);
+
+  // gestos: 1 dedo arrasta; 2 dedos aumentam/diminuem e giram
+  const measure = () => {
+    const pts = [...pointers.current.values()];
+    if (pts.length < 2) return { dist: 0, ang: 0, cx: pts[0]?.x ?? 0, cy: pts[0]?.y ?? 0 };
+    const [a, b] = pts;
+    return { dist: Math.hypot(b.x - a.x, b.y - a.y), ang: Math.atan2(b.y - a.y, b.x - a.x), cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2 };
+  };
+  const onDown = (e: React.PointerEvent) => {
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    start.current = { pose, ...measure() };
+  };
+  const onMove = (e: React.PointerEvent) => {
+    if (!pointers.current.has(e.pointerId) || !start.current) return;
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const m = measure();
+    const s0 = start.current;
+    const next: Pose = { ...s0.pose, x: s0.pose.x + (m.cx - s0.cx), y: s0.pose.y + (m.cy - s0.cy) };
+    if (m.dist && s0.dist) {
+      next.s = Math.min(4, Math.max(0.25, s0.pose.s * (m.dist / s0.dist)));
+      next.r = s0.pose.r + ((m.ang - s0.ang) * 180) / Math.PI;
+    }
+    setPose(next);
+  };
+  const onUp = (e: React.PointerEvent) => {
+    pointers.current.delete(e.pointerId);
+    start.current = pointers.current.size ? { pose, ...measure() } : null;
+  };
+  const onWheel = (e: React.WheelEvent) => setPose((p) => ({ ...p, s: Math.min(4, Math.max(0.25, p.s * (e.deltaY < 0 ? 1.08 : 0.93))) }));
+
+  // Foto: imagem da câmera + produto na mesma posição → compartilhar ou baixar.
+  const snap = async () => {
+    const v = videoRef.current, box = boxRef.current, img = imgRef.current;
+    if (!v || !box || !img || !v.videoWidth) return;
+    const W = box.clientWidth, H = box.clientHeight, k = 2;
+    const cv = document.createElement('canvas');
+    cv.width = W * k; cv.height = H * k;
+    const ctx = cv.getContext('2d')!;
+    ctx.scale(k, k);
+    const cover = Math.max(W / v.videoWidth, H / v.videoHeight);
+    const vw = v.videoWidth * cover, vh = v.videoHeight * cover;
+    ctx.drawImage(v, (W - vw) / 2, (H - vh) / 2, vw, vh);
+    ctx.save();
+    ctx.translate(W / 2 + pose.x, H / 2 + pose.y);
+    ctx.rotate((pose.r * Math.PI) / 180);
+    ctx.scale(pose.s, pose.s);
+    ctx.drawImage(img, -img.offsetWidth / 2, -img.offsetHeight / 2, img.offsetWidth, img.offsetHeight);
+    ctx.restore();
+    setFlash(true); setTimeout(() => setFlash(false), 180);
+    const blob = await new Promise<Blob | null>((r) => cv.toBlob(r, 'image/jpeg', 0.9));
+    if (!blob) return;
+    const file = new File([blob], `${name.replace(/[^\w-]+/g, '-').slice(0, 40) || 'producto'}-en-mi-espacio.jpg`, { type: 'image/jpeg' });
+    const nav = navigator as Navigator & { canShare?: (d: unknown) => boolean };
+    if (nav.canShare?.({ files: [file] })) { try { await nav.share({ files: [file], title: name }); return; } catch { /* cancelado */ } }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = file.name; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  };
+
+  return (
+    <div role="dialog" aria-modal="true" aria-label={`Ver ${name} con la cámara`} className="fixed inset-0 z-[100] bg-black text-white">
+      <div ref={boxRef} className="absolute inset-0 touch-none select-none overflow-hidden"
+        onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} onWheel={onWheel}>
+        <video ref={videoRef} playsInline muted autoPlay className="absolute inset-0 h-full w-full object-cover" />
+        {live && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img ref={imgRef} src={ar.image} alt={name} crossOrigin="anonymous" draggable={false}
+            className="pointer-events-none absolute left-1/2 top-1/2 w-[62vw] max-w-[440px] drop-shadow-[0_18px_24px_rgba(0,0,0,0.55)]"
+            style={{ transform: `translate(-50%, -50%) translate(${pose.x}px, ${pose.y}px) rotate(${pose.r}deg) scale(${pose.s})` }} />
+        )}
+        {flash && <div className="pointer-events-none absolute inset-0 bg-white/80" />}
+        {!live && !error && <p className="absolute inset-0 flex items-center justify-center text-sm text-white/70">Abriendo la cámara…</p>}
+        {error && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-8 text-center">
+            <p className="max-w-sm text-sm leading-relaxed text-white/85">{error}</p>
+            <button type="button" onClick={onOpen3d} className="h-12 cursor-pointer rounded-md bg-white px-6 text-sm font-bold uppercase tracking-[0.12em] text-[#0b0614]">Ver en 3D</button>
+          </div>
+        )}
+      </div>
+
+      <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-3 bg-gradient-to-b from-black/70 to-transparent p-4 pt-[max(1rem,env(safe-area-inset-top))]">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-bold uppercase tracking-[0.14em]">{name}</p>
+          {live && <p className="mt-0.5 text-xs text-white/70">Arrastra para colocarlo · pellizca para ajustar el tamaño</p>}
+        </div>
+        <button type="button" onClick={onClose} className="pointer-events-auto h-10 shrink-0 cursor-pointer rounded-full bg-black/50 px-4 text-xs font-semibold uppercase tracking-[0.16em] backdrop-blur hover:bg-black/70">Cerrar</button>
+      </div>
+
+      {live && (
+        <div className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-6 bg-gradient-to-t from-black/70 to-transparent p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+          <button type="button" onClick={() => setPose({ x: 0, y: 40, s: 1, r: 0 })} className="h-11 cursor-pointer rounded-full bg-black/50 px-4 text-xs font-semibold uppercase tracking-[0.14em] backdrop-blur">Centrar</button>
+          <button type="button" onClick={snap} aria-label="Tomar foto" className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-full border-4 border-white bg-white/25 transition-transform active:scale-90">
+            <span className="h-11 w-11 rounded-full bg-white" />
+          </button>
+          <button type="button" onClick={onOpen3d} className="h-11 cursor-pointer rounded-full bg-black/50 px-4 text-xs font-semibold uppercase tracking-[0.14em] backdrop-blur">3D / AR</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function ArViewer({ name, ar, theme = 'dark', variant = 'button', className = '' }: { name: string; ar: ArConfig; theme?: 'dark' | 'light'; variant?: 'button' | 'icon'; className?: string }) {
+  // camera = câmera do navegador com o produto por cima (o que abre ao tocar);
+  // open = janela 3D com o botão de AR nativo (fixar na superfície).
+  const [camera, setCamera] = useState(false);
   const [open, setOpen] = useState(false);
+  const closeCamera = useCallback(() => setCamera(false), []);
+  const open3d = useCallback(() => { setCamera(false); setOpen(true); }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -128,17 +288,19 @@ export function ArViewer({ name, ar, theme = 'dark', variant = 'button', classNa
   return (
     <>
       {variant === 'icon' ? (
-        <button type="button" onClick={() => setOpen(true)} aria-label="Ver en tu espacio con la cámara" title="Ver en tu espacio"
+        <button type="button" onClick={() => setCamera(true)} aria-label="Ver en tu espacio con la cámara" title="Ver en tu espacio"
           className={`flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border border-white/25 bg-black/55 text-white shadow-[0_6px_24px_rgba(0,0,0,0.45)] backdrop-blur transition-transform hover:scale-105 active:scale-95 ${className}`}>
           <CameraDot />
         </button>
       ) : (
-        <button type="button" onClick={() => setOpen(true)}
+        <button type="button" onClick={() => setCamera(true)}
           className={`mt-3 flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-md text-sm font-bold uppercase tracking-[0.12em] transition-colors ${trigger} ${className}`}>
           <span aria-hidden className="rounded border border-current px-1.5 py-0.5 text-[10px] leading-none">AR</span>
           Ver en tu espacio
         </button>
       )}
+
+      {camera && <CameraTryOn name={name} ar={ar} onClose={closeCamera} onOpen3d={open3d} />}
 
       {open && (
         <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/80 p-0 backdrop-blur-sm sm:items-center sm:p-4" onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}>

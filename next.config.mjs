@@ -30,7 +30,8 @@ const securityHeaders = [
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   // geolocation=(self): o checkout usa "usar minha localizacao" pra achar o
   // ponto de recogida. payment fica livre (Apple Pay / Google Pay do Stripe).
-  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(self), browsing-topics=()' },
+  // camera=(self): a câmera do "Ver en tu espacio" (produto por cima da câmera / AR) só no próprio site.
+  { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=(self), browsing-topics=()' },
   { key: 'X-Permitted-Cross-Domain-Policies', value: 'none' },
   { key: 'X-XSS-Protection', value: '0' },
 ]
