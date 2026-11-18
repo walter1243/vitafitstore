@@ -17,7 +17,7 @@ const inputCls = 'w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-
 const labelCls = 'mb-1.5 block text-xs font-medium text-white/50';
 
 const EMPTY: SalesPageConfig = {
-  slug: '', title: 'Nova loja', theme: 'vice-city', enabled: true, logoImage: '', iconImage: '', logoHeight: 56, heroLogoSize: 0,
+  slug: '', title: 'Nova loja', theme: 'vice-city', enabled: true, logoImage: '', iconImage: '', logoHeight: 56, heroLogoSize: 0, whatsappEnabled: true, whatsappNumber: '', instagram: '',
   eyebrow: 'EDICIÓN LIMITADA', heading: 'VICE CITY STORE',
   subtitle: 'Llaveros y piezas 3D con alma retro de los 80.',
   ctaLabel: 'Comprar ahora', badge: 'NUEVO DROP', heroImage: '', heroVideo: '', backgroundImage: '',
@@ -324,6 +324,20 @@ export default function AdminSalesPages({ products, editSlug, onSaved, onManage 
               {dateVal && <button type="button" onClick={() => up('countdownTo', null)} className="mb-0.5 rounded-lg border border-white/10 px-2 py-2 text-white/60 hover:bg-white/10"><X size={14} /></button>}
             </div>
             <div><label className={labelCls}>Rodapé (selos de confiança)</label><input value={editing.footerNote} onChange={(e) => up('footerNote', e.target.value)} className={inputCls} /></div>
+            {/* WhatsApp e Instagram da loja */}
+            <div className="space-y-3 rounded-xl border border-white/10 bg-[#0f1117] p-3">
+              <label className="flex cursor-pointer items-start gap-3">
+                <input type="checkbox" checked={editing.whatsappEnabled !== false} onChange={(e) => up('whatsappEnabled', e.target.checked)} className="mt-0.5 h-4 w-4 accent-green-500" />
+                <span>
+                  <span className="block text-sm font-semibold text-white">WhatsApp na loja</span>
+                  <span className="block text-[11px] text-white/40">Botão do WhatsApp nas páginas da loja e “¿Prefieres pedirlo por WhatsApp?” nos produtos personalizados com nome (a mensagem já vai com o produto e o nome escrito).</span>
+                </span>
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className={labelCls}>Número do WhatsApp</label><input value={editing.whatsappNumber} onChange={(e) => up('whatsappNumber', e.target.value)} placeholder="Vazio = o mesmo da Kitoys" inputMode="tel" className={inputCls} /></div>
+                <div><label className={labelCls}>Instagram da loja</label><input value={editing.instagram} onChange={(e) => up('instagram', e.target.value)} placeholder="@vicecitystore" className={inputCls} /></div>
+              </div>
+            </div>
           </div>
 
           {/* Coluna capa + produtos */}

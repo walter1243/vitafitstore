@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { cookies, headers } from 'next/headers';
 import { StoreCartSidebar } from '@/components/sales/store-cart';
+import { StoreWhatsApp } from '@/components/sales/store-chrome';
 import { ViceCityStore } from '@/components/sales/vice-city-store';
 import { getSalesPage, storeArt, storeIcons } from '@/lib/sales-pages';
 import { getStoreProductsServer } from '@/lib/products-db';
@@ -61,6 +62,7 @@ export default async function StorePage({ params }: PageProps) {
     <>
       <ViceCityStore config={page} products={products} cover={cover} preview={!page.enabled} />
       <StoreCartSidebar store={page} />
+      <StoreWhatsApp store={page} />
     </>
   );
 }

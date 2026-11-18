@@ -21,8 +21,9 @@ import { FREE_SHIPPING_FROM } from '@/lib/checkout-pricing';
 import { storeArt, storePath, type SalesPageConfig } from '@/lib/sales-pages-shared';
 import { ProductCard } from '@/components/sales/vice-city-store';
 import { flyToCart } from '@/lib/fly-to-cart';
+import { useStoreContact, waLink } from '@/components/sales/store-chrome';
 
-type Store = Pick<SalesPageConfig, 'slug' | 'title' | 'neonPrimary' | 'neonSecondary' | 'theme' | 'backgroundImage'>;
+type Store = Pick<SalesPageConfig, 'slug' | 'title' | 'neonPrimary' | 'neonSecondary' | 'theme' | 'backgroundImage'> & { whatsappEnabled?: boolean; whatsappNumber?: string };
 
 const eur = (n: number) => `${n.toFixed(2).replace('.', ',')} €`;
 
@@ -37,6 +38,8 @@ export function StoreProductView({ product, store, entrega, related }: {
   const P = store.neonPrimary;
   const S = store.neonSecondary;
   const art = storeArt(store);
+  const { phone } = useStoreContact(store);
+  const canWhatsApp = store.whatsappEnabled !== false && Boolean(phone);
 
   // Personalização com nome (chaveiro): mesmas regras da Kitoys.
   const pcfg = parsePersonalize(product.personalize);
@@ -104,6 +107,18 @@ export function StoreProductView({ product, store, entrega, related }: {
   useEffect(() => { if ({ ...DEFAULT_ENTREGA, ...entrega }.enabled) setEta(deliveryText(entrega, personalized)); }, [entrega, personalized]);
 
   const showNameOnPhoto = personalized && (active === 0 || colorImages.includes(activeImage));
+
+  // Mensagem pronta: produto, nome escrito, cor/tamanho e o link do produto.
+  function orderByWhatsApp() {
+    const lines = [
+      `¡Hola ${store.title}! Quiero el «${product.name}» personalizado.`,
+      `Nombre: ${cleanCustomText(customName, pcfg.maxLength) || '(lo escribo aquí)'}`,
+      selectedColor && product.colorOptions?.length ? `Color: ${selectedColor}` : '',
+      needsSize && selectedSize ? `Tamaño: ${selectedSize}` : '',
+      window.location.href,
+    ].filter(Boolean);
+    window.open(waLink(phone, lines.join('\n')), '_blank', 'noopener');
+  }
 
   const BTN = 'inline-flex h-12 cursor-pointer items-center justify-center rounded-md px-5 text-sm font-bold uppercase tracking-[0.12em] transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white';
 
@@ -240,6 +255,12 @@ export function StoreProductView({ product, store, entrega, related }: {
                   onBuyNow={() => router.push('/checkout')}
                   blocked={blocked || undefined}
                 />
+                {canWhatsApp && (
+                  <button type="button" onClick={orderByWhatsApp}
+                    className="mt-3 h-12 w-full cursor-pointer rounded-md border border-slate-300 text-sm font-bold uppercase tracking-[0.1em] text-slate-800 transition-colors hover:border-[#25D366] hover:text-[#128C4B]">
+                    ¿Prefieres pedirlo por WhatsApp?
+                  </button>
+                )}
               </div>
             ) : (
               <div className="mt-8 hidden lg:block">

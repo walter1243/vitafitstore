@@ -18,6 +18,9 @@ export type SalesPageConfig = {
   iconImage: string; // ícone quadrado: favicon + prévia do link (Instagram/WhatsApp)
   logoHeight: number; // altura do logo no topo, em px (Editar loja → Tamanho do logo)
   heroLogoSize: number; // logo grande na capa, em % da largura do texto da capa (0 = mostra o título escrito)
+  whatsappEnabled: boolean; // botão do WhatsApp na loja + "pedir por WhatsApp" nos personalizados com nome
+  whatsappNumber: string; // vazio = o mesmo WhatsApp da Kitoys (Configurações)
+  instagram: string; // @ ou link do Instagram da loja (rodapé)
   eyebrow: string;
   heading: string;
   subtitle: string;
@@ -48,6 +51,9 @@ export const DEFAULT_SALES_PAGE: Omit<SalesPageConfig, 'slug'> = {
   iconImage: '',
   logoHeight: 56,
   heroLogoSize: 0,
+  whatsappEnabled: true,
+  whatsappNumber: '',
+  instagram: '',
   eyebrow: 'EDICIÓN LIMITADA',
   heading: 'VICE CITY STORE',
   subtitle: 'Llaveros y piezas 3D con alma retro de los 80. Luz de neón, palmeras y actitud de ciudad — impresos en nuestro taller en España.',

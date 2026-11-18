@@ -15,6 +15,7 @@ import { SectorsProvider } from '@/components/kids/sectors-context'
 import { StoreFooter, StoreHeader } from '@/components/sales/store-chrome'
 import { StoreProductView } from '@/components/sales/store-product-view'
 import { StoreCartSidebar } from '@/components/sales/store-cart'
+import { StoreWhatsApp } from '@/components/sales/store-chrome'
 import { storeFontClass } from '@/components/sales/store-fonts'
 import { getStoreProductsServer } from '@/lib/products-db'
 import { toStoreProduct, type DbProduct } from '@/lib/store-product'
@@ -84,6 +85,7 @@ export default async function ProductPage({ params }: PageProps) {
         </main>
         <StoreFooter store={store} />
         <StoreCartSidebar store={store} />
+        <StoreWhatsApp store={store} lift />
       </div>
       </SectorsProvider>
     )

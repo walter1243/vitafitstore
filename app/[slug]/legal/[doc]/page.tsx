@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { StoreCartSidebar } from '@/components/sales/store-cart';
+import { StoreWhatsApp } from '@/components/sales/store-chrome';
 import { CookieSettingsButton } from '@/components/cookie-consent';
 import { StoreFooter, StoreHeader } from '@/components/sales/store-chrome';
 import { storeFontClass } from '@/components/sales/store-fonts';
@@ -173,6 +174,7 @@ export default async function StoreLegalPage({ params }: PageProps) {
 
       <StoreFooter store={store} />
       <StoreCartSidebar store={store} />
+      <StoreWhatsApp store={store} />
     </div>
   );
 }
