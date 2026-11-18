@@ -1,12 +1,13 @@
 'use client';
 
 // Botão "Ver en tu espacio" + janela de realidade aumentada (lib/ar.ts).
-// Monta o modelo 3D na hora a partir da foto recortada e abre no <model-viewer>:
-// no celular, a câmera abre e o cliente toca na mesa/parede para colocar o
-// produto em tamanho real. No computador mostra o modelo e pede para abrir no celular.
+// Monta o modelo 3D (com volume) na hora a partir da foto recortada e abre no
+// <model-viewer>: no celular, "Abrir cámara y colocar" pede a câmera e o cliente
+// toca na mesa/parede para colocar o produto em tamanho real. No computador o
+// modelo gira com o mouse. ArModel3D também é usado na prévia do painel.
 
 import { createElement, useEffect, useState } from 'react';
-import { buildArGlb, type ArConfig } from '@/lib/ar';
+import { arDepthCm, buildArGlb, loadArBitmap, type ArConfig } from '@/lib/ar';
 
 const MODEL_VIEWER_SRC = 'https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js';
 
@@ -19,24 +20,78 @@ function loadModelViewer(): Promise<void> {
     s.src = MODEL_VIEWER_SRC;
     document.head.appendChild(s);
   }
-  return customElements.whenDefined('model-viewer').then(() => undefined);
+  return Promise.race([
+    customElements.whenDefined('model-viewer').then(() => undefined),
+    new Promise<void>((_, rej) => setTimeout(() => rej(new Error('model-viewer não carregou')), 20000)),
+  ]);
 }
 
-// Foto → PNG (até 1024px). Imagens de outro domínio passam pelo /_next/image
-// (mesmo domínio), então o navegador deixa ler os pixels.
+// Foto → PNG (até 1024px), pronta para virar textura do modelo.
 async function toPngBytes(src: string): Promise<ArrayBuffer> {
-  const url = /^https?:\/\//i.test(src) ? `/_next/image?url=${encodeURIComponent(src)}&w=1080&q=90` : src;
-  const res = await fetch(url, { headers: { Accept: 'image/png' } });
-  if (!res.ok) throw new Error('img');
-  const bmp = await createImageBitmap(await res.blob());
+  const bmp = await loadArBitmap(src);
   const scale = Math.min(1, 1024 / Math.max(bmp.width, bmp.height));
   const cv = document.createElement('canvas');
-  cv.width = Math.round(bmp.width * scale);
-  cv.height = Math.round(bmp.height * scale);
+  cv.width = Math.max(1, Math.round(bmp.width * scale));
+  cv.height = Math.max(1, Math.round(bmp.height * scale));
   cv.getContext('2d')!.drawImage(bmp, 0, 0, cv.width, cv.height);
   const blob = await new Promise<Blob | null>((r) => cv.toBlob(r, 'image/png'));
   if (!blob) throw new Error('png');
   return blob.arrayBuffer();
+}
+
+// Monta o .glb do produto e devolve um blob: URL (some quando desmonta).
+function useArGlb(ar: Pick<ArConfig, 'image' | 'widthCm' | 'heightCm' | 'depthCm' | 'placement'>, active: boolean) {
+  const [url, setUrl] = useState('');
+  const [error, setError] = useState('');
+  const depth = arDepthCm(ar);
+  useEffect(() => {
+    if (!active || !ar.image) return;
+    let alive = true;
+    let made = '';
+    setError(''); setUrl('');
+    Promise.all([loadModelViewer(), toPngBytes(ar.image)])
+      .then(([, png]) => {
+        if (!alive) return;
+        const glb = buildArGlb(png, ar.widthCm / 100, ar.heightCm / 100, depth / 100, ar.placement);
+        made = URL.createObjectURL(new Blob([glb], { type: 'model/gltf-binary' }));
+        setUrl(made);
+      })
+      .catch((e) => { console.error('[ar]', e); if (alive) setError('No se pudo preparar el modelo 3D. Inténtalo de nuevo.'); });
+    return () => { alive = false; if (made) URL.revokeObjectURL(made); };
+  }, [active, ar.image, ar.widthCm, ar.heightCm, depth, ar.placement]);
+  return { url, error };
+}
+
+// O modelo 3D girando (sem botão de câmera) — prévia do painel e base da janela AR.
+export function ArModel3D({ ar, name, withAr = false, autoRotate = true, className = '' }: {
+  ar: Pick<ArConfig, 'image' | 'widthCm' | 'heightCm' | 'depthCm' | 'placement'>; name: string; withAr?: boolean; autoRotate?: boolean; className?: string;
+}) {
+  const { url, error } = useArGlb(ar, true);
+  if (error) return <p className={`flex items-center justify-center px-6 text-center text-sm text-white/70 ${className}`}>{error}</p>;
+  if (!url) return <p className={`flex items-center justify-center text-sm text-white/60 ${className}`}>Preparando 3D…</p>;
+  const props: Record<string, unknown> = {
+    src: url,
+    alt: name,
+    'camera-controls': '',
+    'touch-action': 'pan-y',
+    'shadow-intensity': '1',
+    'shadow-softness': '0.8',
+    'camera-orbit': '25deg 75deg auto',
+    'interaction-prompt': 'none',
+    class: className,
+    style: { width: '100%', height: '100%', background: 'transparent' },
+  };
+  if (autoRotate) { props['auto-rotate'] = ''; props['rotation-per-second'] = '24deg'; }
+  if (withAr) {
+    props.ar = '';
+    props['ar-modes'] = 'webxr scene-viewer quick-look';
+    props['ar-placement'] = ar.placement;
+    props['ar-scale'] = 'fixed';
+  }
+  return createElement('model-viewer', props, withAr ? createElement('button', {
+    slot: 'ar-button',
+    className: 'absolute inset-x-4 bottom-4 h-14 cursor-pointer rounded-md bg-white text-sm font-bold uppercase tracking-[0.12em] text-[#0b0614]',
+  }, 'Abrir cámara y colocar') : null);
 }
 
 // Câmera com a bolinha piscando (indica "ao vivo"): botão redondo sobre a foto do produto.
@@ -57,26 +112,13 @@ function CameraDot() {
 
 export function ArViewer({ name, ar, theme = 'dark', variant = 'button', className = '' }: { name: string; ar: ArConfig; theme?: 'dark' | 'light'; variant?: 'button' | 'icon'; className?: string }) {
   const [open, setOpen] = useState(false);
-  const [glbUrl, setGlbUrl] = useState('');
-  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!open) return;
-    let alive = true;
-    let made = '';
-    setError('');
-    Promise.all([loadModelViewer(), toPngBytes(ar.image)])
-      .then(([, png]) => {
-        if (!alive) return;
-        const glb = buildArGlb(png, ar.widthCm / 100, ar.heightCm / 100);
-        made = URL.createObjectURL(new Blob([glb], { type: 'model/gltf-binary' }));
-        setGlbUrl(made);
-      })
-      .catch(() => alive && setError('No se pudo abrir la vista en tu espacio. Inténtalo de nuevo.'));
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
     document.addEventListener('keydown', onKey);
-    return () => { alive = false; document.removeEventListener('keydown', onKey); if (made) URL.revokeObjectURL(made); setGlbUrl(''); };
-  }, [open, ar.image, ar.widthCm, ar.heightCm]);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open]);
 
   const trigger = theme === 'dark'
     ? 'border border-white/70 text-white hover:bg-white hover:text-[#0b0614]'
@@ -106,28 +148,7 @@ export function ArViewer({ name, ar, theme = 'dark', variant = 'button', classNa
               <button type="button" onClick={() => setOpen(false)} className="h-10 cursor-pointer px-2 text-xs font-semibold uppercase tracking-[0.16em] text-white/60 hover:text-white">Cerrar</button>
             </div>
             <div className="relative h-[60vh] max-h-[520px] bg-[radial-gradient(circle_at_50%_40%,#2a1640,#0b0614)]">
-              {error ? (
-                <p className="flex h-full items-center justify-center px-8 text-center text-sm text-white/70">{error}</p>
-              ) : !glbUrl ? (
-                <p className="flex h-full items-center justify-center text-sm text-white/60">Preparando…</p>
-              ) : (
-                createElement('model-viewer', {
-                  src: glbUrl,
-                  alt: name,
-                  ar: '',
-                  'ar-modes': 'webxr scene-viewer quick-look',
-                  'ar-placement': ar.placement,
-                  'ar-scale': 'fixed',
-                  'camera-controls': '',
-                  'touch-action': 'pan-y',
-                  'shadow-intensity': '0.8',
-                  'environment-image': 'neutral',
-                  style: { width: '100%', height: '100%', background: 'transparent' },
-                }, createElement('button', {
-                  slot: 'ar-button',
-                  className: 'absolute inset-x-4 bottom-4 h-14 cursor-pointer rounded-md bg-white text-sm font-bold uppercase tracking-[0.12em] text-[#0b0614]',
-                }, 'Abrir cámara y colocar'))
-              )}
+              <ArModel3D ar={ar} name={name} withAr className="h-full w-full" />
             </div>
             <div className="space-y-1.5 px-5 py-4 text-sm text-white/70">
               <p>Toca <strong className="text-white">“Abrir cámara y colocar”</strong>, permite la cámara y apunta a {where}. Toca la superficie para colocar <strong className="text-white">{name}</strong> en tamaño real ({ar.widthCm} × {ar.heightCm} cm).</p>

@@ -5,31 +5,26 @@
 // produto fica (mesa/chão ou parede). O resultado é salvo em products.ar.
 // Remoção de fundo: funciona bem com foto em fundo liso. PNG já transparente é usado como está.
 
-import { useCallback, useRef, useState } from 'react';
-import { parseAr, type ArConfig } from '@/lib/ar';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { arDepthCm, loadArBitmap, parseAr, type ArConfig } from '@/lib/ar';
+import { ArModel3D } from '@/components/ar/ar-viewer';
 
 const CARD = 'rounded-2xl border border-white/10 bg-[#0f1117] p-5';
 const inputCls = 'w-full rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40';
 
 async function loadCanvas(src: string, max = 1200): Promise<HTMLCanvasElement> {
-  const url = /^https?:\/\//i.test(src) ? `/_next/image?url=${encodeURIComponent(src)}&w=1200&q=95` : src;
-  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-    const i = new Image();
-    i.onload = () => resolve(i);
-    i.onerror = () => reject(new Error('Não foi possível ler a foto.'));
-    i.src = url;
-  });
-  const scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+  const img = await loadArBitmap(src).catch(() => { throw new Error('Não foi possível ler a foto.'); });
+  const scale = Math.min(1, max / Math.max(img.width, img.height));
   const cv = document.createElement('canvas');
-  cv.width = Math.round(img.naturalWidth * scale);
-  cv.height = Math.round(img.naturalHeight * scale);
+  cv.width = Math.max(1, Math.round(img.width * scale));
+  cv.height = Math.max(1, Math.round(img.height * scale));
   cv.getContext('2d', { willReadFrequently: true })!.drawImage(img, 0, 0, cv.width, cv.height);
   return cv;
 }
 
 // Fundo liso: parte das bordas e apaga o que tem a cor do fundo e encosta na
 // borda (flood fill), com borda suave no recorte; depois corta as sobras.
-async function removeBackground(src: string, tolerance: number): Promise<{ png: string; hadAlpha: boolean }> {
+async function removeBackground(src: string, tolerance: number): Promise<{ png: string; hadAlpha: boolean; chroma: boolean }> {
   const cv = await loadCanvas(src);
   const ctx = cv.getContext('2d', { willReadFrequently: true })!;
   const { width: w, height: h } = cv;
@@ -40,7 +35,45 @@ async function removeBackground(src: string, tolerance: number): Promise<{ png: 
   for (let i = 3; i < d.length; i += 4 * 7) if (d[i] < 20) transparent++;
   const hadAlpha = transparent > (w * h) / 7 / 50;
 
+  let chroma = false;
   if (!hadAlpha) {
+    let r = 0, g = 0, b = 0, n = 0;
+    const sample = (x: number, y: number) => { const k = (y * w + x) * 4; r += d[k]; g += d[k + 1]; b += d[k + 2]; n++; };
+    for (let x = 0; x < w; x += 2) { sample(x, 0); sample(x, h - 1); }
+    for (let y = 0; y < h; y += 2) { sample(0, y); sample(w - 1, y); }
+    r /= n; g /= n; b /= n;
+    // Fundo colorido forte (chroma verde/azul): recorte por cor em toda a foto.
+    chroma = Math.max(r, g, b) - Math.min(r, g, b) > 50 && (g > r + 25 && g > b + 15 || b > r + 25 && b > g + 15);
+  }
+  if (chroma) {
+    let r = 0, g = 0, b = 0, n = 0;
+    const sample = (x: number, y: number) => { const k = (y * w + x) * 4; r += d[k]; g += d[k + 1]; b += d[k + 2]; n++; };
+    for (let x = 0; x < w; x += 2) { sample(x, 0); sample(x, h - 1); }
+    for (let y = 0; y < h; y += 2) { sample(0, y); sample(w - 1, y); }
+    r /= n; g /= n; b /= n;
+    const cb = (R: number, G: number, B: number) => -0.168736 * R - 0.331264 * G + 0.5 * B;
+    const cr = (R: number, G: number, B: number) => 0.5 * R - 0.418688 * G - 0.081312 * B;
+    const kcb = cb(r, g, b), kcr = cr(r, g, b);
+    const greenKey = g >= b; // canal dominante do chroma (verde ou azul)
+    const inner = tolerance * 0.7, outer = tolerance * 1.2;
+    for (let k = 0; k < d.length; k += 4) {
+      const R = d[k], G = d[k + 1], B = d[k + 2];
+      const dist = Math.hypot(cb(R, G, B) - kcb, cr(R, G, B) - kcr);
+      const a = dist <= inner ? 0 : dist >= outer ? 1 : (dist - inner) / (outer - inner);
+      d[k + 3] = Math.round(d[k + 3] * a);
+      // tira o reflexo do chroma nas bordas e nas partes tingidas
+      if (a > 0 && dist < outer * 1.6) {
+        if (greenKey) { const lim = Math.max(R, B); if (G > lim) d[k + 1] = lim; }
+        else { const lim = Math.max(R, G); if (B > lim) d[k + 2] = lim; }
+      }
+    }
+    // some com pontinhos soltos (ruído do chroma)
+    for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
+      const p = (y * w + x) * 4 + 3;
+      if (d[p] && !d[p - 4] && !d[p + 4] && !d[p - w * 4] && !d[p + w * 4]) d[p] = 0;
+    }
+    ctx.putImageData(img, 0, 0);
+  } else if (!hadAlpha) {
     let r = 0, g = 0, b = 0, n = 0;
     const sample = (x: number, y: number) => { const k = (y * w + x) * 4; r += d[k]; g += d[k + 1]; b += d[k + 2]; n++; };
     for (let x = 0; x < w; x += 2) { sample(x, 0); sample(x, h - 1); }
@@ -79,7 +112,7 @@ async function removeBackground(src: string, tolerance: number): Promise<{ png: 
   out.width = right - left + 1;
   out.height = bottom - top + 1;
   out.getContext('2d')!.drawImage(cv, left, top, out.width, out.height, 0, 0, out.width, out.height);
-  return { png: out.toDataURL('image/png'), hadAlpha };
+  return { png: out.toDataURL('image/png'), hadAlpha, chroma };
 }
 
 const readFile = (f: File) => new Promise<string>((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result)); r.onerror = rej; r.readAsDataURL(f); });
@@ -97,13 +130,37 @@ export function ArEditor({ value, onChange, productImage }: { value: string; onC
     source.current = src;
     setBusy(true); setMsg(null);
     try {
-      const { png, hadAlpha } = await removeBackground(src, tolerance);
+      const { png, hadAlpha, chroma } = await removeBackground(src, tolerance);
       onChange(JSON.stringify({ ...parseAr(value), enabled: true, image: png }));
-      setMsg({ ok: true, text: hadAlpha ? 'A foto já tinha fundo transparente: usada como está.' : 'Fundo removido. Se sobrou fundo, aumente a tolerância; se comeu o produto, diminua.' });
+      setMsg({ ok: true, text: hadAlpha ? 'A foto já tinha fundo transparente: usada como está.' : chroma ? 'Chroma removido. Se sobrou verde, aumente a tolerância; se comeu o produto, diminua.' : 'Fundo removido. Se sobrou fundo, aumente a tolerância; se comeu o produto, diminua.' });
     } catch (e: any) {
       setMsg({ ok: false, text: e?.message || 'Não foi possível remover o fundo desta foto.' });
     } finally { setBusy(false); }
   }, [onChange, tolerance, value]);
+
+  // Colar (Ctrl+V) uma imagem em qualquer lugar do painel com a AR ligada, ou arrastar sobre o quadro.
+  const [dragging, setDragging] = useState(false);
+  const cutRef = useRef(cut);
+  cutRef.current = cut;
+  const imageFrom = (files: FileList | DataTransferItemList | null | undefined): File | null => {
+    if (!files) return null;
+    for (const it of Array.from(files as ArrayLike<File | DataTransferItem>)) {
+      const f = it instanceof File ? it : it.kind === 'file' ? it.getAsFile() : null;
+      if (f && f.type.startsWith('image/')) return f;
+    }
+    return null;
+  };
+  useEffect(() => {
+    if (!cfg.enabled) return;
+    const onPaste = async (e: ClipboardEvent) => {
+      const f = imageFrom(e.clipboardData?.items);
+      if (!f) return; // texto colado em outro campo segue normal
+      e.preventDefault();
+      cutRef.current(await readFile(f));
+    };
+    window.addEventListener('paste', onPaste);
+    return () => window.removeEventListener('paste', onPaste);
+  }, [cfg.enabled]);
 
   return (
     <section className={CARD}>
@@ -116,19 +173,23 @@ export function ArEditor({ value, onChange, productImage }: { value: string; onC
       </div>
 
       <label className="flex cursor-pointer items-center gap-3 text-sm text-white">
-        <input type="checkbox" checked={cfg.enabled} onChange={(e) => set({ enabled: e.target.checked })} className="h-4 w-4 accent-green-500" />
+        <input type="checkbox" checked={cfg.enabled} onChange={(e) => { set({ enabled: e.target.checked }); if (e.target.checked && !cfg.image && productImage) void cut(productImage); }} className="h-4 w-4 accent-green-500" />
         Mostrar “Ver en tu espacio” neste produto
       </label>
 
       {cfg.enabled && (
         <div className="mt-4 grid gap-4 md:grid-cols-[200px_1fr]">
-          <div className="relative mx-auto flex aspect-square w-full max-w-[200px] items-center justify-center overflow-hidden rounded-xl border border-white/10"
-            style={{ backgroundImage: 'conic-gradient(#2a2f3d 25%, #1c2236 0 50%, #2a2f3d 0 75%, #1c2236 0)', backgroundSize: '18px 18px' }}>
-            {cfg.image
-              // eslint-disable-next-line @next/next/no-img-element
-              ? <img src={cfg.image} alt="" className="max-h-full max-w-full object-contain" />
-              : <span className="px-4 text-center text-xs text-white/45">Sem foto recortada ainda</span>}
+          <div
+            onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={async (e) => { e.preventDefault(); setDragging(false); const f = imageFrom(e.dataTransfer.files); if (f) cut(await readFile(f)); }}
+            className={`relative mx-auto flex aspect-square w-full max-w-[200px] items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition-colors ${dragging ? 'border-green-400 bg-green-500/10' : 'border-white/15'}`}
+            style={dragging ? undefined : { background: 'radial-gradient(circle at 50% 40%, #2a1640, #0b0614)' }}>
+            {cfg.image && !busy
+              ? <ArModel3D ar={{ ...cfg }} name="Prévia 3D" className="h-full w-full" />
+              : !busy && <span className="px-4 text-center text-xs leading-relaxed text-white/55"><strong className="text-white/80">Cole (Ctrl+V)</strong> ou <strong className="text-white/80">arraste</strong> a foto aqui<br />e ela vira 3D</span>}
             {busy && <span className="absolute inset-0 flex items-center justify-center bg-black/60 text-xs text-white">Removendo fundo…</span>}
+            {dragging && <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-xs font-semibold text-green-200">Solte a foto</span>}
           </div>
 
           <div className="space-y-3">
@@ -154,11 +215,13 @@ export function ArEditor({ value, onChange, productImage }: { value: string; onC
                 className="w-full cursor-pointer accent-green-500" />
             </label>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <label className="block"><span className="mb-1 block text-xs text-white/55">Largura real (cm)</span>
                 <input type="number" min={1} max={500} step={0.5} value={cfg.widthCm} onChange={(e) => set({ widthCm: Number(e.target.value) })} className={inputCls} /></label>
               <label className="block"><span className="mb-1 block text-xs text-white/55">Altura real (cm)</span>
                 <input type="number" min={1} max={500} step={0.5} value={cfg.heightCm} onChange={(e) => set({ heightCm: Number(e.target.value) })} className={inputCls} /></label>
+              <label className="block"><span className="mb-1 block text-xs text-white/55">Espessura 3D (cm)</span>
+                <input type="number" min={0} max={50} step={0.5} value={cfg.depthCm || ''} placeholder={`auto ${arDepthCm(cfg)}`} onChange={(e) => set({ depthCm: Number(e.target.value) || 0 })} className={inputCls} /></label>
             </div>
 
             <div className="flex flex-wrap gap-2">
