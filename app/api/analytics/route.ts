@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin-auth';
-import { ensureSiteEvents, IGNORE_COOKIE } from '@/lib/site-events';
+import { ensureSiteEvents, IGNORE_COOKIE, storeParam } from '@/lib/site-events';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,6 +13,7 @@ export async function GET(req: NextRequest) {
     if (!auth.ok) return auth.response;
     await ensureSiteEvents();
     const days = Math.min(365, Math.max(1, Number(req.nextUrl.searchParams.get('days')) || 30));
+    const store = storeParam(req);
     const [{ start }] = await sql`SELECT (date_trunc('day', NOW() AT TIME ZONE 'Europe/Madrid') AT TIME ZONE 'Europe/Madrid') AS start`;
     const dayStart = new Date(start);
     const since = days === 1 ? dayStart.toISOString() : new Date(Date.now() - days * 86400000).toISOString();
@@ -24,17 +25,17 @@ export async function GET(req: NextRequest) {
         COUNT(*) FILTER (WHERE type = 'page_view' AND product_id IS NOT NULL)::INT  AS "productViews",
         COUNT(*) FILTER (WHERE type = 'product_click')::INT                           AS "productClicks",
         COUNT(*) FILTER (WHERE type = 'add_to_cart')::INT                             AS "addToCart"
-      FROM site_events WHERE created_at >= ${since}
+      FROM (SELECT * FROM site_events WHERE COALESCE(store_slug, 'kitoys') = ${store}) site_events WHERE created_at >= ${since}
     `;
     const [today] = await sql`
       SELECT
         COUNT(*) FILTER (WHERE type = 'page_view')::INT AS views,
         COUNT(DISTINCT visitor)::INT                    AS visitors
-      FROM site_events WHERE created_at >= ${dayStart.toISOString()}
+      FROM (SELECT * FROM site_events WHERE COALESCE(store_slug, 'kitoys') = ${store}) site_events WHERE created_at >= ${dayStart.toISOString()}
     `;
     const [orders] = await sql`
       SELECT COUNT(*)::INT AS count, COALESCE(SUM(total_amount), 0)::FLOAT AS revenue
-      FROM orders WHERE created_at >= ${since}
+      FROM orders WHERE created_at >= ${since} AND COALESCE(store_slug, 'kitoys') = ${store}
     `;
     const daily = await sql`
       SELECT TO_CHAR(d, 'YYYY-MM-DD') AS day,
@@ -45,7 +46,7 @@ export async function GET(req: NextRequest) {
         SELECT created_at::DATE AS day,
                COUNT(*) FILTER (WHERE type = 'page_view') AS views,
                COUNT(DISTINCT visitor) AS visitors
-        FROM site_events WHERE created_at >= CURRENT_DATE - 13
+        FROM (SELECT * FROM site_events WHERE COALESCE(store_slug, 'kitoys') = ${store}) site_events WHERE created_at >= CURRENT_DATE - 13
         GROUP BY 1
       ) e ON e.day = d::DATE
       ORDER BY d
@@ -56,7 +57,7 @@ export async function GET(req: NextRequest) {
              COUNT(*) FILTER (WHERE e.type = 'page_view')::INT     AS views,
              COUNT(*) FILTER (WHERE e.type = 'product_click')::INT AS clicks,
              COUNT(*) FILTER (WHERE e.type = 'add_to_cart')::INT   AS carts
-      FROM site_events e
+      FROM (SELECT * FROM (SELECT * FROM site_events WHERE COALESCE(store_slug, 'kitoys') = ${store}) site_events WHERE COALESCE(store_slug, 'kitoys') = ${store}) e
       LEFT JOIN products p ON p.id = e.product_id
       WHERE e.created_at >= ${since} AND e.product_id IS NOT NULL
       GROUP BY e.product_id
@@ -65,7 +66,7 @@ export async function GET(req: NextRequest) {
     `;
     const pages = await sql`
       SELECT path, COUNT(*)::INT AS views
-      FROM site_events
+      FROM (SELECT * FROM site_events WHERE COALESCE(store_slug, 'kitoys') = ${store}) site_events
       WHERE created_at >= ${since} AND type = 'page_view'
       GROUP BY path ORDER BY views DESC LIMIT 8
     `;
@@ -74,19 +75,19 @@ export async function GET(req: NextRequest) {
     const geo = await sql`
       SELECT country, COALESCE(city, '') AS city, AVG(lat)::FLOAT AS lat, AVG(lng)::FLOAT AS lng,
              COUNT(DISTINCT visitor)::INT AS visitors, COUNT(*)::INT AS views
-      FROM site_events
+      FROM (SELECT * FROM site_events WHERE COALESCE(store_slug, 'kitoys') = ${store}) site_events
       WHERE created_at >= ${since} AND type = 'page_view' AND country IS NOT NULL
       GROUP BY country, COALESCE(city, '')
       ORDER BY visitors DESC, views DESC LIMIT 300
     `;
     const hours = await sql`
       SELECT EXTRACT(HOUR FROM created_at AT TIME ZONE 'Europe/Madrid')::INT AS hour, COUNT(*)::INT AS views
-      FROM site_events WHERE created_at >= ${since} AND type = 'page_view'
+      FROM (SELECT * FROM site_events WHERE COALESCE(store_slug, 'kitoys') = ${store}) site_events WHERE created_at >= ${since} AND type = 'page_view'
       GROUP BY 1 ORDER BY 1
     `;
     const recent = await sql`
       SELECT TO_CHAR(created_at AT TIME ZONE 'Europe/Madrid', 'DD/MM HH24:MI') AS "when", country, city, path
-      FROM site_events WHERE type = 'page_view' AND created_at >= ${since}
+      FROM (SELECT * FROM site_events WHERE COALESCE(store_slug, 'kitoys') = ${store}) site_events WHERE type = 'page_view' AND created_at >= ${since}
       ORDER BY created_at DESC LIMIT 12
     `;
     // Compras: posicao do comprador no pagamento; pedidos antigos so tem o pais.
@@ -97,7 +98,7 @@ export async function GET(req: NextRequest) {
       SELECT UPPER(COALESCE(country, '')) AS country, COALESCE(geo_city, city, '') AS city,
              AVG(geo_lat)::FLOAT AS lat, AVG(geo_lng)::FLOAT AS lng,
              COUNT(*)::INT AS orders, COALESCE(SUM(total_amount), 0)::FLOAT AS revenue
-      FROM orders WHERE created_at >= ${since}
+      FROM orders WHERE created_at >= ${since} AND COALESCE(store_slug, 'kitoys') = ${store}
       GROUP BY 1, 2 ORDER BY orders DESC LIMIT 300
     `;
 
@@ -117,7 +118,9 @@ export async function DELETE(req: NextRequest) {
     const auth = await requireAdmin(req);
     if (!auth.ok) return auth.response;
     await ensureSiteEvents();
-    const rows = await sql`DELETE FROM site_events RETURNING 1`;
+    // Zera só as estatísticas da loja selecionada no painel.
+    const store = storeParam(req);
+    const rows = await sql`DELETE FROM site_events WHERE COALESCE(store_slug, 'kitoys') = ${store} RETURNING 1`;
     return NextResponse.json({ ok: true, deleted: rows.length });
   } catch (err: any) {
     console.error('[DELETE /api/analytics]', err);

@@ -13,7 +13,10 @@ import { getSiteContent } from '@/lib/site-content'
 import { getSectors } from '@/lib/sectors'
 import { SectorsProvider } from '@/components/kids/sectors-context'
 import { StoreFooter, StoreHeader } from '@/components/sales/store-chrome'
-import { getSalesPage, MAIN_STORE, storePath } from '@/lib/sales-pages'
+import { StoreProductView } from '@/components/sales/store-product-view'
+import { getStoreProductsServer } from '@/lib/products-db'
+import { toStoreProduct, type DbProduct } from '@/lib/store-product'
+import { getSalesPage, MAIN_STORE } from '@/lib/sales-pages'
 
 export const dynamic = 'force-dynamic'
 
@@ -65,12 +68,17 @@ export default async function ProductPage({ params }: PageProps) {
   // dela — quem veio pelo link da loja não cai na Kitoys. Carrinho/checkout iguais.
   const store = product.storeSlug && product.storeSlug !== MAIN_STORE ? await getSalesPage(product.storeSlug).catch(() => null) : null
   if (store) {
+    // "Más de la colección": outros produtos da mesma loja.
+    const related = (await getStoreProductsServer(surcharge, true, store.slug))
+      .filter((p) => Number(p.id) !== product.id)
+      .slice(0, 4)
+      .map((p) => toStoreProduct(p as DbProduct))
     return (
       <SectorsProvider sectors={sectors}>
-      <div data-kt-store={store.slug} className="flex min-h-screen flex-col bg-[#FAF8F5]" style={{ ['--hdr-h' as string]: '0px' }}>
+      <div data-kt-store={store.slug} className="flex min-h-screen flex-col bg-[#140720]">
         <StoreHeader store={store} />
         <main className="flex-1">
-          <ProductPageView product={product} entrega={content.entrega} homeHref={storePath(store.slug)} homeLabel={store.title} />
+          <StoreProductView product={product} store={store} entrega={content.entrega} related={related} />
         </main>
         <StoreFooter store={store} />
         <CartSidebar />

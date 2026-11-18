@@ -35,11 +35,12 @@ export async function POST(req: NextRequest) {
     const clean = (v: unknown, n: number) => String(v ?? '').toLowerCase().replace(/[^a-z0-9._ -]/g, '').trim().slice(0, n) || null;
     const source = clean(body?.source, 40);
     const meta = clean(body?.meta, 40);
+    const store = String(body?.store ?? '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 60) || 'kitoys';
     await ensureSiteEvents();
     const geo = body?.noGeo ? { country: null, city: null, lat: null, lng: null } : geoFromHeaders(req.headers);
     await sql`
-      INSERT INTO site_events (type, path, product_id, visitor, country, city, lat, lng, variant, device, source, meta)
-      VALUES (${type}, ${path}, ${productId}, ${visitor}, ${geo.country}, ${geo.city}, ${geo.lat}, ${geo.lng}, ${variant}, ${device}, ${source}, ${meta})
+      INSERT INTO site_events (type, path, product_id, visitor, country, city, lat, lng, variant, device, source, meta, store_slug)
+      VALUES (${type}, ${path}, ${productId}, ${visitor}, ${geo.country}, ${geo.city}, ${geo.lat}, ${geo.lng}, ${variant}, ${device}, ${source}, ${meta}, ${store})
     `;
   } catch (err) {
     console.error('[POST /api/track]', err);

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin-auth';
-import { ensureSiteEvents } from '@/lib/site-events';
+import { ensureSiteEvents, storeParam } from '@/lib/site-events';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
   try {
     await ensureSiteEvents();
     const days = Math.min(365, Math.max(1, Number(req.nextUrl.searchParams.get('days')) || 30));
+    const store = storeParam(req);
     const dev = req.nextUrl.searchParams.get('device');
     const device = dev === 'mobile' || dev === 'desktop' || dev === 'tablet' ? dev : null;
     const [{ start }] = await sql`SELECT (date_trunc('day', NOW() AT TIME ZONE 'Europe/Madrid') AT TIME ZONE 'Europe/Madrid') AS start`;
@@ -24,7 +25,7 @@ export async function GET(req: NextRequest) {
     const [f] = await sql`
       WITH ev AS (
         SELECT visitor || TO_CHAR(created_at, 'YYYY-MM-DD') AS who, type, path
-        FROM site_events
+        FROM (SELECT * FROM site_events WHERE COALESCE(store_slug, 'kitoys') = ${store}) site_events
         WHERE created_at >= ${since} AND (${device}::text IS NULL OR device = ${device})
       )
       SELECT
@@ -40,7 +41,7 @@ export async function GET(req: NextRequest) {
     const sources = await sql`
       WITH ev AS (
         SELECT visitor || TO_CHAR(created_at, 'YYYY-MM-DD') AS who, type, path, COALESCE(source, 'sem dado') AS source
-        FROM site_events
+        FROM (SELECT * FROM site_events WHERE COALESCE(store_slug, 'kitoys') = ${store}) site_events
         WHERE created_at >= ${since} AND (${device}::text IS NULL OR device = ${device})
       )
       SELECT source,
@@ -55,13 +56,13 @@ export async function GET(req: NextRequest) {
       SELECT COALESCE(device, 'sem dado') AS device,
              COUNT(DISTINCT visitor || TO_CHAR(created_at, 'YYYY-MM-DD'))::int AS visited,
              COUNT(DISTINCT visitor || TO_CHAR(created_at, 'YYYY-MM-DD')) FILTER (WHERE type = 'purchase')::int AS purchase
-      FROM site_events WHERE created_at >= ${since}
+      FROM (SELECT * FROM site_events WHERE COALESCE(store_slug, 'kitoys') = ${store}) site_events WHERE created_at >= ${since}
       GROUP BY 1 ORDER BY visited DESC
     `;
 
     const methods = await sql`
       SELECT COALESCE(NULLIF(meta, ''), 'sem dado') AS method, COUNT(*)::int AS n
-      FROM site_events
+      FROM (SELECT * FROM site_events WHERE COALESCE(store_slug, 'kitoys') = ${store}) site_events
       WHERE type = 'payment_start' AND created_at >= ${since} AND (${device}::text IS NULL OR device = ${device})
       GROUP BY 1 ORDER BY n DESC
     `;
@@ -71,7 +72,7 @@ export async function GET(req: NextRequest) {
       SELECT e.product_id AS id, COALESCE(MAX(p.name), 'Produto #' || e.product_id) AS name,
              COUNT(DISTINCT e.visitor || TO_CHAR(e.created_at, 'YYYY-MM-DD')) FILTER (WHERE e.type = 'page_view')::int AS opened,
              COUNT(DISTINCT e.visitor || TO_CHAR(e.created_at, 'YYYY-MM-DD')) FILTER (WHERE e.type = 'add_to_cart')::int AS carted
-      FROM site_events e LEFT JOIN products p ON p.id = e.product_id
+      FROM (SELECT * FROM (SELECT * FROM site_events WHERE COALESCE(store_slug, 'kitoys') = ${store}) site_events WHERE COALESCE(store_slug, 'kitoys') = ${store}) e LEFT JOIN products p ON p.id = e.product_id
       WHERE e.product_id IS NOT NULL AND e.created_at >= ${since} AND (${device}::text IS NULL OR e.device = ${device})
       GROUP BY e.product_id ORDER BY opened DESC LIMIT 8
     `;

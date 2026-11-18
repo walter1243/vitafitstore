@@ -2929,7 +2929,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
         )}
 
         <main className="min-w-0 flex-1 overflow-x-clip bg-[#0f1117] p-4 sm:p-6">
-          {section === 'dashboard' && <DashboardSection products={products} orders={orders} revenue={revenue} onNavigate={navigate} trackingAlerts={trackingPending} />}
+          {section === 'dashboard' && <DashboardSection products={products} orders={orders} revenue={revenue} onNavigate={navigate} trackingAlerts={trackingPending} store={storeSlug} />}
           {section === 'products' && (
             <ProductsSection
               products={products}
@@ -3003,7 +3003,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
   );
 }
 
-function DashboardSection({ products, orders, revenue, onNavigate, trackingAlerts }: { products: Product[]; orders: Order[]; revenue: number; onNavigate: (s: Section) => void; trackingAlerts: number; }) {
+function DashboardSection({ products, orders, revenue, onNavigate, trackingAlerts, store }: { products: Product[]; orders: Order[]; revenue: number; onNavigate: (s: Section) => void; trackingAlerts: number; store: string; }) {
   const stats = [
     { label: 'Produtos', value: products.length, sub: 'cadastrados', icon: <Package size={20} className="text-green-500" />, bg: 'bg-green-500/10' },
     { label: 'Pedidos', value: orders.length, sub: `${orders.filter(o => o.status === 'pending').length} aguardando`, icon: <ShoppingCart size={20} className="text-blue-400" />, bg: 'bg-blue-500/10' },
@@ -3025,7 +3025,7 @@ function DashboardSection({ products, orders, revenue, onNavigate, trackingAlert
         </button>
       )}
 
-      <AnalyticsPanel />
+      <AnalyticsPanel store={store} />
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         {stats.map(s => (

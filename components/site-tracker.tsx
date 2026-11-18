@@ -34,13 +34,25 @@ function visitSource(): string {
   }
 }
 
+// Loja do evento (multi-loja): página de outra loja (data-kt-store, ex.: /vice-city
+// e os produtos dela) = essa loja; checkout/pedido = a loja de onde o cliente veio;
+// o resto = Kitoys. O painel separa as estatísticas por loja com isso.
+function pageStore(): string {
+  try {
+    const s = document.querySelector('[data-kt-store]')?.getAttribute('data-kt-store')
+    if (s) return s
+    if (/^\/(checkout|pedido)/.test(location.pathname)) return sessionStorage.getItem('kt_store') || 'kitoys'
+  } catch {}
+  return 'kitoys'
+}
+
 // Estatisticas proprias da loja (Admin → Dashboard): visitas, cliques em
 // produtos e "adicionar ao carrinho". Nao usa cookies nem guarda nada no
 // aparelho — ver app/api/track/route.ts.
 export function send(data: { type: string; path: string; productId?: number; meta?: string }) {
   try {
     // Quem recusou no aviso de cookies conta como visita, mas sem localizacao.
-    const body = JSON.stringify({ ...data, noGeo: getCookieConsent() === 'rejected', variant: currentVariant(), source: visitSource() })
+    const body = JSON.stringify({ ...data, noGeo: getCookieConsent() === 'rejected', variant: currentVariant(), source: visitSource(), store: pageStore() })
     if (navigator.sendBeacon?.('/api/track', new Blob([body], { type: 'application/json' }))) return
     fetch('/api/track', { method: 'POST', body, headers: { 'Content-Type': 'application/json' }, keepalive: true }).catch(() => {})
   } catch {}

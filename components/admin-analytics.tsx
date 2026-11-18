@@ -23,7 +23,7 @@ const RANGES = [1, 7, 30, 90] as const;
 
 // Dashboard → estatisticas da loja (app/api/analytics). Visitantes = pessoas
 // diferentes por dia (sem cookies), somadas no periodo.
-export function AnalyticsPanel() {
+export function AnalyticsPanel({ store = 'kitoys' }: { store?: string }) {
   const [days, setDays] = useState<number>(30);
   const [stats, setStats] = useState<Stats | null>(null);
   const [error, setError] = useState('');
@@ -31,10 +31,10 @@ export function AnalyticsPanel() {
   const [resetting, setResetting] = useState(false);
 
   async function resetStats() {
-    if (!confirm('Zerar todas as estatísticas (visitantes, visualizações, cliques e carrinho)? Os pedidos não são apagados. Isso não pode ser desfeito.')) return;
+    if (!confirm('Zerar as estatísticas DESTA loja (visitantes, visualizações, cliques e carrinho)? As outras lojas e os pedidos não são apagados. Isso não pode ser desfeito.')) return;
     setResetting(true);
     try {
-      const r = await fetch('/api/analytics', { method: 'DELETE' });
+      const r = await fetch(`/api/analytics?store=${encodeURIComponent(store)}`, { method: 'DELETE' });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) { setError(d?.error ?? 'Falha ao zerar estatísticas.'); return; }
       setReload(n => n + 1);
@@ -48,7 +48,7 @@ export function AnalyticsPanel() {
   useEffect(() => {
     let alive = true;
     setError('');
-    fetch(`/api/analytics?days=${days}`, { cache: 'no-store' })
+    fetch(`/api/analytics?days=${days}&store=${encodeURIComponent(store)}`, { cache: 'no-store' })
       .then(async r => {
         const d = await r.json().catch(() => ({}));
         if (!alive) return;
@@ -56,7 +56,7 @@ export function AnalyticsPanel() {
       })
       .catch(() => alive && setError('Falha ao carregar estatísticas.'));
     return () => { alive = false; };
-  }, [days, reload]);
+  }, [days, reload, store]);
 
   const t = stats?.totals;
   const conversion = t && t.visitors ? (stats!.orders.count / t.visitors) * 100 : 0;
@@ -116,7 +116,7 @@ export function AnalyticsPanel() {
       </div>
 
       {/* Funil de compra: onde as pessoas desistem */}
-      <FunnelPanel days={days} />
+      <FunnelPanel days={days} store={store} />
 
       {stats && (
         <div className="mt-5 grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">

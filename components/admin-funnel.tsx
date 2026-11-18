@@ -31,7 +31,7 @@ const DEVICES = [
 const METHOD_LABEL: Record<string, string> = { card: 'Cartão / Apple Pay / Google Pay', bizum: 'Bizum', paypal: 'PayPal', klarna: 'Klarna', link: 'Link (Stripe)', mb_way: 'MB Way', apple_pay: 'Apple Pay', google_pay: 'Google Pay' };
 const pct = (a: number, b: number) => (b > 0 ? Math.round((a / b) * 100) : 0);
 
-export function FunnelPanel({ days }: { days: number }) {
+export function FunnelPanel({ days, store = 'kitoys' }: { days: number; store?: string }) {
   const [device, setDevice] = useState<'all' | 'mobile' | 'desktop'>('all');
   const [data, setData] = useState<Data | null>(null);
   const [error, setError] = useState('');
@@ -39,7 +39,7 @@ export function FunnelPanel({ days }: { days: number }) {
   useEffect(() => {
     let alive = true;
     setError('');
-    fetch(`/api/analytics/funnel?days=${days}&device=${device}`, { cache: 'no-store' })
+    fetch(`/api/analytics/funnel?days=${days}&device=${device}&store=${encodeURIComponent(store)}`, { cache: 'no-store' })
       .then(async (r) => {
         const d = await r.json().catch(() => ({}));
         if (!alive) return;
@@ -47,7 +47,7 @@ export function FunnelPanel({ days }: { days: number }) {
       })
       .catch(() => alive && setError('Falha ao carregar o funil.'));
     return () => { alive = false; };
-  }, [days, device]);
+  }, [days, device, store]);
 
   const f = data?.funnel;
   const top = Math.max(1, f?.visited ?? 1);

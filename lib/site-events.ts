@@ -46,6 +46,14 @@ export function ensureSiteEvents() {
     await sql`ALTER TABLE site_events ADD COLUMN IF NOT EXISTS device TEXT`;
     await sql`ALTER TABLE site_events ADD COLUMN IF NOT EXISTS source TEXT`;
     await sql`ALTER TABLE site_events ADD COLUMN IF NOT EXISTS meta TEXT`;
+    // multi-loja: de qual loja é o evento ('kitoys' = principal; ex.: 'vice-city')
+    await sql`ALTER TABLE site_events ADD COLUMN IF NOT EXISTS store_slug TEXT`;
+    await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS store_slug TEXT DEFAULT 'kitoys'`;
   })().catch((e) => { ready = null; throw e; });
   return ready;
+}
+
+// Loja selecionada no painel (?store=); sem parâmetro = loja principal (Kitoys).
+export function storeParam(req: { nextUrl: URL }): string {
+  return (req.nextUrl.searchParams.get('store') || 'kitoys').toLowerCase().replace(/[^a-z0-9-]/g, '') || 'kitoys';
 }

@@ -43,7 +43,24 @@ function TimeBox({ value, label }: { value: number; label: string }) {
   );
 }
 
-function ProductCard({ product }: { product: Product }) {
+function Palm({ className, glow }: { className?: string; glow: string }) {
+  return (
+    <svg viewBox="0 0 200 400" className={className} style={{ filter: `drop-shadow(0 0 8px ${glow}66)` }} aria-hidden>
+      <g fill="#0b0313">
+        <path d="M98 400C94 300 104 200 100 122L108 122C114 200 106 300 112 400Z" />
+        <path d="M104 120Q60 90 8 112Q60 100 104 130Z" />
+        <path d="M104 120Q150 85 196 106Q150 98 104 130Z" />
+        <path d="M104 118Q70 60 28 40Q76 70 106 126Z" />
+        <path d="M104 118Q140 58 180 36Q134 70 102 126Z" />
+        <path d="M104 116Q100 60 92 18Q112 64 108 122Z" />
+        <path d="M104 122Q70 130 38 172Q76 136 106 130Z" />
+        <path d="M104 122Q140 128 170 170Q134 134 102 130Z" />
+      </g>
+    </svg>
+  );
+}
+
+export function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
   const cp = cardPrice(product.price, product.personalize, product.sizes);
@@ -134,8 +151,10 @@ export function ViceCityStore({ config, products, cover, preview }: Props) {
         @keyframes vc-spin { to { transform: rotate(360deg); } }
         @keyframes vc-pulse { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
         @keyframes vc-flicker { 0%,19%,21%,23%,80%,100% { opacity:1; } 20%,22% { opacity:.6; } }
+        @keyframes vc-sway { 0%,100% { transform: rotate(-1.4deg); } 50% { transform: rotate(1.4deg); } }
+        .vc-palm { transform-origin: 50% 100%; animation: vc-sway 7s ease-in-out infinite; }
         @media (prefers-reduced-motion: reduce) {
-          .vc-sweep, .vc-sun-grid, .vc-flick { animation: none !important; }
+          .vc-sweep, .vc-sun-grid, .vc-flick, .vc-palm { animation: none !important; }
         }
       `}</style>
 
@@ -143,6 +162,15 @@ export function ViceCityStore({ config, products, cover, preview }: Props) {
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute inset-0" style={{ background: `radial-gradient(120% 80% at 50% -10%, ${config.neonPrimary}22 0%, transparent 55%), linear-gradient(180deg, #2a0b3f 0%, #190a2b 40%, #0c0416 100%)` }} />
         <div className="absolute left-1/2 top-[7%] h-56 w-56 -translate-x-1/2 rounded-full sm:h-72 sm:w-72" style={{ background: `linear-gradient(180deg, ${config.neonSecondary}, ${config.neonPrimary})`, filter: 'blur(2px)', opacity: 0.9, maskImage: 'linear-gradient(180deg,#000 55%,transparent 72%)', WebkitMaskImage: 'linear-gradient(180deg,#000 55%,transparent 72%)' }} />
+        {/* Vice City atrás do hero: silhueta da cidade + palmeiras balançando */}
+        <div className="absolute inset-x-0 top-0 h-[min(100vh,820px)]">
+          <svg viewBox="0 0 1200 160" preserveAspectRatio="none" className="absolute inset-x-0 bottom-0 h-24 w-full sm:h-36" style={{ filter: `drop-shadow(0 -2px 10px ${config.neonPrimary}55)` }}>
+            <path fill="#12061f" d="M0 160V110H60V70H110V95H150V40H190V95H240V80H300V120H340V55H380V30H400V55H440V100H500V75H560V110H600V60H650V90H700V45H720V20H740V45H780V105H840V70H900V115H950V50H1000V90H1060V65H1120V100H1200V160Z" />
+          </svg>
+          <Palm className="vc-palm absolute -left-10 bottom-0 h-[300px] opacity-90 sm:-left-4 sm:h-[460px]" glow={config.neonPrimary} />
+          <Palm className="vc-palm absolute left-16 bottom-0 hidden h-[300px] opacity-70 [animation-delay:-2s] md:block" glow={config.neonSecondary} />
+          <Palm className="vc-palm absolute -right-10 bottom-0 h-[340px] -scale-x-100 opacity-90 [animation-delay:-3.5s] sm:-right-4 sm:h-[500px]" glow={config.neonSecondary} />
+        </div>
         <div className="vc-sun-grid absolute inset-x-[-20%] bottom-0 h-[42vh]" style={{ transform: 'perspective(400px) rotateX(72deg)', transformOrigin: 'bottom', backgroundImage: `linear-gradient(${config.neonSecondary}55 1px, transparent 1px), linear-gradient(90deg, ${config.neonSecondary}55 1px, transparent 1px)`, backgroundSize: '44px 44px', animation: 'vc-grid 1.6s linear infinite', maskImage: 'linear-gradient(180deg, transparent, #000 60%)', WebkitMaskImage: 'linear-gradient(180deg, transparent, #000 60%)' }} />
       </div>
 
