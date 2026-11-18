@@ -15,7 +15,8 @@ export async function GET() {
     publishableKeyType: publishable.slice(0, 8) || null,
   };
   try {
-    const account = await new Stripe(secret).accounts.retrieve();
+    // conta da própria chave (GET /v1/account); retrieve() exige um id na stripe-node 22
+    const account = await new Stripe(secret).accounts.retrieveCurrent();
     const fragment = account.id.replace(/^acct_1/, '');
     out.account = { id: account.id, country: account.country, name: account.settings?.dashboard?.display_name ?? null };
     out.publishableMatchesSecret = Boolean(publishable) && publishable.includes(fragment);

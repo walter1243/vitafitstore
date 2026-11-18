@@ -72,7 +72,7 @@ function AcessoPageContent() {
       const payload = (await res.json().catch(() => ({}))) as ValidateSuccess | ValidateError;
 
       if (!res.ok || !('valid' in payload) || payload.valid !== true) {
-        const message = 'reason' in payload ? reasonToMessage(payload.reason) : payload.error ?? 'Erro ao validar token.';
+        const message = 'reason' in payload ? reasonToMessage(payload.reason) : (payload as ValidateError).error ?? 'Erro ao validar token.';
         setError(message);
         return;
       }
