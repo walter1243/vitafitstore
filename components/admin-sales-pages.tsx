@@ -253,9 +253,9 @@ export default function AdminSalesPages({ products, editSlug, onSaved, onManage 
               {/* prévia: proporção de uma tela, com a coluna do título à esquerda */}
               <div className="relative mt-2 aspect-[16/9] overflow-hidden rounded-lg border border-white/15 bg-[#0b0614]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={editing.backgroundImage || storeArt(editing).hero} alt="" className="absolute inset-y-0 right-0 h-full w-[58%] object-cover object-[50%_28%] opacity-80" />
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, #0b0614 0%, #0b0614eb 30%, #0b061466 52%, transparent 72%)' }} />
-                <div className="absolute inset-y-0 left-[6%] flex w-[48%] flex-col justify-center">
+                <img src={editing.backgroundImage || storeArt(editing).hero} alt="" className="absolute inset-0 h-full w-full object-cover object-[38%_55%] opacity-90" />
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(270deg, #0b0614 0%, #0b0614e0 22%, #0b061480 40%, transparent 60%)' }} />
+                <div className="absolute inset-y-0 right-[4%] flex w-[40%] flex-col justify-center">
                   {editing.logoImage && clampHeroLogo(editing.heroLogoSize) > 0
                     // eslint-disable-next-line @next/next/no-img-element
                     ? <img src={editing.logoImage} alt="" style={{ width: `${clampHeroLogo(editing.heroLogoSize)}%` }} className="h-auto max-w-full" />

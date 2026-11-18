@@ -92,9 +92,9 @@ export const storePath = (slug: string) => (!slug || slug === MAIN_STORE ? '/' :
 // minúscula para o fundo desfocado e prévia borrada (aparece enquanto carrega).
 export const THEME_ART: Record<SalesPageTheme, { hero: string; ambient: string; blur: string }> = {
   'vice-city': {
-    hero: '/images/lojas/vice-city-hero.webp',
-    ambient: '/images/lojas/vice-city-ambient.webp',
-    blur: 'data:image/webp;base64,UklGRpQAAABXRUJQVlA4IIgAAAAwBACdASoMABUAPtFWo0uoJKMhsAgBABoJZACdH8AC9WCOdtb1CE9S3nAA/ZaWEHSoRO93QLZU+CZO31N3qGbUdLc0yTZjf6wzwz+9ENb+aL/XyDNlahPu9ozfqOTvfiseYHcc+CV08vOZttCObwSssVHjR09rww5mS0FBW+L7aresKpxpKAAA',
+    hero: '/images/lojas/vice-city-capa.webp',
+    ambient: '/images/lojas/vice-city-capa-ambient.webp',
+    blur: 'data:image/webp;base64,UklGRmwAAABXRUJQVlA4IGAAAAAwAgCdASoQAAoAAsBMJbACdAEWQ5lx4ONIgAD+7FZhIjFcN+WDHxxfLAae0w4lxx6WpalLDj/hyJ93+jhhE+9scJDYyoDg7BZLI3abNUwkfptyyXi797z4BXjvtMCSAAA=',
   },
 };
 

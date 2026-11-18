@@ -87,7 +87,7 @@ export function ProductCard({ product }: { product: Product }) {
   const personal = Boolean(product.personalize?.enabled);
 
   return (
-    <article className="group flex flex-col">
+    <article id={`p-${product.id}`} className="group flex scroll-mt-32 flex-col">
       <Link href={hrefOf(product)} className="block overflow-hidden rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
         <div ref={setImg} className="relative aspect-[4/5] overflow-hidden bg-[#1a1024]">
           <Image src={imgOf(product)} alt={product.name} fill sizes="(min-width:1024px) 380px, (min-width:640px) 50vw, 100vw" className="object-cover transition-transform duration-700 group-hover:scale-[1.04] motion-reduce:transition-none" />
@@ -220,6 +220,12 @@ export function ViceCityStore({ config, products, cover }: Props) {
   const S = config.neonSecondary;
   const vars = { '--vc-primary': P, '--vc-secondary': S } as React.CSSProperties;
   const toCatalog = () => catalogRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // Botão da capa: vai direto ao produto-gancho (o da capa) na lista; sem ele, ao começo dos produtos.
+  const toHook = () => {
+    const el = cover ? document.getElementById(`p-${cover.id}`) : null;
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    else toCatalog();
+  };
 
   return (
     <div style={vars} data-kt-store={config.slug} className={`${storeFontClass} relative min-h-screen overflow-x-clip bg-[#0b0614] text-white`}>
@@ -230,9 +236,6 @@ export function ViceCityStore({ config, products, cover }: Props) {
         .vc-spin { animation: vc-spin 5s linear infinite; }
         .vc-chase { animation: vc-chase .9s linear infinite; }
         .vc-pulse { animation: vc-pulse 2.8s ease-in-out infinite; }
-        @media (min-width: 1024px) {
-          .vc-photo { -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 32%); mask-image: linear-gradient(90deg, transparent 0%, #000 32%); }
-        }
         @media (prefers-reduced-motion: reduce) { .vc-spin, .vc-chase, .vc-pulse { animation: none !important; } }
       `}</style>
 
@@ -240,27 +243,26 @@ export function ViceCityStore({ config, products, cover }: Props) {
 
       {/* ── CAPA ─────────────────────────────────────────────────────────── */}
       <section className="relative isolate">
-        <div aria-hidden className="absolute inset-0 -z-10 hidden overflow-hidden lg:block">
-          <div className="absolute -inset-20 bg-cover bg-center opacity-70 blur-[60px]" style={{ backgroundImage: `url(${art.ambient})` }} />
-        </div>
-        <div className="vc-photo absolute inset-x-0 top-0 -z-10 h-[94svh] lg:inset-y-0 lg:left-auto lg:h-auto lg:w-[58%]">
+        {/* a capa: tela cheia; no celular os bonecos ficam no centro, no PC à esquerda */}
+        <div className="absolute inset-x-0 top-0 -z-10 h-[94svh] lg:inset-0 lg:h-auto">
           <Image
             src={art.hero}
             alt=""
             fill
             priority
-            sizes="(min-width:1024px) 58vw, 100vw"
+            sizes="100vw"
             placeholder={art.blur ? 'blur' : 'empty'}
             blurDataURL={art.blur || undefined}
-            className="object-cover object-[50%_28%]"
+            className="object-cover object-[44%_50%] lg:object-[38%_55%]"
           />
         </div>
         <div aria-hidden className="absolute inset-0 -z-10 mix-blend-soft-light" style={{ background: `linear-gradient(155deg, ${P}66 0%, transparent 45%, ${S}4d 100%)` }} />
         <div aria-hidden className="absolute inset-0 -z-10 lg:hidden" style={{ background: `linear-gradient(180deg, ${BG}99 0%, transparent 16%, transparent 36%, ${BG}d9 64%, ${BG} 88%)` }} />
-        <div aria-hidden className="absolute inset-0 -z-10 hidden lg:block" style={{ background: `linear-gradient(90deg, ${BG} 0%, ${BG}eb 30%, ${BG}66 52%, transparent 72%), linear-gradient(180deg, ${BG}80 0%, transparent 14%, transparent 78%, ${BG} 100%)` }} />
+        <div aria-hidden className="absolute inset-0 -z-10 hidden lg:block" style={{ background: `linear-gradient(270deg, ${BG} 0%, ${BG}e0 22%, ${BG}80 40%, transparent 60%), linear-gradient(180deg, ${BG}80 0%, transparent 16%, transparent 76%, ${BG} 100%)` }} />
 
-        <div className="mx-auto grid max-w-6xl gap-12 px-4 pb-16 pt-[50svh] sm:pt-[54svh] lg:min-h-[100svh] lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:gap-6 lg:pb-20 lg:pt-32">
-          <div className="text-center lg:text-left">
+        <div className="mx-auto grid max-w-6xl gap-12 px-4 pb-16 pt-[58svh] sm:pt-[60svh] lg:min-h-[100svh] lg:grid-cols-[1fr_minmax(0,480px)] lg:items-center lg:gap-6 lg:pb-20 lg:pt-32">
+          {/* PC: texto à direita, sobre o pôr do sol — os bonecos ficam livres à esquerda */}
+          <div className="text-center lg:col-start-2 lg:text-left">
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">{config.badge || config.eyebrow}</p>
             {config.logoImage && clampHeroLogo(config.heroLogoSize) > 0 ? (
               // Logo grande no lugar do título (Editar loja → Logo na capa)
@@ -288,15 +290,13 @@ export function ViceCityStore({ config, products, cover }: Props) {
             )}
 
             <div className="mt-9 flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:justify-start">
-              <button type="button" onClick={toCatalog} className={`${BTN} h-14 w-full bg-white px-10 text-base text-[#0b0614] hover:bg-[var(--vc-primary)] sm:w-auto`}>
+              <button type="button" onClick={toHook} className={`${BTN} h-14 w-full bg-white px-10 text-base text-[#0b0614] hover:bg-[var(--vc-primary)] sm:w-auto`}>
                 {config.ctaLabel || 'Ver productos'}
               </button>
               <p className="text-sm text-white/70">Envío gratis desde {FREE_SHIPPING_FROM} €</p>
             </div>
           </div>
 
-          {/* Sem produto ainda: sem cartão — a foto real ocupa o lado direito. */}
-          {cover && <CoverCard cover={cover} config={config} />}
         </div>
       </section>
 
@@ -311,7 +311,7 @@ export function ViceCityStore({ config, products, cover }: Props) {
         {/* fundo dos produtos: a mesma arte da capa, parada atrás enquanto a página rola
             (sticky funciona no iPhone; background-attachment: fixed não) */}
         <div aria-hidden className="pointer-events-none sticky top-0 -mb-[100svh] h-[100svh] overflow-hidden">
-          <Image src={art.hero} alt="" fill sizes="100vw" className="scale-105 object-cover object-[50%_30%] opacity-40 blur-[3px]" />
+          <Image src={art.hero} alt="" fill sizes="100vw" className="scale-105 object-cover object-[44%_55%] opacity-45 blur-[2px]" />
           <div className="absolute inset-0 mix-blend-soft-light" style={{ background: `linear-gradient(155deg, ${P}66 0%, transparent 50%, ${S}4d 100%)` }} />
           <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, ${BG} 0%, ${BG}cc 22%, ${BG}b3 60%, ${BG}e0 100%)` }} />
         </div>
