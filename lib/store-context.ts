@@ -4,7 +4,7 @@
 // produtos do carrinho; se o carrinho está vazio, a última loja visitada nesta
 // aba (guardada pela página da loja). 'kitoys' = loja principal.
 import { useEffect, useState } from 'react';
-import { MAIN_STORE, type SalesPageConfig } from '@/lib/sales-pages-shared';
+import { MAIN_STORE, storeFaviconHref, type SalesPageConfig } from '@/lib/sales-pages-shared';
 
 const KEY = 'kt_store';
 
@@ -16,7 +16,7 @@ export function rememberedStore(): string {
   try { return sessionStorage.getItem(KEY) || MAIN_STORE; } catch { return MAIN_STORE; }
 }
 
-type StoreBrand = Pick<SalesPageConfig, 'slug' | 'title' | 'logoImage' | 'neonPrimary' | 'neonSecondary'>;
+type StoreBrand = Pick<SalesPageConfig, 'slug' | 'title' | 'logoImage' | 'neonPrimary' | 'neonSecondary' | 'theme'>;
 
 // Loja ativa + dados de marca dela (nome, logo, cores). null = Kitoys.
 export function useActiveStore(cartStoreSlug?: string): { slug: string; brand: StoreBrand | null } {
@@ -38,4 +38,28 @@ export function useActiveStore(cartStoreSlug?: string): { slug: string; brand: S
   }, [slug]);
 
   return { slug, brand };
+}
+
+// Página compartilhada (checkout) comprando em outra loja: a aba do navegador
+// mostra o ícone dessa loja; ao sair, volta o ícone original (Kitoys).
+export function useStoreFavicon(brand: Pick<SalesPageConfig, 'logoImage' | 'theme'> | null) {
+  const href = brand ? storeFaviconHref(brand) : '';
+  useEffect(() => {
+    if (!href) return;
+    const links = Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel~="icon"], link[rel="apple-touch-icon"]'));
+    const prev = links.map((l) => l.href);
+    links.forEach((l) => { l.href = href; });
+    return () => links.forEach((l, i) => { l.href = prev[i]; });
+  }, [href]);
+}
+
+// Base das políticas para a página atual: dentro de outra loja (data-kt-store)
+// = /<slug>/legal (visual da loja); senão /legal (Kitoys).
+export function useLegalBase(): string {
+  const [base, setBase] = useState('/legal');
+  useEffect(() => {
+    const s = document.querySelector('[data-kt-store]')?.getAttribute('data-kt-store');
+    setBase(s && s !== MAIN_STORE ? `/${s}/legal` : '/legal');
+  });
+  return base;
 }

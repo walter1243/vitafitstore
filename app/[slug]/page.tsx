@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { cookies, headers } from 'next/headers';
 import { CartSidebar } from '@/components/cart-sidebar';
 import { ViceCityStore } from '@/components/sales/vice-city-store';
-import { getSalesPage } from '@/lib/sales-pages';
+import { getSalesPage, storeIcons } from '@/lib/sales-pages';
 import { getStoreProductsServer } from '@/lib/products-db';
 import { toStoreProduct, type DbProduct } from '@/lib/store-product';
 import { COUNTRY_COOKIE, countrySurcharge, viewerCountry } from '@/lib/country-price';
@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description: page.subtitle,
     alternates: { canonical: `/${page.slug}` },
     robots: page.enabled ? undefined : { index: false, follow: false },
-    icons: page.logoImage ? { icon: page.logoImage } : undefined,
+    icons: storeIcons(page),
     openGraph: {
       title: page.title,
       description: page.subtitle,

@@ -12,7 +12,7 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { ShoppingBag, Sparkles } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
-import { storePath, type SalesPageConfig } from '@/lib/sales-pages-shared';
+import { storeLegalHref, storePath, type SalesPageConfig } from '@/lib/sales-pages-shared';
 import { rememberStore } from '@/lib/store-context';
 
 type Brand = Pick<SalesPageConfig, 'slug' | 'title' | 'logoImage' | 'neonPrimary' | 'neonSecondary' | 'footerNote'>;
@@ -71,12 +71,9 @@ export function StoreFooter({ store }: { store: Brand }) {
       <p className="font-store-display text-lg uppercase tracking-[0.18em] text-white/90" style={{ textShadow: `0 0 16px ${store.neonPrimary}66` }}>{store.title}</p>
       <p className="mx-auto mt-2 max-w-md text-xs leading-relaxed">{store.footerNote}</p>
       <nav aria-label="Información legal" className="mt-5 flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs">
-        <Link href="/legal/envios" className="hover:text-white">Envíos</Link>
-        <Link href="/legal/devoluciones" className="hover:text-white">Devoluciones</Link>
-        <Link href="/legal/terminos" className="hover:text-white">Términos</Link>
-        <Link href="/legal/privacidad" className="hover:text-white">Privacidad</Link>
-        <Link href="/legal/cookies" className="hover:text-white">Cookies</Link>
-        <Link href="/legal/aviso-legal" className="hover:text-white">Aviso legal</Link>
+        {([['envios', 'Envíos'], ['devoluciones', 'Devoluciones'], ['terminos', 'Términos'], ['privacidad', 'Privacidad'], ['cookies', 'Cookies'], ['aviso-legal', 'Aviso legal']] as const).map(([doc, label]) => (
+          <Link key={doc} href={storeLegalHref(store.slug, doc)} className="hover:text-white">{label}</Link>
+        ))}
       </nav>
       <p className="mt-5 text-[11px] text-white/35">Precios con IVA incluido · Pago seguro con Stripe</p>
     </footer>

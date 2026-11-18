@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { clearPendingCoupon, getPendingCoupon, markCouponUsedIfPending, savePendingCoupon } from '@/lib/coupon-client';
 import { useCart } from '@/lib/cart-context';
-import { useActiveStore } from '@/lib/store-context';
+import { useActiveStore, useStoreFavicon } from '@/lib/store-context';
 import { storePath } from '@/lib/sales-pages-shared';
 import { AddressFinder, type FoundAddress } from '@/components/shipping/address-finder';
 import { packOf, qtyLabel } from '@/lib/personalize';
@@ -557,6 +557,7 @@ function CheckoutFormInner() {
   // Multi-loja: comprando na VICE CITY STORE, o checkout mostra o nome/logo dela
   // e "voltar"/"seguir comprando" levam para a loja dela, não para a Kitoys.
   const { slug: activeStore, brand } = useActiveStore(items.length ? (items[0]?.product.storeSlug || 'kitoys') : undefined);
+  useStoreFavicon(brand);
   const storeHome = storePath(activeStore);
 
   // Same branding cache the header writes to — without it this previously

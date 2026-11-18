@@ -98,3 +98,39 @@ export function storeArt(cfg: Pick<SalesPageConfig, 'theme' | 'backgroundImage'>
   if (cfg.backgroundImage) return { hero: cfg.backgroundImage, ambient: cfg.backgroundImage, blur: '' };
   return theme;
 }
+
+// Ícone da aba (favicon) de cada tema — gerados em public/images/lojas/.
+// Com logo enviado no painel, o favicon da loja é o próprio logo.
+export const THEME_ICONS: Record<SalesPageTheme, { icon32: string; icon192: string; icon512: string; apple: string }> = {
+  'vice-city': {
+    icon32: '/images/lojas/vice-city-icon-32.png',
+    icon192: '/images/lojas/vice-city-icon-192.png',
+    icon512: '/images/lojas/vice-city-icon-512.png',
+    apple: '/images/lojas/vice-city-apple-180.png',
+  },
+};
+
+// Favicon (metadata do Next) das páginas da loja — substitui o da Kitoys.
+export function storeIcons(cfg: Pick<SalesPageConfig, 'theme' | 'logoImage'>) {
+  if (cfg.logoImage) return { icon: [{ url: cfg.logoImage }], shortcut: cfg.logoImage, apple: [{ url: cfg.logoImage }] };
+  const t = THEME_ICONS[cfg.theme] ?? THEME_ICONS['vice-city'];
+  return {
+    icon: [
+      { url: t.icon32, sizes: '32x32', type: 'image/png' },
+      { url: t.icon192, sizes: '192x192', type: 'image/png' },
+      { url: t.icon512, sizes: '512x512', type: 'image/png' },
+    ],
+    shortcut: t.icon32,
+    apple: [{ url: t.apple, sizes: '180x180', type: 'image/png' }],
+  };
+}
+
+// Um único endereço de favicon (para trocar o ícone no navegador, ex.: checkout).
+export function storeFaviconHref(cfg: Pick<SalesPageConfig, 'theme' | 'logoImage'>) {
+  return cfg.logoImage || (THEME_ICONS[cfg.theme] ?? THEME_ICONS['vice-city']).icon32;
+}
+
+// Políticas (envíos, devoluciones…) com o visual de cada loja:
+// Kitoys → /legal/<doc>; outra loja → /<slug>/legal/<doc>.
+export const storeLegalHref = (slug: string, doc: string) =>
+  `${slug && slug !== MAIN_STORE ? `/${slug}` : ''}/legal/${doc}`;

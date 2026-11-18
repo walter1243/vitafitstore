@@ -17,7 +17,7 @@ import { StoreProductView } from '@/components/sales/store-product-view'
 import { storeFontClass } from '@/components/sales/store-fonts'
 import { getStoreProductsServer } from '@/lib/products-db'
 import { toStoreProduct, type DbProduct } from '@/lib/store-product'
-import { getSalesPage, MAIN_STORE } from '@/lib/sales-pages'
+import { getSalesPage, MAIN_STORE, storeIcons } from '@/lib/sales-pages'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,7 +41,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: { absolute: `${product.name} | ${store.title}` },
       description: product.shortDescription,
       alternates: { canonical: `/producto/${product.id}-${product.slug}` },
-      icons: store.logoImage ? { icon: store.logoImage } : undefined,
+      icons: storeIcons(store),
       openGraph: { title: product.name, siteName: store.title, images: product.mainImage ? [product.mainImage] : undefined },
     }
   }

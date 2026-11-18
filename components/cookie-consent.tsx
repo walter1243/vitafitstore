@@ -4,6 +4,7 @@ import { Tr, UI } from '@/components/language-switcher'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useLegalBase } from '@/lib/store-context'
 
 // Aviso de cookies no padrão europeu (RGPD + LSSI-CE / guia da AEPD):
 // - nada de análise ou publicidade antes do consentimento;
@@ -116,6 +117,8 @@ export function CookieConsent() {
   const [configuring, setConfiguring] = useState(false)
   const [prefs, setPrefs] = useState<ConsentPrefs>({ analytics: false, marketing: false })
   const pathname = usePathname()
+  // Dentro de outra loja (ex.: /vice-city), as políticas abrem com o visual dela.
+  const legal = useLegalBase()
 
   useEffect(() => {
     if (getConsentPrefs() === null) setVisible(true)
@@ -154,9 +157,9 @@ export function CookieConsent() {
           Usamos cookies necesarias para que la tienda funcione. Con tu permiso, también usamos cookies de análisis y de publicidad de terceros.
           Puedes aceptarlas, rechazarlas o elegir cuáles, y cambiar de opinión cuando quieras desde «Configurar cookies» al pie de la página.
           Más información en la{' '}
-          <Link href="/legal/cookies" className="font-medium text-[#0071e3] underline hover:text-[#0062c4]">Política de Cookies</Link>
+          <Link href={`${legal}/cookies`} className="font-medium text-[#0071e3] underline hover:text-[#0062c4]">Política de Cookies</Link>
           {' '}y la{' '}
-          <Link href="/legal/privacidad" className="font-medium text-[#0071e3] underline hover:text-[#0062c4]">Política de Privacidad</Link>.
+          <Link href={`${legal}/privacidad`} className="font-medium text-[#0071e3] underline hover:text-[#0062c4]">Política de Privacidad</Link>.
         </p>
 
         {configuring && (
