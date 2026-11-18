@@ -10,6 +10,7 @@ import { AdminNfc } from '@/components/admin-nfc';
 import SignageCad from '@/components/signage-cad';
 import { ShippingZonesSection } from '@/components/admin-shipping-zones';
 import AdminCouponPopup from '@/components/admin-coupon-popup';
+import AdminSalesPages from '@/components/admin-sales-pages';
 import { CategoryCollections, NoteFields, ParcelFields, PersonalizeEditor, ProductPlacement, SaleModeFields } from '@/components/admin-product-extras';
 import { TrackingSection, needsTracking, isNewAlert } from '@/components/admin-tracking';
 import { AnalyticsPanel } from '@/components/admin-analytics';
@@ -26,12 +27,12 @@ import {
   ArrowUp, ArrowDown, Monitor, Zap, ToggleLeft, ToggleRight,
   MessageCircle, Mail, Globe, RefreshCw, LogOut,
   Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  List, ListOrdered, Undo2, Redo2, Star, LayoutGrid, Calculator, Image as ImageIcon, Palette, Printer, Nfc,
+  List, ListOrdered, Undo2, Redo2, Star, LayoutGrid, Calculator, Image as ImageIcon, Palette, Printer, Nfc, Rocket,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Section = 'dashboard' | 'products' | 'sectors' | 'worlds' | 'orders' | 'tracking' | 'settings' | 'automation' | 'import-supplier' | 'reviews' | 'nfc' | 'shipping' | 'letreiro';
+type Section = 'dashboard' | 'products' | 'sectors' | 'worlds' | 'orders' | 'tracking' | 'settings' | 'automation' | 'import-supplier' | 'reviews' | 'nfc' | 'shipping' | 'letreiro' | 'sales-pages';
 
 type Product = {
   id: number;
@@ -130,6 +131,7 @@ const SECTION_LABELS: Record<Section, string> = {
   nfc: 'Tags NFC',
   shipping: 'Envio por país',
   letreiro: 'Letreiro CAD',
+  'sales-pages': 'Lojas',
 };
 
 // Cadastro de produto: todos os blocos com o mesmo cartao e o mesmo cabecalho.
@@ -2147,6 +2149,9 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
   const [adminUser, setAdminUser] = useState<AdminUserSession>(initialAdmin);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
+  // Multi-loja: qual loja o painel está gerenciando agora. 'kitoys' = principal.
+  const [storeSlug, setStoreSlug] = useState('kitoys');
+  const [stores, setStores] = useState<{ slug: string; title: string }[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -2183,6 +2188,30 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
 
   useEffect(() => { void fetchData(); }, []);
 
+  // Multi-loja: restaura a loja escolhida e carrega a lista de lojas (Páginas de venda).
+  useEffect(() => {
+    try { const s = localStorage.getItem('kt_admin_store'); if (s) setStoreSlug(s); } catch {}
+    fetch('/api/sales-pages', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => { if (Array.isArray(d)) setStores(d.map((p: any) => ({ slug: String(p.slug), title: String(p.title) }))); })
+      .catch(() => {});
+  }, []);
+
+  // Troca de loja: regarrega só os produtos daquela loja e lembra a escolha.
+  const didMountStore = useRef(false);
+  useEffect(() => {
+    try { localStorage.setItem('kt_admin_store', storeSlug); } catch {}
+    if (!didMountStore.current) { didMountStore.current = true; return; }
+    fetch(`/api/products?store=${encodeURIComponent(storeSlug)}`, { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => { if (Array.isArray(d)) setProducts(d); })
+      .catch(() => {});
+    fetch(`/api/orders?store=${encodeURIComponent(storeSlug)}`, { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => { if (Array.isArray(d)) setOrders(d); })
+      .catch(() => {});
+  }, [storeSlug]);
+
   // Editor visual (Editar loja): clicar num produto na cópia da loja abre ele aqui.
   useEffect(() => {
     const onEdit = (e: Event) => {
@@ -2201,10 +2230,10 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
   // Avisos de compra nova (Rastreio): busca os pedidos de novo a cada 30 s.
   const refreshOrders = useCallback(async () => {
     try {
-      const res = await fetch('/api/orders', { cache: 'no-store' });
+      const res = await fetch(`/api/orders?store=${encodeURIComponent(storeSlug)}`, { cache: 'no-store' });
       if (res.ok) setOrders(await res.json());
     } catch {}
-  }, []);
+  }, [storeSlug]);
   useEffect(() => {
     const id = setInterval(() => { if (document.visibilityState === 'visible') void refreshOrders(); }, 30000);
     return () => clearInterval(id);
@@ -2227,7 +2256,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
 
   async function fetchData() {
     try {
-      const [pr, or, cr] = await Promise.all([fetch('/api/products'), fetch('/api/orders'), fetch('/api/categories')]);
+      const [pr, or, cr] = await Promise.all([fetch(`/api/products?store=${encodeURIComponent(storeSlug)}`), fetch(`/api/orders?store=${encodeURIComponent(storeSlug)}`), fetch('/api/categories')]);
       if (pr.ok) setProducts(await pr.json());
       if (or.ok) setOrders(await or.json());
       if (cr.ok) setCategories(await cr.json());
@@ -2441,6 +2470,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
           productType: prodProductType,
           sizes: prodSizes,
           colorOptions,
+          storeSlug,
         }),
       });
 
@@ -2597,6 +2627,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
       label: 'Catálogo',
       items: [
         { key: 'products', label: 'Produtos', icon: <Package size={18} /> },
+        { key: 'sales-pages', label: 'Lojas', icon: <Rocket size={18} /> },
         { key: 'sectors', label: 'Setores e coleções', icon: <LayoutGrid size={18} /> },
         { key: 'import-supplier', label: 'Importar Produtos', icon: <PackageSearch size={18} /> },
         { key: 'letreiro', label: 'Letreiro CAD', icon: <Printer size={18} /> },
@@ -2628,6 +2659,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
     nfc: 'Grave e leia as tags NFC dos chaveiros pelo celular (Chrome no Android).',
     shipping: 'Para quais países a loja vende e quanto cobra de frete (Packlink ou tabela dos Correos).',
     letreiro: 'Suba uma imagem ou texto e gere as peças do letreiro em 3D (3MF) para imprimir.',
+    'sales-pages': 'Crie outras lojas (ex.: VICE CITY STORE) com nome, cara e catálogo próprios. Mesmo login e mesmo checkout; escolha a loja no seletor do topo para cadastrar os produtos dela.',
   };
 
   return (
@@ -2746,6 +2778,22 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
             <h1 className="truncate text-sm font-semibold text-white sm:text-base">{SECTION_LABELS[section]}</h1>
             <p className="hidden truncate text-xs text-white/45 sm:block">{SECTION_DESCRIPTIONS[section]}</p>
           </div>
+
+          {/* Seletor de loja (multi-loja): escolhe de qual loja você edita os produtos. */}
+          <label className="flex shrink-0 items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1" title="Loja que você está gerenciando">
+            <Rocket size={14} className={storeSlug === 'kitoys' ? 'text-white/40' : 'text-pink-400'} />
+            <select
+              value={storeSlug}
+              onChange={(e) => setStoreSlug(e.target.value)}
+              className="max-w-[140px] cursor-pointer bg-transparent text-xs font-semibold text-white outline-none [color-scheme:dark] sm:max-w-[180px]"
+            >
+              <option value="kitoys" className="bg-[#161b28]">Kitoys (principal)</option>
+              {stores.map((s) => (
+                <option key={s.slug} value={s.slug} className="bg-[#161b28]">{s.title}</option>
+              ))}
+            </select>
+          </label>
+
           <div className="relative flex items-center">
             <button
               type="button"
@@ -2887,6 +2935,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
           {section === 'sectors' && <AdminSectors />}
           {section === 'worlds' && <AdminWorlds />}
           {section === 'nfc' && <AdminNfc />}
+          {section === 'sales-pages' && <AdminSalesPages products={products} />}
           {section === 'letreiro' && <SignageCad />}
           {section === 'import-supplier' && <ImportSupplierSection onImportToStore={preFillFromSupplier} />}
           {section === 'orders' && <OrdersSection orders={orders} products={products} onUpdateTracking={updateTracking} onUpdateStatus={updateOrderStatus} onRefresh={fetchData} />}

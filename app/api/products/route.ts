@@ -4,6 +4,13 @@ import { parsePersonalize } from '@/lib/personalize';
 import { getAdminSessionFromRequest, requireAdmin } from "@/lib/admin-auth";
 import { COUNTRY_COOKIE, countrySurcharge, viewerCountry, withSurcharge } from "@/lib/country-price";
 import { DEMO_TYPES, normalizeProduct, parseAdditionalImages, parseColorOptions, parseJsonArray, parseSizes, publicProduct } from "@/lib/products-db";
+import { normalizeSlug } from "@/lib/sales-pages";
+
+// Loja dona do produto. 'kitoys' = loja principal (padrão); outras lojas
+// (ex.: 'vice-city') têm o catálogo próprio delas. Sem ?store= a API devolve
+// a loja principal, para a vitrine e o painel da Kitoys não misturarem.
+const MAIN_STORE = 'kitoys';
+const storeOf = (v: unknown) => normalizeSlug(v) || MAIN_STORE;
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -37,6 +44,8 @@ async function ensureVariantColumns() {
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS personalize TEXT`;
   // Caixa de envio (peso/medidas) pra Packlink.
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS parcel TEXT`;
+  // Loja dona do produto (multi-loja): 'kitoys' = principal; outras = catálogo próprio.
+  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS store_slug TEXT DEFAULT 'kitoys'`;
 }
 
 export async function GET(req: NextRequest) {
@@ -47,12 +56,14 @@ export async function GET(req: NextRequest) {
     const surcharge = getAdminSessionFromRequest(req)
       ? 0
       : await countrySurcharge(viewerCountry(req.cookies.get(COUNTRY_COOKIE)?.value, req.headers.get('x-vercel-ip-country')));
+    const store = storeOf(req.nextUrl.searchParams.get('store'));
     const rows = await sql`
       SELECT id, name, description, price, category, image, additional_images, video, stock, position,
              source_store_url, source_product_url, cost_price,
-             product_type, color_options, sizes, is_category_cover, shipping_cost, demo_type, demo_image, collection_slug, personalize, parcel,
+             product_type, color_options, sizes, is_category_cover, shipping_cost, demo_type, demo_image, collection_slug, personalize, parcel, store_slug,
              created_at AS "createdAt"
       FROM products
+      WHERE COALESCE(store_slug, 'kitoys') = ${store}
       ORDER BY COALESCE(position, 999999), created_at DESC
     `;
     const isAdmin = Boolean(getAdminSessionFromRequest(req));
@@ -99,8 +110,9 @@ export async function POST(req: NextRequest) {
     const nextColorOptions = parseColorOptions(colorOptions);
     const nextSizes = parseSizes(sizes);
 
+    const nextStoreSlug = storeOf(body.storeSlug);
     const [product] = await sql`
-      INSERT INTO products (name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost, demo_type, demo_image, collection_slug, personalize, parcel)
+      INSERT INTO products (name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost, demo_type, demo_image, collection_slug, personalize, parcel, store_slug)
       VALUES (
         ${String(name).trim()},
         ${description ? String(description) : null},
@@ -122,9 +134,10 @@ export async function POST(req: NextRequest) {
         ${nextDemoImage || null},
         ${nextCollectionSlug || null},
         ${nextPersonalize},
-        ${nextParcel}
+        ${nextParcel},
+        ${nextStoreSlug}
       )
-      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost, demo_type, demo_image, collection_slug, personalize, parcel
+      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost, demo_type, demo_image, collection_slug, personalize, parcel, store_slug
     `;
 
     return NextResponse.json(normalizeProduct(product), { status: 201 });
@@ -242,6 +255,8 @@ export async function PATCH(req: NextRequest) {
     const personalize = JSON.stringify(parsePersonalize(body.personalize));
     const updateParcel = Object.prototype.hasOwnProperty.call(body, 'parcel');
     const parcel = body.parcel && typeof body.parcel === 'object' ? JSON.stringify(body.parcel) : null;
+    const updateStore = Object.prototype.hasOwnProperty.call(body, 'storeSlug');
+    const storeSlug = storeOf(body.storeSlug);
 
     if (!name) {
       return NextResponse.json({ error: 'O campo "nome" é obrigatório.' }, { status: 400 });
@@ -272,9 +287,10 @@ export async function PATCH(req: NextRequest) {
         demo_image        = CASE WHEN ${updateDemo} THEN ${demoImage || null} ELSE demo_image END,
         collection_slug   = CASE WHEN ${updateCollection} THEN ${collectionSlug || null} ELSE collection_slug END,
         personalize       = CASE WHEN ${updatePersonalize} THEN ${personalize} ELSE personalize END,
-        parcel            = CASE WHEN ${updateParcel} THEN ${parcel} ELSE parcel END
+        parcel            = CASE WHEN ${updateParcel} THEN ${parcel} ELSE parcel END,
+        store_slug        = CASE WHEN ${updateStore} THEN ${storeSlug} ELSE store_slug END
       WHERE id = ${id}
-      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost, demo_type, demo_image, collection_slug, personalize, parcel
+      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost, demo_type, demo_image, collection_slug, personalize, parcel, store_slug
     `;
 
     if (!product) {

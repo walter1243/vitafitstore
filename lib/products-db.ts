@@ -72,6 +72,7 @@ export function normalizeProduct(row: any) {
     colorOptions: parseColorOptions(row.color_options),
     sizes: parseSizes(row.sizes),
     isCategoryCover: Boolean(row.is_category_cover),
+    storeSlug: row.store_slug ?? 'kitoys',
   };
 }
 
@@ -86,13 +87,15 @@ export function publicProduct<T extends Record<string, unknown>>(p: T): T {
 
 // Lista para a vitrine (home no servidor): preço do país de quem vê, sem campos internos e,
 // com light = true, sem a descrição longa (a home não usa; deixa o HTML leve).
-export async function getStoreProductsServer(surcharge: number, light = true): Promise<any[]> {
+export async function getStoreProductsServer(surcharge: number, light = true, storeSlug = 'kitoys'): Promise<any[]> {
   try {
+    const store = String(storeSlug || 'kitoys');
     const rows = await sql`
       SELECT id, name, description, price, category, image, additional_images, video, stock, position,
-             product_type, color_options, sizes, is_category_cover, shipping_cost, demo_type, demo_image, collection_slug, personalize, parcel,
+             product_type, color_options, sizes, is_category_cover, shipping_cost, demo_type, demo_image, collection_slug, personalize, parcel, store_slug,
              created_at AS "createdAt"
       FROM products
+      WHERE COALESCE(store_slug, 'kitoys') = ${store}
       ORDER BY COALESCE(position, 999999), created_at DESC
     `;
     return (rows as any[]).map((p) => {

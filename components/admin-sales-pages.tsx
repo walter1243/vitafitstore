@@ -1,0 +1,259 @@
+'use client';
+
+// Admin → Lojas. Cria e edita lojas próprias (ex.: VICE CITY STORE): nome,
+// endereço (/tienda/slug), tema neon, textos, contagem regressiva e o produto
+// da capa (o que brilha). Cada loja tem catálogo próprio — os produtos entram
+// pelo seletor de loja no topo + aba Produtos. Mesmo login e mesmo checkout.
+
+import { useCallback, useEffect, useState } from 'react';
+import { Check, ExternalLink, Image as ImageIcon, Loader2, Plus, Rocket, Sparkles, Star, Trash2, X } from 'lucide-react';
+import { dataUrlToBlobUrl, isDataUrl } from '@/lib/upload-data-url';
+import { useHoverPaste } from '@/lib/use-hover-paste';
+import { SALES_PAGE_THEMES, type SalesPageConfig } from '@/lib/sales-pages';
+
+type AdminProduct = { id: number; name: string; price: number; image?: string; mainImage?: string; category?: string };
+
+const inputCls = 'w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40';
+const labelCls = 'mb-1.5 block text-xs font-medium text-white/50';
+
+const EMPTY: SalesPageConfig = {
+  slug: '', title: 'Nova loja', theme: 'vice-city', enabled: true,
+  eyebrow: 'EDICIÓN LIMITADA', heading: 'VICE CITY STORE',
+  subtitle: 'Llaveros y piezas 3D con alma retro de los 80.',
+  ctaLabel: 'Comprar ahora', badge: 'NUEVO DROP', heroImage: '', heroVideo: '',
+  countdownTo: null, countdownLabel: 'El drop termina en',
+  coverProductId: null, coverTagline: 'La pieza que enciende la colección',
+  productIds: [], featureTitle: 'El llavero que brilla',
+  featureText: 'Contornos de neón y ese brillo inconfundible.',
+  neonPrimary: '#ff2d9b', neonSecondary: '#00e5ff',
+  footerNote: 'Impreso en 3D en España · Envío con seguimiento',
+};
+
+function readAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result));
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+export default function AdminSalesPages({ products }: { products: AdminProduct[] }) {
+  const [pages, setPages] = useState<SalesPageConfig[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<(SalesPageConfig & { originalSlug?: string }) | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const r = await fetch('/api/sales-pages', { cache: 'no-store' });
+      const d = await r.json();
+      setPages(Array.isArray(d) ? d : []);
+    } catch { setMsg({ ok: false, text: 'Não foi possível carregar as páginas.' }); }
+    finally { setLoading(false); }
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  const up = <K extends keyof SalesPageConfig>(k: K, v: SalesPageConfig[K]) => setEditing((e) => (e ? { ...e, [k]: v } : e));
+
+  const heroPaste = useHoverPaste<HTMLDivElement>((t) => /^image\//.test(t), async (files) => {
+    if (files[0]) up('heroImage', await readAsDataUrl(files[0]));
+  });
+
+  async function save() {
+    if (!editing) return;
+    setSaving(true); setMsg(null);
+    try {
+      const heroImage = isDataUrl(editing.heroImage) ? await dataUrlToBlobUrl(editing.heroImage, 'campanhas') : editing.heroImage;
+      const r = await fetch('/api/sales-pages', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...editing, heroImage }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d?.error || 'Erro ao salvar.');
+      setMsg({ ok: true, text: `Salvo. Página "${d.title}" ${d.enabled ? 'publicada' : 'em rascunho'} em /tienda/${d.slug}` });
+      setEditing(null);
+      await load();
+    } catch (e: any) { setMsg({ ok: false, text: e?.message || 'Erro ao salvar.' }); }
+    finally { setSaving(false); }
+  }
+
+  async function remove(slug: string) {
+    if (!confirm(`Apagar a página /tienda/${slug}? Isto não pode ser desfeito.`)) return;
+    try {
+      const r = await fetch(`/api/sales-pages?slug=${encodeURIComponent(slug)}`, { method: 'DELETE' });
+      if (!r.ok) throw new Error('Erro ao apagar.');
+      setMsg({ ok: true, text: 'Página apagada.' });
+      if (editing?.originalSlug === slug) setEditing(null);
+      await load();
+    } catch (e: any) { setMsg({ ok: false, text: e?.message || 'Erro ao apagar.' }); }
+  }
+
+  // Produtos desta loja (para escolher o da capa — o que brilha). A loja mostra
+  // todos os produtos dela sozinha; os produtos entram pelo seletor de loja no
+  // topo + aba Produtos. Loja nova (ainda sem slug salvo) não tem produtos.
+  const [storeProducts, setStoreProducts] = useState<AdminProduct[]>([]);
+  const editingSlug = editing?.originalSlug;
+  useEffect(() => {
+    if (!editingSlug) { setStoreProducts([]); return; }
+    fetch(`/api/products?store=${encodeURIComponent(editingSlug)}`, { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => setStoreProducts(Array.isArray(d) ? d : []))
+      .catch(() => setStoreProducts([]));
+  }, [editingSlug]);
+  void products;
+
+  // ---------- Editor ----------
+  if (editing) {
+    const dateVal = editing.countdownTo ? editing.countdownTo.slice(0, 10) : '';
+    return (
+      <div className="rounded-2xl border border-white/10 bg-[#161b28] p-5">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="flex items-center gap-2 font-semibold text-white"><Rocket size={16} className="text-pink-400" /> {editing.originalSlug ? 'Editar loja' : 'Nova loja'}</h2>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={() => up('enabled', !editing.enabled)}
+              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${editing.enabled ? 'border-green-500/50 bg-green-500/15 text-green-300' : 'border-white/15 bg-white/5 text-white/60'}`}>
+              <span className={`h-2 w-2 rounded-full ${editing.enabled ? 'bg-green-400' : 'bg-white/30'}`} />
+              {editing.enabled ? 'Publicada' : 'Rascunho'}
+            </button>
+            <button type="button" onClick={() => setEditing(null)} className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-white/60 hover:bg-white/5">Voltar</button>
+          </div>
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          {/* Coluna textos */}
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div><label className={labelCls}>Nome da loja</label><input value={editing.title} onChange={(e) => up('title', e.target.value)} className={inputCls} /></div>
+              <div><label className={labelCls}>Endereço (slug) · /tienda/…</label><input value={editing.slug} onChange={(e) => up('slug', e.target.value)} placeholder="vice-city" className={`${inputCls} font-mono`} /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><label className={labelCls}>Selo (badge)</label><input value={editing.badge} onChange={(e) => up('badge', e.target.value)} className={inputCls} /></div>
+              <div><label className={labelCls}>Linha fina (eyebrow)</label><input value={editing.eyebrow} onChange={(e) => up('eyebrow', e.target.value)} className={inputCls} /></div>
+            </div>
+            <div><label className={labelCls}>Título grande (neon)</label><input value={editing.heading} onChange={(e) => up('heading', e.target.value)} className={`${inputCls} font-black`} /></div>
+            <div><label className={labelCls}>Subtítulo</label><textarea value={editing.subtitle} onChange={(e) => up('subtitle', e.target.value)} rows={3} className={inputCls} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><label className={labelCls}>Texto do botão</label><input value={editing.ctaLabel} onChange={(e) => up('ctaLabel', e.target.value)} className={inputCls} /></div>
+              <div><label className={labelCls}>Tema</label>
+                <select value={editing.theme} onChange={(e) => up('theme', e.target.value as any)} className={`${inputCls} [color-scheme:dark]`}>
+                  {SALES_PAGE_THEMES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><label className={labelCls}>Cor neon 1</label><input type="color" value={editing.neonPrimary} onChange={(e) => up('neonPrimary', e.target.value)} className="h-10 w-full cursor-pointer rounded-lg border border-white/10 bg-[#1c2236]" /></div>
+              <div><label className={labelCls}>Cor neon 2</label><input type="color" value={editing.neonSecondary} onChange={(e) => up('neonSecondary', e.target.value)} className="h-10 w-full cursor-pointer rounded-lg border border-white/10 bg-[#1c2236]" /></div>
+            </div>
+            <div className="grid grid-cols-[1fr_auto] items-end gap-3">
+              <div><label className={labelCls}>Contagem regressiva termina em (opcional)</label>
+                <input type="date" value={dateVal} onChange={(e) => up('countdownTo', e.target.value ? new Date(`${e.target.value}T23:59:59`).toISOString() : null)} className={`${inputCls} [color-scheme:dark]`} />
+              </div>
+              {dateVal && <button type="button" onClick={() => up('countdownTo', null)} className="mb-0.5 rounded-lg border border-white/10 px-2 py-2 text-white/60 hover:bg-white/10"><X size={14} /></button>}
+            </div>
+            <div><label className={labelCls}>Rodapé (selos de confiança)</label><input value={editing.footerNote} onChange={(e) => up('footerNote', e.target.value)} className={inputCls} /></div>
+          </div>
+
+          {/* Coluna capa + produtos */}
+          <div className="space-y-3">
+            <div ref={heroPaste.ref} className="rounded-xl border border-white/10 bg-[#0f1117] p-3">
+              <div className="mb-2 flex items-center gap-2"><ImageIcon size={15} className="text-white/60" /><p className="text-sm font-semibold text-white">Imagem da capa (opcional)</p></div>
+              <div className="relative mx-auto flex aspect-square max-w-[200px] items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-[#1c2236]">
+                {editing.heroImage
+                  // eslint-disable-next-line @next/next/no-img-element
+                  ? <img src={editing.heroImage} alt="" className="h-full w-full object-cover" />
+                  : <span className="px-3 text-center text-xs text-white/40">Sem imagem: usa a foto do produto da capa</span>}
+                {editing.heroImage && <button type="button" onClick={() => up('heroImage', '')} className="absolute right-1.5 top-1.5 rounded-lg bg-black/60 p-1.5 text-white/80 hover:bg-red-600"><Trash2 size={13} /></button>}
+              </div>
+              <input type="file" accept="image/jpeg,image/png,image/webp,image/avif"
+                onChange={async (e) => { const f = e.target.files?.[0]; if (f) up('heroImage', await readAsDataUrl(f)); e.target.value = ''; }}
+                className="mt-2 w-full text-xs text-white/60" />
+              <p className="mt-1 text-[11px] text-white/40">Cole com Ctrl+V passando o mouse por cima, ou escolha o arquivo.</p>
+            </div>
+            <div className="grid grid-cols-1 gap-3">
+              <div><label className={labelCls}>Chamada da capa</label><input value={editing.coverTagline} onChange={(e) => up('coverTagline', e.target.value)} className={inputCls} /></div>
+            </div>
+
+            <div className="rounded-xl border border-white/10 bg-[#0f1117] p-3">
+              <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-white"><Star size={14} className="text-yellow-400" /> Produto da capa (o que brilha)</p>
+              {editingSlug ? (
+                storeProducts.length > 0 ? (
+                  <>
+                    <select value={editing.coverProductId ?? ''} onChange={(e) => up('coverProductId', e.target.value ? Number(e.target.value) : null)} className={`${inputCls} [color-scheme:dark]`}>
+                      <option value="">Automático (primeiro produto da loja)</option>
+                      {storeProducts.map((p) => <option key={p.id} value={p.id}>{p.name} · €{Number(p.price).toFixed(2)}</option>)}
+                    </select>
+                    <p className="mt-2 text-[11px] text-white/45">Esta loja tem {storeProducts.length} produto(s). A capa é a peça em destaque com os LEDs passando.</p>
+                  </>
+                ) : (
+                  <p className="text-[11px] leading-relaxed text-white/50">Esta loja ainda não tem produtos. No seletor do topo, escolha <strong className="text-white/80">{editing.title}</strong> e cadastre os produtos na aba <strong className="text-white/80">Produtos</strong> — eles aparecem aqui automaticamente.</p>
+                )
+              ) : (
+                <p className="text-[11px] leading-relaxed text-white/50">Salve a loja primeiro. Depois, no seletor do topo, escolha esta loja e cadastre os produtos na aba <strong className="text-white/80">Produtos</strong>.</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <button type="button" onClick={save} disabled={saving}
+            className="inline-flex items-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-60">
+            {saving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Salvar loja
+          </button>
+          {editing.originalSlug && (
+            <a href={`/tienda/${editing.originalSlug}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-2.5 text-xs text-white/70 hover:bg-white/5"><ExternalLink size={13} /> Ver loja</a>
+          )}
+          {msg && <span className={`text-xs ${msg.ok ? 'text-green-300' : 'text-red-300'}`}>{msg.text}</span>}
+        </div>
+      </div>
+    );
+  }
+
+  // ---------- Lista ----------
+  return (
+    <div className="rounded-2xl border border-white/10 bg-[#161b28] p-5">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="flex items-center gap-2 font-semibold text-white"><Sparkles size={16} className="text-pink-400" /> Lojas</h2>
+          <p className="mt-0.5 text-xs text-white/50">Outras lojas com nome, cara e catálogo próprios (ex.: VICE CITY STORE). Mesmo login e mesmo checkout. Depois de criar, escolha a loja no seletor do topo para cadastrar os produtos dela.</p>
+        </div>
+        <button type="button" onClick={() => setEditing({ ...EMPTY })}
+          className="inline-flex items-center gap-2 rounded-xl bg-pink-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-pink-700">
+          <Plus size={14} /> Nova loja
+        </button>
+      </div>
+
+      {msg && <p className={`mb-3 text-xs ${msg.ok ? 'text-green-300' : 'text-red-300'}`}>{msg.text}</p>}
+
+      {loading ? (
+        <div className="flex items-center gap-2 text-sm text-white/60"><Loader2 size={16} className="animate-spin" /> Carregando…</div>
+      ) : pages.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-white/15 p-8 text-center text-sm text-white/50">Nenhuma loja extra ainda. Crie a primeira — a VICE CITY STORE já vem pronta de exemplo.</div>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {pages.map((p) => (
+            <div key={p.slug} className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#0f1117] p-3">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg text-black" style={{ background: `linear-gradient(135deg, ${p.neonSecondary}, ${p.neonPrimary})` }}>
+                <Rocket size={18} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="truncate text-sm font-semibold text-white">{p.title}</p>
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${p.enabled ? 'bg-green-500/15 text-green-300' : 'bg-white/10 text-white/50'}`}>{p.enabled ? 'Publicada' : 'Rascunho'}</span>
+                </div>
+                <p className="truncate text-xs text-white/45">/tienda/{p.slug}</p>
+              </div>
+              <div className="flex shrink-0 items-center gap-1">
+                <a href={`/tienda/${p.slug}`} target="_blank" rel="noopener noreferrer" title="Ver" className="rounded-lg p-2 text-white/60 hover:bg-white/5 hover:text-white"><ExternalLink size={15} /></a>
+                <button type="button" onClick={() => setEditing({ ...p, originalSlug: p.slug })} className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white/80 hover:bg-white/5">Editar</button>
+                <button type="button" onClick={() => remove(p.slug)} title="Apagar" className="rounded-lg p-2 text-white/40 hover:bg-red-500/15 hover:text-red-300"><Trash2 size={15} /></button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

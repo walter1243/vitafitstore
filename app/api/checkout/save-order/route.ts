@@ -54,9 +54,13 @@ export async function POST(req: NextRequest) {
       // Cupom usado (ex.: BIENVENIDOS15) e quanto foi descontado.
       await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS coupon_code TEXT`;
       await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount_amount NUMERIC`;
+      // Loja dona do pedido (multi-loja): vem dos produtos comprados.
+      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS store_slug TEXT DEFAULT 'kitoys'`;
       const ids = [...new Set(items.map((i) => i.productId))];
-      const names = ids.length ? await sql`SELECT id, name FROM products WHERE id = ANY(${ids})` : [];
+      const names = ids.length ? await sql`SELECT id, name, store_slug FROM products WHERE id = ANY(${ids})` : [];
       const nameById = new Map((names as any[]).map((r) => [Number(r.id), String(r.name)]));
+      const storeById = new Map((names as any[]).map((r) => [Number(r.id), String(r.store_slug || 'kitoys')]));
+      const orderStore = storeById.get(items[0]?.productId as number) || 'kitoys';
       const itemsJson = JSON.stringify(items.map((i) => ({ ...i, name: nameById.get(i.productId) ?? `Produto #${i.productId}` })));
       await sql`
         INSERT INTO orders (
@@ -65,7 +69,7 @@ export async function POST(req: NextRequest) {
           product_id, total_amount, status, stripe_payment_id,
           selected_color, selected_size, items_json, custom_text,
           shipping_method, shipping_service, pickup_point, shipping_cost,
-          geo_city, geo_lat, geo_lng, coupon_code, discount_amount
+          geo_city, geo_lat, geo_lng, coupon_code, discount_amount, store_slug
         ) VALUES (
           ${meta.customerName  || 'Anônimo'},
           ${meta.customerEmail || null},
@@ -90,7 +94,8 @@ export async function POST(req: NextRequest) {
           ${meta.geoLat ? Number(meta.geoLat) : null},
           ${meta.geoLng ? Number(meta.geoLng) : null},
           ${meta.couponCode || null},
-          ${meta.couponCode && meta.discount ? Number(meta.discount) : null}
+          ${meta.couponCode && meta.discount ? Number(meta.discount) : null},
+          ${orderStore}
         )
       `;
     } catch (dbErr) {

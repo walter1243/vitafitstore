@@ -22,6 +22,13 @@ async function ensureOrderColumns() {
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_service TEXT`;
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS pickup_point TEXT`;
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_cost NUMERIC`;
+  // Loja dona do pedido (multi-loja): 'kitoys' = principal.
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS store_slug TEXT DEFAULT 'kitoys'`;
+}
+
+// Loja selecionada no painel (?store=). Sem parâmetro = loja principal.
+function storeFilter(req: NextRequest) {
+  return (req.nextUrl.searchParams.get('store') || 'kitoys').toLowerCase().replace(/[^a-z0-9-]/g, '') || 'kitoys';
 }
 
 // Dados pessoais dos clientes: so o admin pode listar.
@@ -30,6 +37,7 @@ export async function GET(req: NextRequest) {
     const auth = await requireAdmin(req);
     if (!auth.ok) return auth.response;
     await ensureOrderColumns();
+    const store = storeFilter(req);
     const rows = await sql`
       SELECT
         o.id,
@@ -61,6 +69,7 @@ export async function GET(req: NextRequest) {
         TO_CHAR(o.created_at, 'DD/MM HH24:MI')        AS "dateTime"
       FROM orders o
       LEFT JOIN products p ON o.product_id = p.id
+      WHERE COALESCE(o.store_slug, 'kitoys') = ${store}
       ORDER BY o.created_at DESC
     `;
     return NextResponse.json(rows, { headers: { 'Cache-Control': 'no-store' } });
