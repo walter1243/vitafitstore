@@ -9,7 +9,9 @@ type Variant = { color?: string; size?: string; text?: string; note?: string }
 
 interface CartContextType {
   items: CartItem[]
-  addItem: (product: Product, variant?: Variant, quantity?: number) => void
+  // opts.openCart = false: só adiciona (a loja mostra a animação do produto
+  // voando até o carrinho em vez de abrir a gaveta). Padrão: abre o carrinho.
+  addItem: (product: Product, variant?: Variant, quantity?: number, opts?: { openCart?: boolean }) => void
   removeItem: (productId: number, variant?: Variant) => void
   updateQuantity: (productId: number, quantity: number, variant?: Variant) => void
   clearCart: () => void
@@ -45,7 +47,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     (item.customText ?? '') === (variant?.text ?? '') &&
     (item.customNote ?? '') === (variant?.note ?? '')
 
-  const addItem = useCallback((product: Product, variant?: Variant, quantity = 1) => {
+  const addItem = useCallback((product: Product, variant?: Variant, quantity = 1, opts?: { openCart?: boolean }) => {
     // Pack: sempre packs inteiros (o "+ Anadir" dos cards poe 1 pack).
     const step = stepFor(product.personalize)
     const qty = step > 1 ? Math.max(step, Math.ceil(quantity / step) * step) : Math.max(1, Math.floor(quantity))
@@ -65,6 +67,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     // Estatistica "adicionado ao carrinho" (components/site-tracker.tsx).
     window.dispatchEvent(new CustomEvent('kitoys:add-to-cart', { detail: { productId: product.id, name: product.name, value: Number(product.price) * qty } }))
 
+    if (opts?.openCart === false) return
     // Show upsell popup when adding health products
     if (product.category === 'salud') {
       setShowUpsell(true)

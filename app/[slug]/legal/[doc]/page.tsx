@@ -2,24 +2,24 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
-import { ChevronRight, Info } from 'lucide-react';
 import { CartSidebar } from '@/components/cart-sidebar';
 import { CookieSettingsButton } from '@/components/cookie-consent';
 import { StoreFooter, StoreHeader } from '@/components/sales/store-chrome';
 import { storeFontClass } from '@/components/sales/store-fonts';
 import { LEGAL_PAGES, LEGAL_SLUGS, type LegalPage } from '@/lib/legal-content';
 import { getAdminSessionFromCookieStore } from '@/lib/admin-auth';
-import { getSalesPage, storeArt, storeIcons, storeLegalHref, storePath } from '@/lib/sales-pages';
+import { getSalesPage, storeHeaderOffset, storeIcons, storeLegalHref, storePath } from '@/lib/sales-pages';
 
 // Políticas (envíos, devoluciones, privacidad…) de cada loja própria, com o
-// visual e o NOME dela: /vice-city/legal/aviso-legal. O texto é o mesmo da
-// Kitoys (lib/legal-content.ts) com "Kitoys 3D" trocado pelo nome da loja.
-// Titular, NIF, domicílio e e-mail continuam os reais (exigência da LSSI-CE).
+// visual e o NOME dela: /vice-city/legal/aviso-legal. Layout limpo e organizado:
+// menu dos documentos + índice da página ao lado (computador), abas + índice
+// recolhível (celular), seções numeradas. O texto é o mesmo da Kitoys
+// (lib/legal-content.ts) com "Kitoys 3D" trocado pelo nome da loja; titular,
+// NIF, domicílio e e-mail continuam os reais (exigência da LSSI-CE).
 export const dynamic = 'force-dynamic';
 
 type PageProps = { params: Promise<{ slug: string; doc: string }> };
 
-// Troca a marca da Kitoys pelo nome da loja (e-mail/domínio em minúsculas ficam).
 function rebrand(page: LegalPage, name: string): LegalPage {
   const t = (v: string) => v.replace(/Kitoys 3D|Kitoys3D|Kitoys/g, name);
   return {
@@ -34,6 +34,8 @@ function rebrand(page: LegalPage, name: string): LegalPage {
     })),
   };
 }
+
+const num = (i: number) => String(i + 1).padStart(2, '0');
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug, doc } = await params;
@@ -55,80 +57,119 @@ export default async function StoreLegalPage({ params }: PageProps) {
   if (!store.enabled && !getAdminSessionFromCookieStore(await cookies())) notFound();
 
   const page = rebrand(base, store.title);
-  const art = storeArt(store);
-  const S = store.neonSecondary;
-  const P = store.neonPrimary;
+  const stickyTop = storeHeaderOffset(store) + 24;
+
+  const docLink = (s: string, mobile = false) => {
+    const on = s === doc;
+    return (
+      <Link key={s} href={storeLegalHref(store.slug, s)} aria-current={on ? 'page' : undefined}
+        className={mobile
+          ? `shrink-0 border-b-2 py-3 text-xs font-semibold uppercase tracking-[0.16em] transition-colors ${on ? 'border-white text-white' : 'border-transparent text-white/50 hover:text-white'}`
+          : `block border-l-2 py-2 pl-4 text-sm transition-colors ${on ? 'border-white font-semibold text-white' : 'border-white/10 text-white/55 hover:border-white/40 hover:text-white'}`}>
+        {LEGAL_PAGES[s].navLabel}
+      </Link>
+    );
+  };
 
   return (
-    <div data-kt-store={store.slug} className={`${storeFontClass} relative flex min-h-screen flex-col overflow-x-clip bg-[#0d0418] text-white`}>
-      {/* fundo: a arte da loja bem desfocada no topo */}
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[60vh] overflow-hidden">
-        <div className="absolute -inset-16 bg-cover bg-center opacity-50 blur-[60px]" style={{ backgroundImage: `url(${art.ambient})` }} />
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, transparent 0%, #0d0418cc 50%, #0d0418 100%)' }} />
-      </div>
-
+    <div data-kt-store={store.slug} className={`${storeFontClass} relative flex min-h-screen flex-col overflow-x-clip bg-[#0b0614] text-white`}>
       <StoreHeader store={store} />
 
-      <main className="relative z-10 mx-auto w-full max-w-3xl flex-1 px-4 pb-20 pt-8 sm:pt-12">
-        <nav aria-label="Ruta" className="mb-6 flex flex-wrap items-center gap-1.5 text-xs text-white/55">
-          <Link href={storePath(store.slug)} className="hover:text-white">{store.title}</Link>
-          <ChevronRight size={12} aria-hidden />
-          <span className="text-white/80">{page.title}</span>
-        </nav>
-
-        <h1 className="font-store-display text-3xl leading-tight sm:text-4xl" style={{ textShadow: `0 0 22px ${P}66` }}>{page.title}</h1>
-        <p className="mt-3 text-base leading-relaxed text-white/75">{page.intro}</p>
-
-        <p className="mt-6 flex gap-3 rounded-2xl border border-white/12 bg-white/[0.04] p-4 text-sm leading-relaxed text-white/75">
-          <Info size={18} className="mt-0.5 shrink-0" style={{ color: S }} aria-hidden />
-          <span>Los pedidos, pagos, envíos y devoluciones de <strong className="text-white">{store.title}</strong> se rigen por estas condiciones.</span>
-        </p>
-
-        <div className="mt-10 space-y-9">
-          {page.sections.map((section) => (
-            <section key={section.heading}>
-              <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-white">
-                <span className="h-4 w-1 rounded-full" style={{ background: `linear-gradient(180deg, ${S}, ${P})` }} aria-hidden />
-                {section.heading}
-              </h2>
-              <div className="space-y-2.5">
-                {section.body.map((paragraph, i) => (
-                  <p key={i} className="text-[15px] leading-relaxed text-white/70">{paragraph}</p>
-                ))}
-              </div>
-              {section.table && (
-                <div className="mt-4 overflow-x-auto rounded-2xl border border-white/10 bg-white/[0.03]">
-                  <table className="w-full min-w-[520px] text-left text-sm">
-                    <thead className="text-[11px] uppercase tracking-[0.14em] text-white/50">
-                      <tr>{section.table.head.map((h) => <th key={h} scope="col" className="px-4 py-3 font-bold">{h}</th>)}</tr>
-                    </thead>
-                    <tbody className="text-white/70">
-                      {section.table.rows.map((row) => (
-                        <tr key={row[0]} className="border-t border-white/[0.07]">{row.map((cell, i) => <td key={i} className="px-4 py-3 align-top">{cell}</td>)}</tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-              {doc === 'cookies' && section.heading.startsWith('Cómo aceptar') && (
-                <div className="mt-3 inline-block rounded-xl bg-white p-1"><CookieSettingsButton /></div>
-              )}
-            </section>
-          ))}
+      {/* celular: abas dos documentos */}
+      <nav aria-label="Documentos legales" className="mt-4 border-b border-white/10 lg:hidden">
+        <div className="flex gap-6 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {LEGAL_SLUGS.map((s) => docLink(s, true))}
         </div>
+      </nav>
 
-        <div className="mt-14 rounded-2xl border border-white/10 bg-white/[0.04] p-5">
-          <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.2em] text-white/50">Otros documentos</p>
-          <div className="flex flex-wrap gap-2">
-            {LEGAL_SLUGS.filter((s) => s !== doc).map((s) => (
-              <Link key={s} href={storeLegalHref(store.slug, s)}
-                className="inline-flex min-h-10 items-center rounded-xl border border-white/12 bg-white/[0.04] px-3.5 text-sm font-medium text-white/80 transition-colors hover:border-white/40 hover:text-white">
-                {LEGAL_PAGES[s].navLabel}
-              </Link>
+      <div className="mx-auto grid w-full max-w-6xl flex-1 gap-12 px-4 pb-24 pt-10 lg:grid-cols-[220px_1fr] lg:pt-16">
+        {/* computador: documentos + índice desta página, presos ao rolar */}
+        <aside className="hidden lg:block">
+          <div className="sticky space-y-10" style={{ top: stickyTop }}>
+            <nav aria-label="Documentos legales">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-white/40">Documentos</p>
+              {LEGAL_SLUGS.map((s) => docLink(s))}
+            </nav>
+            {page.sections.length > 1 && (
+              <nav aria-label="En esta página">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-white/40">En esta página</p>
+                <ol className="space-y-2 text-sm">
+                  {page.sections.map((sec, i) => (
+                    <li key={sec.heading}>
+                      <a href={`#s${i + 1}`} className="flex gap-3 text-white/55 transition-colors hover:text-white">
+                        <span className="tabular-nums text-white/30">{num(i)}</span>
+                        <span>{sec.heading}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ol>
+              </nav>
+            )}
+          </div>
+        </aside>
+
+        <main className="min-w-0 max-w-3xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-white/50">{store.title} · Información legal</p>
+          <h1 className="font-store-display mt-3 text-5xl uppercase leading-[0.95] sm:text-6xl">{page.title}</h1>
+          <p className="mt-5 text-lg leading-relaxed text-white/70">{page.intro}</p>
+          <p className="mt-4 border-l-2 border-white/20 pl-4 text-sm leading-relaxed text-white/60">
+            Los pedidos, pagos, envíos y devoluciones de {store.title} se rigen por estas condiciones.
+          </p>
+
+          {/* celular: índice recolhível */}
+          {page.sections.length > 1 && (
+            <details className="mt-8 border-y border-white/10 py-4 lg:hidden">
+              <summary className="cursor-pointer text-xs font-semibold uppercase tracking-[0.2em] text-white/70">Ver índice</summary>
+              <ol className="mt-4 space-y-3 text-sm">
+                {page.sections.map((sec, i) => (
+                  <li key={sec.heading}>
+                    <a href={`#s${i + 1}`} className="flex gap-3 text-white/65"><span className="tabular-nums text-white/30">{num(i)}</span>{sec.heading}</a>
+                  </li>
+                ))}
+              </ol>
+            </details>
+          )}
+
+          <div className="mt-10 divide-y divide-white/10 border-t border-white/10">
+            {page.sections.map((section, i) => (
+              <section key={section.heading} id={`s${i + 1}`} className="py-8" style={{ scrollMarginTop: stickyTop }}>
+                <h2 className="flex items-baseline gap-4 text-xl font-semibold text-white">
+                  <span className="font-store-display text-2xl tabular-nums text-white/30">{num(i)}</span>
+                  {section.heading}
+                </h2>
+                <div className="mt-4 space-y-3 pl-0 sm:pl-12">
+                  {section.body.map((paragraph, j) => (
+                    <p key={j} className="text-base leading-[1.75] text-white/70">{paragraph}</p>
+                  ))}
+                  {section.table && (
+                    <div className="mt-4 overflow-x-auto">
+                      <table className="w-full min-w-[520px] text-left text-sm">
+                        <thead>
+                          <tr className="border-b border-white/15">{section.table.head.map((h) => <th key={h} scope="col" className="py-3 pr-4 text-xs font-semibold uppercase tracking-[0.14em] text-white/50">{h}</th>)}</tr>
+                        </thead>
+                        <tbody className="text-white/70">
+                          {section.table.rows.map((row) => (
+                            <tr key={row[0]} className="border-b border-white/[0.07]">{row.map((cell, k) => <td key={k} className="py-3 pr-4 align-top">{cell}</td>)}</tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                  {doc === 'cookies' && section.heading.startsWith('Cómo aceptar') && (
+                    <div className="mt-3 inline-block rounded-md bg-white p-1"><CookieSettingsButton /></div>
+                  )}
+                </div>
+              </section>
             ))}
           </div>
-        </div>
-      </main>
+
+          <div className="mt-6 border-t border-white/10 pt-8">
+            <Link href={storePath(store.slug)} className="inline-flex h-12 items-center rounded-md bg-white px-6 text-sm font-bold uppercase tracking-[0.12em] text-[#0b0614] transition-colors hover:bg-[#ff2d9b]">
+              Volver a la tienda
+            </Link>
+          </div>
+        </main>
+      </div>
 
       <StoreFooter store={store} />
       <CartSidebar />

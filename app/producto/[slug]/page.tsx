@@ -76,7 +76,7 @@ export default async function ProductPage({ params }: PageProps) {
       .map((p) => toStoreProduct(p as DbProduct))
     return (
       <SectorsProvider sectors={sectors}>
-      <div data-kt-store={store.slug} className={`${storeFontClass} flex min-h-screen flex-col bg-[#140720]`}>
+      <div data-kt-store={store.slug} className={`${storeFontClass} flex min-h-screen flex-col bg-[#0b0614]`}>
         <StoreHeader store={store} />
         <main className="flex-1">
           <StoreProductView product={product} store={store} entrega={content.entrega} related={related} />
