@@ -2192,6 +2192,10 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
   const [products, setProducts] = useState<Product[]>([]);
   // Multi-loja: qual loja o painel está gerenciando agora. 'kitoys' = principal.
   const [storeSlug, setStoreSlug] = useState('kitoys');
+  // Loja selecionada AGORA: resposta que chega atrasada de outra loja é ignorada
+  // (ex.: a busca inicial da Kitoys terminando depois da troca para a Vice City).
+  const storeRef = useRef(storeSlug);
+  storeRef.current = storeSlug;
   const [stores, setStores] = useState<StoreSummary[]>([]);
   const [storesLoaded, setStoresLoaded] = useState(false);
   // Loja selecionada no topo (null = Kitoys). É ela que aparece no painel todo.
@@ -2268,13 +2272,16 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
   useEffect(() => {
     try { localStorage.setItem('kt_admin_store', storeSlug); } catch {}
     if (!didMountStore.current) { didMountStore.current = true; return; }
-    fetch(`/api/products?store=${encodeURIComponent(storeSlug)}`, { cache: 'no-store' })
+    const asked = storeSlug;
+    setProducts([]);
+    setOrders([]);
+    fetch(`/api/products?store=${encodeURIComponent(asked)}`, { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : []))
-      .then((d) => { if (Array.isArray(d)) setProducts(d); })
+      .then((d) => { if (storeRef.current === asked && Array.isArray(d)) setProducts(d); })
       .catch(() => {});
-    fetch(`/api/orders?store=${encodeURIComponent(storeSlug)}`, { cache: 'no-store' })
+    fetch(`/api/orders?store=${encodeURIComponent(asked)}`, { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : []))
-      .then((d) => { if (Array.isArray(d)) setOrders(d); })
+      .then((d) => { if (storeRef.current === asked && Array.isArray(d)) setOrders(d); })
       .catch(() => {});
   }, [storeSlug]);
 
@@ -2296,8 +2303,9 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
   // Avisos de compra nova (Rastreio): busca os pedidos de novo a cada 30 s.
   const refreshOrders = useCallback(async () => {
     try {
-      const res = await fetch(`/api/orders?store=${encodeURIComponent(storeSlug)}`, { cache: 'no-store' });
-      if (res.ok) setOrders(await res.json());
+      const asked = storeSlug;
+      const res = await fetch(`/api/orders?store=${encodeURIComponent(asked)}`, { cache: 'no-store' });
+      if (res.ok) { const d = await res.json(); if (storeRef.current === asked) setOrders(d); }
     } catch {}
   }, [storeSlug]);
   useEffect(() => {
@@ -2322,9 +2330,11 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
 
   async function fetchData() {
     try {
-      const [pr, or, cr] = await Promise.all([fetch(`/api/products?store=${encodeURIComponent(storeSlug)}`), fetch(`/api/orders?store=${encodeURIComponent(storeSlug)}`), fetch('/api/categories')]);
-      if (pr.ok) setProducts(await pr.json());
-      if (or.ok) setOrders(await or.json());
+      const asked = storeSlug;
+      const [pr, or, cr] = await Promise.all([fetch(`/api/products?store=${encodeURIComponent(asked)}`), fetch(`/api/orders?store=${encodeURIComponent(asked)}`), fetch('/api/categories')]);
+      // só mostra se ainda é a loja selecionada (a busca inicial é da Kitoys)
+      if (pr.ok) { const d = await pr.json(); if (storeRef.current === asked) setProducts(d); }
+      if (or.ok) { const d = await or.json(); if (storeRef.current === asked) setOrders(d); }
       if (cr.ok) setCategories(await cr.json());
     } catch {
       // silently ignore — DB might not be configured yet

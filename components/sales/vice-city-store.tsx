@@ -389,7 +389,7 @@ export function ViceCityStore({ config, products, cover, preview }: Props) {
   const toCatalog = () => catalogRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   return (
-    <div style={vars} data-kt-store={config.slug} className={`${storeFontClass} relative min-h-screen overflow-x-clip text-white`}>
+    <div style={vars} data-kt-store={config.slug} className={`${storeFontClass} relative min-h-screen overflow-x-clip bg-[#0d0418] text-white`}>
       <style>{`
         @keyframes vc-spin { to { transform: rotate(360deg); } }
         @keyframes vc-chase { to { stroke-dashoffset: -2.5; } }
@@ -402,7 +402,6 @@ export function ViceCityStore({ config, products, cover, preview }: Props) {
         }
         @media (prefers-reduced-motion: reduce) { .vc-spin, .vc-chase, .vc-pulse { animation: none !important; } }
       `}</style>
-      <div aria-hidden className="fixed inset-0 -z-20" style={{ background: BG }} />
 
       <StoreHeader store={config} overlay onCatalog={toCatalog} />
 
@@ -471,7 +470,16 @@ export function ViceCityStore({ config, products, cover, preview }: Props) {
         </div>
       </section>
 
-      <main className="relative mx-auto max-w-6xl px-4 pb-24">
+      <div className="relative">
+        {/* fundo da vitrine: a mesma arte da capa, parada atrás enquanto a página rola
+            (sticky funciona no iPhone; background-attachment: fixed não) */}
+        <div aria-hidden className="pointer-events-none sticky top-0 -mb-[100svh] h-[100svh] overflow-hidden">
+          <Image src={art.hero} alt="" fill sizes="100vw" className="scale-105 object-cover object-[50%_30%] opacity-45 blur-[3px]" />
+          <div className="absolute inset-0 mix-blend-soft-light" style={{ background: `linear-gradient(155deg, ${P}80 0%, transparent 50%, ${S}66 100%)` }} />
+          <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, ${BG} 0%, ${BG}c7 22%, ${BG}a6 60%, ${BG}d9 100%)` }} />
+          <div className="absolute inset-0 opacity-[0.12]" style={{ backgroundImage: 'repeating-linear-gradient(0deg, rgba(0,0,0,.7) 0 1px, transparent 1px 3px)' }} />
+        </div>
+      <main className="relative z-10 mx-auto max-w-6xl px-4 pb-24">
         {/* ── Selos (padrão europeu) ──────────────────────────────────────── */}
         <section aria-label="Compra segura" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {[
@@ -507,6 +515,7 @@ export function ViceCityStore({ config, products, cover, preview }: Props) {
           </ol>
         </section>
       </main>
+      </div>
 
       <StoreFooter store={config} />
 
