@@ -607,4 +607,6 @@ body { top: 0 !important; }
 
 /* Lojas próprias (multi-loja, ex.: VICE CITY STORE): fontes carregadas em components/sales/store-fonts.ts */
 .font-store { font-family: var(--font-store-body), ui-sans-serif, system-ui, sans-serif; }
+/* títulos dentro da loja usam a fonte da loja (a base do site põe a serifada da Kitoys em h1–h3) */
+:where(.font-store) :where(h1, h2, h3, h4, h5, h6) { font-family: var(--font-store-body), ui-sans-serif, system-ui, sans-serif; }
 .font-store-display { font-family: var(--font-store-display), var(--font-store-body), ui-sans-serif, sans-serif; letter-spacing: .01em; }
