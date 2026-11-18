@@ -39,7 +39,23 @@ async function toPngBytes(src: string): Promise<ArrayBuffer> {
   return blob.arrayBuffer();
 }
 
-export function ArViewer({ name, ar, theme = 'dark' }: { name: string; ar: ArConfig; theme?: 'dark' | 'light' }) {
+// Câmera com a bolinha piscando (indica "ao vivo"): botão redondo sobre a foto do produto.
+function CameraDot() {
+  return (
+    <span aria-hidden className="relative block h-6 w-6">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
+        <path d="M4 8h3l1.6-2.2A1.5 1.5 0 0 1 9.8 5h4.4a1.5 1.5 0 0 1 1.2.8L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" />
+        <circle cx="12" cy="13.2" r="3.4" />
+      </svg>
+      <span className="absolute -right-1 -top-1 flex h-3 w-3">
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#ff2d9b] opacity-75 motion-reduce:hidden" />
+        <span className="relative inline-flex h-3 w-3 rounded-full border-2 border-[#0b0614] bg-[#ff2d9b]" />
+      </span>
+    </span>
+  );
+}
+
+export function ArViewer({ name, ar, theme = 'dark', variant = 'button', className = '' }: { name: string; ar: ArConfig; theme?: 'dark' | 'light'; variant?: 'button' | 'icon'; className?: string }) {
   const [open, setOpen] = useState(false);
   const [glbUrl, setGlbUrl] = useState('');
   const [error, setError] = useState('');
@@ -69,11 +85,18 @@ export function ArViewer({ name, ar, theme = 'dark' }: { name: string; ar: ArCon
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)}
-        className={`mt-3 flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-md text-sm font-bold uppercase tracking-[0.12em] transition-colors ${trigger}`}>
-        <span aria-hidden className="rounded border border-current px-1.5 py-0.5 text-[10px] leading-none">AR</span>
-        Ver en tu espacio
-      </button>
+      {variant === 'icon' ? (
+        <button type="button" onClick={() => setOpen(true)} aria-label="Ver en tu espacio con la cámara" title="Ver en tu espacio"
+          className={`flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border border-white/25 bg-black/55 text-white shadow-[0_6px_24px_rgba(0,0,0,0.45)] backdrop-blur transition-transform hover:scale-105 active:scale-95 ${className}`}>
+          <CameraDot />
+        </button>
+      ) : (
+        <button type="button" onClick={() => setOpen(true)}
+          className={`mt-3 flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-md text-sm font-bold uppercase tracking-[0.12em] transition-colors ${trigger} ${className}`}>
+          <span aria-hidden className="rounded border border-current px-1.5 py-0.5 text-[10px] leading-none">AR</span>
+          Ver en tu espacio
+        </button>
+      )}
 
       {open && (
         <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/80 p-0 backdrop-blur-sm sm:items-center sm:p-4" onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}>

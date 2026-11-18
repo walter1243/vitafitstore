@@ -164,6 +164,7 @@ export function StoreProductView({ product, store, entrega, related }: {
               {images.length > 1 && (
                 <p className="absolute bottom-3 right-3 rounded bg-black/60 px-2.5 py-1 text-xs font-semibold tabular-nums text-white backdrop-blur">{active + 1} / {images.length}</p>
               )}
+              {arReady(product.ar) && <ArViewer name={product.name} ar={product.ar!} theme="dark" variant="icon" className="absolute right-3 top-3 z-10" />}
             </div>
             {images.length > 1 && (
               <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -176,7 +177,6 @@ export function StoreProductView({ product, store, entrega, related }: {
                 ))}
               </div>
             )}
-            {arReady(product.ar) && <ArViewer name={product.name} ar={product.ar!} theme="dark" />}
           </div>
 
           {/* Compra */}

@@ -10,6 +10,7 @@ import { clearPendingCoupon, getPendingCoupon, markCouponUsedIfPending, savePend
 import { useCart } from '@/lib/cart-context';
 import { useActiveStore, useStoreFavicon } from '@/lib/store-context';
 import { storePath } from '@/lib/sales-pages-shared';
+import { storeFontClass } from '@/components/sales/store-fonts';
 import { AddressFinder, type FoundAddress } from '@/components/shipping/address-finder';
 import { packOf, qtyLabel } from '@/lib/personalize';
 import Link from 'next/link';
@@ -78,6 +79,36 @@ const stripeAppearance = {
   },
 };
 
+// Lojas próprias (ex.: VICE CITY STORE): formulário de pagamento escuro, no neon da loja.
+function storeStripeAppearance(accent: string) {
+  return {
+    theme: 'night' as const,
+    variables: {
+      colorPrimary: accent,
+      colorBackground: '#160b26',
+      colorText: '#ffffff',
+      colorTextSecondary: 'rgba(255,255,255,0.65)',
+      colorTextPlaceholder: 'rgba(255,255,255,0.35)',
+      colorDanger: '#fca5a5',
+      borderRadius: '14px',
+      fontFamily: 'system-ui, -apple-system, sans-serif',
+      fontSizeBase: '15px',
+      spacingUnit: '4px',
+    },
+    rules: {
+      '.Input': { backgroundColor: 'rgba(255,255,255,0.06)', border: '2px solid rgba(255,255,255,0.12)', color: '#ffffff', padding: '12px 16px' },
+      '.Input:focus': { border: `2px solid ${accent}`, boxShadow: 'none' },
+      '.Label': { color: '#ffffff', fontSize: '13px', fontWeight: '700' },
+      '.Tab': { backgroundColor: 'rgba(255,255,255,0.05)', border: '2px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)' },
+      '.Tab:hover': { color: '#ffffff' },
+      '.Tab--selected': { backgroundColor: 'rgba(255,255,255,0.08)', border: `2px solid ${accent}`, color: '#ffffff' },
+      '.TabIcon--selected': { fill: accent },
+      '.TabLabel--selected': { color: '#ffffff' },
+      '.Block': { backgroundColor: 'rgba(255,255,255,0.05)', border: '2px solid rgba(255,255,255,0.12)' },
+    },
+  };
+}
+
 // ─── Brand logos ──────────────────────────────────────────────────────────────
 
 function VisaLogo({ w = 40, h = 25 }: { w?: number; h?: number }) {
@@ -122,44 +153,44 @@ function SuccessScreen({ name, storeName, homeHref = '/' }: { name: string; stor
         .anim-dots    { animation: trailDots      3s  ease-out                     1.2s both; }
       `}</style>
       <div className="fixed inset-0 z-50 flex flex-col items-center justify-center px-6 text-center"
-        style={{ background: '#FAF8F5' }}>
+        style={{ background: 'var(--ck-page)' }}>
         <div className="relative flex flex-col items-center mb-8">
           <div className="anim-dots absolute right-[-40px] top-[60px] flex gap-1.5">
             {[0,1,2].map(i => (
-              <div key={i} className="w-1.5 h-1.5 rounded-full bg-orange-700"
+              <div key={i} className="w-1.5 h-1.5 rounded-full bg-[color:var(--ck-accent)]"
                 style={{ animationDelay:`${1.3+i*0.1}s` }} />
             ))}
           </div>
           <div className="anim-box flex flex-col items-center">
             <div className="anim-product text-3xl mb-0.5">📦</div>
             <div className="relative w-24 h-20 rounded-xl flex items-end justify-center pb-2"
-              style={{ background:'linear-gradient(135deg,#9a3412,#047857)' }}>
+              style={{ background:'linear-gradient(135deg,var(--ck-accent-hover),#047857)' }}>
               <div className="absolute -top-3 left-0 right-0 h-5 rounded-t-xl flex items-center justify-center"
-                style={{ background:'#c2410c' }}>
-                <div className="w-8 h-0.5 rounded-full bg-orange-700" />
+                style={{ background:'var(--ck-accent)' }}>
+                <div className="w-8 h-0.5 rounded-full bg-[color:var(--ck-accent)]" />
               </div>
               <span className="text-xs font-bold text-white/90 tracking-wider uppercase truncate max-w-[70px]">{storeName}</span>
               <div className="absolute top-0.5 left-1/2 -translate-x-1/2 w-10 h-1.5 rounded-full opacity-50"
                 style={{ background:'#fbbf24' }} />
             </div>
             <div className="flex gap-12 -mt-1">
-              <div className="w-4 h-4 rounded-full border-2 border-orange-700" style={{ background:'#FAF8F5' }} />
-              <div className="w-4 h-4 rounded-full border-2 border-orange-700" style={{ background:'#FAF8F5' }} />
+              <div className="w-4 h-4 rounded-full border-2 border-[color:var(--ck-accent)]" style={{ background:'var(--ck-page)' }} />
+              <div className="w-4 h-4 rounded-full border-2 border-[color:var(--ck-accent)]" style={{ background:'var(--ck-page)' }} />
             </div>
           </div>
           <div className="anim-check absolute -bottom-3 -right-3 w-10 h-10 rounded-full flex items-center justify-center"
-            style={{ background:'#c2410c', boxShadow:'0 0 20px rgba(194,65,12,0.5)' }}>
+            style={{ background:'var(--ck-accent)', boxShadow:'0 0 20px color-mix(in srgb, var(--ck-accent) 50%, transparent)' }}>
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <path d="M3 9l4 4 8-8" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
         </div>
         <div className="anim-text space-y-2">
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-900">¡Pedido confirmado!</h2>
-          <p className="text-orange-600 font-semibold">
+          <h2 className="text-2xl sm:text-3xl font-black text-[color:var(--ck-strong)]">¡Pedido confirmado!</h2>
+          <p className="text-[color:var(--ck-accent)] font-semibold">
             ¡Gracias por tu compra{name ? `, ${name.split(' ')[0]}` : ''}!
           </p>
-          <p className="text-slate-500 text-sm max-w-xs mx-auto leading-relaxed">
+          <p className="text-[color:var(--ck-sub)] text-sm max-w-xs mx-auto leading-relaxed">
             Tu pedido está siendo preparado y saldrá en camino muy pronto.
             Recibirás un email de confirmación en breve.
           </p>
@@ -168,17 +199,17 @@ function SuccessScreen({ name, storeName, homeHref = '/' }: { name: string; stor
               <div key={s} className="flex items-center gap-2">
                 <div className="flex flex-col items-center gap-1">
                   <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
-                    style={{ background:i===0?'#c2410c':'rgba(194,65,12,0.15)', color:i===0?'white':'#c2410c', border:'1px solid rgba(194,65,12,0.3)' }}>
+                    style={{ background:i===0?'var(--ck-accent)':'color-mix(in srgb, var(--ck-accent) 15%, transparent)', color:i===0?'white':'var(--ck-accent)', border:'1px solid color-mix(in srgb, var(--ck-accent) 30%, transparent)' }}>
                     {i===0?'✓':i+1}
                   </div>
-                  <span className="text-[9px] text-slate-500 font-medium">{s}</span>
+                  <span className="text-[9px] text-[color:var(--ck-sub)] font-medium">{s}</span>
                 </div>
-                {i<2 && <div className="w-6 h-px bg-orange-100 mb-4" />}
+                {i<2 && <div className="w-6 h-px bg-[color:var(--ck-line)] mb-4" />}
               </div>
             ))}
           </div>
           <Link href={homeHref} className="inline-flex items-center gap-2 mt-4 px-6 py-3 rounded-xl font-bold text-sm text-white"
-            style={{ background:'#c2410c', boxShadow:'0 8px 24px rgba(194,65,12,0.3)' }}>
+            style={{ background:'var(--ck-accent)', boxShadow:'0 8px 24px color-mix(in srgb, var(--ck-accent) 30%, transparent)' }}>
             Seguir comprando <ChevronRight size={16} />
           </Link>
         </div>
@@ -196,14 +227,14 @@ function StepIndicator({ step }: { step: 1 | 2 }) {
         <div key={s.n} className={`flex items-center ${i<arr.length-1?'flex-1':''}`}>
           <div className="flex items-center gap-2 shrink-0">
             <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-extrabold transition-all duration-400"
-              style={{ background:step>=s.n?'#c2410c':'#FFFFFF', color:step>=s.n?'white':'#565a78', boxShadow:'none', border: step>=s.n ? 'none' : '2px solid #efe7da' }}>
+              style={{ background:step>=s.n?'var(--ck-accent)':'var(--ck-card)', color:step>=s.n?'white':'var(--ck-muted)', boxShadow:'none', border: step>=s.n ? 'none' : '2px solid var(--ck-line)' }}>
               {step>s.n?'✓':s.n}
             </div>
-            <span className={`font-kids text-lg font-bold hidden sm:block ${step>=s.n?'text-[#23263f]':'text-[#565a78]'}`}>{s.label}</span>
+            <span className={`font-kids text-lg font-bold hidden sm:block ${step>=s.n?'text-[color:var(--ck-ink)]':'text-[color:var(--ck-muted)]'}`}>{s.label}</span>
           </div>
           {i<arr.length-1 && (
             <div className="flex-1 mx-3 h-1 rounded-full transition-all duration-500"
-              style={{ background:step>1?'#c2410c':'#efe7da' }} />
+              style={{ background:step>1?'var(--ck-accent)':'var(--ck-line)' }} />
           )}
         </div>
       ))}
@@ -216,7 +247,7 @@ function StepIndicator({ step }: { step: 1 | 2 }) {
 function Field({ label, error, children }: { label:string; error?:string; children:React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-bold text-[#23263f]">{label}</label>
+      <label className="block text-sm font-bold text-[color:var(--ck-ink)]">{label}</label>
       {children}
       {error && <p className="text-red-600 text-xs">{error}</p>}
     </div>
@@ -224,10 +255,10 @@ function Field({ label, error, children }: { label:string; error?:string; childr
 }
 
 const inputCls = [
-  'w-full min-h-12 rounded-2xl px-4 py-3 text-base text-[#23263f]',
-  'placeholder:text-[#9a9db5] outline-none transition-all',
-  'bg-white border-2 border-[#efe7da]',
-  'focus:border-[#23263f]',
+  'w-full min-h-12 rounded-2xl px-4 py-3 text-base text-[color:var(--ck-ink)]',
+  'placeholder:text-[color:var(--ck-faint)] outline-none transition-all',
+  'bg-[color:var(--ck-input)] border-2 border-[color:var(--ck-line)]',
+  'focus:border-[color:var(--ck-ink)]',
 ].join(' ');
 
 // ─── Order Summary ────────────────────────────────────────────────────────────
@@ -240,11 +271,11 @@ function OrderSummary({ items, totalPrice, shipping, total, shipLabel, discount 
   return (
     <div className="space-y-4">
       <div className="rounded-[28px] p-5 space-y-4"
-        style={{ background:'#FFFFFF', border:'none', boxShadow:'0 6px 24px rgba(35,38,63,0.06)' }}>
+        style={{ background:'var(--ck-card)', border:'none', boxShadow:'0 6px 24px rgba(35,38,63,0.06)' }}>
         <div className="flex items-center justify-between">
-          <p className="font-kids text-xl font-bold text-[#23263f]">Tu pedido</p>
-          <span className="px-2.5 py-1 rounded-full text-xs font-bold text-[#9a3412]"
-            style={{ background:'rgba(194,65,12,0.12)' }}>
+          <p className="font-kids text-xl font-bold text-[color:var(--ck-ink)]">Tu pedido</p>
+          <span className="px-2.5 py-1 rounded-full text-xs font-bold text-[color:var(--ck-accent-hover)]"
+            style={{ background:'color-mix(in srgb, var(--ck-accent) 12%, transparent)' }}>
             {totalItems} item(s)
           </span>
         </div>
@@ -252,33 +283,33 @@ function OrderSummary({ items, totalPrice, shipping, total, shipLabel, discount 
           {items.map((item:any) => (
             <div key={item.product.id} className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0 flex items-center justify-center"
-                style={{ background:'#F8FAFC', border:'1px solid rgba(194,65,12,0.12)' }}>
+                style={{ background:'var(--ck-soft)', border:'1px solid color-mix(in srgb, var(--ck-accent) 12%, transparent)' }}>
                 {item.product.image
                   ? <Image src={item.product.image} alt={item.product.name} width={44} height={44} className="object-cover" />
                   : <span className="text-lg">{item.product.emoji||'📦'}</span>}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[#23263f] text-sm font-bold truncate">{item.product.name}</p>
+                <p className="text-[color:var(--ck-ink)] text-sm font-bold truncate">{item.product.name}</p>
                 {(item.selectedColor || item.selectedSize || item.customText) ? (
-                  <p className="text-[10px] font-medium text-orange-700">
+                  <p className="text-[10px] font-medium text-[color:var(--ck-accent)]">
                     {[item.customText && `Nombre: «${item.customText}»`, item.customNote, item.selectedColor && `Color: ${item.selectedColor}`, item.selectedSize && `Talla: ${item.selectedSize}`].filter(Boolean).join(' - ')}
                   </p>
                 ) : item.product.shortDescription && (
-                  <p className="text-[10px] text-slate-500 line-clamp-2">{item.product.shortDescription}</p>
+                  <p className="text-[10px] text-[color:var(--ck-sub)] line-clamp-2">{item.product.shortDescription}</p>
                 )}
-                <p className="text-slate-500 text-xs">× {packOf(item.product.personalize) ? `${qtyLabel(item.product.personalize, item.quantity)} (${item.quantity} uds)` : item.quantity}</p>
+                <p className="text-[color:var(--ck-sub)] text-xs">× {packOf(item.product.personalize) ? `${qtyLabel(item.product.personalize, item.quantity)} (${item.quantity} uds)` : item.quantity}</p>
               </div>
-              <p className="text-[#23263f] font-extrabold text-sm shrink-0">
+              <p className="text-[color:var(--ck-ink)] font-extrabold text-sm shrink-0">
                 €{lineTotal(item).toFixed(2)}
               </p>
             </div>
           ))}
         </div>
         {couponSlot}
-        <div className="border-t pt-3 space-y-2" style={{ borderColor:'rgba(194,65,12,0.1)' }}>
+        <div className="border-t pt-3 space-y-2" style={{ borderColor:'color-mix(in srgb, var(--ck-accent) 10%, transparent)' }}>
           <div className="flex justify-between text-xs">
-            <span className="text-slate-500">Subtotal</span>
-            <span className="text-slate-900">€{totalPrice.toFixed(2)}</span>
+            <span className="text-[color:var(--ck-sub)]">Subtotal</span>
+            <span className="text-[color:var(--ck-strong)]">€{totalPrice.toFixed(2)}</span>
           </div>
           {discount > 0 && (
             <div className="flex justify-between text-xs font-semibold text-green-700">
@@ -287,33 +318,33 @@ function OrderSummary({ items, totalPrice, shipping, total, shipLabel, discount 
             </div>
           )}
           <div className="flex justify-between text-xs">
-            <span className="text-slate-500">Envío{shipLabel ? ` · ${shipLabel}` : ''}</span>
+            <span className="text-[color:var(--ck-sub)]">Envío{shipLabel ? ` · ${shipLabel}` : ''}</span>
             {shipping===0
-              ? <span className="text-orange-600 font-medium flex items-center gap-1"><Truck size={10}/> Gratis</span>
-              : <span className="text-slate-900">€{shipping.toFixed(2)}</span>}
+              ? <span className="text-[color:var(--ck-accent)] font-medium flex items-center gap-1"><Truck size={10}/> Gratis</span>
+              : <span className="text-[color:var(--ck-strong)]">€{shipping.toFixed(2)}</span>}
           </div>
-          <div className="border-t pt-2.5" style={{ borderColor:'rgba(194,65,12,0.1)' }}>
+          <div className="border-t pt-2.5" style={{ borderColor:'color-mix(in srgb, var(--ck-accent) 10%, transparent)' }}>
             <div className="flex justify-between">
-              <span className="font-bold text-slate-900 text-sm">Total</span>
-              <span className="font-kids text-2xl font-bold text-[#23263f]">€{total.toFixed(2)}</span>
+              <span className="font-bold text-[color:var(--ck-strong)] text-sm">Total</span>
+              <span className="font-kids text-2xl font-bold text-[color:var(--ck-ink)]">€{total.toFixed(2)}</span>
             </div>
           </div>
         </div>
       </div>
       <div className="rounded-[28px] p-4 grid grid-cols-2 gap-2"
-        style={{ background:'#FFFFFF', border:'none', boxShadow:'0 6px 24px rgba(35,38,63,0.06)' }}>
+        style={{ background:'var(--ck-card)', border:'none', boxShadow:'0 6px 24px rgba(35,38,63,0.06)' }}>
         {[
-          { icon:<Truck size={14} className="text-orange-700"/>, label:'Envío', sub:'Calculado al finalizar' },
-          { icon:<RotateCcw size={14} className="text-orange-700"/>, label:'Devolución', sub:'14 días' },
-          { icon:<Lock size={14} className="text-orange-700"/>, label:'SSL 256-bit', sub:'Seguro' },
-          { icon:<Package size={14} className="text-orange-700"/>, label:'Pago', sub:'Tarjeta y Bizum' },
+          { icon:<Truck size={14} className="text-[color:var(--ck-accent)]"/>, label:'Envío', sub:'Calculado al finalizar' },
+          { icon:<RotateCcw size={14} className="text-[color:var(--ck-accent)]"/>, label:'Devolución', sub:'14 días' },
+          { icon:<Lock size={14} className="text-[color:var(--ck-accent)]"/>, label:'SSL 256-bit', sub:'Seguro' },
+          { icon:<Package size={14} className="text-[color:var(--ck-accent)]"/>, label:'Pago', sub:'Tarjeta y Bizum' },
         ].map(b => (
           <div key={b.label} className="flex items-center gap-2 p-2 rounded-xl"
-            style={{ background:'rgba(194,65,12,0.04)' }}>
+            style={{ background:'color-mix(in srgb, var(--ck-accent) 4%, transparent)' }}>
             {b.icon}
             <div>
-              <p className="text-slate-900 text-[10px] font-semibold">{b.label}</p>
-              <p className="text-slate-500 text-[9px]">{b.sub}</p>
+              <p className="text-[color:var(--ck-strong)] text-[10px] font-semibold">{b.label}</p>
+              <p className="text-[color:var(--ck-sub)] text-[9px]">{b.sub}</p>
             </div>
           </div>
         ))}
@@ -454,9 +485,9 @@ function PaymentStepInner({
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Payment Element */}
       <div className="rounded-[28px] p-5 sm:p-6 space-y-4"
-        style={{ background:'#FFFFFF', border:'none', boxShadow:'0 6px 24px rgba(35,38,63,0.06)' }}>
+        style={{ background:'var(--ck-card)', border:'none', boxShadow:'0 6px 24px rgba(35,38,63,0.06)' }}>
         <div className="flex items-center justify-between mb-2">
-          <p className="font-kids text-xl font-bold text-[#23263f]">¿Cómo quieres pagar?</p>
+          <p className="font-kids text-xl font-bold text-[color:var(--ck-ink)]">¿Cómo quieres pagar?</p>
           <div className="flex gap-1.5"><VisaLogo /><MastercardLogo /></div>
         </div>
 
@@ -480,7 +511,7 @@ function PaymentStepInner({
           }}
         />
 
-        <p className="text-slate-500 text-xs flex items-center gap-1.5 pt-1">
+        <p className="text-[color:var(--ck-sub)] text-xs flex items-center gap-1.5 pt-1">
           <Lock size={11} /> Pago procesado de forma segura · SSL 256-bit
         </p>
       </div>
@@ -500,12 +531,12 @@ function PaymentStepInner({
 
       <div className="hidden sm:flex gap-3">
         <button type="button" onClick={onBack}
-          className="flex items-center gap-1.5 px-5 py-4 rounded-xl font-semibold text-sm text-slate-400 hover:text-slate-900 transition-colors cursor-pointer"
-          style={{ background:'#F8FAFC', border:'1px solid #E2E8F0' }}>
+          className="flex items-center gap-1.5 px-5 py-4 rounded-xl font-semibold text-sm text-[color:var(--ck-faint)] hover:text-[color:var(--ck-strong)] transition-colors cursor-pointer"
+          style={{ background:'var(--ck-soft)', border:'1px solid var(--ck-line)' }}>
           <ChevronLeft size={16} /> Volver
         </button>
         <button type="submit" disabled={loading || !stripe || !elements}
-          className="flex-1 flex min-h-[56px] items-center justify-center gap-2 rounded-2xl font-extrabold text-base text-white disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors bg-[#c2410c] hover:bg-[#9a3412]">
+          className="flex-1 flex min-h-[56px] items-center justify-center gap-2 rounded-2xl font-extrabold text-base text-white disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors bg-[color:var(--ck-accent)] hover:bg-[color:var(--ck-accent-hover)] ck-cta">
           {loading
             ? <><Loader2 size={18} className="animate-spin" /> Procesando...</>
             : <><Lock size={16} /> Pagar €{total.toFixed(2)}</>}
@@ -514,21 +545,21 @@ function PaymentStepInner({
 
       {/* Mobile sticky total + CTA, same pattern as step 1 — type="submit"
          still works here since this whole block renders inside the <form>. */}
-      <div className="sm:hidden fixed inset-x-0 bottom-0 z-40 flex items-center gap-2 border-t bg-white px-4 py-3"
-        style={{ borderColor: 'rgba(194,65,12,0.12)', boxShadow: '0 -4px 20px rgba(0,0,0,0.06)' }}>
+      <div className="sm:hidden fixed inset-x-0 bottom-0 z-40 flex items-center gap-2 border-t bg-[color:var(--ck-card)] px-4 py-3"
+        style={{ borderColor: 'color-mix(in srgb, var(--ck-accent) 12%, transparent)', boxShadow: '0 -4px 20px rgba(0,0,0,0.06)' }}>
         <button type="button" onClick={onBack}
-          className="flex shrink-0 items-center justify-center rounded-xl p-3.5 text-slate-400 cursor-pointer"
-          style={{ background:'#F8FAFC', border:'1px solid #E2E8F0' }}
+          className="flex shrink-0 items-center justify-center rounded-xl p-3.5 text-[color:var(--ck-faint)] cursor-pointer"
+          style={{ background:'var(--ck-soft)', border:'1px solid var(--ck-line)' }}
           aria-label="Volver">
           <ChevronLeft size={18} />
         </button>
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] text-slate-500">Total</p>
-          <p className="font-kids text-xl font-bold text-[#23263f] truncate">€{total.toFixed(2)}</p>
+          <p className="text-[10px] text-[color:var(--ck-sub)]">Total</p>
+          <p className="font-kids text-xl font-bold text-[color:var(--ck-ink)] truncate">€{total.toFixed(2)}</p>
         </div>
         <button type="submit" disabled={loading || !stripe || !elements}
           className="flex shrink-0 items-center justify-center gap-1.5 rounded-xl px-5 py-3.5 font-bold text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
-          style={{ background:'#c2410c' }}>
+          style={{ background:'var(--ck-accent)' }}>
           {loading
             ? <Loader2 size={18} className="animate-spin" />
             : <><Lock size={14} /> Pagar</>}
@@ -559,6 +590,10 @@ function CheckoutFormInner() {
   const { slug: activeStore, brand } = useActiveStore(items.length ? (items[0]?.product.storeSlug || 'kitoys') : undefined);
   useStoreFavicon(brand);
   const storeHome = storePath(activeStore);
+  // Outra loja que não a Kitoys: checkout escuro com a paleta/fonte dela (variáveis --ck-* em globals.css).
+  const accent = brand?.neonPrimary || '#ff2d9b';
+  const skin = brand ? `${storeFontClass} store-checkout` : 'kids';
+  const skinStyle = brand ? ({ '--ck-accent': accent } as React.CSSProperties) : undefined;
 
   // Same branding cache the header writes to — without it this previously
   // hardcoded "V" / "Nuestra Tienda", never reflecting the real store name
@@ -566,7 +601,7 @@ function CheckoutFormInner() {
   const cachedBranding = readCachedBranding();
   const [storeName, setStoreName] = useState(cachedBranding?.storeName ?? 'Nuestra Tienda');
   const [logoUrl, setLogoUrl] = useState(cachedBranding?.logoUrl ?? '');
-  const [themeColor, setThemeColor] = useState(cachedBranding?.themeColor ?? '#c2410c');
+  const [themeColor, setThemeColor] = useState(cachedBranding?.themeColor ?? 'var(--ck-accent)');
 
   useEffect(() => {
     fetch('/api/store-settings', { cache: 'no-store' })
@@ -575,7 +610,7 @@ function CheckoutFormInner() {
         if (!data) return;
         setStoreName(data.storeName ?? 'Nuestra Tienda');
         setLogoUrl(data.logoUrl ?? '');
-        setThemeColor(data.themeColor ?? '#c2410c');
+        setThemeColor(data.themeColor ?? 'var(--ck-accent)');
       })
       .catch(() => {});
   }, []);
@@ -807,33 +842,33 @@ function CheckoutFormInner() {
   // Empty cart
   if (items.length === 0 && !success) {
     return (
-      <div className="kids min-h-screen flex flex-col items-center justify-center gap-6 text-center px-4"
-        style={{ background:'#FFF8EF' }}>
+      <div className={`${skin} min-h-screen flex flex-col items-center justify-center gap-6 text-center px-4`}
+        style={{ ...skinStyle, background:'var(--ck-page)' }}>
         <div className="w-20 h-20 rounded-full flex items-center justify-center"
-          style={{ background:'rgba(194,65,12,0.1)', border:'1px solid rgba(194,65,12,0.2)' }}>
-          <Package size={36} className="text-orange-700" />
+          style={{ background:'color-mix(in srgb, var(--ck-accent) 10%, transparent)', border:'1px solid color-mix(in srgb, var(--ck-accent) 20%, transparent)' }}>
+          <Package size={36} className="text-[color:var(--ck-accent)]" />
         </div>
         {returnMsg && <p className="max-w-sm rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{returnMsg}</p>}
-        <h2 className="text-3xl font-bold text-[#23263f]">¡Tu carrito está vacío!</h2>
-        <p className="text-slate-500 text-sm max-w-xs">Añade productos antes de finalizar la compra.</p>
+        <h2 className="text-3xl font-bold text-[color:var(--ck-ink)]">¡Tu carrito está vacío!</h2>
+        <p className="text-[color:var(--ck-sub)] text-sm max-w-xs">Añade productos antes de finalizar la compra.</p>
         <Link href={`${storeHome}#productos`}
-          className="inline-flex min-h-12 items-center gap-2 px-7 rounded-2xl font-extrabold text-base text-white bg-[#c2410c] hover:bg-[#9a3412]">
+          className="inline-flex min-h-12 items-center gap-2 px-7 rounded-2xl font-extrabold text-base text-white bg-[color:var(--ck-accent)] hover:bg-[color:var(--ck-accent-hover)] ck-cta">
           Ver productos
         </Link>
       </div>
     );
   }
 
-  if (success) return <SuccessScreen name={name} storeName={brand?.title ?? storeName} homeHref={storeHome} />;
+  if (success) return <div className={brand ? skin : ''} style={skinStyle}><SuccessScreen name={name} storeName={brand?.title ?? storeName} homeHref={storeHome} /></div>;
 
   // ── Step 1 ──────────────────────────────────────────────────
   const step1 = (
     <div className="space-y-4">
       <div className="rounded-[28px] p-5 sm:p-6 space-y-4"
-        style={{ background:'#FFFFFF', border:'none', boxShadow:'0 6px 24px rgba(35,38,63,0.06)' }}>
+        style={{ background:'var(--ck-card)', border:'none', boxShadow:'0 6px 24px rgba(35,38,63,0.06)' }}>
         <div className="flex items-center gap-2">
-          <User size={18} className="text-[#c2410c]" />
-          <p className="font-kids text-xl font-bold text-[#23263f]">¿Quién hace el pedido?</p>
+          <User size={18} className="text-[color:var(--ck-accent)]" />
+          <p className="font-kids text-xl font-bold text-[color:var(--ck-ink)]">¿Quién hace el pedido?</p>
         </div>
         <Field label="Nombre completo *" error={errors.name}>
           <input className={inputCls} placeholder="María Silva" value={name}
@@ -852,10 +887,10 @@ function CheckoutFormInner() {
       </div>
 
       <div className="rounded-[28px] p-5 sm:p-6 space-y-4"
-        style={{ background:'#FFFFFF', border:'none', boxShadow:'0 6px 24px rgba(35,38,63,0.06)' }}>
+        style={{ background:'var(--ck-card)', border:'none', boxShadow:'0 6px 24px rgba(35,38,63,0.06)' }}>
         <div className="flex items-center gap-2">
-          <MapPin size={18} className="text-[#c2410c]" />
-          <p className="font-kids text-xl font-bold text-[#23263f]">¿Dónde lo enviamos?</p>
+          <MapPin size={18} className="text-[color:var(--ck-accent)]" />
+          <p className="font-kids text-xl font-bold text-[color:var(--ck-ink)]">¿Dónde lo enviamos?</p>
         </div>
         {/* Pais primeiro: decide a busca do Google, o formato do CP e o frete. */}
         <Field label="País *">
@@ -894,24 +929,24 @@ function CheckoutFormInner() {
 
       {(
         <div className="rounded-[28px] p-5 sm:p-6 space-y-3"
-          style={{ background:'#FFFFFF', border:'none', boxShadow:'0 6px 24px rgba(35,38,63,0.06)' }}>
+          style={{ background:'var(--ck-card)', border:'none', boxShadow:'0 6px 24px rgba(35,38,63,0.06)' }}>
           <div className="flex items-center gap-2">
-            <Truck size={18} className="text-[#c2410c]" />
-            <p className="font-kids text-xl font-bold text-[#23263f]">¿Cómo lo recibes?</p>
+            <Truck size={18} className="text-[color:var(--ck-accent)]" />
+            <p className="font-kids text-xl font-bold text-[color:var(--ck-ink)]">¿Cómo lo recibes?</p>
           </div>
           {isES && zip5.length !== 5 ? (
-            <p className="text-sm text-slate-500">Escribe tu código postal para ver las opciones de envío.</p>
+            <p className="text-sm text-[color:var(--ck-sub)]">Escribe tu código postal para ver las opciones de envío.</p>
           ) : !isES && quoteError ? (
             <p className="text-sm font-semibold text-red-600">{quoteError}</p>
           ) : (
             <>
               <ShipOptionsList quote={shipOpts} method={activeMethod} onMethod={chooseMethod} loading={quoteLoading} />
               {!isES && shipOpts?.home && (
-                <p className="text-xs text-slate-500">Envío internacional a domicilio. Los plazos y posibles tasas de aduana dependen del país de destino.</p>
+                <p className="text-xs text-[color:var(--ck-sub)]">Envío internacional a domicilio. Los plazos y posibles tasas de aduana dependen del país de destino.</p>
               )}
               {needsPoint && shipOpts?.pickup && (
                 <div>
-                  <p className="mt-2 text-sm font-bold text-[#23263f]">Elige tu punto de recogida</p>
+                  <p className="mt-2 text-sm font-bold text-[color:var(--ck-ink)]">Elige tu punto de recogida</p>
                   <PickupPoints serviceId={shipOpts.pickup.serviceId} zip={zip5} address={[street, streetN].filter(Boolean).join(" ") + (city ? `, ${city}` : "")} value={pickupPoint} onChange={setPickupPoint} />
                   {errors.point && <p className="mt-1 text-xs font-semibold text-red-600">{errors.point}</p>}
                 </div>
@@ -929,7 +964,7 @@ function CheckoutFormInner() {
       )}
 
       <button type="button" onClick={goToStep2} disabled={intentLoading}
-        className="hidden sm:flex w-full min-h-[56px] items-center justify-center gap-2 rounded-2xl font-extrabold text-base text-white disabled:opacity-60 cursor-pointer transition-colors bg-[#c2410c] hover:bg-[#9a3412]">
+        className="hidden sm:flex w-full min-h-[56px] items-center justify-center gap-2 rounded-2xl font-extrabold text-base text-white disabled:opacity-60 cursor-pointer transition-colors bg-[color:var(--ck-accent)] hover:bg-[color:var(--ck-accent-hover)] ck-cta">
         {intentLoading
           ? <><Loader2 size={18} className="animate-spin" /> Preparando pago...</>
           : <>Continuar al Pago <ChevronRight size={18} /></>}
@@ -938,14 +973,14 @@ function CheckoutFormInner() {
       {/* Mobile sticky total + CTA — on a tall form, the price and the next
          step used to be scrolled far out of view; this keeps both visible
          the whole time, same pattern as most mobile checkout flows. */}
-      <div className="sm:hidden fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t bg-white px-4 py-3"
-        style={{ borderColor: 'rgba(194,65,12,0.12)', boxShadow: '0 -4px 20px rgba(0,0,0,0.06)' }}>
+      <div className="sm:hidden fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t bg-[color:var(--ck-card)] px-4 py-3"
+        style={{ borderColor: 'color-mix(in srgb, var(--ck-accent) 12%, transparent)', boxShadow: '0 -4px 20px rgba(0,0,0,0.06)' }}>
         <div className="min-w-0">
-          <p className="text-[10px] text-slate-500">Total</p>
-          <p className="font-kids text-2xl font-bold text-[#23263f]">€{total.toFixed(2)}</p>
+          <p className="text-[10px] text-[color:var(--ck-sub)]">Total</p>
+          <p className="font-kids text-2xl font-bold text-[color:var(--ck-ink)]">€{total.toFixed(2)}</p>
         </div>
         <button type="button" onClick={goToStep2} disabled={intentLoading}
-          className="flex flex-1 min-h-12 items-center justify-center gap-2 rounded-2xl font-extrabold text-sm text-white disabled:opacity-60 cursor-pointer transition-colors bg-[#c2410c] hover:bg-[#9a3412]">
+          className="flex flex-1 min-h-12 items-center justify-center gap-2 rounded-2xl font-extrabold text-sm text-white disabled:opacity-60 cursor-pointer transition-colors bg-[color:var(--ck-accent)] hover:bg-[color:var(--ck-accent-hover)] ck-cta">
           {intentLoading
             ? <Loader2 size={18} className="animate-spin" />
             : <>Continuar al Pago <ChevronRight size={16} /></>}
@@ -974,19 +1009,19 @@ function CheckoutFormInner() {
     <div>
       {!couponOpen && !couponMsg ? (
         <button type="button" onClick={() => setCouponOpen(true)}
-          className="flex min-h-10 cursor-pointer items-center gap-1.5 text-sm font-bold text-[#c2410c] hover:underline">
+          className="flex min-h-10 cursor-pointer items-center gap-1.5 text-sm font-bold text-[color:var(--ck-accent)] hover:underline">
           <Tag size={14} aria-hidden /> ¿Tienes un cupón de descuento?
         </button>
       ) : (
         <div className="space-y-1.5">
-          <label htmlFor="coupon" className="block text-xs font-bold text-[#23263f]">Cupón de descuento</label>
+          <label htmlFor="coupon" className="block text-xs font-bold text-[color:var(--ck-ink)]">Cupón de descuento</label>
           <div className="flex gap-2">
             <input id="coupon" className={`${inputCls} uppercase`} placeholder="Escribe tu código" value={couponInput}
               autoComplete="off" autoCapitalize="characters"
               onChange={e => setCouponInput(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); } }} />
             <button type="button" onClick={applyCoupon} disabled={quoteLoading && !!couponCode}
-              className="shrink-0 cursor-pointer rounded-2xl bg-[#23263f] px-4 text-sm font-bold text-white hover:bg-[#15172a] disabled:opacity-60">
+              className="shrink-0 cursor-pointer rounded-2xl bg-[color:var(--ck-btn)] px-4 text-sm font-bold text-[color:var(--ck-btn-ink)] hover:opacity-90 disabled:opacity-60">
               {quoteLoading && !!couponCode ? <Loader2 size={16} className="animate-spin" /> : 'Aplicar'}
             </button>
           </div>
@@ -1000,7 +1035,7 @@ function CheckoutFormInner() {
   const step2 = clientSecret ? (
     <Elements
       stripe={stripePromise}
-      options={{ clientSecret, appearance: stripeAppearance, locale: stripeLocale() }}
+      options={{ clientSecret, appearance: brand ? storeStripeAppearance(accent) : stripeAppearance, locale: stripeLocale() }}
     >
       <PaymentStepInner
         total={total}
@@ -1015,13 +1050,13 @@ function CheckoutFormInner() {
     </Elements>
   ) : (
     <div className="flex items-center justify-center py-12">
-      <Loader2 size={24} className="animate-spin text-orange-700" />
+      <Loader2 size={24} className="animate-spin text-[color:var(--ck-accent)]" />
     </div>
   );
 
   // ── Layout ──────────────────────────────────────────────────
   return (
-    <div className="kids min-h-screen py-6 pb-28 sm:pb-12 sm:py-10 px-4" style={{ background:'#FFF8EF' }}>
+    <div className={`${skin} min-h-screen py-6 pb-28 sm:pb-12 sm:py-10 px-4`} style={{ ...skinStyle, background:'var(--ck-page)' }}>
 
       <div className="max-w-5xl mx-auto">
         <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -1045,7 +1080,7 @@ function CheckoutFormInner() {
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 lg:gap-10">
           <div>
-            <h1 className="text-4xl sm:text-5xl font-bold text-[#23263f] mb-6">¡Ya casi es tuyo!</h1>
+            <h1 className="text-4xl sm:text-5xl font-bold text-[color:var(--ck-ink)] mb-6">¡Ya casi es tuyo!</h1>
             <StepIndicator step={step} />
             {step===1 ? step1 : step2}
           </div>
@@ -1053,7 +1088,7 @@ function CheckoutFormInner() {
             <OrderSummary items={items} totalPrice={subtotal} shipping={shipping} total={total} shipLabel={shipLabel}
               discount={discount} couponLabel={appliedCoupon ? `${appliedCoupon.code} (−${appliedCoupon.percent}%)` : ''}
               couponSlot={couponBox} />
-            {quoteLoading && <p className="mt-2 text-center text-xs text-slate-500">Actualizando total...</p>}
+            {quoteLoading && <p className="mt-2 text-center text-xs text-[color:var(--ck-sub)]">Actualizando total...</p>}
           </div>
         </div>
       </div>
@@ -1067,7 +1102,7 @@ const POSTAL_HINT: Record<string, string> = { ES: '28001', PT: '1000-001', FR: '
 export default function CheckoutForm() {
   if (!process.env.NEXT_PUBLIC_STRIPE_PK) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4" style={{ background:'#FAF8F5' }}>
+      <div className="min-h-screen flex items-center justify-center px-4" style={{ background:'var(--ck-page)' }}>
         <div className="rounded-xl px-4 py-3 text-sm text-red-600"
           style={{ background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)' }}>
           Clave pública de Stripe no configurada (STRIPE_KEY_PUBLIC).
