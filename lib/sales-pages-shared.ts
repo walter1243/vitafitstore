@@ -17,6 +17,7 @@ export type SalesPageConfig = {
   logoImage: string; // logo do topo (com o nome)
   iconImage: string; // ícone quadrado: favicon + prévia do link (Instagram/WhatsApp)
   logoHeight: number; // altura do logo no topo, em px (Editar loja → Tamanho do logo)
+  heroLogoSize: number; // logo grande na capa, em % da largura do texto da capa (0 = mostra o título escrito)
   eyebrow: string;
   heading: string;
   subtitle: string;
@@ -46,6 +47,7 @@ export const DEFAULT_SALES_PAGE: Omit<SalesPageConfig, 'slug'> = {
   logoImage: '',
   iconImage: '',
   logoHeight: 56,
+  heroLogoSize: 0,
   eyebrow: 'EDICIÓN LIMITADA',
   heading: 'VICE CITY STORE',
   subtitle: 'Llaveros y piezas 3D con alma retro de los 80. Luz de neón, palmeras y actitud de ciudad — impresos en nuestro taller en España.',
@@ -149,3 +151,9 @@ export const clampLogoHeight = (v: unknown) => {
 // Barra de vidro: no mínimo 72px; cresce com o logo. +12px do espaço acima dela.
 export const storeBarHeight = (cfg: { logoHeight?: number }) => Math.max(72, clampLogoHeight(cfg.logoHeight) + 16);
 export const storeHeaderOffset = (cfg: { logoHeight?: number }) => storeBarHeight(cfg) + 12;
+
+// Logo na capa: % da largura da coluna do título (no celular, da tela). 0 = desligado.
+export const clampHeroLogo = (v: unknown) => {
+  const n = Math.round(Number(v));
+  return Number.isFinite(n) && n > 0 ? Math.min(100, Math.max(15, n)) : 0;
+};

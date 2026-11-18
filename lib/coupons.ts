@@ -66,21 +66,35 @@ export function ensureCoupons() {
       VALUES (1, TRUE, ${DEFAULT_COUPON}, ${DEFAULT_POPUP_IMAGE})
       ON CONFLICT (id) DO NOTHING
     `;
+    // Multi-loja: um pop-up por loja (id 1 = Kitoys; as outras lojas ganham linha própria).
+    await sql`ALTER TABLE coupon_popup ADD COLUMN IF NOT EXISTS store_slug TEXT`;
+    await sql`UPDATE coupon_popup SET store_slug = 'kitoys' WHERE id = 1 AND store_slug IS NULL`;
+    await sql`CREATE UNIQUE INDEX IF NOT EXISTS coupon_popup_store_idx ON coupon_popup (store_slug)`;
   })().catch((e) => { ready = null; throw e; });
   return ready;
 }
 
-export async function getCouponPopup(): Promise<CouponPopupConfig> {
+const MAIN = 'kitoys';
+const storeKey = (v: unknown) => String(v ?? '').toLowerCase().replace(/[^a-z0-9-]/g, '') || MAIN;
+
+// Pop-up de cupom da loja (Kitoys = padrão). Loja sem campanha: desligado.
+export async function getCouponPopup(storeSlug: string = MAIN): Promise<CouponPopupConfig> {
   await ensureCoupons();
+  const store = storeKey(storeSlug);
   const [r] = (await sql`
     SELECT p.enabled, p.code, p.delay_sec, p.reshow_days, p.image_desktop, p.image_mobile,
            c.percent, c.active, c.first_purchase_only, c.min_subtotal, c.ends_at
     FROM coupon_popup p LEFT JOIN coupons c ON c.code = p.code
-    WHERE p.id = 1
+    WHERE p.store_slug = ${store}
+    LIMIT 1
   `) as any[];
+  const isMain = store === MAIN;
+  if (!r && !isMain) {
+    return { enabled: false, code: '', percent: 10, firstPurchaseOnly: true, minSubtotal: 0, endsAt: null, delaySec: 3, reshowDays: 0, imageDesktop: '', imageMobile: '' };
+  }
   return {
     enabled: Boolean(r?.enabled) && Boolean(r?.active),
-    code: String(r?.code ?? DEFAULT_COUPON),
+    code: String(r?.code ?? (isMain ? DEFAULT_COUPON : '')),
     percent: Number(r?.percent ?? 15),
     firstPurchaseOnly: r?.first_purchase_only !== false,
     minSubtotal: Number(r?.min_subtotal ?? 0),
@@ -88,14 +102,21 @@ export async function getCouponPopup(): Promise<CouponPopupConfig> {
     delaySec: Number(r?.delay_sec ?? 3),
     reshowDays: Number(r?.reshow_days ?? 0),
     imageDesktop: String(r?.image_desktop ?? ''),
-    imageMobile: String(r?.image_mobile ?? '') || DEFAULT_POPUP_IMAGE,
+    imageMobile: String(r?.image_mobile ?? '') || (isMain ? DEFAULT_POPUP_IMAGE : ''),
   };
 }
 
-export async function saveCouponPopup(input: Partial<CouponPopupConfig>) {
+export async function saveCouponPopup(input: Partial<CouponPopupConfig>, storeSlug: string = MAIN) {
   await ensureCoupons();
-  const current = await getCouponPopup();
+  const store = storeKey(storeSlug);
+  const isMain = store === MAIN;
+  const current = await getCouponPopup(store);
   const code = normalizeCode(input.code) || current.code;
+  if (!code) throw new Error('Escreva o código do cupom (ex.: VICECITY10).');
+  // O cupom (%, regras) é um só por código: duas lojas com o mesmo código
+  // mudariam o desconto uma da outra.
+  const [taken] = (await sql`SELECT store_slug FROM coupon_popup WHERE code = ${code} AND store_slug <> ${store} LIMIT 1`) as any[];
+  if (taken) throw new Error(`O código ${code} já é usado no pop-up de outra loja. Escolha outro código.`);
   const percent = Math.min(90, Math.max(1, Math.round(Number(input.percent ?? current.percent) || 15)));
   const enabled = Boolean(input.enabled ?? current.enabled);
   const firstPurchaseOnly = Boolean(input.firstPurchaseOnly ?? current.firstPurchaseOnly);
@@ -105,10 +126,10 @@ export async function saveCouponPopup(input: Partial<CouponPopupConfig>) {
   const delaySec = Math.min(60, Math.max(0, Math.round(Number(input.delaySec ?? current.delaySec) || 0)));
   const reshowDays = Math.min(365, Math.max(0, Math.round(Number(input.reshowDays ?? current.reshowDays) || 0)));
   const imageDesktop = String(input.imageDesktop ?? current.imageDesktop).trim();
-  const imageMobile = String(input.imageMobile ?? current.imageMobile).trim() || DEFAULT_POPUP_IMAGE;
+  const imageMobile = String(input.imageMobile ?? current.imageMobile).trim() || (isMain ? DEFAULT_POPUP_IMAGE : '');
 
-  // Trocou o codigo: o antigo deixa de valer (so existe um cupom de campanha).
-  if (code !== current.code) await sql`UPDATE coupons SET active = FALSE WHERE code = ${current.code}`;
+  // Trocou o codigo: o antigo deixa de valer (so existe um cupom de campanha por loja).
+  if (current.code && code !== current.code) await sql`UPDATE coupons SET active = FALSE WHERE code = ${current.code}`;
   await sql`
     INSERT INTO coupons (code, percent, active, first_purchase_only, min_subtotal, ends_at)
     VALUES (${code}, ${percent}, ${enabled}, ${firstPurchaseOnly}, ${minSubtotal}, ${endsAt})
@@ -117,13 +138,22 @@ export async function saveCouponPopup(input: Partial<CouponPopupConfig>) {
       first_purchase_only = EXCLUDED.first_purchase_only,
       min_subtotal = EXCLUDED.min_subtotal, ends_at = EXCLUDED.ends_at
   `;
-  await sql`
-    UPDATE coupon_popup SET enabled = ${enabled}, code = ${code}, delay_sec = ${delaySec},
-      reshow_days = ${reshowDays}, image_desktop = ${imageDesktop || null}, image_mobile = ${imageMobile},
-      updated_at = NOW()
-    WHERE id = 1
-  `;
-  return getCouponPopup();
+  const [row] = (await sql`SELECT id FROM coupon_popup WHERE store_slug = ${store} LIMIT 1`) as any[];
+  if (row) {
+    await sql`
+      UPDATE coupon_popup SET enabled = ${enabled}, code = ${code}, delay_sec = ${delaySec},
+        reshow_days = ${reshowDays}, image_desktop = ${imageDesktop || null}, image_mobile = ${imageMobile || null},
+        updated_at = NOW()
+      WHERE store_slug = ${store}
+    `;
+  } else {
+    await sql`
+      INSERT INTO coupon_popup (id, store_slug, enabled, code, delay_sec, reshow_days, image_desktop, image_mobile)
+      SELECT COALESCE(MAX(id), 1) + 1, ${store}, ${enabled}, ${code}, ${delaySec}, ${reshowDays}, ${imageDesktop || null}, ${imageMobile || null}
+      FROM coupon_popup
+    `;
+  }
+  return getCouponPopup(store);
 }
 
 export type CouponCheck =

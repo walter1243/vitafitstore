@@ -9,7 +9,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Check, Copy, ExternalLink, Image as ImageIcon, Instagram, Loader2, Plus, Rocket, Settings2, Sparkles, Star, Trash2, X } from 'lucide-react';
 import { dataUrlToBlobUrl, isDataUrl } from '@/lib/upload-data-url';
 import { useHoverPaste } from '@/lib/use-hover-paste';
-import { LOGO_HEIGHT_MAX, LOGO_HEIGHT_MIN, SALES_PAGE_THEMES, THEME_ART, THEME_ICONS, clampLogoHeight, storePath, type SalesPageConfig } from '@/lib/sales-pages-shared';
+import { LOGO_HEIGHT_MAX, LOGO_HEIGHT_MIN, SALES_PAGE_THEMES, THEME_ART, THEME_ICONS, clampHeroLogo, clampLogoHeight, storeArt, storePath, type SalesPageConfig } from '@/lib/sales-pages-shared';
 
 type AdminProduct = { id: number; name: string; price: number; image?: string; mainImage?: string; category?: string };
 
@@ -17,7 +17,7 @@ const inputCls = 'w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-
 const labelCls = 'mb-1.5 block text-xs font-medium text-white/50';
 
 const EMPTY: SalesPageConfig = {
-  slug: '', title: 'Nova loja', theme: 'vice-city', enabled: true, logoImage: '', iconImage: '', logoHeight: 56,
+  slug: '', title: 'Nova loja', theme: 'vice-city', enabled: true, logoImage: '', iconImage: '', logoHeight: 56, heroLogoSize: 0,
   eyebrow: 'EDICIÓN LIMITADA', heading: 'VICE CITY STORE',
   subtitle: 'Llaveros y piezas 3D con alma retro de los 80.',
   ctaLabel: 'Comprar ahora', badge: 'NUEVO DROP', heroImage: '', heroVideo: '', backgroundImage: '',
@@ -245,6 +245,38 @@ export default function AdminSalesPages({ products, editSlug, onSaved, onManage 
                   </button>
                 )}
               </div>
+            </div>
+            {/* Logo grande na capa, no lugar do título — tamanho em relação à página */}
+            <div className="rounded-xl border border-white/10 bg-[#0f1117] p-3">
+              <p className="text-sm font-semibold text-white">Logo na capa (no lugar do título)</p>
+              <p className="text-[11px] text-white/40">Mostra o logo grande na capa da loja. 0% = mostra o título escrito.</p>
+              {/* prévia: proporção de uma tela, com a coluna do título à esquerda */}
+              <div className="relative mt-2 aspect-[16/9] overflow-hidden rounded-lg border border-white/15 bg-[#0b0614]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={editing.backgroundImage || storeArt(editing).hero} alt="" className="absolute inset-y-0 right-0 h-full w-[58%] object-cover object-[50%_28%] opacity-80" />
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, #0b0614 0%, #0b0614eb 30%, #0b061466 52%, transparent 72%)' }} />
+                <div className="absolute inset-y-0 left-[6%] flex w-[48%] flex-col justify-center">
+                  {editing.logoImage && clampHeroLogo(editing.heroLogoSize) > 0
+                    // eslint-disable-next-line @next/next/no-img-element
+                    ? <img src={editing.logoImage} alt="" style={{ width: `${clampHeroLogo(editing.heroLogoSize)}%` }} className="h-auto max-w-full" />
+                    : <span className="text-[clamp(14px,3vw,26px)] font-black uppercase leading-none text-white">{editing.heading || editing.title}</span>}
+                  <span className="mt-2 h-1.5 w-2/3 rounded bg-white/25" />
+                  <span className="mt-1 h-1.5 w-1/2 rounded bg-white/15" />
+                  <span className="mt-2 h-3 w-1/4 rounded bg-white/70" />
+                </div>
+              </div>
+              <label className="mt-3 block">
+                <span className="mb-1 flex items-center justify-between text-xs font-medium text-white/60">
+                  <span>Tamanho do logo na capa</span>
+                  <span className="tabular-nums text-white">{clampHeroLogo(editing.heroLogoSize) ? `${clampHeroLogo(editing.heroLogoSize)}%` : 'desligado'}</span>
+                </span>
+                <input type="range" min={0} max={100} step={5}
+                  value={clampHeroLogo(editing.heroLogoSize)}
+                  disabled={!editing.logoImage}
+                  onChange={(e) => up('heroLogoSize', Number(e.target.value) < 15 ? 0 : Number(e.target.value))}
+                  className="w-full cursor-pointer accent-pink-500 disabled:cursor-not-allowed disabled:opacity-40" />
+                <span className="mt-0.5 flex justify-between text-[10px] text-white/35"><span>título escrito</span><span>{editing.logoImage ? '% da largura do texto da capa (no celular, da tela)' : 'envie o logo do topo primeiro'}</span><span>100%</span></span>
+              </label>
             </div>
             {/* Ícone (quadrado): favicon da aba + prévia do link no Instagram/WhatsApp */}
             <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#0f1117] p-3">

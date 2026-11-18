@@ -14,11 +14,13 @@ export async function GET(req: NextRequest) {
   try {
     await Promise.all([ensureCoupons(), ensureSiteEvents()]);
     const days = Math.min(365, Math.max(1, Number(req.nextUrl.searchParams.get('days')) || 30));
+    const store = (req.nextUrl.searchParams.get('store') || 'kitoys').toLowerCase().replace(/[^a-z0-9-]/g, '') || 'kitoys';
     const events = (await sql`
       SELECT type, COUNT(*)::int AS total, COUNT(DISTINCT visitor)::int AS people
       FROM site_events
       WHERE type IN ('coupon_view', 'coupon_copy', 'coupon_buy', 'coupon_close')
         AND created_at > NOW() - make_interval(days => ${days})
+        AND COALESCE(store_slug, 'kitoys') = ${store}
       GROUP BY type
     `) as any[];
     const [orders] = (await sql`
@@ -28,6 +30,7 @@ export async function GET(req: NextRequest) {
       FROM orders
       WHERE coupon_code IS NOT NULL
         AND created_at > NOW() - make_interval(days => ${days})
+        AND COALESCE(store_slug, 'kitoys') = ${store}
     `) as any[];
     const by = (t: string) => events.find((e) => e.type === t) ?? { total: 0, people: 0 };
     return NextResponse.json({

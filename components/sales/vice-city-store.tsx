@@ -14,7 +14,7 @@ import { type Product } from '@/lib/products';
 import { useCart } from '@/lib/cart-context';
 import { cardPrice } from '@/lib/personalize';
 import { FREE_SHIPPING_FROM } from '@/lib/checkout-pricing';
-import { storeArt, storeHeaderOffset, type SalesPageConfig } from '@/lib/sales-pages-shared';
+import { clampHeroLogo, storeArt, storeHeaderOffset, type SalesPageConfig } from '@/lib/sales-pages-shared';
 import { StoreFooter, StoreHeader } from '@/components/sales/store-chrome';
 import { flyToCart } from '@/lib/fly-to-cart';
 import { storeFontClass } from '@/components/sales/store-fonts';
@@ -262,9 +262,17 @@ export function ViceCityStore({ config, products, cover }: Props) {
         <div className="mx-auto grid max-w-6xl gap-12 px-4 pb-16 pt-[50svh] sm:pt-[54svh] lg:min-h-[100svh] lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:gap-6 lg:pb-20 lg:pt-32">
           <div className="text-center lg:text-left">
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">{config.badge || config.eyebrow}</p>
-            <h1 className="font-store-display mt-3 text-[64px] uppercase leading-[0.86] text-white sm:text-8xl lg:text-[124px]" style={{ textShadow: `0 4px 40px ${P}66` }}>
-              {config.heading}
-            </h1>
+            {config.logoImage && clampHeroLogo(config.heroLogoSize) > 0 ? (
+              // Logo grande no lugar do título (Editar loja → Logo na capa)
+              <h1 className="mt-4">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={config.logoImage} alt={config.heading} style={{ width: `${clampHeroLogo(config.heroLogoSize)}%`, filter: `drop-shadow(0 6px 30px ${P}55)` }} className="mx-auto h-auto max-w-full lg:mx-0" />
+              </h1>
+            ) : (
+              <h1 className="font-store-display mt-3 text-[64px] uppercase leading-[0.86] text-white sm:text-8xl lg:text-[124px]" style={{ textShadow: `0 4px 40px ${P}66` }}>
+                {config.heading}
+              </h1>
+            )}
             <p className="mx-auto mt-6 max-w-lg text-lg leading-relaxed text-white/85 lg:mx-0">{config.subtitle}</p>
 
             {cd && (

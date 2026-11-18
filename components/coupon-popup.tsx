@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { ArrowRight, Check, Copy, Gift, ShoppingCart, Tag, X } from 'lucide-react'
 import { send } from '@/components/site-tracker'
 import { canShowPopup, copyText, markPopupSeen, savePendingCoupon } from '@/lib/coupon-client'
+import { storeFontClass } from '@/components/sales/store-fonts'
 
 // Pop-up de boas-vindas com cupom (Admin → Editar loja → Pop-up de cupom).
 //  - aparece X segundos (padrao 3) depois de entrar na loja, uma vez;
@@ -25,7 +26,14 @@ type Cfg = {
   reshowDays: number
   imageDesktop: string
   imageMobile: string
+  // lojas próprias (multi-loja)
+  storeTitle?: string
+  neonPrimary?: string
+  fallbackImage?: string
 }
+
+const MAIN = 'kitoys'
+const pageStore = () => (typeof document !== 'undefined' && document.querySelector('[data-kt-store]')?.getAttribute('data-kt-store')) || MAIN
 
 const SKIP = ['/admin', '/checkout', '/acesso', '/preview', '/pedido', '/resena', '/legal']
 const skipped = (p: string | null) => !p || SKIP.some((s) => p.startsWith(s))
@@ -52,6 +60,7 @@ export function CouponPopup() {
   const [copied, setCopied] = useState(false)
   const scheduled = useRef(false)
   const closeBtn = useRef<HTMLButtonElement>(null)
+  const [store, setStore] = useState(MAIN)
 
   // Agenda uma vez por carregamento, so em paginas da loja.
   useEffect(() => {
@@ -59,14 +68,17 @@ export function CouponPopup() {
     scheduled.current = true
     let timer: ReturnType<typeof setTimeout> | undefined
     let alive = true
-    fetch('/api/coupon-popup', { cache: 'no-store' })
+    // Cada loja tem a sua campanha (Admin → Editar loja → Pop-up de cupom).
+    const st = pageStore()
+    setStore(st)
+    fetch(`/api/coupon-popup?store=${encodeURIComponent(st)}`, { cache: 'no-store' })
       .then((r) => r.json())
       .then((c: Cfg) => {
         if (!alive || !c?.enabled || !c.code || !canShowPopup(c.code, Number(c.reshowDays) || 0)) return
         setCfg(c)
         timer = setTimeout(() => {
-          // Loja própria (ex.: VICE CITY STORE, marcada com data-kt-store): o pop-up é da Kitoys, não aparece.
-          if (skipped(location.pathname) || document.querySelector('[data-kt-store]') || !canShowPopup(c.code, Number(c.reshowDays) || 0)) return
+          // Mudou de loja antes de aparecer: a campanha era da outra loja.
+          if (skipped(location.pathname) || pageStore() !== st || !canShowPopup(c.code, Number(c.reshowDays) || 0)) return
           setOpen(true)
           track('coupon_view', c.code)
         }, Math.max(0, Number(c.delaySec ?? 3)) * 1000)
@@ -114,11 +126,13 @@ export function CouponPopup() {
     markPopupSeen(cfg.code)
     track('coupon_buy', cfg.code)
     setOpen(false)
-    if (location.pathname === '/') {
-      document.getElementById('productos')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    } else {
-      router.push('/#productos')
-    }
+    const grid = document.getElementById('productos')
+    if (grid) grid.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    else router.push(store === MAIN ? '/#productos' : `/${store}#productos`)
+  }
+
+  if (store !== MAIN) {
+    return <StoreCouponModal cfg={cfg} copied={copied} onCopy={copy} onBuy={buy} onClose={close} closeRef={closeBtn} />
   }
 
   const codeBox = (
@@ -225,6 +239,60 @@ export function CouponPopup() {
               </div>
             </div>
           )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Pop-up das lojas próprias (ex.: VICE CITY): mesmas regras e botões do da
+// Kitoys, no visual da loja — fundo escuro, arte dela, botões brancos, sem ícones.
+function StoreCouponModal({ cfg, copied, onCopy, onBuy, onClose, closeRef }: {
+  cfg: Cfg; copied: boolean; onCopy: () => void; onBuy: () => void; onClose: () => void; closeRef: React.RefObject<HTMLButtonElement | null>
+}) {
+  const img = cfg.imageMobile || cfg.fallbackImage || ''
+  const P = cfg.neonPrimary || '#ff2d9b'
+  return (
+    <div
+      className={`${storeFontClass} fixed inset-0 z-[95] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm motion-safe:animate-in motion-safe:fade-in`}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div role="dialog" aria-modal="true" aria-label={`Cupón: -${cfg.percent}% con el código ${cfg.code}`}
+        className="relative w-full max-w-[400px] overflow-hidden rounded-xl border border-white/15 bg-[#0b0614] text-white shadow-2xl md:max-w-[820px] motion-safe:animate-in motion-safe:zoom-in-95">
+        <button ref={closeRef} type="button" onClick={onClose}
+          className="absolute right-3 top-3 z-10 h-10 cursor-pointer rounded-md bg-black/55 px-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/80 backdrop-blur transition-colors hover:text-white">
+          Cerrar
+        </button>
+        <div className="md:grid md:grid-cols-2">
+          {img && (
+            <div className="relative aspect-[4/3] md:aspect-auto md:min-h-[480px]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={img} alt="" className="absolute inset-0 h-full w-full object-cover object-[50%_30%]" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0b0614] via-transparent to-transparent md:bg-gradient-to-r md:from-transparent md:via-transparent md:to-[#0b0614]" />
+            </div>
+          )}
+          <div className="flex flex-col justify-center gap-5 p-6 sm:p-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">{cfg.storeTitle || 'Regalo de bienvenida'}</p>
+            <div>
+              <p className="font-store-display text-7xl leading-none" style={{ color: P }}>-{cfg.percent}%</p>
+              <p className="font-store-display mt-2 text-3xl uppercase leading-tight">{cfg.firstPurchaseOnly ? 'En tu primera compra' : 'En tu compra'}</p>
+            </div>
+            <div className="flex items-center gap-2 rounded-md border border-dashed border-white/35 bg-white/5 p-1.5 pl-4">
+              <span className="min-w-0 flex-1 truncate font-mono text-lg font-bold tracking-wider">{cfg.code}</span>
+              <button type="button" onClick={onCopy}
+                className="h-10 shrink-0 cursor-pointer rounded-md bg-white/10 px-4 text-xs font-bold uppercase tracking-[0.14em] transition-colors hover:bg-white/20">
+                {copied ? 'Copiado' : 'Copiar'}
+              </button>
+            </div>
+            <button type="button" onClick={onBuy}
+              className="h-14 cursor-pointer rounded-md bg-white text-sm font-bold uppercase tracking-[0.14em] text-[#0b0614] transition-colors hover:opacity-90">
+              Comprar ahora
+            </button>
+            <p className="text-xs leading-snug text-white/50">
+              {copied ? 'Listo: el descuento se aplica solo al pagar. ' : 'Se aplica automáticamente al pagar. '}
+              {rules(cfg)}
+            </p>
+          </div>
         </div>
       </div>
     </div>

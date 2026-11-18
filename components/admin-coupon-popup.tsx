@@ -47,7 +47,7 @@ function readAsDataUrl(file: File): Promise<string> {
   });
 }
 
-function ImageSlot({ kind, value, onChange }: { kind: 'desktop' | 'mobile'; value: string; onChange: (v: string) => void }) {
+function ImageSlot({ kind, value, onChange, fallback = DEFAULT_MOBILE }: { kind: 'desktop' | 'mobile'; value: string; onChange: (v: string) => void; fallback?: string }) {
   const isDesk = kind === 'desktop';
   const accept = (t: string) => /^image\/(jpeg|png|webp|avif)$/.test(t);
   const take = useCallback(async (files: File[]) => { if (files[0]) onChange(await readAsDataUrl(files[0])); }, [onChange]);
@@ -70,7 +70,7 @@ function ImageSlot({ kind, value, onChange }: { kind: 'desktop' | 'mobile'; valu
           <div className="grid h-full w-full grid-cols-2 gap-1 p-2 text-[10px] text-white/50">
             <div className="overflow-hidden rounded bg-white/5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={DEFAULT_MOBILE} alt="" className="h-full w-full object-cover object-top opacity-80" />
+              {fallback ? <img src={fallback} alt="" className="h-full w-full object-cover object-top opacity-80" /> : null}
             </div>
             <div className="flex flex-col justify-center gap-1 rounded bg-white/5 p-2">
               <span className="font-bold text-orange-300">-15%</span>
@@ -121,7 +121,11 @@ function StatTile({ icon, label, value, sub }: { icon: React.ReactNode; label: s
 
 const pct = (a: number, b: number) => (b > 0 ? `${Math.round((a / b) * 100)}%` : '—');
 
-export default function AdminCouponPopup() {
+// store: loja selecionada no topo do painel ('kitoys' = principal). Cada loja tem
+// o seu pop-up e o seu cupom, com as mesmas regras.
+export default function AdminCouponPopup({ store = 'kitoys' }: { store?: string } = {}) {
+  const isMain = store === 'kitoys';
+  const q = `store=${encodeURIComponent(store)}`;
   const [cfg, setCfg] = useState<Cfg | null>(null);
   const [ended, setEnded] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -130,11 +134,11 @@ export default function AdminCouponPopup() {
   const [days, setDays] = useState(30);
 
   useEffect(() => {
-    fetch('/api/coupon-popup', { cache: 'no-store' }).then((r) => r.json()).then((d) => {
+    fetch(`/api/coupon-popup?${q}`, { cache: 'no-store' }).then((r) => r.json()).then((d) => {
       setEnded(Boolean(d.ended));
       setCfg({
         enabled: Boolean(d.configuredEnabled ?? d.enabled),
-        code: d.code ?? 'BIENVENIDOS15',
+        code: d.code || (isMain ? 'BIENVENIDOS15' : ''),
         percent: Number(d.percent ?? 15),
         firstPurchaseOnly: d.firstPurchaseOnly !== false,
         minSubtotal: Number(d.minSubtotal ?? 0),
@@ -142,15 +146,15 @@ export default function AdminCouponPopup() {
         delaySec: Number(d.delaySec ?? 3),
         reshowDays: Number(d.reshowDays ?? 0),
         imageDesktop: d.imageDesktop ?? '',
-        imageMobile: d.imageMobile ?? DEFAULT_MOBILE,
+        imageMobile: d.imageMobile ?? (isMain ? DEFAULT_MOBILE : ''),
       });
     }).catch(() => setMsg({ ok: false, text: 'Não foi possível carregar o cupom.' }));
-  }, []);
+  }, [q, isMain]);
 
   useEffect(() => {
-    fetch(`/api/coupon-popup/stats?days=${days}`, { cache: 'no-store' })
+    fetch(`/api/coupon-popup/stats?days=${days}&${q}`, { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : null)).then((d) => d && !d.error && setStats(d)).catch(() => {});
-  }, [days]);
+  }, [days, q]);
 
   const up = <K extends keyof Cfg>(k: K, v: Cfg[K]) => setCfg((c) => (c ? { ...c, [k]: v } : c));
   const setDesk = useCallback((v: string) => up('imageDesktop', v), []);
@@ -163,7 +167,7 @@ export default function AdminCouponPopup() {
     try {
       const imageDesktop = isDataUrl(cfg.imageDesktop) ? await dataUrlToBlobUrl(cfg.imageDesktop, 'cupom') : cfg.imageDesktop;
       const imageMobile = isDataUrl(cfg.imageMobile) ? await dataUrlToBlobUrl(cfg.imageMobile, 'cupom') : cfg.imageMobile;
-      const res = await fetch('/api/coupon-popup', {
+      const res = await fetch(`/api/coupon-popup?${q}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...cfg, imageDesktop, imageMobile }),
@@ -209,7 +213,7 @@ export default function AdminCouponPopup() {
 
       {/* imagens: computador de um lado, celular do outro */}
       <div className="grid gap-3 md:grid-cols-[1.4fr_1fr]">
-        <ImageSlot kind="desktop" value={cfg.imageDesktop} onChange={setDesk} />
+        <ImageSlot kind="desktop" value={cfg.imageDesktop} onChange={setDesk} fallback={isMain ? DEFAULT_MOBILE : cfg.imageMobile} />
         <ImageSlot kind="mobile" value={cfg.imageMobile} onChange={setMob} />
       </div>
 

@@ -3032,7 +3032,11 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
           {section === 'automation' && <AutomationSection />}
           {/* "Editar loja": na Kitoys edita a home dela; em outra loja edita nome, logo, link e página dela. */}
           {section === 'settings' && activeStore && (
-            <AdminSalesPages key={activeStore.slug} products={products} editSlug={activeStore.slug} onSaved={(slug) => { void loadStores(); setStoreSlug(slug); }} />
+            <>
+              <AdminSalesPages key={activeStore.slug} products={products} editSlug={activeStore.slug} onSaved={(slug) => { void loadStores(); setStoreSlug(slug); }} />
+              {/* pop-up de cupom da loja: mesmas regras do da Kitoys, cupom próprio */}
+              <div className="mt-6"><AdminCouponPopup key={`cupom-${activeStore.slug}`} store={activeStore.slug} /></div>
+            </>
           )}
           {section === 'settings' && !activeStore && (
             <SettingsSection

@@ -3,6 +3,7 @@ import {
   DEFAULT_SALES_PAGE,
   RESERVED_SLUGS,
   clampLogoHeight,
+  clampHeroLogo,
   normalizeSlug,
   type SalesPageConfig,
 } from '@/lib/sales-pages-shared';
@@ -65,6 +66,7 @@ function rowToConfig(row: any): SalesPageConfig {
     logoImage: String(d.logoImage ?? ''),
     iconImage: String(d.iconImage ?? ''),
     logoHeight: clampLogoHeight(d.logoHeight ?? 56),
+    heroLogoSize: clampHeroLogo(d.heroLogoSize ?? 0),
     eyebrow: String(d.eyebrow ?? base.eyebrow),
     heading: String(d.heading ?? base.heading),
     subtitle: String(d.subtitle ?? base.subtitle),
@@ -119,6 +121,7 @@ export async function saveSalesPage(input: Partial<SalesPageConfig> & { original
     logoImage: String(input.logoImage ?? '').trim(),
     iconImage: String(input.iconImage ?? '').trim(),
     logoHeight: clampLogoHeight(input.logoHeight ?? 56),
+    heroLogoSize: clampHeroLogo(input.heroLogoSize ?? 0),
     eyebrow: String(input.eyebrow ?? DEFAULT_SALES_PAGE.eyebrow).slice(0, 60),
     heading: String(input.heading ?? DEFAULT_SALES_PAGE.heading).slice(0, 80),
     subtitle: String(input.subtitle ?? DEFAULT_SALES_PAGE.subtitle).slice(0, 400),

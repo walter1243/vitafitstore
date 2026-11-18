@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { useCart } from '@/lib/cart-context';
 import { clampLogoHeight, storeBarHeight, storeHeaderOffset, storeLegalHref, storePath, type SalesPageConfig } from '@/lib/sales-pages-shared';
 import { rememberStore } from '@/lib/store-context';
+import { PAYMENT_LOGOS } from '@/components/payment-logos';
 
 type Brand = Pick<SalesPageConfig, 'slug' | 'title' | 'logoImage' | 'neonPrimary' | 'neonSecondary' | 'footerNote'> & { logoHeight?: number };
 
@@ -90,6 +91,37 @@ export function StoreHeader({ store, overlay = false, onCatalog }: { store: Bran
   );
 }
 
+// Mesmo critério do rodapé da Kitoys: só mostra o logo do método que está ATIVO
+// na conta Stripe (/api/checkout/stripe-status) — nunca prometer o que o checkout não tem.
+const LOGO_NEEDS: Record<string, (methods: string[], bizum: string) => boolean> = {
+  visa: (m) => m.includes('card'),
+  mastercard: (m) => m.includes('card'),
+  'apple-pay': (m) => m.includes('card'),
+  'google-pay': (m) => m.includes('card'),
+  paypal: (m) => m.includes('paypal'),
+  bizum: (_m, bizum) => bizum === 'active',
+};
+
+function PaymentRow() {
+  const [payment, setPayment] = useState<{ methods: string[]; bizum: string } | null>(null);
+  useEffect(() => {
+    fetch('/api/checkout/stripe-status')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (Array.isArray(d?.paymentMethods)) setPayment({ methods: d.paymentMethods, bizum: String(d.bizum ?? '') }); })
+      .catch(() => {});
+  }, []);
+  const logos = PAYMENT_LOGOS.filter(({ key }) => (payment ? LOGO_NEEDS[key]?.(payment.methods, payment.bizum) : key === 'visa' || key === 'mastercard'));
+  return (
+    <div className="flex flex-wrap justify-center gap-1.5" aria-label="Métodos de pago aceptados">
+      {logos.map(({ key, label, Logo }) => (
+        <span key={key} title={label} className="overflow-hidden rounded-md">
+          <Logo w={44} h={28} />
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export function StoreFooter({ store }: { store: Brand }) {
   return (
     <footer className="relative z-10 border-t border-white/10 bg-[#07030d] px-4 pb-10 pt-12 text-center text-white/55">
@@ -100,7 +132,11 @@ export function StoreFooter({ store }: { store: Brand }) {
           <Link key={doc} href={storeLegalHref(store.slug, doc)} className="hover:text-white">{label}</Link>
         ))}
       </nav>
-      <p className="mt-5 text-[11px] text-white/35">Precios con IVA incluido · Pago seguro con Stripe</p>
+      <div className="mx-auto mt-8 max-w-md border-t border-white/10 pt-6">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-white/45">Pago seguro</p>
+        <PaymentRow />
+      </div>
+      <p className="mt-5 text-[11px] text-white/35">Precios con IVA incluido</p>
     </footer>
   );
 }
