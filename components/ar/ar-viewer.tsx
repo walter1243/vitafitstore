@@ -7,6 +7,7 @@
 // modelo gira com o mouse. ArModel3D também é usado na prévia do painel.
 
 import { createElement, useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { arDepthCm, buildArGlb, loadArBitmap, type ArConfig } from '@/lib/ar';
 
 const MODEL_VIEWER_SRC = 'https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js';
@@ -224,7 +225,7 @@ function CameraTryOn({ name, ar, onClose, onOpen3d }: { name: string; ar: ArConf
   };
 
   return (
-    <div role="dialog" aria-modal="true" aria-label={`Ver ${name} con la cámara`} className="fixed inset-0 z-[100] bg-black text-white">
+    <div role="dialog" aria-modal="true" aria-label={`Ver ${name} con la cámara`} translate="no" className="notranslate fixed inset-0 z-[2147483000] bg-black text-white">
       <div ref={boxRef} className="absolute inset-0 touch-none select-none overflow-hidden"
         onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} onWheel={onWheel}>
         <video ref={videoRef} playsInline muted autoPlay className="absolute inset-0 h-full w-full object-cover" />
@@ -300,10 +301,11 @@ export function ArViewer({ name, ar, theme = 'dark', variant = 'button', classNa
         </button>
       )}
 
-      {camera && <CameraTryOn name={name} ar={ar} onClose={closeCamera} onOpen3d={open3d} />}
+      {/* no <body>: acima do cabeçalho, do aviso de cookies e de qualquer camada da página */}
+      {camera && createPortal(<CameraTryOn name={name} ar={ar} onClose={closeCamera} onOpen3d={open3d} />, document.body)}
 
-      {open && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/80 p-0 backdrop-blur-sm sm:items-center sm:p-4" onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}>
+      {open && createPortal(
+        <div className="fixed inset-0 z-[2147483000] flex items-end justify-center bg-black/80 p-0 backdrop-blur-sm sm:items-center sm:p-4" onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}>
           <div role="dialog" aria-modal="true" aria-label={`Ver ${name} en tu espacio`} className="w-full max-w-xl overflow-hidden rounded-t-2xl bg-[#0b0614] text-white sm:rounded-2xl">
             <div className="flex items-center justify-between gap-3 border-b border-white/10 px-5 py-4">
               <p className="text-sm font-bold uppercase tracking-[0.14em]">Ver en tu espacio</p>
@@ -317,7 +319,8 @@ export function ArViewer({ name, ar, theme = 'dark', variant = 'button', classNa
               <p className="text-xs text-white/45">En el ordenador puedes girarlo con el ratón; para verlo en tu casa abre esta página en el móvil (Android con Chrome o iPhone con Safari).</p>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
