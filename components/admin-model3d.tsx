@@ -9,7 +9,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { upload } from '@vercel/blob/client';
 import { ModelBox } from '@/components/ar/product-3d-viewer';
-import { ACCEPTED_3D, buildForAr, extOf, loadModelFile, type BuildResult, type LoadedModel, type UpAxis } from '@/lib/model3d-convert';
+import { ACCEPTED_3D, buildForAr, extOf, loadModelFiles, type BuildResult, type LoadedMany, type UpAxis } from '@/lib/model3d-convert';
 import {
   MAX_GLB_BYTES, TOLERANCE_BLOCK, WARN_GLB_BYTES, WARN_TRIANGLES, validateDims,
   type Placement, type ProductModel, type ValidationStatus,
@@ -28,8 +28,8 @@ const kb = (n: number) => (n > 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(1)} MB
 
 export function AdminModel3D({ productId }: { productId: number | null }) {
   const [saved, setSaved] = useState<ProductModel | null>(null);
-  const [file, setFile] = useState<File | null>(null);
-  const [loaded, setLoaded] = useState<LoadedModel | null>(null);
+  const [files, setFiles] = useState<File[]>([]); // um 3MF pronto ou várias peças (STL) para unir
+  const [loaded, setLoaded] = useState<LoadedMany | null>(null);
   const [built, setBuilt] = useState<BuildResult | null>(null);
   const [up, setUp] = useState<UpAxis>('z');
   const [rotY, setRotY] = useState(0);
@@ -44,7 +44,7 @@ export function AdminModel3D({ productId }: { productId: number | null }) {
 
   // modelo já salvo deste produto
   useEffect(() => {
-    setSaved(null); setFile(null); setLoaded(null); setBuilt(null); setMsg(null);
+    setSaved(null); setFiles([]); setLoaded(null); setBuilt(null); setMsg(null);
     if (!productId) return;
     fetch(`/api/product-models?productId=${productId}`, { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : null))
@@ -59,15 +59,15 @@ export function AdminModel3D({ productId }: { productId: number | null }) {
 
   // lê o arquivo (uma vez por arquivo/cor)
   useEffect(() => {
-    if (!file) return;
+    if (!files.length) return;
     let on = true;
     setBusy('Lendo o arquivo 3D…'); setMsg(null); setBuilt(null);
-    loadModelFile(file, color)
+    loadModelFiles(files, color)
       .then((L) => { if (!on) return; setLoaded(L); setUp(L.up); })
       .catch((e) => on && setMsg({ ok: false, text: e?.message || 'Não foi possível ler o arquivo.' }))
       .finally(() => on && setBusy(''));
     return () => { on = false; };
-  }, [file, color]);
+  }, [files, color]);
 
   // monta o modelo final (posição + medidas reais)
   const realW = Number(w.replace(',', '.')) || 0;
@@ -109,10 +109,14 @@ export function AdminModel3D({ productId }: { productId: number | null }) {
   const previewSrc = built?.previewUrl || saved?.glbUrl || '';
   const shown = built?.measured ?? saved?.measured ?? null;
 
-  const pick = (f: File | null | undefined) => {
-    if (!f) return;
-    if (!['3mf', 'stl', 'obj', 'glb'].includes(extOf(f.name))) { setMsg({ ok: false, text: 'Formato não suportado. Use 3MF, STL, OBJ ou GLB.' }); return; }
-    setFile(f);
+  // um arquivo pronto (3MF) ou várias peças de uma vez (o site une tudo)
+  const pick = (list: FileList | null | undefined) => {
+    const all = Array.from(list ?? []);
+    if (!all.length) return;
+    const bad = all.find((f) => !['3mf', 'stl', 'obj', 'glb'].includes(extOf(f.name)));
+    if (bad) { setMsg({ ok: false, text: `Formato não suportado (${bad.name}). Use 3MF, STL, OBJ ou GLB.` }); return; }
+    if (all.length > 30) { setMsg({ ok: false, text: 'Máximo de 30 arquivos por modelo.' }); return; }
+    setFiles(all);
   };
 
   async function save(arStatus: 'rascunho' | 'publicado') {
@@ -120,19 +124,23 @@ export function AdminModel3D({ productId }: { productId: number | null }) {
     setBusy(arStatus === 'publicado' ? 'Publicando…' : 'Salvando…'); setMsg(null);
     try {
       const body: Record<string, unknown> = { productId, real: real ? { ...real, d: 0 } : null, placement, arStatus };
-      if (built && file) {
+      if (built && files.length) {
         const dir = `modelos3d/${productId}`;
-        const base = file.name.replace(/\.[^.]+$/, '').replace(/[^\w-]+/g, '-').slice(0, 40) || 'modelo';
-        // original guardado sem alteração (nunca sobrescreve: nome com sufixo aleatório)
-        const original = await upload(`${dir}/original-${base}.${extOf(file.name)}`, file, { access: 'public', handleUploadUrl: '/api/upload', contentType: 'application/octet-stream' });
+        const clean = (n: string) => n.replace(/\.[^.]+$/, '').replace(/[^\w-]+/g, '-').slice(0, 40) || 'modelo';
+        const base = clean(files[0].name);
+        // originais guardados sem alteração (nunca sobrescreve: nome com sufixo aleatório)
+        const originals = [];
+        for (const f of files) originals.push(await upload(`${dir}/original-${clean(f.name)}.${extOf(f.name)}`, f, { access: 'public', handleUploadUrl: '/api/upload', contentType: 'application/octet-stream' }));
+        const original = originals[0];
+        const sourceName = files.length === 1 ? files[0].name : `${files.length} arquivos: ${files.map((f) => f.name).join(', ')}`;
         const glb = await upload(`${dir}/${base}.glb`, new Blob([built.glb], { type: 'model/gltf-binary' }), { access: 'public', handleUploadUrl: '/api/upload', contentType: 'model/gltf-binary' });
         const usdz = built.usdz ? await upload(`${dir}/${base}.usdz`, new Blob([built.usdz as BlobPart], { type: 'model/vnd.usdz+zip' }), { access: 'public', handleUploadUrl: '/api/upload', contentType: 'model/vnd.usdz+zip' }) : null;
-        Object.assign(body, { glbUrl: glb.url, usdzUrl: usdz?.url ?? '', sourceUrl: original.url, sourceName: file.name });
+        Object.assign(body, { glbUrl: glb.url, usdzUrl: usdz?.url ?? '', sourceUrl: original.url, sourceName });
       }
       const r = await fetch('/api/product-models', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const d = await r.json();
       if (!r.ok) throw new Error(d?.error || 'Erro ao salvar.');
-      setSaved(d); setFile(null); setLoaded(null); setBuilt(null);
+      setSaved(d); setFiles([]); setLoaded(null); setBuilt(null);
       setMsg({ ok: true, text: d.arStatus === 'publicado' ? 'Publicado: o modelo 3D e a AR já aparecem na página do produto.' : 'Salvo como rascunho (não aparece na loja).' });
     } catch (e: any) { setMsg({ ok: false, text: e?.message || 'Erro ao salvar.' }); }
     finally { setBusy(''); }
@@ -144,7 +152,7 @@ export function AdminModel3D({ productId }: { productId: number | null }) {
     try {
       const r = await fetch(`/api/product-models?productId=${productId}`, { method: 'DELETE' });
       if (!r.ok) throw new Error('Erro ao remover.');
-      setSaved(null); setFile(null); setLoaded(null); setBuilt(null);
+      setSaved(null); setFiles([]); setLoaded(null); setBuilt(null);
       setMsg({ ok: true, text: 'Modelo removido do produto.' });
     } catch (e: any) { setMsg({ ok: false, text: e?.message || 'Erro ao remover.' }); }
     finally { setBusy(''); }
@@ -175,14 +183,14 @@ export function AdminModel3D({ productId }: { productId: number | null }) {
           <div
             onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
             onDragLeave={() => setDragging(false)}
-            onDrop={(e) => { e.preventDefault(); setDragging(false); pick(e.dataTransfer.files?.[0]); }}
+            onDrop={(e) => { e.preventDefault(); setDragging(false); pick(e.dataTransfer.files); }}
             className={`rounded-xl border-2 border-dashed p-4 text-center transition-colors ${dragging ? 'border-green-400 bg-green-500/10' : 'border-white/15'}`}>
-            <p className="text-sm text-white/80">{file ? <strong className="text-white">{file.name}</strong> : saved?.sourceName ? <>Atual: <strong className="text-white">{saved.sourceName}</strong></> : 'Arraste o arquivo 3MF aqui'}</p>
+            <p className="break-words text-sm text-white/80">{files.length ? <strong className="text-white">{files.length === 1 ? files[0].name : `${files.length} arquivos para unir`}</strong> : saved?.sourceName ? <>Atual: <strong className="text-white">{saved.sourceName}</strong></> : 'Arraste o 3MF pronto ou todas as peças (STL) aqui'}</p>
             <label className="mt-2 inline-block cursor-pointer rounded-lg bg-green-600 px-4 py-2 text-xs font-semibold text-white hover:bg-green-700">
-              {file || saved ? 'Trocar arquivo' : 'Escolher arquivo'}
-              <input type="file" accept={ACCEPTED_3D} className="hidden" onChange={(e) => { pick(e.target.files?.[0]); e.target.value = ''; }} />
+              {files.length || saved ? 'Trocar arquivos' : 'Escolher arquivos'}
+              <input type="file" multiple accept={ACCEPTED_3D} className="hidden" onChange={(e) => { pick(e.target.files); e.target.value = ''; }} />
             </label>
-            <p className="mt-2 text-[11px] text-white/40">3MF (MakerWorld/Bambu: todas as peças e cores), STL, OBJ ou GLB · até 60 MB</p>
+            <p className="mt-2 text-[11px] text-white/40">Um 3MF pronto ou várias peças (STL/3MF/OBJ) de uma vez: o site une tudo num modelo só · até 60 MB cada</p>
           </div>
 
           {loaded && (
@@ -199,7 +207,12 @@ export function AdminModel3D({ productId }: { productId: number | null }) {
                 <label className="flex items-center gap-2 text-xs text-white/60">Cor do filamento (o arquivo não tem cor):
                   <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="h-7 w-10 cursor-pointer rounded border border-white/15 bg-transparent" /></label>
               )}
-              <p className="text-[11px] text-white/45">{loaded.parts} peça(s){loaded.hasOwnColors ? ' · cores do projeto' : ''}</p>
+              <p className="text-[11px] text-white/45">{loaded.files > 1 ? `${loaded.files} arquivos unidos · ` : ''}{loaded.parts} peça(s){loaded.hasOwnColors ? ' · cores do projeto' : ''}</p>
+              {loaded.overlap && (
+                <p className="rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-[11px] leading-relaxed text-amber-100">
+                  As peças vieram cada uma no mesmo lugar (o arquivo de cada peça não diz onde ela encaixa), então ficaram umas dentro das outras. Para o produto aparecer montado, use o arquivo pronto: no Bambu Studio, monte as peças (aba “Montar”) e exporte o conjunto como 3MF ou STL “como um só objeto”, ou baixe do MakerWorld o modelo já montado, se o criador oferecer.
+                </p>
+              )}
             </div>
           )}
 
@@ -246,7 +259,7 @@ export function AdminModel3D({ productId }: { productId: number | null }) {
 
         <div>
           {previewSrc ? (
-            <ModelBox key={previewSrc} src={previewSrc} name="Prévia" className="aspect-square w-full rounded-xl" />
+            <ModelBox key={previewSrc} src={previewSrc} name="Prévia" className="relative aspect-square w-full rounded-xl" />
           ) : (
             <div className="flex aspect-square w-full items-center justify-center rounded-xl border border-white/10 bg-[radial-gradient(circle_at_50%_35%,#2a1640,#0b0614)] px-6 text-center text-xs text-white/45">A prévia 3D aparece aqui (gire e dê zoom para conferir todos os lados).</div>
           )}

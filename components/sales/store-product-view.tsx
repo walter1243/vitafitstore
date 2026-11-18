@@ -23,7 +23,7 @@ import { ProductCard } from '@/components/sales/vice-city-store';
 import { flyToCart } from '@/lib/fly-to-cart';
 import { arReady } from '@/lib/ar';
 import { ArViewer } from '@/components/ar/ar-viewer';
-import { Product3DViewer, type PublicModel } from '@/components/ar/product-3d-viewer';
+import { ModelArLauncher, type PublicModel } from '@/components/ar/product-3d-viewer';
 import { useStoreContact, waLink } from '@/components/sales/store-chrome';
 
 type Store = Pick<SalesPageConfig, 'slug' | 'title' | 'neonPrimary' | 'neonSecondary' | 'theme' | 'backgroundImage'> & { whatsappEnabled?: boolean; whatsappNumber?: string };
@@ -166,7 +166,10 @@ export function StoreProductView({ product, store, entrega, related, model = nul
               {images.length > 1 && (
                 <p className="absolute bottom-3 right-3 rounded bg-black/60 px-2.5 py-1 text-xs font-semibold tabular-nums text-white backdrop-blur">{active + 1} / {images.length}</p>
               )}
-              {!model && arReady(product.ar) && <ArViewer name={product.name} ar={product.ar!} theme="dark" variant="icon" className="absolute right-3 top-3 z-10" />}
+              {/* câmera no canto da foto: modelo 3D (tamanho real) se houver; senão, a foto recortada */}
+              {model
+                ? <ModelArLauncher model={model} name={product.name} variant="icon" className="absolute right-3 top-3 z-10" />
+                : arReady(product.ar) && <ArViewer name={product.name} ar={product.ar!} theme="dark" variant="icon" className="absolute right-3 top-3 z-10" />}
             </div>
             {images.length > 1 && (
               <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -179,7 +182,6 @@ export function StoreProductView({ product, store, entrega, related, model = nul
                 ))}
               </div>
             )}
-            {model && <Product3DViewer model={model} name={product.name} theme="dark" />}
           </div>
 
           {/* Compra */}

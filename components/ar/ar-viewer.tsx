@@ -96,7 +96,7 @@ export function ArModel3D({ ar, name, withAr = false, autoRotate = true, classNa
 }
 
 // Câmera com a bolinha piscando (indica "ao vivo"): botão redondo sobre a foto do produto.
-function CameraDot() {
+export function CameraDot() {
   return (
     <span aria-hidden className="relative block h-6 w-6">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">

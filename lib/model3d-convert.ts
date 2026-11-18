@@ -232,6 +232,51 @@ export async function loadModelFile(file: File, color: string): Promise<LoadedMo
   return { T, root, unitToM, hasOwnColors, up, parts, name: file.name };
 }
 
+// Vários arquivos (ex.: o MakerWorld baixa um STL por peça): une tudo num modelo
+// só, mantendo a posição de cada peça como veio do arquivo. Se as peças vierem
+// todas "no mesmo lugar" (cada uma centrada sozinha), avisa: o arquivo não diz
+// como montar — use o projeto já montado (3MF/STL do conjunto).
+export type LoadedMany = LoadedModel & { files: number; overlap: boolean };
+
+export async function loadModelFiles(files: File[], color: string): Promise<LoadedMany> {
+  if (!files.length) throw new Error('Escolha ao menos um arquivo.');
+  const list: LoadedModel[] = [];
+  for (const f of files) list.push(await loadModelFile(f, color));
+  if (list.length === 1) return { ...list[0], files: 1, overlap: false };
+  const { T } = list[0];
+  const { THREE } = T;
+  const up = list[0].up;
+  const root = new THREE.Group();
+  const boxes: THREE_NS.Box3[] = [];
+  for (const L of list) {
+    const wrap = new THREE.Group();
+    wrap.scale.setScalar(L.unitToM); // tudo em metros
+    if (L.up !== up) wrap.rotation.x = up === 'z' ? Math.PI / 2 : -Math.PI / 2; // mesmo eixo "para cima"
+    wrap.add(L.root);
+    root.add(wrap);
+    wrap.updateMatrixWorld(true);
+    boxes.push(new THREE.Box3().setFromObject(wrap));
+  }
+  root.updateMatrixWorld(true);
+  // peças empilhadas: quase todas as caixas se cruzam bastante entre si
+  let crossing = 0, pairs = 0;
+  for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
+    pairs++;
+    const inter = boxes[i].clone().intersect(boxes[j]);
+    if (inter.isEmpty()) continue;
+    const v = (b: THREE_NS.Box3) => { const s = b.getSize(new THREE.Vector3()); return Math.max(1e-12, s.x * s.y * s.z); };
+    if (v(inter) / Math.min(v(boxes[i]), v(boxes[j])) > 0.6) crossing++;
+  }
+  return {
+    T, root, unitToM: 1, up,
+    hasOwnColors: list.some((l) => l.hasOwnColors),
+    parts: list.reduce((n, l) => n + l.parts, 0),
+    name: `${files.length} arquivos`,
+    files: files.length,
+    overlap: pairs > 0 && crossing / pairs > 0.5,
+  };
+}
+
 // ─── Montagem para AR com as medidas reais ───────────────────────────────────
 export type BuildResult = {
   glb: ArrayBuffer;
