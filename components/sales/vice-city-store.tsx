@@ -21,7 +21,7 @@ import { type Product } from '@/lib/products';
 import { useCart } from '@/lib/cart-context';
 import { cardPrice, packOf } from '@/lib/personalize';
 import { FREE_SHIPPING_FROM } from '@/lib/checkout-pricing';
-import { storeArt, type SalesPageConfig } from '@/lib/sales-pages-shared';
+import { storeArt, storeHeaderOffset, type SalesPageConfig } from '@/lib/sales-pages-shared';
 import { StoreFooter, StoreHeader } from '@/components/sales/store-chrome';
 import { storeFontClass } from '@/components/sales/store-fonts';
 
@@ -230,7 +230,7 @@ function Catalog({ products, config, sectionRef }: { products: Product[]; config
       ) : (
         <>
           {/* Barra de filtros: fica presa embaixo do cabeçalho no celular */}
-          <div className="sticky top-[84px] z-20 -mx-4 mb-5 space-y-3 border-y border-white/10 bg-[#0d0418]/85 px-4 py-3 backdrop-blur-xl sm:static sm:mx-0 sm:rounded-2xl sm:border">
+          <div style={{ top: storeHeaderOffset(config) }} className="sticky z-20 -mx-4 mb-5 space-y-3 border-y border-white/10 bg-[#0d0418]/85 px-4 py-3 backdrop-blur-xl sm:static sm:mx-0 sm:rounded-2xl sm:border">
             <div className="flex items-center gap-2">
               <label className="relative min-w-0 flex-1">
                 <span className="sr-only">Buscar en la colección</span>

@@ -9,7 +9,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Check, Copy, ExternalLink, Image as ImageIcon, Instagram, Loader2, Plus, Rocket, Settings2, Sparkles, Star, Trash2, X } from 'lucide-react';
 import { dataUrlToBlobUrl, isDataUrl } from '@/lib/upload-data-url';
 import { useHoverPaste } from '@/lib/use-hover-paste';
-import { SALES_PAGE_THEMES, THEME_ART, THEME_ICONS, storePath, type SalesPageConfig } from '@/lib/sales-pages-shared';
+import { LOGO_HEIGHT_MAX, LOGO_HEIGHT_MIN, SALES_PAGE_THEMES, THEME_ART, THEME_ICONS, clampLogoHeight, storePath, type SalesPageConfig } from '@/lib/sales-pages-shared';
 
 type AdminProduct = { id: number; name: string; price: number; image?: string; mainImage?: string; category?: string };
 
@@ -17,7 +17,7 @@ const inputCls = 'w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-
 const labelCls = 'mb-1.5 block text-xs font-medium text-white/50';
 
 const EMPTY: SalesPageConfig = {
-  slug: '', title: 'Nova loja', theme: 'vice-city', enabled: true, logoImage: '', iconImage: '',
+  slug: '', title: 'Nova loja', theme: 'vice-city', enabled: true, logoImage: '', iconImage: '', logoHeight: 56,
   eyebrow: 'EDICIÓN LIMITADA', heading: 'VICE CITY STORE',
   subtitle: 'Llaveros y piezas 3D con alma retro de los 80.',
   ctaLabel: 'Comprar ahora', badge: 'NUEVO DROP', heroImage: '', heroVideo: '', backgroundImage: '',
@@ -28,6 +28,42 @@ const EMPTY: SalesPageConfig = {
   neonPrimary: '#ff2d9b', neonSecondary: '#00e5ff',
   footerNote: 'Impreso en 3D en España · Envío con seguimiento',
 };
+
+// Corta as bordas vazias do logo (transparentes ou da cor do fundo): logo com
+// muita margem em volta fica minúsculo no topo. Devolve PNG em data URL.
+async function trimLogo(src: string): Promise<string> {
+  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const i = new Image();
+    i.crossOrigin = 'anonymous';
+    i.onload = () => resolve(i);
+    i.onerror = () => reject(new Error('Não foi possível ler a imagem.'));
+    i.src = src;
+  });
+  const w = img.naturalWidth, h = img.naturalHeight;
+  const cv = document.createElement('canvas');
+  cv.width = w; cv.height = h;
+  const ctx = cv.getContext('2d', { willReadFrequently: true });
+  if (!ctx) return src;
+  ctx.drawImage(img, 0, 0);
+  const { data } = ctx.getImageData(0, 0, w, h);
+  const hasAlpha = data[3] < 250 || data[(w * h - 1) * 4 + 3] < 250;
+  const [r0, g0, b0] = [data[0], data[1], data[2]];
+  const empty = (i: number) => hasAlpha
+    ? data[i + 3] < 12
+    : Math.abs(data[i] - r0) + Math.abs(data[i + 1] - g0) + Math.abs(data[i + 2] - b0) < 30;
+  let top = h, left = w, right = -1, bottom = -1;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    if (!empty((y * w + x) * 4)) { if (x < left) left = x; if (x > right) right = x; if (y < top) top = y; if (y > bottom) bottom = y; }
+  }
+  if (right < 0) return src; // imagem vazia
+  const pad = Math.round(Math.max(right - left, bottom - top) * 0.02);
+  left = Math.max(0, left - pad); top = Math.max(0, top - pad);
+  right = Math.min(w - 1, right + pad); bottom = Math.min(h - 1, bottom + pad);
+  const out = document.createElement('canvas');
+  out.width = right - left + 1; out.height = bottom - top + 1;
+  out.getContext('2d')!.drawImage(cv, left, top, out.width, out.height, 0, 0, out.width, out.height);
+  return out.toDataURL('image/png');
+}
 
 function readAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -164,20 +200,51 @@ export default function AdminSalesPages({ products, editSlug, onSaved, onManage 
                 {!editing.enabled && <p className="mt-1.5 text-[11px] text-amber-200">Em rascunho: só você (logado) vê. Clique em “Rascunho” → “Publicada” e salve para o link funcionar para todos.</p>}
               </div>
             )}
-            {/* Logo do topo (largo, com o nome) */}
+            {/* Logo do topo (largo, com o nome) + tamanho */}
             <div className="rounded-xl border border-white/10 bg-[#0f1117] p-3">
               <p className="text-sm font-semibold text-white">Logo do topo (com o nome)</p>
-              <p className="text-[11px] text-white/40">Aparece grande na barra de cima da loja, nos produtos e no checkout. Horizontal, PNG com fundo transparente.</p>
-              <div className="relative mt-2 flex h-20 items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-[#0d0418] px-4">
+              <p className="text-[11px] text-white/40">Aparece na barra de cima da loja, nos produtos e no checkout. Horizontal, PNG com fundo transparente. Ao enviar, as bordas vazias são cortadas sozinhas.</p>
+              {/* prévia no tamanho real escolhido, numa barra igual à da loja */}
+              <div className="relative mt-2 flex items-center overflow-hidden rounded-xl border border-white/15 bg-[#0d0418] px-3" style={{ height: Math.max(72, clampLogoHeight(editing.logoHeight) + 16) }}>
                 {editing.logoImage
                   // eslint-disable-next-line @next/next/no-img-element
-                  ? <img src={editing.logoImage} alt="" className="h-14 w-auto max-w-full object-contain" />
+                  ? <img src={editing.logoImage} alt="" style={{ height: clampLogoHeight(editing.logoHeight) }} className="w-auto max-w-[85%] object-contain" />
                   : <span className="text-xs text-white/40">Sem logo: mostra o nome da loja em neon</span>}
+                <span className="ml-auto rounded-lg border border-white/15 px-2.5 py-1.5 text-[11px] text-white/60">Carrito</span>
                 {editing.logoImage && <button type="button" onClick={() => up('logoImage', '')} title="Remover logo" className="absolute right-1.5 top-1.5 rounded-lg bg-black/60 p-1.5 text-white/80 hover:bg-red-600"><Trash2 size={13} /></button>}
               </div>
-              <input type="file" accept="image/jpeg,image/png,image/webp,image/avif"
-                onChange={async (e) => { const f = e.target.files?.[0]; if (f) up('logoImage', await readAsDataUrl(f)); e.target.value = ''; }}
-                className="mt-2 w-full text-xs text-white/60" />
+              <label className="mt-3 block">
+                <span className="mb-1 flex items-center justify-between text-xs font-medium text-white/60">
+                  <span>Tamanho do logo no topo</span>
+                  <span className="tabular-nums text-white">{clampLogoHeight(editing.logoHeight)} px</span>
+                </span>
+                <input type="range" min={LOGO_HEIGHT_MIN} max={LOGO_HEIGHT_MAX} step={2}
+                  value={clampLogoHeight(editing.logoHeight)}
+                  onChange={(e) => up('logoHeight', Number(e.target.value))}
+                  className="w-full cursor-pointer accent-pink-500" />
+                <span className="mt-0.5 flex justify-between text-[10px] text-white/35"><span>pequeno</span><span>no celular fica 80% deste tamanho</span><span>grande</span></span>
+              </label>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <input type="file" accept="image/jpeg,image/png,image/webp,image/avif"
+                  onChange={async (e) => {
+                    const f = e.target.files?.[0];
+                    e.target.value = '';
+                    if (!f) return;
+                    const raw = await readAsDataUrl(f);
+                    up('logoImage', await trimLogo(raw).catch(() => raw));
+                  }}
+                  className="min-w-0 flex-1 text-xs text-white/60" />
+                {editing.logoImage && (
+                  <button type="button"
+                    onClick={async () => {
+                      try { up('logoImage', await trimLogo(editing.logoImage)); setMsg({ ok: true, text: 'Bordas vazias do logo cortadas. Clique em Salvar loja.' }); }
+                      catch { setMsg({ ok: false, text: 'Não foi possível cortar este logo. Envie o arquivo de novo.' }); }
+                    }}
+                    className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-semibold text-white/80 hover:bg-white/5">
+                    Cortar bordas vazias
+                  </button>
+                )}
+              </div>
             </div>
             {/* Ícone (quadrado): favicon da aba + prévia do link no Instagram/WhatsApp */}
             <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#0f1117] p-3">

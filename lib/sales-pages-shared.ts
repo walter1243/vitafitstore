@@ -16,6 +16,7 @@ export type SalesPageConfig = {
   enabled: boolean;
   logoImage: string; // logo do topo (com o nome)
   iconImage: string; // ícone quadrado: favicon + prévia do link (Instagram/WhatsApp)
+  logoHeight: number; // altura do logo no topo, em px (Editar loja → Tamanho do logo)
   eyebrow: string;
   heading: string;
   subtitle: string;
@@ -44,6 +45,7 @@ export const DEFAULT_SALES_PAGE: Omit<SalesPageConfig, 'slug'> = {
   enabled: true,
   logoImage: '',
   iconImage: '',
+  logoHeight: 56,
   eyebrow: 'EDICIÓN LIMITADA',
   heading: 'VICE CITY STORE',
   subtitle: 'Llaveros y piezas 3D con alma retro de los 80. Luz de neón, palmeras y actitud de ciudad — impresos en nuestro taller en España.',
@@ -136,3 +138,14 @@ export function storeFaviconHref(cfg: Pick<SalesPageConfig, 'theme' | 'iconImage
 // Kitoys → /legal/<doc>; outra loja → /<slug>/legal/<doc>.
 export const storeLegalHref = (slug: string, doc: string) =>
   `${slug && slug !== MAIN_STORE ? `/${slug}` : ''}/legal/${doc}`;
+
+// Tamanho do logo no topo (px) e a altura da barra que cabe ele.
+export const LOGO_HEIGHT_MIN = 24;
+export const LOGO_HEIGHT_MAX = 120;
+export const clampLogoHeight = (v: unknown) => {
+  const n = Math.round(Number(v));
+  return Number.isFinite(n) && n > 0 ? Math.min(LOGO_HEIGHT_MAX, Math.max(LOGO_HEIGHT_MIN, n)) : 56;
+};
+// Barra de vidro: no mínimo 72px; cresce com o logo. +12px do espaço acima dela.
+export const storeBarHeight = (cfg: { logoHeight?: number }) => Math.max(72, clampLogoHeight(cfg.logoHeight) + 16);
+export const storeHeaderOffset = (cfg: { logoHeight?: number }) => storeBarHeight(cfg) + 12;
