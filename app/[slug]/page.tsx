@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { cookies, headers } from 'next/headers';
-import { CartSidebar } from '@/components/cart-sidebar';
+import { StoreCartSidebar } from '@/components/sales/store-cart';
 import { ViceCityStore } from '@/components/sales/vice-city-store';
 import { getSalesPage, storeArt, storeIcons } from '@/lib/sales-pages';
 import { getStoreProductsServer } from '@/lib/products-db';
@@ -60,7 +60,7 @@ export default async function StorePage({ params }: PageProps) {
   return (
     <>
       <ViceCityStore config={page} products={products} cover={cover} preview={!page.enabled} />
-      <CartSidebar />
+      <StoreCartSidebar store={page} />
     </>
   );
 }
