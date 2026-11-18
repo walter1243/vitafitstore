@@ -466,7 +466,8 @@ export function ViceCityStore({ config, products, cover, preview }: Props) {
             </div>
           </div>
 
-          <CoverCard cover={cover} config={config} />
+          {/* Sem produto ainda: nada de cartão vazio — a foto real ocupa o lado direito. */}
+          {cover && <CoverCard cover={cover} config={config} />}
         </div>
       </section>
 
