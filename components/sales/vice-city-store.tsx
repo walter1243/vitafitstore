@@ -140,7 +140,12 @@ function Catalog({ products, config, sectionRef }: { products: Product[]; config
     return () => window.removeEventListener(STORE_SEARCH_EVENT, on);
   }, []);
   const fold = (v: string) => v.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  const cats = useMemo(() => [...new Set(products.map((p) => p.categoryLabel).filter(Boolean))] as string[], [products]);
+  // Abas: as coleções da loja (ordem do painel) que têm produto; depois outras categorias antigas.
+  const cats = useMemo(() => {
+    const used = new Set(products.map((p) => p.categoryLabel).filter(Boolean) as string[]);
+    const ordered = (config.collections ?? []).filter((c) => used.has(c));
+    return [...ordered, ...[...used].filter((c) => !ordered.includes(c))];
+  }, [products, config.collections]);
   const list = useMemo(() => {
     const term = fold(q.trim());
     return products.filter((p) => (!cat || p.categoryLabel === cat) && (!term || fold(`${p.name} ${p.categoryLabel ?? ''}`).includes(term)));
@@ -158,7 +163,7 @@ function Catalog({ products, config, sectionRef }: { products: Product[]; config
   };
 
   return (
-    <section ref={sectionRef} id="productos" className="relative scroll-mt-24 pt-16 sm:pt-24" aria-labelledby="vc-productos">
+    <section ref={sectionRef} id="productos" className="relative scroll-mt-24 pt-8 sm:pt-12" aria-labelledby="vc-productos">
       <div className="flex items-end justify-between gap-4 border-b border-white/10 pb-5">
         <h2 id="vc-productos" className="font-store-display text-5xl uppercase leading-none text-white sm:text-7xl">Productos</h2>
         {products.length > 0 && <p className="pb-1 text-sm text-white/50">{list.length} {list.length === 1 ? 'producto' : 'productos'}</p>}
@@ -283,7 +288,7 @@ export function ViceCityStore({ config, products, cover }: Props) {
       {/* ── CAPA ─────────────────────────────────────────────────────────── */}
       <section className="relative isolate">
         {/* a capa: tela cheia; no celular os bonecos ficam no centro, no PC à esquerda */}
-        <div className="absolute inset-x-0 top-0 -z-10 h-[94svh] lg:inset-0 lg:h-auto">
+        <div className="absolute inset-x-0 top-0 -z-10 h-[76svh] lg:inset-0 lg:h-auto">
           <Image
             src={art.hero}
             alt=""
@@ -299,7 +304,7 @@ export function ViceCityStore({ config, products, cover }: Props) {
         <div aria-hidden className="absolute inset-0 -z-10 lg:hidden" style={{ background: `linear-gradient(180deg, ${BG}99 0%, transparent 16%, transparent 36%, ${BG}d9 64%, ${BG} 88%)` }} />
         <div aria-hidden className="absolute inset-0 -z-10 hidden lg:block" style={{ background: `linear-gradient(270deg, ${BG} 0%, ${BG}e0 22%, ${BG}80 40%, transparent 60%), linear-gradient(180deg, ${BG}80 0%, transparent 16%, transparent 76%, ${BG} 100%)` }} />
 
-        <div className="mx-auto grid max-w-6xl gap-12 px-4 pb-16 pt-[58svh] sm:pt-[60svh] lg:min-h-[100svh] lg:grid-cols-[1fr_minmax(0,480px)] lg:items-center lg:gap-6 lg:pb-20 lg:pt-32">
+        <div className="mx-auto grid max-w-6xl gap-12 px-4 pb-16 pt-[44svh] sm:pt-[46svh] lg:min-h-[76svh] lg:grid-cols-[1fr_minmax(0,480px)] lg:items-center lg:gap-6 lg:pb-12 lg:pt-28">
           {/* PC: texto à direita, sobre o pôr do sol — os bonecos ficam livres à esquerda */}
           <div className="text-center lg:col-start-2 lg:text-left">
             <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/40 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.28em] backdrop-blur-md" style={{ color: S }}>

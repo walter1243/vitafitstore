@@ -17,11 +17,13 @@ const LOOK: Record<PersonalizerLook, { ink: string; muted: string; field: string
 // "Ponle su nombre": o cliente escreve e ve o nome no MESMO modelo do
 // produto na hora (o chaveiro balanca, as letras "pulam"), escolhe a
 // quantidade e adiciona. Cada nome vira uma linha no carrinho/pedido.
-export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded, name: nameProp, onName, color: colorProp, onColor, showPreview = true, variant, basePrice, blocked, optional = false, onBuyNow }: {
+export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded, openCart = true, name: nameProp, onName, color: colorProp, onColor, showPreview = true, variant, basePrice, blocked, optional = false, onBuyNow }: {
   product: Product;
   look?: PersonalizerLook;
   compact?: boolean;
   onAdded?: () => void;
+  // false: só adiciona (a loja anima o produto indo ao carrinho). Padrão: abre o carrinho.
+  openCart?: boolean;
   // Pagina do produto: o nome e controlado por ela (aparece na propria foto
   // do produto) e o personalizador fica so com o campo + quantidade.
   name?: string;
@@ -79,7 +81,7 @@ export function NamePersonalizer({ product, look = 'llaveros', compact, onAdded,
     // A cor escolhida vai junto (carrinho, checkout e pedido: "Color: Negro").
     // Produto com cores proprias: a cor e a do produto; a das letras vai na nota.
     const letters = variant?.color && chosen ? `Letras: ${chosen.name}` : '';
-    addItem(product, { text: text || undefined, color: variant?.color || chosen?.name, size: variant?.size, note: [letters, variant?.note, note].filter(Boolean).join(' · ') || undefined }, qty);
+    addItem(product, { text: text || undefined, color: variant?.color || chosen?.name, size: variant?.size, note: [letters, variant?.note, note].filter(Boolean).join(' · ') || undefined }, qty, { openCart });
     if (buyNow && onBuyNow) { onBuyNow(); return; }
     setAdded(true);
     onAdded?.();

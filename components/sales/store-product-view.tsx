@@ -254,6 +254,8 @@ export function StoreProductView({ product, store, entrega, related }: {
                   optional={nameOptional}
                   onBuyNow={() => router.push('/checkout')}
                   blocked={blocked || undefined}
+                  openCart={false}
+                  onAdded={() => { void flyToCart(galleryEl.current, activeImage || product.mainImage || product.image); }}
                 />
                 {canWhatsApp && (
                   <button type="button" onClick={orderByWhatsApp}

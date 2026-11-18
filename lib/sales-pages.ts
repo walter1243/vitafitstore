@@ -4,6 +4,7 @@ import {
   RESERVED_SLUGS,
   clampLogoHeight,
   clampHeroLogo,
+  cleanCollections,
   normalizeSlug,
   type SalesPageConfig,
 } from '@/lib/sales-pages-shared';
@@ -70,6 +71,7 @@ function rowToConfig(row: any): SalesPageConfig {
     whatsappEnabled: d.whatsappEnabled !== false,
     whatsappNumber: String(d.whatsappNumber ?? '').replace(/[^\d+ ]/g, '').slice(0, 20),
     instagram: String(d.instagram ?? '').trim().slice(0, 120),
+    collections: cleanCollections(d.collections),
     eyebrow: String(d.eyebrow ?? base.eyebrow),
     heading: String(d.heading ?? base.heading),
     subtitle: String(d.subtitle ?? base.subtitle),
@@ -128,6 +130,7 @@ export async function saveSalesPage(input: Partial<SalesPageConfig> & { original
     whatsappEnabled: input.whatsappEnabled !== false,
     whatsappNumber: String(input.whatsappNumber ?? '').replace(/[^\d+ ]/g, '').slice(0, 20),
     instagram: String(input.instagram ?? '').trim().slice(0, 120),
+    collections: cleanCollections(input.collections),
     eyebrow: String(input.eyebrow ?? DEFAULT_SALES_PAGE.eyebrow).slice(0, 60),
     heading: String(input.heading ?? DEFAULT_SALES_PAGE.heading).slice(0, 80),
     subtitle: String(input.subtitle ?? DEFAULT_SALES_PAGE.subtitle).slice(0, 400),

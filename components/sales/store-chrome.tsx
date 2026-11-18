@@ -209,11 +209,11 @@ export function StoreWhatsApp({ store, lift = false }: { store: Brand; lift?: bo
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Escríbenos por WhatsApp"
-      className={`${storeFontClass} fixed right-4 z-40 inline-flex h-12 items-center gap-2 rounded-xl border border-white/30 px-4 text-sm uppercase tracking-wider text-[#0b0614] transition-transform hover:scale-[1.04] ${lift ? 'bottom-24 lg:bottom-6' : 'bottom-5'}`}
-      style={{ background: `linear-gradient(90deg, ${store.neonSecondary}, ${store.neonPrimary})`, boxShadow: `0 0 22px ${store.neonPrimary}99, 0 10px 26px rgba(0,0,0,.5)` }}
+      className={`${storeFontClass} fixed right-4 z-40 inline-flex h-12 items-center gap-2 rounded-xl border border-white/40 px-4 text-sm uppercase tracking-wider text-white transition-transform hover:scale-[1.04] ${lift ? 'bottom-24 lg:bottom-6' : 'bottom-5'}`}
+      style={{ background: 'linear-gradient(120deg, #6d28d9 0%, #ff2d9b 55%, #ff9a3c 100%)', boxShadow: '0 0 24px rgba(255,45,155,.55), 0 10px 26px rgba(0,0,0,.5)', textShadow: '0 1px 2px rgba(0,0,0,.35)' }}
     >
       <WhatsAppGlyph size={22} />
-      <span className="font-store-display hidden sm:inline">WhatsApp</span>
+      <span className="font-store-display">WhatsApp</span>
     </a>
   );
 }

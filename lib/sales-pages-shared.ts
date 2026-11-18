@@ -21,6 +21,7 @@ export type SalesPageConfig = {
   whatsappEnabled: boolean; // botão do WhatsApp na loja + "pedir por WhatsApp" nos personalizados com nome
   whatsappNumber: string; // vazio = o mesmo WhatsApp da Kitoys (Configurações)
   instagram: string; // @ ou link do Instagram da loja (rodapé)
+  collections: string[]; // coleções da loja, nesta ordem: abas de filtro na loja e escolha no cadastro do produto
   eyebrow: string;
   heading: string;
   subtitle: string;
@@ -54,6 +55,7 @@ export const DEFAULT_SALES_PAGE: Omit<SalesPageConfig, 'slug'> = {
   whatsappEnabled: true,
   whatsappNumber: '',
   instagram: '',
+  collections: [],
   eyebrow: 'EDICIÓN LIMITADA',
   heading: 'VICE CITY STORE',
   subtitle: 'Llaveros y piezas 3D con alma retro de los 80. Luz de neón, palmeras y actitud de ciudad — impresos en nuestro taller en España.',
@@ -165,3 +167,14 @@ export const clampHeroLogo = (v: unknown) => {
   const n = Math.round(Number(v));
   return Number.isFinite(n) && n > 0 ? Math.min(100, Math.max(15, n)) : 0;
 };
+
+// Coleções: nomes únicos (sem diferenciar maiúsculas), até 30, cada um até 40 letras.
+export function cleanCollections(v: unknown): string[] {
+  if (!Array.isArray(v)) return [];
+  const out: string[] = [];
+  for (const item of v) {
+    const name = String(item ?? '').trim().replace(/\s+/g, ' ').slice(0, 40);
+    if (name && !out.some((x) => x.toLowerCase() === name.toLowerCase())) out.push(name);
+  }
+  return out.slice(0, 30);
+}

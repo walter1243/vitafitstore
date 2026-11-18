@@ -139,7 +139,7 @@ const SECTION_LABELS: Record<Section, string> = {
 // outra loja selecionada no topo elas somem do menu.
 const KITOYS_ONLY_SECTIONS: Section[] = ['sectors', 'worlds', 'letreiro', 'nfc'];
 
-type StoreSummary = { slug: string; title: string; logoImage: string; iconImage: string; neonPrimary: string; neonSecondary: string; enabled: boolean };
+type StoreSummary = { slug: string; title: string; logoImage: string; iconImage: string; neonPrimary: string; neonSecondary: string; enabled: boolean; collections: string[] };
 
 // Cadastro de produto: todos os blocos com o mesmo cartao e o mesmo cabecalho.
 const CARD = 'rounded-2xl border border-white/10 bg-[#0f1117] p-5';
@@ -162,7 +162,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   importSourceUrl, importSourceProductUrl, initialCostPrice,
   productType, onProductTypeChange, sizes, onSizesChange, colorOptions, onColorOptionsChange, ownStore }: {
   // Multi-loja: loja própria selecionada no topo (ex.: VICE CITY). null = Kitoys.
-  ownStore?: { title: string } | null;
+  ownStore?: { title: string; collections: string[] } | null;
   products: Product[];
   categories: Category[];
   showForm: boolean;
@@ -1144,27 +1144,27 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
             {/* 3) Onde aparece no site — Kitoys: setor → coleção; outra loja: categoria dela */}
             {ownStore ? (
               <section className={CARD}>
-                <SectionHead icon={<LayoutGrid size={16} />} title={`Categoria na ${ownStore.title} *`} sub="Vira um filtro na tabela de produtos da loja (ex.: Llaveros, Decoración, Gaming). Os setores da Kitoys não entram aqui." />
-                <input
-                  value={form.category}
-                  onChange={(e) => onFormChange('category', e.target.value)}
-                  placeholder="Ex.: Llaveros"
-                  className="w-full rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
-                />
-                {(() => {
-                  const cats = [...new Set(products.map((p) => (p.category || '').trim()).filter(Boolean))];
-                  return cats.length > 0 ? (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <span className="self-center text-[11px] text-white/40">Já usadas nesta loja:</span>
-                      {cats.map((c) => (
-                        <button key={c} type="button" onClick={() => onFormChange('category', c)}
-                          className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${form.category.trim() === c ? 'border-green-500 bg-green-500/15 text-green-300' : 'border-white/15 text-white/70 hover:bg-white/5'}`}>
-                          {c}
-                        </button>
-                      ))}
-                    </div>
-                  ) : null;
-                })()}
+                <SectionHead icon={<LayoutGrid size={16} />} title={`Coleção na ${ownStore.title} *`} sub="Escolha a coleção do produto: é ela que filtra a loja. As coleções são criadas em Editar loja → Coleções da loja." />
+                {ownStore.collections.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {ownStore.collections.map((c) => (
+                      <button key={c} type="button" onClick={() => onFormChange('category', c)}
+                        className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${form.category.trim() === c ? 'border-green-500 bg-green-500/15 text-green-300' : 'border-white/15 text-white/75 hover:bg-white/5'}`}>
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <>
+                    <p className="mb-2 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-100">Esta loja ainda não tem coleções. Crie em Editar loja → Coleções da loja; por enquanto, escreva uma:</p>
+                    <input
+                      value={form.category}
+                      onChange={(e) => onFormChange('category', e.target.value)}
+                      placeholder="Ex.: Llaveros"
+                      className="w-full rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                    />
+                  </>
+                )}
               </section>
             ) : (
               <ProductPlacement value={form.collectionSlug} onChange={(slug, name) => { onFormChange('collectionSlug', slug); onFormChange('category', slug && name ? name : form.category); }} category={form.category} onCategory={(name) => onFormChange('category', name)} />
@@ -2243,7 +2243,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
       const d = r.ok ? await r.json() : [];
       if (Array.isArray(d)) {
         setStores(d.map((p: any) => ({
-          slug: String(p.slug), title: String(p.title), logoImage: String(p.logoImage ?? ''), iconImage: String(p.iconImage ?? ''),
+          slug: String(p.slug), title: String(p.title), logoImage: String(p.logoImage ?? ''), iconImage: String(p.iconImage ?? ''), collections: Array.isArray(p.collections) ? p.collections.map(String) : [],
           neonPrimary: String(p.neonPrimary ?? '#ff2d9b'), neonSecondary: String(p.neonSecondary ?? '#00e5ff'),
           enabled: Boolean(p.enabled),
         })));
@@ -2497,7 +2497,9 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
     if (!prodForm.price) { addToast('error', 'Preço é obrigatório.'); return; }
     // Todo produto novo precisa de setor + colecao; produtos antigos (so com categoria) continuam salvando.
     if (activeStore) {
-      if (!prodForm.category.trim()) { addToast('error', `Escreva a categoria do produto na ${activeStore.title} (ex.: Llaveros).`); return; }
+      // Só cadastra com uma das coleções da loja (quando a loja já tem coleções).
+      if (activeStore.collections.length > 0 && !activeStore.collections.includes(prodForm.category.trim())) { addToast('error', `Escolha a coleção do produto na ${activeStore.title}.`); return; }
+      if (!prodForm.category.trim()) { addToast('error', `Escreva a coleção do produto na ${activeStore.title} (ex.: Llaveros).`); return; }
     } else if (!prodForm.collectionSlug && (!editingProductId || !prodForm.category.trim())) { addToast('error', 'Escolha em “Onde aparece no site” o setor e a coleção do produto.'); return; }
 
     setSaving(true);
@@ -2978,7 +2980,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
           {section === 'dashboard' && <DashboardSection products={products} orders={orders} revenue={revenue} onNavigate={navigate} trackingAlerts={trackingPending} store={storeSlug} />}
           {section === 'products' && (
             <ProductsSection
-              ownStore={activeStore ? { title: activeStore.title } : null}
+              ownStore={activeStore ? { title: activeStore.title, collections: activeStore.collections } : null}
               products={products}
               categories={categories}
               showForm={showForm}

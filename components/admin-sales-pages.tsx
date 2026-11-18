@@ -17,7 +17,7 @@ const inputCls = 'w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-
 const labelCls = 'mb-1.5 block text-xs font-medium text-white/50';
 
 const EMPTY: SalesPageConfig = {
-  slug: '', title: 'Nova loja', theme: 'vice-city', enabled: true, logoImage: '', iconImage: '', logoHeight: 72, heroLogoSize: 0, whatsappEnabled: true, whatsappNumber: '', instagram: '',
+  slug: '', title: 'Nova loja', theme: 'vice-city', enabled: true, logoImage: '', iconImage: '', logoHeight: 72, heroLogoSize: 0, whatsappEnabled: true, whatsappNumber: '', instagram: '', collections: [],
   eyebrow: 'EDICIÓN LIMITADA', heading: 'VICE CITY STORE',
   subtitle: 'Llaveros y piezas 3D con alma retro de los 80.',
   ctaLabel: 'Comprar ahora', badge: 'NUEVO DROP', heroImage: '', heroVideo: '', backgroundImage: '',
@@ -108,6 +108,23 @@ export default function AdminSalesPages({ products, editSlug, onSaved, onManage 
   }, [editSlug, loading, pages, editing]);
 
   const [copied, setCopied] = useState(false);
+  // Coleções da loja (abas de filtro na loja; o produto escolhe uma no cadastro)
+  const [newCol, setNewCol] = useState('');
+  const setCols = (fn: (cols: string[]) => string[]) => setEditing((e) => (e ? { ...e, collections: fn(e.collections ?? []) } : e));
+  const addCol = () => {
+    const name = newCol.trim().replace(/\s+/g, ' ').slice(0, 40);
+    if (!name) return;
+    setCols((cols) => (cols.some((x) => x.toLowerCase() === name.toLowerCase()) ? cols : [...cols, name]));
+    setNewCol('');
+  };
+  const moveCol = (i: number, d: number) => setCols((cols) => {
+    const j = i + d;
+    if (j < 0 || j >= cols.length) return cols;
+    const next = [...cols];
+    [next[i], next[j]] = [next[j], next[i]];
+    return next;
+  });
+  const removeCol = (i: number) => setCols((cols) => cols.filter((_, k) => k !== i));
   const fullLink = (slug: string) => (typeof window !== 'undefined' ? `${window.location.origin}${storePath(slug)}` : storePath(slug));
   async function copyLink(slug: string) {
     try { await navigator.clipboard.writeText(fullLink(slug)); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch {}
@@ -297,17 +314,17 @@ export default function AdminSalesPages({ products, editSlug, onSaved, onManage 
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div><label className={labelCls}>Nome da loja</label><input value={editing.title} onChange={(e) => up('title', e.target.value)} className={inputCls} /></div>
               <div><label className={labelCls}>Link · seusite.com/…</label><input value={editing.slug} onChange={(e) => up('slug', e.target.value)} placeholder="vice-city" className={`${inputCls} font-mono`} /></div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div><label className={labelCls}>Selo (badge)</label><input value={editing.badge} onChange={(e) => up('badge', e.target.value)} className={inputCls} /></div>
               <div><label className={labelCls}>Linha fina (eyebrow)</label><input value={editing.eyebrow} onChange={(e) => up('eyebrow', e.target.value)} className={inputCls} /></div>
             </div>
             <div><label className={labelCls}>Título grande (neon)</label><input value={editing.heading} onChange={(e) => up('heading', e.target.value)} className={`${inputCls} font-black`} /></div>
             <div><label className={labelCls}>Subtítulo</label><textarea value={editing.subtitle} onChange={(e) => up('subtitle', e.target.value)} rows={3} className={inputCls} /></div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div><label className={labelCls}>Texto do botão</label><input value={editing.ctaLabel} onChange={(e) => up('ctaLabel', e.target.value)} className={inputCls} /></div>
               <div><label className={labelCls}>Tema</label>
                 <select value={editing.theme} onChange={(e) => up('theme', e.target.value as any)} className={`${inputCls} [color-scheme:dark]`}>
@@ -315,7 +332,7 @@ export default function AdminSalesPages({ products, editSlug, onSaved, onManage 
                 </select>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div><label className={labelCls}>Cor neon 1</label><input type="color" value={editing.neonPrimary} onChange={(e) => up('neonPrimary', e.target.value)} className="h-10 w-full cursor-pointer rounded-lg border border-white/10 bg-[#1c2236]" /></div>
               <div><label className={labelCls}>Cor neon 2</label><input type="color" value={editing.neonSecondary} onChange={(e) => up('neonSecondary', e.target.value)} className="h-10 w-full cursor-pointer rounded-lg border border-white/10 bg-[#1c2236]" /></div>
             </div>
@@ -326,6 +343,30 @@ export default function AdminSalesPages({ products, editSlug, onSaved, onManage 
               {dateVal && <button type="button" onClick={() => up('countdownTo', null)} className="mb-0.5 rounded-lg border border-white/10 px-2 py-2 text-white/60 hover:bg-white/10"><X size={14} /></button>}
             </div>
             <div><label className={labelCls}>Rodapé (selos de confiança)</label><input value={editing.footerNote} onChange={(e) => up('footerNote', e.target.value)} className={inputCls} /></div>
+            {/* Coleções da loja */}
+            <div className="space-y-3 rounded-xl border border-white/10 bg-[#0f1117] p-3">
+              <div>
+                <p className="text-sm font-semibold text-white">Coleções da loja</p>
+                <p className="text-[11px] text-white/40">Viram as abas de filtro na loja, nesta ordem. No cadastro do produto você escolhe uma delas. Salve a loja depois de mudar.</p>
+              </div>
+              {(editing.collections ?? []).length > 0 && (
+                <ul className="space-y-1.5">
+                  {(editing.collections ?? []).map((name, i, arr) => (
+                    <li key={name} className="flex items-center gap-1.5 rounded-lg bg-[#1c2236] py-1.5 pl-3 pr-1.5 text-sm text-white">
+                      <span className="min-w-0 flex-1 truncate">{name}</span>
+                      <button type="button" onClick={() => moveCol(i, -1)} disabled={i === 0} aria-label="Subir" className="h-8 w-8 rounded-md text-white/60 hover:bg-white/10 disabled:opacity-25">↑</button>
+                      <button type="button" onClick={() => moveCol(i, 1)} disabled={i === arr.length - 1} aria-label="Descer" className="h-8 w-8 rounded-md text-white/60 hover:bg-white/10 disabled:opacity-25">↓</button>
+                      <button type="button" onClick={() => removeCol(i)} aria-label={`Remover ${name}`} className="flex h-8 w-8 items-center justify-center rounded-md text-white/50 hover:bg-red-500/15 hover:text-red-300"><Trash2 size={13} /></button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div className="flex gap-2">
+                <input value={newCol} onChange={(e) => setNewCol(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCol(); } }}
+                  placeholder="Nova coleção (ex.: Llaveros, Figuras)" className={inputCls} />
+                <button type="button" onClick={addCol} className="shrink-0 rounded-lg bg-green-600 px-3 text-xs font-semibold text-white hover:bg-green-700">Adicionar</button>
+              </div>
+            </div>
             {/* WhatsApp e Instagram da loja */}
             <div className="space-y-3 rounded-xl border border-white/10 bg-[#0f1117] p-3">
               <label className="flex cursor-pointer items-start gap-3">
@@ -335,7 +376,7 @@ export default function AdminSalesPages({ products, editSlug, onSaved, onManage 
                   <span className="block text-[11px] text-white/40">Botão do WhatsApp nas páginas da loja e “¿Prefieres pedirlo por WhatsApp?” nos produtos personalizados com nome (a mensagem já vai com o produto e o nome escrito).</span>
                 </span>
               </label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div><label className={labelCls}>Número do WhatsApp</label><input value={editing.whatsappNumber} onChange={(e) => up('whatsappNumber', e.target.value)} placeholder="Vazio = o mesmo da Kitoys" inputMode="tel" className={inputCls} /></div>
                 <div><label className={labelCls}>Instagram da loja</label><input value={editing.instagram} onChange={(e) => up('instagram', e.target.value)} placeholder="@vicecitystore" className={inputCls} /></div>
               </div>
@@ -453,7 +494,7 @@ export default function AdminSalesPages({ products, editSlug, onSaved, onManage 
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {pages.map((p) => (
-            <div key={p.slug} className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#0f1117] p-3">
+            <div key={p.slug} className="flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-[#0f1117] p-3">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg text-black" style={{ background: `linear-gradient(135deg, ${p.neonSecondary}, ${p.neonPrimary})` }}>
                 <Rocket size={18} />
               </div>
