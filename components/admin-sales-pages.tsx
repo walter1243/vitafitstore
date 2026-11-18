@@ -119,17 +119,19 @@ export default function AdminSalesPages({ products, editSlug, onSaved, onManage 
     if (files[0]) up('heroImage', await readAsDataUrl(files[0]));
   });
 
-  async function save() {
+  // overrides: ex. { enabled: true } = publicar e salvar num clique só.
+  async function save(overrides?: Partial<SalesPageConfig>) {
     if (!editing) return;
+    const ed = { ...editing, ...(overrides ?? {}) };
     setSaving(true); setMsg(null);
     try {
-      const heroImage = isDataUrl(editing.heroImage) ? await dataUrlToBlobUrl(editing.heroImage, 'lojas') : editing.heroImage;
-      const logoImage = isDataUrl(editing.logoImage) ? await dataUrlToBlobUrl(editing.logoImage, 'lojas') : editing.logoImage;
-      const iconImage = isDataUrl(editing.iconImage) ? await dataUrlToBlobUrl(editing.iconImage, 'lojas') : editing.iconImage;
-      const backgroundImage = isDataUrl(editing.backgroundImage) ? await dataUrlToBlobUrl(editing.backgroundImage, 'lojas') : editing.backgroundImage;
+      const heroImage = isDataUrl(ed.heroImage) ? await dataUrlToBlobUrl(ed.heroImage, 'lojas') : ed.heroImage;
+      const logoImage = isDataUrl(ed.logoImage) ? await dataUrlToBlobUrl(ed.logoImage, 'lojas') : ed.logoImage;
+      const iconImage = isDataUrl(ed.iconImage) ? await dataUrlToBlobUrl(ed.iconImage, 'lojas') : ed.iconImage;
+      const backgroundImage = isDataUrl(ed.backgroundImage) ? await dataUrlToBlobUrl(ed.backgroundImage, 'lojas') : ed.backgroundImage;
       const r = await fetch('/api/sales-pages', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...editing, heroImage, logoImage, iconImage, backgroundImage }),
+        body: JSON.stringify({ ...ed, heroImage, logoImage, iconImage, backgroundImage }),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d?.error || 'Erro ao salvar.');
@@ -395,8 +397,27 @@ export default function AdminSalesPages({ products, editSlug, onSaved, onManage 
           </div>
         </div>
 
+        {/* Publicar: em rascunho só o admin vê; cliente e Instagram recebem "página não encontrada" */}
+        {editing.originalSlug && (editing.enabled ? (
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-green-500/30 bg-green-500/10 p-4">
+            <p className="text-sm text-green-200"><strong className="text-green-100">Loja publicada.</strong> Qualquer pessoa vê em {storePath(editing.originalSlug)} — pode colocar o link no Instagram.</p>
+            <button type="button" onClick={() => save({ enabled: false })} disabled={saving}
+              className="rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-white/70 hover:bg-white/5 disabled:opacity-60">
+              Voltar para rascunho
+            </button>
+          </div>
+        ) : (
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-400/40 bg-amber-400/10 p-4">
+            <p className="text-sm text-amber-100"><strong className="text-amber-50">Loja em rascunho:</strong> só você (logado no painel) vê. Clientes e o Instagram recebem “página não encontrada” (404).</p>
+            <button type="button" onClick={() => save({ enabled: true })} disabled={saving}
+              className="inline-flex items-center gap-2 rounded-xl bg-amber-400 px-5 py-2.5 text-sm font-bold text-black hover:bg-amber-300 disabled:opacity-60">
+              {saving ? <Loader2 size={15} className="animate-spin" /> : null} Publicar loja
+            </button>
+          </div>
+        ))}
+
         <div className="mt-5 flex flex-wrap items-center gap-3">
-          <button type="button" onClick={save} disabled={saving}
+          <button type="button" onClick={() => save()} disabled={saving}
             className="inline-flex items-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-60">
             {saving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Salvar loja
           </button>
