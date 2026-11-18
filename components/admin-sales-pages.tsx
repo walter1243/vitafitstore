@@ -17,7 +17,7 @@ const inputCls = 'w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-
 const labelCls = 'mb-1.5 block text-xs font-medium text-white/50';
 
 const EMPTY: SalesPageConfig = {
-  slug: '', title: 'Nova loja', theme: 'vice-city', enabled: true, logoImage: '', iconImage: '', logoHeight: 56, heroLogoSize: 0, whatsappEnabled: true, whatsappNumber: '', instagram: '',
+  slug: '', title: 'Nova loja', theme: 'vice-city', enabled: true, logoImage: '', iconImage: '', logoHeight: 72, heroLogoSize: 0, whatsappEnabled: true, whatsappNumber: '', instagram: '',
   eyebrow: 'EDICIÓN LIMITADA', heading: 'VICE CITY STORE',
   subtitle: 'Llaveros y piezas 3D con alma retro de los 80.',
   ctaLabel: 'Comprar ahora', badge: 'NUEVO DROP', heroImage: '', heroVideo: '', backgroundImage: '',

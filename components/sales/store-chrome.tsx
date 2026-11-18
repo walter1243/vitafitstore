@@ -10,6 +10,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Search, ShoppingBag } from 'lucide-react';
+import { storeFontClass } from '@/components/sales/store-fonts';
 import { useCart } from '@/lib/cart-context';
 import { clampLogoHeight, storeBarHeight, storeHeaderOffset, storeLegalHref, storePath, type SalesPageConfig } from '@/lib/sales-pages-shared';
 import { rememberStore } from '@/lib/store-context';
@@ -17,7 +20,11 @@ import { PAYMENT_LOGOS } from '@/components/payment-logos';
 
 type Brand = Pick<SalesPageConfig, 'slug' | 'title' | 'logoImage' | 'neonPrimary' | 'neonSecondary' | 'footerNote'> & { logoHeight?: number; whatsappEnabled?: boolean; whatsappNumber?: string; instagram?: string };
 
+// Busca da loja: o topo e a lista de produtos conversam por este evento.
+export const STORE_SEARCH_EVENT = 'kt-store-search';
+
 export function StoreHeader({ store, overlay = false, onCatalog }: { store: Brand; overlay?: boolean; onCatalog?: () => void }) {
+  const router = useRouter();
   const { setIsCartOpen, totalItems, isCartOpen } = useCart();
   // Aviso "Añadido al carrito" (some sozinho; não aparece se a gaveta abriu).
   const cartOpenRef = useRef(isCartOpen);
@@ -40,48 +47,93 @@ export function StoreHeader({ store, overlay = false, onCatalog }: { store: Bran
   // Lembra a loja nesta visita (checkout e carrinho vazio voltam para ela).
   useEffect(() => { rememberStore(store.slug); }, [store.slug]);
   const home = storePath(store.slug);
+  const P = store.neonPrimary;
+  const S = store.neonSecondary;
   // Tamanho do logo (Editar loja): no celular 80% dele, para caber com o carrinho.
   const logoH = clampLogoHeight(store.logoHeight);
   const barH = storeBarHeight(store);
 
+  // Busca: na página da loja filtra a lista na hora; nas outras páginas leva à loja com ?q=.
+  const [q, setQ] = useState('');
+  useEffect(() => {
+    const on = (e: Event) => setQ(String((e as CustomEvent).detail ?? ''));
+    window.addEventListener(STORE_SEARCH_EVENT, on);
+    return () => window.removeEventListener(STORE_SEARCH_EVENT, on);
+  }, []);
+  const typed = (v: string) => {
+    setQ(v);
+    if (onCatalog) window.dispatchEvent(new CustomEvent(STORE_SEARCH_EVENT, { detail: v }));
+  };
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (onCatalog) { window.dispatchEvent(new CustomEvent(STORE_SEARCH_EVENT, { detail: q })); onCatalog(); }
+    else router.push(`${home}?q=${encodeURIComponent(q.trim())}#productos`);
+  };
+  const searchBox = (cls: string) => (
+    <form role="search" onSubmit={submit} className={cls}>
+      <label className="relative block">
+        <span className="sr-only">Buscar en {store.title}</span>
+        <Search size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-white/55" aria-hidden />
+        <input type="search" value={q} onChange={(e) => typed(e.target.value)} placeholder={`Buscar en ${store.title}…`} enterKeyHint="search"
+          className="h-11 w-full rounded-xl border border-white/15 bg-white/[0.07] pl-10 pr-3 text-base text-white outline-none transition-colors placeholder:text-white/45 focus:border-[var(--vc-s)]"
+          style={{ ['--vc-s' as string]: S }} />
+      </label>
+    </form>
+  );
+
   return (
-    <header className="sticky top-0 z-40 px-3 pt-3 text-white" style={overlay ? { marginBottom: -storeHeaderOffset(store) } : undefined}>
-      <div style={{ height: barH }} className="mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-xl border border-white/12 bg-[#0b0614]/60 px-4 shadow-[0_10px_30px_rgba(0,0,0,.35)] backdrop-blur-xl sm:px-5">
-        <Link href={home} className="flex min-w-0 items-center gap-2.5 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2" style={{ outlineColor: store.neonSecondary }} aria-label={store.title}>
-          {store.logoImage ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={store.logoImage} alt={store.title} style={{ ['--logo-h' as string]: `${logoH}px`, ['--logo-h-m' as string]: `${Math.round(logoH * 0.8)}px` }} className="h-[var(--logo-h-m)] w-auto max-w-[62vw] object-contain sm:h-[var(--logo-h)] sm:max-w-[460px]" />
-          ) : (
-            <span className="font-store-display truncate text-2xl uppercase leading-none tracking-wide">{store.title}</span>
-          )}
-        </Link>
-        <div className="flex shrink-0 items-center gap-2 sm:gap-4">
-          {onCatalog ? (
-            <button type="button" onClick={onCatalog} className="hidden h-11 cursor-pointer items-center px-2 text-sm font-semibold uppercase tracking-[0.16em] text-white/75 transition-colors hover:text-white sm:flex">Productos</button>
-          ) : (
-            <Link href={`${home}#productos`} className="hidden h-11 items-center px-2 text-sm font-semibold uppercase tracking-[0.16em] text-white/75 transition-colors hover:text-white sm:flex">Productos</Link>
-          )}
-          <button
-            type="button"
-            onClick={() => setIsCartOpen(true)}
-            data-cart-target
-            aria-label={totalItems > 0 ? `Abrir carrito (${totalItems})` : 'Abrir carrito'}
-            className="flex h-11 cursor-pointer items-center gap-2 rounded-md bg-white px-4 text-sm font-bold uppercase tracking-[0.14em] text-[#0b0614] transition-colors hover:bg-[var(--vc-primary,#ff2d9b)]"
-          >
-            Carrito
-            {totalItems > 0 && <span className="tabular-nums">({totalItems})</span>}
-          </button>
+    <header
+      className={`sticky top-0 z-40 px-3 pt-3 text-white ${overlay ? 'mb-[calc(var(--hdr-m)*-1)] md:mb-[calc(var(--hdr-d)*-1)]' : ''}`}
+      style={{ ['--hdr-m' as string]: `${storeHeaderOffset(store, true)}px`, ['--hdr-d' as string]: `${storeHeaderOffset(store)}px` }}
+    >
+      <div className="mx-auto max-w-6xl rounded-2xl border border-white/15 bg-[#0d0418]/60 px-3 shadow-[0_10px_30px_rgba(0,0,0,.35)] backdrop-blur-xl sm:px-4">
+        <div style={{ height: barH }} className="flex items-center gap-3 md:gap-5">
+          <Link href={home} className="flex min-w-0 shrink-0 items-center rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2" style={{ outlineColor: S }} aria-label={store.title}>
+            {store.logoImage ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={store.logoImage} alt={store.title} style={{ ['--logo-h' as string]: `${logoH}px`, ['--logo-h-m' as string]: `${Math.round(logoH * 0.8)}px` }} className="h-[var(--logo-h-m)] w-auto max-w-[58vw] object-contain md:h-[var(--logo-h)] md:max-w-[340px]" />
+            ) : (
+              <span className="font-store-display truncate bg-clip-text text-2xl uppercase text-transparent" style={{ backgroundImage: `linear-gradient(95deg, #fff 0%, ${S} 45%, ${P} 100%)` }}>{store.title}</span>
+            )}
+          </Link>
+          {/* computador: busca entre o logo e Colección/Carrito */}
+          {searchBox('hidden min-w-0 flex-1 md:block')}
+          <div className="ml-auto flex shrink-0 items-center gap-1.5">
+            {onCatalog ? (
+              <button type="button" onClick={onCatalog} className="hidden h-10 cursor-pointer items-center rounded-xl px-3.5 text-sm font-semibold text-white/80 transition-colors hover:bg-white/10 hover:text-white sm:flex">Colección</button>
+            ) : (
+              <Link href={`${home}#productos`} className="hidden h-10 items-center rounded-xl px-3.5 text-sm font-semibold text-white/80 transition-colors hover:bg-white/10 hover:text-white sm:flex">Colección</Link>
+            )}
+            <button
+              type="button"
+              onClick={() => setIsCartOpen(true)}
+              data-cart-target
+              aria-label={totalItems > 0 ? `Abrir carrito (${totalItems})` : 'Abrir carrito'}
+              className="relative flex h-11 cursor-pointer items-center gap-2 rounded-xl border border-white/15 bg-white/[0.06] px-3.5 text-sm font-semibold text-white transition-colors hover:bg-white/[0.12]"
+            >
+              <ShoppingBag size={18} aria-hidden />
+              <span className="hidden sm:inline">Carrito</span>
+              {totalItems > 0 && (
+                <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full px-1 text-[11px] font-bold text-black" style={{ background: S, boxShadow: `0 0 10px ${S}` }}>
+                  {totalItems}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
+        {/* celular: busca numa linha embaixo do logo */}
+        {searchBox('pb-3 md:hidden')}
       </div>
       {toast !== null && (
         <div role="status" aria-live="polite" className="pointer-events-none absolute inset-x-3 top-full mt-2 flex justify-end">
-          <div className="pointer-events-auto mx-auto flex w-full max-w-sm items-center gap-4 rounded-lg border-l-4 bg-[#0b0614]/95 py-3 pl-4 pr-3 shadow-[0_16px_40px_rgba(0,0,0,.5)] backdrop-blur-xl animate-in fade-in slide-in-from-top-2 sm:mx-0 sm:mr-[max(0px,calc((100%-72rem)/2))]" style={{ borderColor: store.neonPrimary }}>
+          <div className="pointer-events-auto mx-auto flex w-full max-w-sm items-center gap-4 rounded-xl border-l-4 bg-[#0d0418]/95 py-3 pl-4 pr-3 shadow-[0_16px_40px_rgba(0,0,0,.5)] backdrop-blur-xl animate-in fade-in slide-in-from-top-2 sm:mx-0 sm:mr-[max(0px,calc((100%-72rem)/2))]" style={{ borderColor: P }}>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-white">Añadido al carrito</p>
               {toast && <p className="mt-0.5 truncate text-sm text-white/65">{toast}</p>}
             </div>
             <button type="button" onClick={() => { setToast(null); setIsCartOpen(true); }}
-              className="h-10 shrink-0 cursor-pointer rounded-md bg-white px-3.5 text-xs font-bold uppercase tracking-[0.12em] text-[#0b0614]">
+              className="h-10 shrink-0 cursor-pointer rounded-lg px-3.5 text-xs font-bold uppercase tracking-[0.12em] text-black"
+              style={{ background: `linear-gradient(90deg, ${S}, ${P})` }}>
               Ver carrito
             </button>
           </div>
@@ -157,10 +209,11 @@ export function StoreWhatsApp({ store, lift = false }: { store: Brand; lift?: bo
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Escríbenos por WhatsApp"
-      className={`fixed right-4 z-40 inline-flex h-12 items-center gap-2 rounded-full bg-[#25D366] px-4 text-sm font-bold text-[#0b0614] shadow-[0_12px_28px_rgba(0,0,0,.45)] transition-transform hover:scale-[1.03] ${lift ? 'bottom-24 lg:bottom-6' : 'bottom-5'}`}
+      className={`${storeFontClass} fixed right-4 z-40 inline-flex h-12 items-center gap-2 rounded-xl border border-white/30 px-4 text-sm uppercase tracking-wider text-[#0b0614] transition-transform hover:scale-[1.04] ${lift ? 'bottom-24 lg:bottom-6' : 'bottom-5'}`}
+      style={{ background: `linear-gradient(90deg, ${store.neonSecondary}, ${store.neonPrimary})`, boxShadow: `0 0 22px ${store.neonPrimary}99, 0 10px 26px rgba(0,0,0,.5)` }}
     >
-      <WhatsAppGlyph />
-      <span className="hidden sm:inline">WhatsApp</span>
+      <WhatsAppGlyph size={22} />
+      <span className="font-store-display hidden sm:inline">WhatsApp</span>
     </a>
   );
 }

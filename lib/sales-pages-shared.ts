@@ -49,7 +49,7 @@ export const DEFAULT_SALES_PAGE: Omit<SalesPageConfig, 'slug'> = {
   enabled: true,
   logoImage: '',
   iconImage: '',
-  logoHeight: 56,
+  logoHeight: 72,
   heroLogoSize: 0,
   whatsappEnabled: true,
   whatsappNumber: '',
@@ -152,11 +152,13 @@ export const LOGO_HEIGHT_MIN = 24;
 export const LOGO_HEIGHT_MAX = 120;
 export const clampLogoHeight = (v: unknown) => {
   const n = Math.round(Number(v));
-  return Number.isFinite(n) && n > 0 ? Math.min(LOGO_HEIGHT_MAX, Math.max(LOGO_HEIGHT_MIN, n)) : 56;
+  return Number.isFinite(n) && n > 0 ? Math.min(LOGO_HEIGHT_MAX, Math.max(LOGO_HEIGHT_MIN, n)) : 72;
 };
 // Barra de vidro: no mínimo 72px; cresce com o logo. +12px do espaço acima dela.
 export const storeBarHeight = (cfg: { logoHeight?: number }) => Math.max(72, clampLogoHeight(cfg.logoHeight) + 16);
-export const storeHeaderOffset = (cfg: { logoHeight?: number }) => storeBarHeight(cfg) + 12;
+// No celular a busca fica numa linha embaixo do logo (+56px).
+export const STORE_SEARCH_ROW = 56;
+export const storeHeaderOffset = (cfg: { logoHeight?: number }, mobile = false) => storeBarHeight(cfg) + 12 + (mobile ? STORE_SEARCH_ROW : 0);
 
 // Logo na capa: % da largura da coluna do título (no celular, da tela). 0 = desligado.
 export const clampHeroLogo = (v: unknown) => {

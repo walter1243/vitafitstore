@@ -133,7 +133,7 @@ export default async function StoreLegalPage({ params }: PageProps) {
 
           <div className="mt-10 divide-y divide-white/10 border-t border-white/10">
             {page.sections.map((section, i) => (
-              <section key={section.heading} id={`s${i + 1}`} className="py-8" style={{ scrollMarginTop: stickyTop }}>
+              <section key={section.heading} id={`s${i + 1}`} className="py-8" style={{ scrollMarginTop: storeHeaderOffset(store, true) + 16 }}>
                 <h2 className="flex items-baseline gap-4 text-xl font-semibold text-white">
                   <span className="font-store-display text-2xl tabular-nums text-white/30">{num(i)}</span>
                   {section.heading}

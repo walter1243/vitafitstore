@@ -318,7 +318,7 @@ export function StoreProductView({ product, store, entrega, related }: {
         {related.length > 0 && (
           <section className="mt-20">
             <h2 className="font-store-display border-b border-white/10 pb-4 text-4xl uppercase sm:text-5xl">Más de la colección</h2>
-            <div className="mt-8 grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {related.map((p) => <ProductCard key={p.id} product={p} />)}
             </div>
           </section>

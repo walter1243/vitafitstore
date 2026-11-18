@@ -10,12 +10,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { ArrowRight, Check, PenLine, ShoppingCart, SlidersHorizontal, Truck } from 'lucide-react';
 import { type Product } from '@/lib/products';
 import { useCart } from '@/lib/cart-context';
 import { cardPrice } from '@/lib/personalize';
 import { FREE_SHIPPING_FROM } from '@/lib/checkout-pricing';
 import { clampHeroLogo, storeArt, storeHeaderOffset, type SalesPageConfig } from '@/lib/sales-pages-shared';
-import { StoreFooter, StoreHeader } from '@/components/sales/store-chrome';
+import { STORE_SEARCH_EVENT, StoreFooter, StoreHeader } from '@/components/sales/store-chrome';
 import { flyToCart } from '@/lib/fly-to-cart';
 import { storeFontClass } from '@/components/sales/store-fonts';
 
@@ -85,38 +86,66 @@ export function ProductCard({ product }: { product: Product }) {
   const { added, add, setImg } = useAdd(product);
   const cp = cardPrice(product.price, product.personalize, product.sizes);
   const personal = Boolean(product.personalize?.enabled);
+  const choice = needsChoiceOf(product);
 
   return (
-    <article id={`p-${product.id}`} className="group flex scroll-mt-32 flex-col">
-      <Link href={hrefOf(product)} className="block overflow-hidden rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
-        <div ref={setImg} className="relative aspect-[4/5] overflow-hidden bg-[#1a1024]">
-          <Image src={imgOf(product)} alt={product.name} fill sizes="(min-width:1024px) 380px, (min-width:640px) 50vw, 100vw" className="object-cover transition-transform duration-700 group-hover:scale-[1.04] motion-reduce:transition-none" />
-          {cp.off > 0 && <span className="font-store-display absolute left-0 top-4 bg-[var(--vc-primary)] px-3 py-1 text-base text-[#0b0614]">-{cp.off}%</span>}
-        </div>
-      </Link>
-      <div className="mt-4 flex flex-1 flex-col">
-        {product.categoryLabel && <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/45">{product.categoryLabel}</p>}
-        <Link href={hrefOf(product)} className="mt-1">
-          <h3 className="text-xl font-semibold leading-snug text-white transition-colors group-hover:text-[var(--vc-primary)]">{product.name}</h3>
-        </Link>
-        {(personal || cp.sub) && <p className="mt-1 text-sm text-white/55">{[personal && 'Con tu nombre', cp.sub].filter(Boolean).join(' · ')}</p>}
-        <div className="mt-auto flex items-center justify-between gap-4 pt-4">
-          <p className="font-store-display text-3xl leading-none text-white">
-            {cp.main}
-            {cp.was && <s className="font-store ml-2 align-middle text-sm text-white/40">{cp.was}</s>}
-          </p>
-          <BuyButton product={product} added={added} onAdd={add} />
+    <Link
+      id={`p-${product.id}`}
+      href={hrefOf(product)}
+      className="group relative flex h-full scroll-mt-40 flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/[0.05] p-2 backdrop-blur-sm transition-colors duration-200 hover:border-[var(--vc-secondary)]/60 hover:bg-white/[0.08] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--vc-secondary)] sm:p-2.5"
+    >
+      <div ref={setImg} className="relative aspect-square overflow-hidden rounded-xl bg-[#1a0f24]">
+        <Image src={imgOf(product)} alt={product.name} fill sizes="(min-width:1024px) 260px, (min-width:640px) 33vw, 50vw" className="object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none" />
+        <div aria-hidden className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/50 to-transparent" />
+        {cp.off > 0 ? (
+          <span className="absolute left-2 top-2 rounded-md bg-[var(--vc-primary)] px-2 py-0.5 text-[10px] font-bold tracking-wide text-white">-{cp.off}%</span>
+        ) : personal ? (
+          <span className="absolute left-2 top-2 rounded-md bg-black/65 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--vc-secondary)] ring-1 ring-[var(--vc-secondary)]/40 backdrop-blur">Con tu nombre</span>
+        ) : null}
+      </div>
+      <div className="flex flex-1 flex-col px-1 pt-3">
+        <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug text-white">{product.name}</h3>
+        <div className="mt-auto flex items-end justify-between gap-2 pt-3">
+          <div className="min-w-0">
+            {cp.was && <p className="text-[11px] leading-tight text-white/50"><s>{cp.was}</s> · {cp.sub}</p>}
+            <p className="whitespace-nowrap text-lg font-bold leading-none text-white">{cp.main}</p>
+          </div>
+          {choice ? (
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--vc-secondary)] text-black" title={personal ? 'Personalizar' : 'Elegir opciones'} aria-label={personal ? 'Personalizar' : 'Elegir opciones'}>
+              {personal ? <PenLine className="h-[18px] w-[18px]" aria-hidden /> : <SlidersHorizontal className="h-[18px] w-[18px]" aria-hidden />}
+            </span>
+          ) : (
+            <button type="button" onClick={add} aria-label={`Añadir ${product.name} al carrito`}
+              className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-black transition-colors duration-200"
+              style={{ background: added ? '#34d399' : 'var(--vc-secondary)' }}>
+              {added ? <Check className="h-5 w-5" aria-hidden /> : <ShoppingCart className="h-[18px] w-[18px]" aria-hidden />}
+            </button>
+          )}
         </div>
       </div>
-    </article>
+    </Link>
   );
 }
 
 // ─── Produtos: descem um atrás do outro; só as abas de categoria em cima ─────
 function Catalog({ products, config, sectionRef }: { products: Product[]; config: SalesPageConfig; sectionRef: React.RefObject<HTMLElement | null> }) {
   const [cat, setCat] = useState('');
+  const [q, setQ] = useState('');
+  // busca do topo (STORE_SEARCH_EVENT) e ?q= quando veio da busca de outra página
+  useEffect(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get('q');
+    if (fromUrl) { setQ(fromUrl); window.dispatchEvent(new CustomEvent(STORE_SEARCH_EVENT, { detail: fromUrl })); }
+    const on = (e: Event) => setQ(String((e as CustomEvent).detail ?? ''));
+    window.addEventListener(STORE_SEARCH_EVENT, on);
+    return () => window.removeEventListener(STORE_SEARCH_EVENT, on);
+  }, []);
+  const fold = (v: string) => v.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const cats = useMemo(() => [...new Set(products.map((p) => p.categoryLabel).filter(Boolean))] as string[], [products]);
-  const list = useMemo(() => (cat ? products.filter((p) => p.categoryLabel === cat) : products), [products, cat]);
+  const list = useMemo(() => {
+    const term = fold(q.trim());
+    return products.filter((p) => (!cat || p.categoryLabel === cat) && (!term || fold(`${p.name} ${p.categoryLabel ?? ''}`).includes(term)));
+  }, [products, cat, q]);
+  const clearSearch = () => { setQ(''); window.dispatchEvent(new CustomEvent(STORE_SEARCH_EVENT, { detail: '' })); };
 
   const tab = (label: string, value: string) => {
     const on = cat === value;
@@ -143,7 +172,7 @@ function Catalog({ products, config, sectionRef }: { products: Product[]; config
       ) : (
         <>
           {cats.length > 1 && (
-            <div style={{ top: storeHeaderOffset(config) }} className="sticky z-20 -mx-4 bg-[#0b0614]/85 px-4 backdrop-blur-xl">
+            <div style={{ ['--st-m' as string]: `${storeHeaderOffset(config, true)}px`, ['--st-d' as string]: `${storeHeaderOffset(config)}px` }} className="sticky top-[var(--st-m)] z-20 -mx-4 bg-[#0b0614]/85 px-4 backdrop-blur-xl md:top-[var(--st-d)]">
               <div className="flex gap-7 overflow-x-auto border-b border-white/10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="group" aria-label="Categorías">
                 {tab('Todo', '')}
                 {cats.map((c) => tab(c, c))}
@@ -151,9 +180,19 @@ function Catalog({ products, config, sectionRef }: { products: Product[]; config
             </div>
           )}
 
-          <div className="mt-10 grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
-            {list.map((p) => <ProductCard key={p.id} product={p} />)}
-          </div>
+          {q.trim() && (
+            <p className="mt-6 flex flex-wrap items-center gap-3 text-sm text-white/70">
+              Resultados para «{q.trim()}»
+              <button type="button" onClick={clearSearch} className="cursor-pointer rounded-lg border border-white/20 px-3 py-1 text-xs font-semibold text-white hover:bg-white/10">Ver todo</button>
+            </p>
+          )}
+          {list.length === 0 ? (
+            <p className="py-14 text-center text-white/60">No encontramos productos con «{q.trim() || cat}».</p>
+          ) : (
+            <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+              {list.map((p) => <ProductCard key={p.id} product={p} />)}
+            </div>
+          )}
 
           <p className="mt-14 border-t border-white/10 pt-6 text-center text-sm text-white/50">
             Precios con IVA incluido. Envío gratis en España desde {FREE_SHIPPING_FROM} €.
@@ -263,7 +302,10 @@ export function ViceCityStore({ config, products, cover }: Props) {
         <div className="mx-auto grid max-w-6xl gap-12 px-4 pb-16 pt-[58svh] sm:pt-[60svh] lg:min-h-[100svh] lg:grid-cols-[1fr_minmax(0,480px)] lg:items-center lg:gap-6 lg:pb-20 lg:pt-32">
           {/* PC: texto à direita, sobre o pôr do sol — os bonecos ficam livres à esquerda */}
           <div className="text-center lg:col-start-2 lg:text-left">
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">{config.badge || config.eyebrow}</p>
+            <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/40 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.28em] backdrop-blur-md" style={{ color: S }}>
+              <span className="vc-pulse inline-flex h-2 w-2 rounded-full" style={{ background: S, boxShadow: `0 0 10px ${S}` }} aria-hidden />
+              {config.badge || config.eyebrow}
+            </p>
             {config.logoImage && clampHeroLogo(config.heroLogoSize) > 0 ? (
               // Logo grande no lugar do título (Editar loja → Logo na capa)
               <h1 className="mt-4">
@@ -271,11 +313,13 @@ export function ViceCityStore({ config, products, cover }: Props) {
                 <img src={config.logoImage} alt={config.heading} style={{ width: `${clampHeroLogo(config.heroLogoSize)}%`, filter: `drop-shadow(0 6px 30px ${P}55)` }} className="mx-auto h-auto max-w-full lg:mx-0" />
               </h1>
             ) : (
-              <h1 className="font-store-display mt-3 text-[64px] uppercase leading-[0.86] text-white sm:text-8xl lg:text-[124px]" style={{ textShadow: `0 4px 40px ${P}66` }}>
-                {config.heading}
+              <h1 className="font-store-display mt-5 text-[46px] uppercase leading-[0.9] sm:text-7xl lg:text-[88px]">
+                <span className="bg-clip-text text-transparent" style={{ backgroundImage: `linear-gradient(95deg, #fff 0%, ${S} 45%, ${P} 100%)`, filter: `drop-shadow(0 0 22px ${P}99)` }}>
+                  {config.heading}
+                </span>
               </h1>
             )}
-            <p className="mx-auto mt-6 max-w-lg text-lg leading-relaxed text-white/85 lg:mx-0">{config.subtitle}</p>
+            <p className="mx-auto mt-5 max-w-lg text-base leading-relaxed text-white/85 sm:text-lg lg:mx-0">{config.subtitle}</p>
 
             {cd && (
               <div className="mt-8 inline-flex items-start gap-4" aria-label={`${config.countdownLabel}: ${cd.d} días, ${cd.h} horas, ${cd.m} minutos`}>
@@ -290,10 +334,12 @@ export function ViceCityStore({ config, products, cover }: Props) {
             )}
 
             <div className="mt-9 flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:justify-start">
-              <button type="button" onClick={toHook} className={`${BTN} h-14 w-full bg-white px-10 text-base text-[#0b0614] hover:bg-[var(--vc-primary)] sm:w-auto`}>
-                {config.ctaLabel || 'Ver productos'}
+              <button type="button" onClick={toHook}
+                className="group inline-flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-2xl px-7 py-3 text-base font-bold uppercase tracking-wide text-black transition-opacity hover:opacity-95 sm:w-auto"
+                style={{ background: `linear-gradient(90deg, ${S}, ${P})`, boxShadow: `0 10px 34px ${P}66` }}>
+                {config.ctaLabel || 'Comprar ahora'} <ArrowRight size={19} className="transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden />
               </button>
-              <p className="text-sm text-white/70">Envío gratis desde {FREE_SHIPPING_FROM} €</p>
+              <p className="flex items-center gap-1.5 text-sm text-white/70"><Truck size={16} aria-hidden /> Envío gratis desde {FREE_SHIPPING_FROM} €</p>
             </div>
           </div>
 
