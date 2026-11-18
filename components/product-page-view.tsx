@@ -18,7 +18,7 @@ import { NamePersonalizer, NamePreview, type PersonalizerLook } from '@/componen
 import { DEFAULT_NAME_COLORS, nameRequiredFor, cleanCustomText, lineTotalFor, minQtyFor, packOf, parsePersonalize, sizeRange, sizedPrice } from '@/lib/personalize'
 import { ProductShipping } from '@/components/shipping/shipping-options'
 
-export function ProductPageView({ product, entrega }: { product: Product; entrega?: Partial<EntregaContent> }) {
+export function ProductPageView({ product, entrega, homeHref = '/', homeLabel = 'Inicio' }: { product: Product; entrega?: Partial<EntregaContent>; homeHref?: string; homeLabel?: string }) {
   // previsão calculada no navegador (data de hoje do cliente, sem diferença entre servidor e tela)
   const [eta, setEta] = useState('')
   useEffect(() => { if ({ ...DEFAULT_ENTREGA, ...entrega }.enabled) setEta(deliveryText(entrega, Boolean(product.personalize?.enabled))) }, [entrega, product.personalize?.enabled])
@@ -123,12 +123,17 @@ export function ProductPageView({ product, entrega }: { product: Product; entreg
     <div className="mx-auto max-w-7xl px-4 pb-10 pt-[calc(var(--hdr-h,176px)+12px)] sm:px-6 sm:pt-[calc(var(--hdr-h,160px)+20px)] lg:px-8">
       {/* Breadcrumb */}
       <nav className="mb-6 flex items-center gap-1.5 text-xs text-slate-500">
-        <Link href="/" className="hover:text-slate-800">Inicio</Link>
-        <ChevronRight size={12} />
-        {collection ? (
-          <Link href={`/coleccion/${collection.slug}`} className="hover:text-slate-800">{collection.shortName}</Link>
-        ) : (
-          <Link href="/#productos" className="hover:text-slate-800">Colecciones</Link>
+        <Link href={homeHref} className="hover:text-slate-800">{homeLabel}</Link>
+        {/* Coleções são da Kitoys: produto de outra loja (homeHref ≠ "/") não linka para elas. */}
+        {homeHref === '/' && (
+          <>
+            <ChevronRight size={12} />
+            {collection ? (
+              <Link href={`/coleccion/${collection.slug}`} className="hover:text-slate-800">{collection.shortName}</Link>
+            ) : (
+              <Link href="/#productos" className="hover:text-slate-800">Colecciones</Link>
+            )}
+          </>
         )}
         {product.categoryLabel && (
           <>

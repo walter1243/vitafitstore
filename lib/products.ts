@@ -45,6 +45,8 @@ export interface Product {
   // Colecao escolhida no cadastro (vazio = pela categoria) e personalizacao com nome.
   collectionSlug?: string
   personalize?: import('./personalize').Personalize
+  // Loja dona do produto (multi-loja): 'kitoys' = principal.
+  storeSlug?: string
   emoji: string
   gradient: string
 }

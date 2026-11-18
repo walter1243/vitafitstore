@@ -8,13 +8,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Check, PenLine, ShieldCheck, ShoppingBag, ShoppingCart, SlidersHorizontal, Sparkles, Truck } from 'lucide-react';
+import { ArrowRight, Check, Eye, PenLine, ShieldCheck, ShoppingCart, SlidersHorizontal, Sparkles, Truck } from 'lucide-react';
 import { type Product } from '@/lib/products';
 import { useCart } from '@/lib/cart-context';
 import { cardPrice } from '@/lib/personalize';
-import type { SalesPageConfig } from '@/lib/sales-pages';
+import type { SalesPageConfig } from '@/lib/sales-pages-shared';
+import { StoreFooter, StoreHeader } from '@/components/sales/store-chrome';
 
-type Props = { config: SalesPageConfig; products: Product[]; cover: Product | null };
+type Props = { config: SalesPageConfig; products: Product[]; cover: Product | null; preview?: boolean };
 
 const NO_IMG =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23160a1f'/%3E%3C/svg%3E";
@@ -97,8 +98,8 @@ function ProductCard({ product }: { product: Product }) {
   );
 }
 
-export function ViceCityStore({ config, products, cover }: Props) {
-  const { setIsCartOpen, totalItems, addItem } = useCart();
+export function ViceCityStore({ config, products, cover, preview }: Props) {
+  const { addItem } = useCart();
   const cd = useCountdown(config.countdownTo);
   const gridRef = useRef<HTMLDivElement>(null);
   const coverCp = cover ? cardPrice(cover.price, cover.personalize, cover.sizes) : null;
@@ -127,7 +128,7 @@ export function ViceCityStore({ config, products, cover }: Props) {
   const coverImg = cover?.mainImage || cover?.image || config.heroImage || NO_IMG;
 
   return (
-    <div style={styleVars} className="relative min-h-screen overflow-hidden bg-[#140720] text-white">
+    <div style={styleVars} data-kt-store={config.slug} className="relative min-h-screen overflow-x-clip bg-[#140720] text-white">
       <style>{`
         @keyframes vc-grid { from { background-position: 0 0; } to { background-position: 0 44px; } }
         @keyframes vc-spin { to { transform: rotate(360deg); } }
@@ -145,23 +146,12 @@ export function ViceCityStore({ config, products, cover }: Props) {
         <div className="vc-sun-grid absolute inset-x-[-20%] bottom-0 h-[42vh]" style={{ transform: 'perspective(400px) rotateX(72deg)', transformOrigin: 'bottom', backgroundImage: `linear-gradient(${config.neonSecondary}55 1px, transparent 1px), linear-gradient(90deg, ${config.neonSecondary}55 1px, transparent 1px)`, backgroundSize: '44px 44px', animation: 'vc-grid 1.6s linear infinite', maskImage: 'linear-gradient(180deg, transparent, #000 60%)', WebkitMaskImage: 'linear-gradient(180deg, transparent, #000 60%)' }} />
       </div>
 
-      {/* Barra fina fixa com carrinho */}
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-black/35 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
-          <Link href="/" className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.2em]">
-            <Sparkles size={16} style={{ color: config.neonSecondary }} aria-hidden />
-            <span className="vc-flick" style={{ animation: 'vc-flicker 6s infinite' }}>{config.title}</span>
-          </Link>
-          <button type="button" onClick={() => setIsCartOpen(true)} aria-label="Abrir carrito"
-            className="relative flex h-10 items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 text-sm font-semibold text-white transition-colors hover:bg-white/10">
-            <ShoppingBag size={17} aria-hidden />
-            <span className="hidden sm:inline">Carrito</span>
-            {totalItems > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full px-1 text-[11px] font-bold text-black" style={{ background: config.neonSecondary }}>{totalItems}</span>
-            )}
-          </button>
-        </div>
-      </header>
+      <StoreHeader store={config} />
+      {preview && (
+        <p className="relative z-30 flex items-center justify-center gap-2 bg-amber-400 px-4 py-2 text-center text-xs font-bold text-black">
+          <Eye size={14} aria-hidden /> Vista previa: esta tienda está en borrador y solo tú (con el panel abierto) la ves. Publícala en Admin → Lojas.
+        </p>
+      )}
 
       <main className="relative z-10 mx-auto max-w-6xl px-4 pb-24">
         {/* HERO */}
@@ -262,8 +252,8 @@ export function ViceCityStore({ config, products, cover }: Props) {
           )}
         </section>
 
-        <p className="mt-12 text-center text-xs text-white/40">{config.footerNote}</p>
       </main>
+      <StoreFooter store={config} />
     </div>
   );
 }

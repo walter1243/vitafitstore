@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import { clearPendingCoupon, getPendingCoupon, markCouponUsedIfPending, savePendingCoupon } from '@/lib/coupon-client';
 import { useCart } from '@/lib/cart-context';
+import { useActiveStore } from '@/lib/store-context';
+import { storePath } from '@/lib/sales-pages-shared';
 import { AddressFinder, type FoundAddress } from '@/components/shipping/address-finder';
 import { packOf, qtyLabel } from '@/lib/personalize';
 import Link from 'next/link';
@@ -104,7 +106,7 @@ function MastercardLogo({ w = 40, h = 25 }: { w?: number; h?: number }) {
 
 // ─── Success Screen ───────────────────────────────────────────────────────────
 
-function SuccessScreen({ name, storeName }: { name: string; storeName: string }) {
+function SuccessScreen({ name, storeName, homeHref = '/' }: { name: string; storeName: string; homeHref?: string }) {
   return (
     <>
       <style>{`
@@ -175,7 +177,7 @@ function SuccessScreen({ name, storeName }: { name: string; storeName: string })
               </div>
             ))}
           </div>
-          <Link href="/" className="inline-flex items-center gap-2 mt-4 px-6 py-3 rounded-xl font-bold text-sm text-white"
+          <Link href={homeHref} className="inline-flex items-center gap-2 mt-4 px-6 py-3 rounded-xl font-bold text-sm text-white"
             style={{ background:'#c2410c', boxShadow:'0 8px 24px rgba(194,65,12,0.3)' }}>
             Seguir comprando <ChevronRight size={16} />
           </Link>
@@ -552,6 +554,10 @@ function readCachedBranding() {
 
 function CheckoutFormInner() {
   const { items, totalPrice, clearCart, reprice } = useCart();
+  // Multi-loja: comprando na VICE CITY STORE, o checkout mostra o nome/logo dela
+  // e "voltar"/"seguir comprando" levam para a loja dela, não para a Kitoys.
+  const { slug: activeStore, brand } = useActiveStore(items.length ? (items[0]?.product.storeSlug || 'kitoys') : undefined);
+  const storeHome = storePath(activeStore);
 
   // Same branding cache the header writes to — without it this previously
   // hardcoded "V" / "Nuestra Tienda", never reflecting the real store name
@@ -809,7 +815,7 @@ function CheckoutFormInner() {
         {returnMsg && <p className="max-w-sm rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{returnMsg}</p>}
         <h2 className="text-3xl font-bold text-[#23263f]">¡Tu carrito está vacío!</h2>
         <p className="text-slate-500 text-sm max-w-xs">Añade productos antes de finalizar la compra.</p>
-        <Link href="/#productos"
+        <Link href={`${storeHome}#productos`}
           className="inline-flex min-h-12 items-center gap-2 px-7 rounded-2xl font-extrabold text-base text-white bg-[#c2410c] hover:bg-[#9a3412]">
           Ver productos
         </Link>
@@ -817,7 +823,7 @@ function CheckoutFormInner() {
     );
   }
 
-  if (success) return <SuccessScreen name={name} storeName={storeName} />;
+  if (success) return <SuccessScreen name={name} storeName={brand?.title ?? storeName} homeHref={storeHome} />;
 
   // ── Step 1 ──────────────────────────────────────────────────
   const step1 = (
@@ -1018,9 +1024,18 @@ function CheckoutFormInner() {
 
       <div className="max-w-5xl mx-auto">
         <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <Link href="/" className="flex items-center" aria-label={storeName}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/images/logo-kitoys-3d.png" alt="Kitoys 3D" className="h-16 w-auto object-contain" />
+          <Link href={storeHome} className="flex items-center" aria-label={brand?.title ?? storeName}>
+            {brand ? (
+              brand.logoImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={brand.logoImage} alt={brand.title} className="h-16 w-auto max-w-[220px] object-contain" />
+              ) : (
+                <span className="rounded-xl bg-[#140720] px-4 py-3 text-base font-black uppercase tracking-[0.2em] text-white" style={{ textShadow: `0 0 12px ${brand.neonPrimary}` }}>{brand.title}</span>
+              )
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src="/images/logo-kitoys-3d.png" alt="Kitoys 3D" className="h-16 w-auto object-contain" />
+            )}
           </Link>
           <div className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold text-[#15803d] bg-[#EAF6EF]">
             <ShieldCheck size={16} /> Pago 100% seguro

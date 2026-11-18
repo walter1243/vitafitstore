@@ -1,15 +1,15 @@
 'use client';
 
 // Admin → Lojas. Cria e edita lojas próprias (ex.: VICE CITY STORE): nome,
-// endereço (/tienda/slug), tema neon, textos, contagem regressiva e o produto
+// link próprio (seusite.com/slug — o do Instagram), logo, tema neon, textos e o produto
 // da capa (o que brilha). Cada loja tem catálogo próprio — os produtos entram
 // pelo seletor de loja no topo + aba Produtos. Mesmo login e mesmo checkout.
 
 import { useCallback, useEffect, useState } from 'react';
-import { Check, ExternalLink, Image as ImageIcon, Loader2, Plus, Rocket, Sparkles, Star, Trash2, X } from 'lucide-react';
+import { Check, Copy, ExternalLink, Image as ImageIcon, Instagram, Loader2, Plus, Rocket, Settings2, Sparkles, Star, Trash2, X } from 'lucide-react';
 import { dataUrlToBlobUrl, isDataUrl } from '@/lib/upload-data-url';
 import { useHoverPaste } from '@/lib/use-hover-paste';
-import { SALES_PAGE_THEMES, type SalesPageConfig } from '@/lib/sales-pages';
+import { SALES_PAGE_THEMES, storePath, type SalesPageConfig } from '@/lib/sales-pages-shared';
 
 type AdminProduct = { id: number; name: string; price: number; image?: string; mainImage?: string; category?: string };
 
@@ -17,7 +17,7 @@ const inputCls = 'w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-
 const labelCls = 'mb-1.5 block text-xs font-medium text-white/50';
 
 const EMPTY: SalesPageConfig = {
-  slug: '', title: 'Nova loja', theme: 'vice-city', enabled: true,
+  slug: '', title: 'Nova loja', theme: 'vice-city', enabled: true, logoImage: '',
   eyebrow: 'EDICIÓN LIMITADA', heading: 'VICE CITY STORE',
   subtitle: 'Llaveros y piezas 3D con alma retro de los 80.',
   ctaLabel: 'Comprar ahora', badge: 'NUEVO DROP', heroImage: '', heroVideo: '',
@@ -38,7 +38,15 @@ function readAsDataUrl(file: File): Promise<string> {
   });
 }
 
-export default function AdminSalesPages({ products }: { products: AdminProduct[] }) {
+// editSlug: abre direto o editor dessa loja (Admin → Editar loja com a loja
+// selecionada no topo). onSaved(slug): avisa o painel (nome/logo/link mudaram).
+// onManage(slug): troca o painel para essa loja (produtos, pedidos, dashboard).
+export default function AdminSalesPages({ products, editSlug, onSaved, onManage }: {
+  products: AdminProduct[];
+  editSlug?: string;
+  onSaved?: (slug: string) => void;
+  onManage?: (slug: string) => void;
+}) {
   const [pages, setPages] = useState<SalesPageConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<(SalesPageConfig & { originalSlug?: string }) | null>(null);
@@ -56,6 +64,19 @@ export default function AdminSalesPages({ products }: { products: AdminProduct[]
   }, []);
   useEffect(() => { load(); }, [load]);
 
+  // Modo "Editar loja": abre o editor da loja selecionada assim que a lista chega.
+  useEffect(() => {
+    if (!editSlug || loading || editing) return;
+    const pg = pages.find((x) => x.slug === editSlug);
+    if (pg) setEditing({ ...pg, originalSlug: pg.slug });
+  }, [editSlug, loading, pages, editing]);
+
+  const [copied, setCopied] = useState(false);
+  const fullLink = (slug: string) => (typeof window !== 'undefined' ? `${window.location.origin}${storePath(slug)}` : storePath(slug));
+  async function copyLink(slug: string) {
+    try { await navigator.clipboard.writeText(fullLink(slug)); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch {}
+  }
+
   const up = <K extends keyof SalesPageConfig>(k: K, v: SalesPageConfig[K]) => setEditing((e) => (e ? { ...e, [k]: v } : e));
 
   const heroPaste = useHoverPaste<HTMLDivElement>((t) => /^image\//.test(t), async (files) => {
@@ -66,22 +87,25 @@ export default function AdminSalesPages({ products }: { products: AdminProduct[]
     if (!editing) return;
     setSaving(true); setMsg(null);
     try {
-      const heroImage = isDataUrl(editing.heroImage) ? await dataUrlToBlobUrl(editing.heroImage, 'campanhas') : editing.heroImage;
+      const heroImage = isDataUrl(editing.heroImage) ? await dataUrlToBlobUrl(editing.heroImage, 'lojas') : editing.heroImage;
+      const logoImage = isDataUrl(editing.logoImage) ? await dataUrlToBlobUrl(editing.logoImage, 'lojas') : editing.logoImage;
       const r = await fetch('/api/sales-pages', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...editing, heroImage }),
+        body: JSON.stringify({ ...editing, heroImage, logoImage }),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d?.error || 'Erro ao salvar.');
-      setMsg({ ok: true, text: `Salvo. Página "${d.title}" ${d.enabled ? 'publicada' : 'em rascunho'} em /tienda/${d.slug}` });
-      setEditing(null);
+      setMsg({ ok: true, text: `Salvo. "${d.title}" ${d.enabled ? 'publicada' : 'em rascunho'} em ${storePath(d.slug)}` });
+      // No "Editar loja" o editor continua aberto; na lista de lojas volta para a lista.
+      setEditing(editSlug ? { ...d, originalSlug: d.slug } : null);
       await load();
+      onSaved?.(d.slug);
     } catch (e: any) { setMsg({ ok: false, text: e?.message || 'Erro ao salvar.' }); }
     finally { setSaving(false); }
   }
 
   async function remove(slug: string) {
-    if (!confirm(`Apagar a página /tienda/${slug}? Isto não pode ser desfeito.`)) return;
+    if (!confirm(`Apagar a loja ${storePath(slug)}? A página sai do ar (os produtos e pedidos dela continuam no banco). Isto não pode ser desfeito.`)) return;
     try {
       const r = await fetch(`/api/sales-pages?slug=${encodeURIComponent(slug)}`, { method: 'DELETE' });
       if (!r.ok) throw new Error('Erro ao apagar.');
@@ -118,16 +142,47 @@ export default function AdminSalesPages({ products }: { products: AdminProduct[]
               <span className={`h-2 w-2 rounded-full ${editing.enabled ? 'bg-green-400' : 'bg-white/30'}`} />
               {editing.enabled ? 'Publicada' : 'Rascunho'}
             </button>
-            <button type="button" onClick={() => setEditing(null)} className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-white/60 hover:bg-white/5">Voltar</button>
+            {!editSlug && <button type="button" onClick={() => setEditing(null)} className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-white/60 hover:bg-white/5">Voltar</button>}
           </div>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-2">
           {/* Coluna textos */}
           <div className="space-y-3">
+            {editing.originalSlug && (
+              <div className="rounded-xl border border-pink-500/30 bg-pink-500/10 p-3">
+                <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-pink-200"><Instagram size={14} /> Link da loja (para o Instagram)</p>
+                <div className="flex items-center gap-2">
+                  <code className="min-w-0 flex-1 truncate rounded-lg bg-black/30 px-2.5 py-2 text-xs text-white">{fullLink(editing.originalSlug)}</code>
+                  <button type="button" onClick={() => copyLink(editing.originalSlug!)}
+                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-white ${copied ? 'bg-green-600' : 'bg-pink-600 hover:bg-pink-700'}`}>
+                    {copied ? <><Check size={13} /> Copiado</> : <><Copy size={13} /> Copiar</>}
+                  </button>
+                </div>
+                {!editing.enabled && <p className="mt-1.5 text-[11px] text-amber-200">Em rascunho: só você (logado) vê. Clique em “Rascunho” → “Publicada” e salve para o link funcionar para todos.</p>}
+              </div>
+            )}
+            <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#0f1117] p-3">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/10" style={{ background: `linear-gradient(135deg, ${editing.neonSecondary}, ${editing.neonPrimary})` }}>
+                {editing.logoImage
+                  // eslint-disable-next-line @next/next/no-img-element
+                  ? <img src={editing.logoImage} alt="" className="h-full w-full object-contain" />
+                  : <Rocket size={20} className="text-black" />}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-white">Logo da loja</p>
+                <p className="text-[11px] text-white/40">Aparece no topo da página, nos produtos, no checkout e no painel. PNG com fundo transparente fica melhor.</p>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <input type="file" accept="image/jpeg,image/png,image/webp,image/avif"
+                    onChange={async (e) => { const f = e.target.files?.[0]; if (f) up('logoImage', await readAsDataUrl(f)); e.target.value = ''; }}
+                    className="min-w-0 flex-1 text-xs text-white/60" />
+                  {editing.logoImage && <button type="button" onClick={() => up('logoImage', '')} title="Remover logo" className="rounded-lg p-1.5 text-white/50 hover:bg-red-500/15 hover:text-red-300"><Trash2 size={13} /></button>}
+                </div>
+              </div>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div><label className={labelCls}>Nome da loja</label><input value={editing.title} onChange={(e) => up('title', e.target.value)} className={inputCls} /></div>
-              <div><label className={labelCls}>Endereço (slug) · /tienda/…</label><input value={editing.slug} onChange={(e) => up('slug', e.target.value)} placeholder="vice-city" className={`${inputCls} font-mono`} /></div>
+              <div><label className={labelCls}>Link · seusite.com/…</label><input value={editing.slug} onChange={(e) => up('slug', e.target.value)} placeholder="vice-city" className={`${inputCls} font-mono`} /></div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div><label className={labelCls}>Selo (badge)</label><input value={editing.badge} onChange={(e) => up('badge', e.target.value)} className={inputCls} /></div>
@@ -203,7 +258,7 @@ export default function AdminSalesPages({ products }: { products: AdminProduct[]
             {saving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Salvar loja
           </button>
           {editing.originalSlug && (
-            <a href={`/tienda/${editing.originalSlug}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-2.5 text-xs text-white/70 hover:bg-white/5"><ExternalLink size={13} /> Ver loja</a>
+            <a href={storePath(editing.originalSlug)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-2.5 text-xs text-white/70 hover:bg-white/5"><ExternalLink size={13} /> Ver página de vendas</a>
           )}
           {msg && <span className={`text-xs ${msg.ok ? 'text-green-300' : 'text-red-300'}`}>{msg.text}</span>}
         </div>
@@ -243,11 +298,16 @@ export default function AdminSalesPages({ products }: { products: AdminProduct[]
                   <p className="truncate text-sm font-semibold text-white">{p.title}</p>
                   <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${p.enabled ? 'bg-green-500/15 text-green-300' : 'bg-white/10 text-white/50'}`}>{p.enabled ? 'Publicada' : 'Rascunho'}</span>
                 </div>
-                <p className="truncate text-xs text-white/45">/tienda/{p.slug}</p>
+                <p className="truncate text-xs text-white/45">{storePath(p.slug)}</p>
               </div>
               <div className="flex shrink-0 items-center gap-1">
-                <a href={`/tienda/${p.slug}`} target="_blank" rel="noopener noreferrer" title="Ver" className="rounded-lg p-2 text-white/60 hover:bg-white/5 hover:text-white"><ExternalLink size={15} /></a>
+                <a href={storePath(p.slug)} target="_blank" rel="noopener noreferrer" title="Ver página de vendas" className="rounded-lg p-2 text-white/60 hover:bg-white/5 hover:text-white"><ExternalLink size={15} /></a>
+                <button type="button" onClick={() => copyLink(p.slug)} title="Copiar link (Instagram)" className="rounded-lg p-2 text-white/60 hover:bg-white/5 hover:text-white"><Copy size={15} /></button>
                 <button type="button" onClick={() => setEditing({ ...p, originalSlug: p.slug })} className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white/80 hover:bg-white/5">Editar</button>
+                {onManage && (
+                  <button type="button" onClick={() => onManage(p.slug)} title="Trocar o painel para esta loja (produtos, pedidos, dashboard)"
+                    className="inline-flex items-center gap-1 rounded-lg bg-pink-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-pink-700"><Settings2 size={13} /> Gerenciar</button>
+                )}
                 <button type="button" onClick={() => remove(p.slug)} title="Apagar" className="rounded-lg p-2 text-white/40 hover:bg-red-500/15 hover:text-red-300"><Trash2 size={15} /></button>
               </div>
             </div>

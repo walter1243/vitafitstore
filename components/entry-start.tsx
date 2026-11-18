@@ -2,6 +2,8 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { rememberedStore } from '@/lib/store-context'
+import { storePath } from '@/lib/sales-pages-shared'
 
 // A loja sempre recomeça pela tela inicial, no topo, quando o navegador REABRE ou
 // RESTAURA a última página (aba esquecida aberta, voltar ao app do navegador,
@@ -37,6 +39,13 @@ function touch() {
 
 const isPaymentReturn = () => /[?&](confirmed|payment_intent|redirect_status)=/.test(location.search)
 
+// Início da loja em que o cliente está (multi-loja): página de outra loja
+// (data-kt-store, ex.: /vice-city) volta para ela; senão, a última loja da aba.
+function storeHome(): string {
+  const el = document.querySelector('[data-kt-store]')
+  return storePath(el?.getAttribute('data-kt-store') || rememberedStore())
+}
+
 export function EntryStart() {
   const router = useRouter()
 
@@ -46,7 +55,8 @@ export function EntryStart() {
     function restart() {
       if (skipped()) return
       if ('scrollRestoration' in history) history.scrollRestoration = 'manual'
-      if (location.pathname !== '/') router.replace('/')
+      const home = storeHome()
+      if (location.pathname !== home) router.replace(home)
       window.scrollTo(0, 0)
     }
 
@@ -54,7 +64,7 @@ export function EntryStart() {
     const type = navType()
     const away = awayTooLong()
     // checkout reaberto do nada (aba antiga, link salvo) e sem retorno de pagamento → início
-    if (location.pathname.startsWith('/checkout') && !isPaymentReturn() && type !== 'navigate' && away) router.replace('/')
+    if (location.pathname.startsWith('/checkout') && !isPaymentReturn() && type !== 'navigate' && away) router.replace(storeHome())
     if (!skipped()) {
       if (type === 'navigate') {
         if (!location.hash) window.scrollTo(0, 0)

@@ -11,6 +11,7 @@ import SignageCad from '@/components/signage-cad';
 import { ShippingZonesSection } from '@/components/admin-shipping-zones';
 import AdminCouponPopup from '@/components/admin-coupon-popup';
 import AdminSalesPages from '@/components/admin-sales-pages';
+import { storePath } from '@/lib/sales-pages-shared';
 import { CategoryCollections, NoteFields, ParcelFields, PersonalizeEditor, ProductPlacement, SaleModeFields } from '@/components/admin-product-extras';
 import { TrackingSection, needsTracking, isNewAlert } from '@/components/admin-tracking';
 import { AnalyticsPanel } from '@/components/admin-analytics';
@@ -133,6 +134,12 @@ const SECTION_LABELS: Record<Section, string> = {
   letreiro: 'Letreiro CAD',
   'sales-pages': 'Lojas',
 };
+
+// Multi-loja: seções que editam só a Kitoys (home, coleções, mundos…). Com
+// outra loja selecionada no topo elas somem do menu.
+const KITOYS_ONLY_SECTIONS: Section[] = ['sectors', 'worlds', 'letreiro', 'nfc'];
+
+type StoreSummary = { slug: string; title: string; logoImage: string; neonPrimary: string; neonSecondary: string; enabled: boolean };
 
 // Cadastro de produto: todos os blocos com o mesmo cartao e o mesmo cabecalho.
 const CARD = 'rounded-2xl border border-white/10 bg-[#0f1117] p-5';
@@ -2151,7 +2158,10 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
   const [products, setProducts] = useState<Product[]>([]);
   // Multi-loja: qual loja o painel está gerenciando agora. 'kitoys' = principal.
   const [storeSlug, setStoreSlug] = useState('kitoys');
-  const [stores, setStores] = useState<{ slug: string; title: string }[]>([]);
+  const [stores, setStores] = useState<StoreSummary[]>([]);
+  const [storesLoaded, setStoresLoaded] = useState(false);
+  // Loja selecionada no topo (null = Kitoys). É ela que aparece no painel todo.
+  const activeStore = storeSlug === 'kitoys' ? null : stores.find((s) => s.slug === storeSlug) ?? null;
   const [categories, setCategories] = useState<Category[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -2188,14 +2198,36 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
 
   useEffect(() => { void fetchData(); }, []);
 
-  // Multi-loja: restaura a loja escolhida e carrega a lista de lojas (Páginas de venda).
+  // Multi-loja: lista de lojas (nome, logo, cores) para o seletor e a identidade do painel.
+  const loadStores = useCallback(async () => {
+    try {
+      const r = await fetch('/api/sales-pages', { cache: 'no-store' });
+      const d = r.ok ? await r.json() : [];
+      if (Array.isArray(d)) {
+        setStores(d.map((p: any) => ({
+          slug: String(p.slug), title: String(p.title), logoImage: String(p.logoImage ?? ''),
+          neonPrimary: String(p.neonPrimary ?? '#ff2d9b'), neonSecondary: String(p.neonSecondary ?? '#00e5ff'),
+          enabled: Boolean(p.enabled),
+        })));
+      }
+    } catch {} finally { setStoresLoaded(true); }
+  }, []);
+
+  // Restaura a loja escolhida da última vez e carrega a lista de lojas.
   useEffect(() => {
     try { const s = localStorage.getItem('kt_admin_store'); if (s) setStoreSlug(s); } catch {}
-    fetch('/api/sales-pages', { cache: 'no-store' })
-      .then((r) => (r.ok ? r.json() : []))
-      .then((d) => { if (Array.isArray(d)) setStores(d.map((p: any) => ({ slug: String(p.slug), title: String(p.title) }))); })
-      .catch(() => {});
-  }, []);
+    void loadStores();
+  }, [loadStores]);
+
+  // Loja apagada/renomeada que ficou salva no seletor: volta para a Kitoys.
+  useEffect(() => {
+    if (storesLoaded && storeSlug !== 'kitoys' && !stores.some((s) => s.slug === storeSlug)) setStoreSlug('kitoys');
+  }, [storesLoaded, stores, storeSlug]);
+
+  // Seção só da Kitoys aberta e trocou para outra loja: vai para o Dashboard dela.
+  useEffect(() => {
+    if (activeStore && KITOYS_ONLY_SECTIONS.includes(section)) setSection('dashboard');
+  }, [activeStore, section]);
 
   // Troca de loja: regarrega só os produtos daquela loja e lembra a escolha.
   const didMountStore = useRef(false);
@@ -2720,12 +2752,20 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
 
       <aside className={`fixed top-0 left-0 z-50 flex h-full w-64 flex-col bg-[#0d0f16] text-white transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:sticky lg:top-0 lg:h-screen lg:shrink-0 lg:translate-x-0`}>
         <div className="flex shrink-0 items-center gap-3 border-b border-white/10 px-5 py-4">
-          <div className="flex h-11 shrink-0 items-center justify-center rounded-xl bg-white px-2">
-            <img src="/images/logo-kitoys-3d.png" alt="Kitoys 3D" className="h-9 w-auto" />
-          </div>
+          {activeStore ? (
+            <div className="flex h-11 min-w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl px-1.5" style={{ background: `linear-gradient(135deg, ${activeStore.neonSecondary}, ${activeStore.neonPrimary})` }}>
+              {activeStore.logoImage
+                ? <img src={activeStore.logoImage} alt={activeStore.title} className="h-9 w-auto max-w-[72px] object-contain" />
+                : <Rocket size={20} className="text-black" />}
+            </div>
+          ) : (
+            <div className="flex h-11 shrink-0 items-center justify-center rounded-xl bg-white px-2">
+              <img src="/images/logo-kitoys-3d.png" alt="Kitoys 3D" className="h-9 w-auto" />
+            </div>
+          )}
           <div className="min-w-0">
-            <div className="truncate text-sm font-bold">Painel Admin</div>
-            <div className="text-[11px] text-white/40">Painel de Controle</div>
+            <div className="truncate text-sm font-bold">{activeStore ? activeStore.title : 'Painel Admin'}</div>
+            <div className="truncate text-[11px] text-white/40">{activeStore ? `Painel da loja · ${storePath(activeStore.slug)}` : 'Painel de Controle'}</div>
           </div>
           <button onClick={() => setSidebarOpen(false)} className="ml-auto rounded p-1 text-white/50 hover:text-white lg:hidden">
             <X size={16} />
@@ -2733,12 +2773,12 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
         </div>
 
         <a
-          href="/"
+          href={storePath(storeSlug)}
           target="_blank"
           rel="noopener noreferrer"
-          className="mx-3 mt-3 flex shrink-0 items-center justify-center gap-2 rounded-xl border border-green-500/25 bg-green-500/10 px-3 py-2.5 text-xs font-semibold text-green-300 transition-colors hover:bg-green-500/15"
+          className={`mx-3 mt-3 flex shrink-0 items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-semibold transition-colors ${activeStore ? 'border-pink-500/30 bg-pink-500/10 text-pink-200 hover:bg-pink-500/15' : 'border-green-500/25 bg-green-500/10 text-green-300 hover:bg-green-500/15'}`}
         >
-          <ExternalLink size={13} /> Ver página de vendas
+          <ExternalLink size={13} /> Ver página de vendas{activeStore ? ` · ${storePath(activeStore.slug)}` : ''}
         </a>
 
         <nav className="flex-1 overflow-y-auto px-3 py-4">
@@ -2746,7 +2786,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
             <div key={group.label} className="mb-4 last:mb-0">
               <div className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-widest text-white/30">{group.label}</div>
               <div className="space-y-0.5">
-                {group.items.map(item => (
+                {group.items.filter(item => !(activeStore && KITOYS_ONLY_SECTIONS.includes(item.key))).map(item => (
                   <button
                     key={item.key}
                     onClick={() => navigate(item.key)}
@@ -2935,7 +2975,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
           {section === 'sectors' && <AdminSectors />}
           {section === 'worlds' && <AdminWorlds />}
           {section === 'nfc' && <AdminNfc />}
-          {section === 'sales-pages' && <AdminSalesPages products={products} />}
+          {section === 'sales-pages' && <AdminSalesPages products={products} onSaved={loadStores} onManage={(slug) => { setStoreSlug(slug); navigate('products'); }} />}
           {section === 'letreiro' && <SignageCad />}
           {section === 'import-supplier' && <ImportSupplierSection onImportToStore={preFillFromSupplier} />}
           {section === 'orders' && <OrdersSection orders={orders} products={products} onUpdateTracking={updateTracking} onUpdateStatus={updateOrderStatus} onRefresh={fetchData} />}
@@ -2943,7 +2983,11 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
           {section === 'tracking' && <TrackingSection orders={orders} onChanged={refreshOrders} notify={addToast} />}
           {section === 'shipping' && <ShippingZonesSection notify={addToast} />}
           {section === 'automation' && <AutomationSection />}
-          {section === 'settings' && (
+          {/* "Editar loja": na Kitoys edita a home dela; em outra loja edita nome, logo, link e página dela. */}
+          {section === 'settings' && activeStore && (
+            <AdminSalesPages key={activeStore.slug} products={products} editSlug={activeStore.slug} onSaved={(slug) => { void loadStores(); setStoreSlug(slug); }} />
+          )}
+          {section === 'settings' && !activeStore && (
             <SettingsSection
               categories={categories}
               newCategoryName={newCategoryName}

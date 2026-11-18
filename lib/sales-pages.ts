@@ -1,77 +1,17 @@
 import { sql } from '@/lib/db';
+import {
+  DEFAULT_SALES_PAGE,
+  RESERVED_SLUGS,
+  normalizeSlug,
+  type SalesPageConfig,
+} from '@/lib/sales-pages-shared';
 
-// Páginas de venda configuráveis (Admin → Páginas de venda).
-// Cada página é uma landing temática montada em cima de produtos que já
-// existem na loja — pensada para campanhas de Instagram que pegam carona em
-// hypes e sazonalidades (ex.: lançamento de jogo, Natal, Black Friday).
-// A primeira é a VICE CITY STORE, com a cara de cidade neon dos anos 80.
-//
-// Só montamos a landing e escolhemos os produtos: o preço, o carrinho, a
-// personalização e o checkout continuam sendo os mesmos da loja. Nada aqui
-// cria desconto nem muda preço — é só vitrine com tema.
+// Lojas próprias (multi-loja) — Admin → Lojas. Cada loja tem nome, logo, link
+// curto (/<slug>, o que vai no Instagram), página de vendas temática e catálogo
+// próprio (products.store_slug). Carrinho, checkout Stripe e login do painel
+// são os mesmos da Kitoys. Parte segura para o navegador: lib/sales-pages-shared.ts.
 
-export type SalesPageTheme = 'vice-city';
-
-export const SALES_PAGE_THEMES: { value: SalesPageTheme; label: string }[] = [
-  { value: 'vice-city', label: 'Vice City (neon anos 80)' },
-];
-
-export type SalesPageConfig = {
-  slug: string;
-  title: string;
-  theme: SalesPageTheme;
-  enabled: boolean;
-  eyebrow: string;
-  heading: string;
-  subtitle: string;
-  ctaLabel: string;
-  badge: string;
-  heroImage: string;
-  heroVideo: string;
-  countdownTo: string | null;
-  countdownLabel: string;
-  coverProductId: number | null;
-  coverTagline: string;
-  productIds: number[];
-  featureTitle: string;
-  featureText: string;
-  neonPrimary: string;
-  neonSecondary: string;
-  footerNote: string;
-  updatedAt?: string;
-};
-
-export const DEFAULT_SALES_PAGE: Omit<SalesPageConfig, 'slug'> = {
-  title: 'Vice City Store',
-  theme: 'vice-city',
-  enabled: true,
-  eyebrow: 'EDICIÓN LIMITADA',
-  heading: 'VICE CITY STORE',
-  subtitle: 'Llaveros y piezas 3D con alma retro de los 80. Luz de neón, palmeras y actitud de ciudad — impresos en nuestro taller en España.',
-  ctaLabel: 'Comprar ahora',
-  badge: 'NUEVO DROP',
-  heroImage: '',
-  heroVideo: '',
-  countdownTo: null,
-  countdownLabel: 'El drop termina en',
-  coverProductId: null,
-  coverTagline: 'La pieza que enciende la colección',
-  productIds: [],
-  featureTitle: 'El llavero que brilla',
-  featureText: 'Contornos de neón, acabado premium y ese brillo inconfundible. El protagonista de la portada, listo para colgar en tus llaves o en la mochila.',
-  neonPrimary: '#ff2d9b',
-  neonSecondary: '#00e5ff',
-  footerNote: 'Impreso en 3D en España · Envío con seguimiento · Edición de campaña',
-};
-
-export const normalizeSlug = (v: unknown) =>
-  String(v ?? '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '')
-    .slice(0, 60);
+export * from '@/lib/sales-pages-shared';
 
 const clampColor = (v: unknown, fallback: string) => {
   const s = String(v ?? '').trim();
@@ -103,7 +43,7 @@ export function ensureSalesPages() {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
     `;
-    // Semeia a VICE CITY STORE já desligada de produtos (o admin escolhe).
+    // A VICE CITY STORE já vem criada (em rascunho até ter produtos).
     await sql`
       INSERT INTO sales_pages (slug, title, theme, enabled, data, position)
       VALUES ('vice-city', ${DEFAULT_SALES_PAGE.title}, 'vice-city', FALSE, ${JSON.stringify(DEFAULT_SALES_PAGE)}::jsonb, 0)
@@ -121,6 +61,7 @@ function rowToConfig(row: any): SalesPageConfig {
     title: String(row.title ?? d.title ?? base.title),
     theme: 'vice-city',
     enabled: Boolean(row.enabled),
+    logoImage: String(d.logoImage ?? ''),
     eyebrow: String(d.eyebrow ?? base.eyebrow),
     heading: String(d.heading ?? base.heading),
     subtitle: String(d.subtitle ?? base.subtitle),
@@ -149,14 +90,19 @@ export async function listSalesPages(): Promise<SalesPageConfig[]> {
 }
 
 export async function getSalesPage(slug: string): Promise<SalesPageConfig | null> {
+  const s = normalizeSlug(slug);
+  if (!s || RESERVED_SLUGS.has(s)) return null;
   await ensureSalesPages();
-  const [row] = (await sql`SELECT slug, title, theme, enabled, data, updated_at FROM sales_pages WHERE slug = ${normalizeSlug(slug)} LIMIT 1`) as any[];
+  const [row] = (await sql`SELECT slug, title, theme, enabled, data, updated_at FROM sales_pages WHERE slug = ${s} LIMIT 1`) as any[];
   return row ? rowToConfig(row) : null;
 }
 
 export async function saveSalesPage(input: Partial<SalesPageConfig> & { originalSlug?: string }): Promise<SalesPageConfig> {
   await ensureSalesPages();
-  const slug = normalizeSlug(input.slug) || normalizeSlug(input.title) || `pagina-${Date.now()}`;
+  const slug = normalizeSlug(input.slug) || normalizeSlug(input.title) || `loja-${Date.now()}`;
+  if (RESERVED_SLUGS.has(slug)) {
+    throw new Error(`O endereço "/${slug}" já é usado pelo site. Escolha outro (ex.: ${slug}-store).`);
+  }
   const originalSlug = input.originalSlug ? normalizeSlug(input.originalSlug) : slug;
 
   const title = String(input.title ?? DEFAULT_SALES_PAGE.title).trim().slice(0, 80) || DEFAULT_SALES_PAGE.title;
@@ -166,6 +112,7 @@ export async function saveSalesPage(input: Partial<SalesPageConfig> & { original
     title,
     theme: 'vice-city',
     enabled,
+    logoImage: String(input.logoImage ?? '').trim(),
     eyebrow: String(input.eyebrow ?? DEFAULT_SALES_PAGE.eyebrow).slice(0, 60),
     heading: String(input.heading ?? DEFAULT_SALES_PAGE.heading).slice(0, 80),
     subtitle: String(input.subtitle ?? DEFAULT_SALES_PAGE.subtitle).slice(0, 400),
@@ -185,9 +132,13 @@ export async function saveSalesPage(input: Partial<SalesPageConfig> & { original
     footerNote: String(input.footerNote ?? DEFAULT_SALES_PAGE.footerNote).slice(0, 200),
   };
 
-  // Renomeou o slug: move a linha (mantém histórico/posição).
+  // Mudou o endereço: a loja, os produtos e os pedidos dela vão junto.
   if (originalSlug && originalSlug !== slug) {
+    const [taken] = (await sql`SELECT 1 FROM sales_pages WHERE slug = ${slug} LIMIT 1`) as any[];
+    if (taken) throw new Error(`Já existe uma loja em "/${slug}".`);
     await sql`UPDATE sales_pages SET slug = ${slug} WHERE slug = ${originalSlug}`;
+    await sql`UPDATE products SET store_slug = ${slug} WHERE store_slug = ${originalSlug}`;
+    await sql`UPDATE orders SET store_slug = ${slug} WHERE store_slug = ${originalSlug}`.catch(() => {});
   }
 
   await sql`
@@ -199,7 +150,7 @@ export async function saveSalesPage(input: Partial<SalesPageConfig> & { original
   `;
 
   const saved = await getSalesPage(slug);
-  if (!saved) throw new Error('Não foi possível salvar a página de venda.');
+  if (!saved) throw new Error('Não foi possível salvar a loja.');
   return saved;
 }
 

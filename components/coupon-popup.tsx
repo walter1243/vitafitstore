@@ -65,7 +65,8 @@ export function CouponPopup() {
         if (!alive || !c?.enabled || !c.code || !canShowPopup(c.code, Number(c.reshowDays) || 0)) return
         setCfg(c)
         timer = setTimeout(() => {
-          if (skipped(location.pathname) || !canShowPopup(c.code, Number(c.reshowDays) || 0)) return
+          // Loja própria (ex.: VICE CITY STORE, marcada com data-kt-store): o pop-up é da Kitoys, não aparece.
+          if (skipped(location.pathname) || document.querySelector('[data-kt-store]') || !canShowPopup(c.code, Number(c.reshowDays) || 0)) return
           setOpen(true)
           track('coupon_view', c.code)
         }, Math.max(0, Number(c.delaySec ?? 3)) * 1000)

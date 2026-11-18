@@ -26,6 +26,7 @@ export type DbProduct = {
   demoImage?: string;
   collectionSlug?: string;
   personalize?: unknown;
+  storeSlug?: string;
 };
 
 export function normalizeCategory(raw?: string) {
@@ -78,6 +79,7 @@ export function toStoreProduct(p: DbProduct): Product {
     demoImage: p.demoImage || '',
     collectionSlug: p.collectionSlug || '',
     personalize: parsePersonalize(p.personalize),
+    storeSlug: p.storeSlug || 'kitoys',
     emoji: '✨',
     gradient: category === 'fitness' ? 'from-blue-400 to-indigo-600' : 'from-emerald-400 to-green-600',
   };

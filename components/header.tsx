@@ -6,6 +6,7 @@ import { ShoppingCart, Menu, X, Smile } from 'lucide-react';
 import { ProductSearch } from '@/components/product-search';
 import { useStoreProducts } from '@/components/kids/use-store-products';
 import { useCart } from '@/lib/cart-context';
+import { rememberStore } from '@/lib/store-context';
 import { useSectors } from '@/components/kids/sectors-context';
 import { LanguageSwitcher, Tr, UI } from '@/components/language-switcher';
 import { OPEN_MENU_EVENT, OPEN_SEARCH_EVENT, goHome, MobileTabBar } from '@/components/mobile-tab-bar';
@@ -40,6 +41,8 @@ function readCachedBranding() {
 // topbar/cabecalho/branding: só a cópia da loja no admin passa (rascunho ainda não publicado).
 export function Header({ topbar: topbarOverride, cabecalho: cabecalhoOverride, branding }: { topbar?: Partial<TopbarContent>; cabecalho?: Partial<CabecalhoContent>; branding?: Partial<Branding> } = {}) {
   const { sectors, collectionForProduct } = useSectors();
+  // Multi-loja: cabeçalho da Kitoys na tela = cliente está na Kitoys.
+  useEffect(() => { rememberStore('kitoys'); }, []);
   const [menuWanted, setMenuWanted] = useState(false);
   const { products: menuProducts, loaded: menuLoaded } = useStoreProducts(undefined, menuWanted);
   // Só coleções com pelo menos um produto (sem "nenhum produto" ao tocar); setor vazio some.
