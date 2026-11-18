@@ -160,7 +160,9 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   categories, newCategoryName, onNewCategoryNameChange, onCreateCategory, onCategoriesChanged, onNotify,
   onMoveCategory, onSaveCategoryMedia, onDeleteCategory, editingProductId, onEditProduct,
   importSourceUrl, importSourceProductUrl, initialCostPrice,
-  productType, onProductTypeChange, sizes, onSizesChange, colorOptions, onColorOptionsChange }: {
+  productType, onProductTypeChange, sizes, onSizesChange, colorOptions, onColorOptionsChange, ownStore }: {
+  // Multi-loja: loja própria selecionada no topo (ex.: VICE CITY). null = Kitoys.
+  ownStore?: { title: string } | null;
   products: Product[];
   categories: Category[];
   showForm: boolean;
@@ -239,6 +241,8 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   const [formTab, setFormTab] = useState<'dados' | 'upsell'>('dados');
   const [upsellCategoryFilter, setUpsellCategoryFilter] = useState('');
   const [productViewTab, setProductViewTab] = useState<'products' | 'cards' | 'kits'>('products');
+  // "+ categoria" e "Kits" montam a home da Kitoys: em outra loja, só a lista de produtos.
+  useEffect(() => { if (ownStore) setProductViewTab('products'); }, [ownStore]);
   const [productsSearch, setProductsSearch] = useState('');
   const [categoryDrafts, setCategoryDrafts] = useState<Record<number, { bannerType: 'image' | 'video'; bannerUrl: string; logoUrl: string }>>({});
   const [newSizeInput, setNewSizeInput] = useState('');
@@ -714,6 +718,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
               >
                 Produtos
               </button>
+              {!ownStore && (<>
               <button
                 type="button"
                 onClick={() => setProductViewTab('cards')}
@@ -728,6 +733,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
               >
                 Kits
               </button>
+              </>)}
               </div>
             </div>
             {productViewTab === 'products' && (
@@ -1135,12 +1141,39 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
               </section>
             </div>
 
-            {/* 3) Onde aparece no site */}
-            <ProductPlacement value={form.collectionSlug} onChange={(slug, name) => { onFormChange('collectionSlug', slug); onFormChange('category', slug && name ? name : form.category); }} category={form.category} onCategory={(name) => onFormChange('category', name)} />
+            {/* 3) Onde aparece no site — Kitoys: setor → coleção; outra loja: categoria dela */}
+            {ownStore ? (
+              <section className={CARD}>
+                <SectionHead icon={<LayoutGrid size={16} />} title={`Categoria na ${ownStore.title} *`} sub="Vira um filtro na tabela de produtos da loja (ex.: Llaveros, Decoración, Gaming). Os setores da Kitoys não entram aqui." />
+                <input
+                  value={form.category}
+                  onChange={(e) => onFormChange('category', e.target.value)}
+                  placeholder="Ex.: Llaveros"
+                  className="w-full rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
+                />
+                {(() => {
+                  const cats = [...new Set(products.map((p) => (p.category || '').trim()).filter(Boolean))];
+                  return cats.length > 0 ? (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <span className="self-center text-[11px] text-white/40">Já usadas nesta loja:</span>
+                      {cats.map((c) => (
+                        <button key={c} type="button" onClick={() => onFormChange('category', c)}
+                          className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${form.category.trim() === c ? 'border-green-500 bg-green-500/15 text-green-300' : 'border-white/15 text-white/70 hover:bg-white/5'}`}>
+                          {c}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null;
+                })()}
+              </section>
+            ) : (
+              <ProductPlacement value={form.collectionSlug} onChange={(slug, name) => { onFormChange('collectionSlug', slug); onFormChange('category', slug && name ? name : form.category); }} category={form.category} onCategory={(name) => onFormChange('category', name)} />
+            )}
 
             {/* 4) Extras: personalizacao com nome e amostra interativa */}
             <div className="grid items-start gap-5 lg:grid-cols-2">
               <PersonalizeEditor value={form.personalize} onChange={(json) => onFormChange('personalize', json)} productImage={image} />
+              {!ownStore && (<>
               {/* Amostra gratis interativa: brincadeira na pagina do produto que
                   termina oferecendo o produto (ver components/kids/product-demo.tsx). */}
               <section className={CARD}>
@@ -1175,6 +1208,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                   />
                 )}
               </section>
+              </>)}
             </div>
 
             <section className="rounded-2xl border border-white/10 bg-[#0f1117] p-5 shadow-none">
@@ -2452,7 +2486,9 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
     if (!prodForm.name.trim()) { addToast('error', 'Nome do produto é obrigatório.'); return; }
     if (!prodForm.price) { addToast('error', 'Preço é obrigatório.'); return; }
     // Todo produto novo precisa de setor + colecao; produtos antigos (so com categoria) continuam salvando.
-    if (!prodForm.collectionSlug && (!editingProductId || !prodForm.category.trim())) { addToast('error', 'Escolha em “Onde aparece no site” o setor e a coleção do produto.'); return; }
+    if (activeStore) {
+      if (!prodForm.category.trim()) { addToast('error', `Escreva a categoria do produto na ${activeStore.title} (ex.: Llaveros).`); return; }
+    } else if (!prodForm.collectionSlug && (!editingProductId || !prodForm.category.trim())) { addToast('error', 'Escolha em “Onde aparece no site” o setor e a coleção do produto.'); return; }
 
     setSaving(true);
     try {
@@ -2932,6 +2968,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
           {section === 'dashboard' && <DashboardSection products={products} orders={orders} revenue={revenue} onNavigate={navigate} trackingAlerts={trackingPending} store={storeSlug} />}
           {section === 'products' && (
             <ProductsSection
+              ownStore={activeStore ? { title: activeStore.title } : null}
               products={products}
               categories={categories}
               showForm={showForm}
