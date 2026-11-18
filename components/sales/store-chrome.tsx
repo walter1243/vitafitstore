@@ -109,9 +109,9 @@ export function StoreHeader({ store, overlay = false, onCatalog }: { store: Bran
               onClick={() => setIsCartOpen(true)}
               data-cart-target
               aria-label={totalItems > 0 ? `Abrir carrito (${totalItems})` : 'Abrir carrito'}
-              className="relative flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl border border-white/15 bg-white/[0.06] text-white transition-colors hover:bg-white/[0.12]"
+              className="relative flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-white transition-colors hover:bg-white/10"
             >
-              <ShoppingBag size={20} aria-hidden />
+              <ShoppingBag size={26} strokeWidth={1.8} aria-hidden />
               {totalItems > 0 && (
                 <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full px-1 text-[11px] font-bold text-black" style={{ background: S, boxShadow: `0 0 10px ${S}` }}>
                   {totalItems}

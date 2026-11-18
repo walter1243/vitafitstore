@@ -17,6 +17,8 @@ import { ProductDemo } from '@/components/kids/product-demo'
 import { NamePersonalizer, NamePreview, type PersonalizerLook } from '@/components/personalize/name-personalizer'
 import { DEFAULT_NAME_COLORS, nameRequiredFor, cleanCustomText, lineTotalFor, minQtyFor, packOf, parsePersonalize, sizeRange, sizedPrice } from '@/lib/personalize'
 import { ProductShipping } from '@/components/shipping/shipping-options'
+import { arReady } from '@/lib/ar'
+import { ArViewer } from '@/components/ar/ar-viewer'
 
 export function ProductPageView({ product, entrega, homeHref = '/', homeLabel = 'Inicio' }: { product: Product; entrega?: Partial<EntregaContent>; homeHref?: string; homeLabel?: string }) {
   // previsão calculada no navegador (data de hoje do cliente, sem diferença entre servidor e tela)
@@ -457,6 +459,8 @@ export function ProductPageView({ product, entrega, homeHref = '/', homeLabel = 
           <ProductReviews productId={product.id} anchor={false} className="mt-8 hidden lg:block" />
         </div>
       </div>
+
+      {arReady(product.ar) && <div className="mt-6 max-w-md"><ArViewer name={product.name} ar={product.ar!} theme="light" /></div>}
 
       {/* Descricao no celular/tablet (no computador fica embaixo das fotos) */}
       <div className="mt-12 max-w-3xl lg:hidden">

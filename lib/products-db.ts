@@ -2,6 +2,7 @@
 import { sql } from '@/lib/db';
 import { parsePersonalize } from '@/lib/personalize';
 import { withSurcharge } from '@/lib/country-price';
+import { parseAr } from '@/lib/ar';
 
 export function parseAdditionalImages(value: unknown): string[] {
   if (Array.isArray(value)) {
@@ -73,6 +74,7 @@ export function normalizeProduct(row: any) {
     sizes: parseSizes(row.sizes),
     isCategoryCover: Boolean(row.is_category_cover),
     storeSlug: row.store_slug ?? 'kitoys',
+    ar: parseAr(row.ar),
   };
 }
 
@@ -92,7 +94,7 @@ export async function getStoreProductsServer(surcharge: number, light = true, st
     const store = String(storeSlug || 'kitoys');
     const rows = await sql`
       SELECT id, name, description, price, category, image, additional_images, video, stock, position,
-             product_type, color_options, sizes, is_category_cover, shipping_cost, demo_type, demo_image, collection_slug, personalize, parcel, store_slug,
+             product_type, color_options, sizes, is_category_cover, shipping_cost, demo_type, demo_image, collection_slug, personalize, parcel, store_slug, ar,
              created_at AS "createdAt"
       FROM products
       WHERE COALESCE(store_slug, 'kitoys') = ${store}

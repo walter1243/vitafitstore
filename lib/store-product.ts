@@ -1,5 +1,6 @@
 import { type Product, type ProductType, type ColorOption } from '@/lib/products';
 import { parsePersonalize } from '@/lib/personalize';
+import { parseAr } from '@/lib/ar';
 
 // Neutral inline placeholder for a product with no image set — the old
 // fallback pointed at a leftover supplement product photo, which is wrong
@@ -27,6 +28,7 @@ export type DbProduct = {
   collectionSlug?: string;
   personalize?: unknown;
   storeSlug?: string;
+  ar?: unknown;
 };
 
 export function normalizeCategory(raw?: string) {
@@ -80,6 +82,7 @@ export function toStoreProduct(p: DbProduct): Product {
     collectionSlug: p.collectionSlug || '',
     personalize: parsePersonalize(p.personalize),
     storeSlug: p.storeSlug || 'kitoys',
+    ar: parseAr(p.ar),
     emoji: '✨',
     gradient: category === 'fitness' ? 'from-blue-400 to-indigo-600' : 'from-emerald-400 to-green-600',
   };

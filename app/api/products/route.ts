@@ -5,6 +5,7 @@ import { getAdminSessionFromRequest, requireAdmin } from "@/lib/admin-auth";
 import { COUNTRY_COOKIE, countrySurcharge, viewerCountry, withSurcharge } from "@/lib/country-price";
 import { DEMO_TYPES, normalizeProduct, parseAdditionalImages, parseColorOptions, parseJsonArray, parseSizes, publicProduct } from "@/lib/products-db";
 import { normalizeSlug } from "@/lib/sales-pages";
+import { parseAr } from "@/lib/ar";
 
 // Loja dona do produto. 'kitoys' = loja principal (padrão); outras lojas
 // (ex.: 'vice-city') têm o catálogo próprio delas. Sem ?store= a API devolve
@@ -46,6 +47,8 @@ async function ensureVariantColumns() {
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS parcel TEXT`;
   // Loja dona do produto (multi-loja): 'kitoys' = principal; outras = catálogo próprio.
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS store_slug TEXT DEFAULT 'kitoys'`;
+  // Realidade aumentada (JSON, ver lib/ar.ts): foto sem fundo, tamanho real, mesa/parede.
+  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS ar TEXT`;
 }
 
 export async function GET(req: NextRequest) {
@@ -60,7 +63,7 @@ export async function GET(req: NextRequest) {
     const rows = await sql`
       SELECT id, name, description, price, category, image, additional_images, video, stock, position,
              source_store_url, source_product_url, cost_price,
-             product_type, color_options, sizes, is_category_cover, shipping_cost, demo_type, demo_image, collection_slug, personalize, parcel, store_slug,
+             product_type, color_options, sizes, is_category_cover, shipping_cost, demo_type, demo_image, collection_slug, personalize, parcel, store_slug, ar,
              created_at AS "createdAt"
       FROM products
       WHERE COALESCE(store_slug, 'kitoys') = ${store}
@@ -111,8 +114,9 @@ export async function POST(req: NextRequest) {
     const nextSizes = parseSizes(sizes);
 
     const nextStoreSlug = storeOf(body.storeSlug);
+    const nextAr = body.ar ? JSON.stringify(parseAr(body.ar)) : null;
     const [product] = await sql`
-      INSERT INTO products (name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost, demo_type, demo_image, collection_slug, personalize, parcel, store_slug)
+      INSERT INTO products (name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost, demo_type, demo_image, collection_slug, personalize, parcel, store_slug, ar)
       VALUES (
         ${String(name).trim()},
         ${description ? String(description) : null},
@@ -135,9 +139,10 @@ export async function POST(req: NextRequest) {
         ${nextCollectionSlug || null},
         ${nextPersonalize},
         ${nextParcel},
-        ${nextStoreSlug}
+        ${nextStoreSlug},
+        ${nextAr}
       )
-      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost, demo_type, demo_image, collection_slug, personalize, parcel, store_slug
+      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost, demo_type, demo_image, collection_slug, personalize, parcel, store_slug, ar
     `;
 
     return NextResponse.json(normalizeProduct(product), { status: 201 });
@@ -257,6 +262,8 @@ export async function PATCH(req: NextRequest) {
     const parcel = body.parcel && typeof body.parcel === 'object' ? JSON.stringify(body.parcel) : null;
     const updateStore = Object.prototype.hasOwnProperty.call(body, 'storeSlug');
     const storeSlug = storeOf(body.storeSlug);
+    const updateAr = Object.prototype.hasOwnProperty.call(body, 'ar');
+    const arJson = body.ar ? JSON.stringify(parseAr(body.ar)) : null;
 
     if (!name) {
       return NextResponse.json({ error: 'O campo "nome" é obrigatório.' }, { status: 400 });
@@ -288,9 +295,10 @@ export async function PATCH(req: NextRequest) {
         collection_slug   = CASE WHEN ${updateCollection} THEN ${collectionSlug || null} ELSE collection_slug END,
         personalize       = CASE WHEN ${updatePersonalize} THEN ${personalize} ELSE personalize END,
         parcel            = CASE WHEN ${updateParcel} THEN ${parcel} ELSE parcel END,
-        store_slug        = CASE WHEN ${updateStore} THEN ${storeSlug} ELSE store_slug END
+        store_slug        = CASE WHEN ${updateStore} THEN ${storeSlug} ELSE store_slug END,
+        ar                = CASE WHEN ${updateAr} THEN ${arJson} ELSE ar END
       WHERE id = ${id}
-      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost, demo_type, demo_image, collection_slug, personalize, parcel, store_slug
+      RETURNING id, name, description, price, category, image, additional_images, video, stock, position, source_store_url, source_product_url, cost_price, product_type, color_options, sizes, shipping_cost, demo_type, demo_image, collection_slug, personalize, parcel, store_slug, ar
     `;
 
     if (!product) {

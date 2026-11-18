@@ -10,7 +10,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Check, PenLine, ShoppingCart, SlidersHorizontal, Truck } from 'lucide-react';
+import { ArrowRight, Check, PenLine, Search, ShoppingCart, SlidersHorizontal, Truck } from 'lucide-react';
 import { type Product } from '@/lib/products';
 import { useCart } from '@/lib/cart-context';
 import { cardPrice } from '@/lib/personalize';
@@ -168,6 +168,15 @@ function Catalog({ products, config, sectionRef }: { products: Product[]; config
         <h2 id="vc-productos" className="font-store-display text-5xl uppercase leading-none text-white sm:text-7xl">Productos</h2>
         {products.length > 0 && <p className="pb-1 text-sm text-white/50">{list.length} {list.length === 1 ? 'producto' : 'productos'}</p>}
       </div>
+      {products.length > 0 && (
+        <label className="relative mt-5 block max-w-md">
+          <span className="sr-only">Buscar productos</span>
+          <Search size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/55" aria-hidden />
+          <input type="search" value={q} enterKeyHint="search" placeholder="Buscar productos…"
+            onChange={(e) => { setQ(e.target.value); window.dispatchEvent(new CustomEvent(STORE_SEARCH_EVENT, { detail: e.target.value })); }}
+            className="h-12 w-full rounded-xl border border-white/15 bg-white/[0.07] pl-11 pr-3 text-base text-white outline-none transition-colors placeholder:text-white/45 focus:border-[var(--vc-secondary)]" />
+        </label>
+      )}
 
       {products.length === 0 ? (
         <div className="py-20 text-center">
@@ -351,12 +360,6 @@ export function ViceCityStore({ config, products, cover }: Props) {
         </div>
       </section>
 
-      {/* faixa de confiança, só texto */}
-      <div className="border-y border-white/10 bg-black/30">
-        <p className="mx-auto max-w-6xl px-4 py-4 text-center text-xs font-semibold uppercase tracking-[0.2em] text-white/60 sm:text-sm">
-          Envío con seguimiento · Bizum, Apple Pay y Google Pay · Devolución en 14 días · IVA incluido
-        </p>
-      </div>
 
       <div className="relative">
         {/* fundo dos produtos: a mesma arte da capa, parada atrás enquanto a página rola

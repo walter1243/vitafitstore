@@ -47,6 +47,8 @@ export interface Product {
   personalize?: import('./personalize').Personalize
   // Loja dona do produto (multi-loja): 'kitoys' = principal.
   storeSlug?: string
+  // Realidade aumentada (Admin → Produtos): ver lib/ar.ts
+  ar?: import('./ar').ArConfig
   emoji: string
   gradient: string
 }

@@ -51,6 +51,7 @@ export async function getProductById(id: number, surcharge = 0): Promise<Product
       colorOptions: (() => { try { return JSON.parse(row.color_options || '[]'); } catch { return []; } })(),
       sizes: (() => { try { return JSON.parse(row.sizes || '[]'); } catch { return []; } })(),
       storeSlug: row.store_slug || 'kitoys',
+      ar: row.ar ?? null,
     };
 
     return toStoreProduct(dbProduct);

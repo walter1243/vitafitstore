@@ -21,6 +21,8 @@ import { FREE_SHIPPING_FROM } from '@/lib/checkout-pricing';
 import { storeArt, storePath, type SalesPageConfig } from '@/lib/sales-pages-shared';
 import { ProductCard } from '@/components/sales/vice-city-store';
 import { flyToCart } from '@/lib/fly-to-cart';
+import { arReady } from '@/lib/ar';
+import { ArViewer } from '@/components/ar/ar-viewer';
 import { useStoreContact, waLink } from '@/components/sales/store-chrome';
 
 type Store = Pick<SalesPageConfig, 'slug' | 'title' | 'neonPrimary' | 'neonSecondary' | 'theme' | 'backgroundImage'> & { whatsappEnabled?: boolean; whatsappNumber?: string };
@@ -174,6 +176,7 @@ export function StoreProductView({ product, store, entrega, related }: {
                 ))}
               </div>
             )}
+            {arReady(product.ar) && <ArViewer name={product.name} ar={product.ar!} theme="dark" />}
           </div>
 
           {/* Compra */}

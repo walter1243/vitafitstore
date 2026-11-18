@@ -11,6 +11,7 @@ import SignageCad from '@/components/signage-cad';
 import { ShippingZonesSection } from '@/components/admin-shipping-zones';
 import AdminCouponPopup from '@/components/admin-coupon-popup';
 import AdminSalesPages from '@/components/admin-sales-pages';
+import { ArEditor } from '@/components/admin-ar-editor';
 import { storePath } from '@/lib/sales-pages-shared';
 import { CategoryCollections, NoteFields, ParcelFields, PersonalizeEditor, ProductPlacement, SaleModeFields } from '@/components/admin-product-extras';
 import { TrackingSection, needsTracking, isNewAlert } from '@/components/admin-tracking';
@@ -56,6 +57,7 @@ type Product = {
   collectionSlug?: string;
   personalize?: unknown;
   parcel?: unknown;
+  ar?: unknown;
   isCategoryCover?: boolean;
 };
 
@@ -167,7 +169,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   categories: Category[];
   showForm: boolean;
   saving: boolean;
-  form: { name: string; price: string; category: string; stock: string; videoUrl: string; shippingCost: string; demoType: string; demoImage: string; collectionSlug: string; personalize: string; parcel: string };
+  form: { name: string; price: string; category: string; stock: string; videoUrl: string; shippingCost: string; demoType: string; demoImage: string; collectionSlug: string; personalize: string; parcel: string; ar: string };
   image: string | null;
   additionalImages: string[];
   desc: string;
@@ -1169,6 +1171,9 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
             ) : (
               <ProductPlacement value={form.collectionSlug} onChange={(slug, name) => { onFormChange('collectionSlug', slug); onFormChange('category', slug && name ? name : form.category); }} category={form.category} onCategory={(name) => onFormChange('category', name)} />
             )}
+
+            {/* Realidade aumentada: o cliente vê o produto na mesa/parede pela câmera */}
+            <ArEditor value={form.ar} onChange={(json) => onFormChange('ar', json)} productImage={image} />
 
             {/* 4) Extras: personalizacao com nome e amostra interativa */}
             <div className="grid items-start gap-5 lg:grid-cols-2">
@@ -2213,7 +2218,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
-  const [prodForm, setProdForm] = useState({ name: '', price: '', category: '', stock: '', videoUrl: '', shippingCost: '', demoType: 'none', demoImage: '', collectionSlug: '', personalize: '', parcel: '' });
+  const [prodForm, setProdForm] = useState({ name: '', price: '', category: '', stock: '', videoUrl: '', shippingCost: '', demoType: 'none', demoImage: '', collectionSlug: '', personalize: '', parcel: '', ar: '' });
   const [prodImage, setProdImage] = useState<string | null>(null);
   const [prodAdditionalImages, setProdAdditionalImages] = useState<string[]>([]);
   const [prodDesc, setProdDesc] = useState('');
@@ -2427,7 +2432,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
 
   function resetProductForm() {
     setEditingProductId(null);
-    setProdForm({ name: '', price: '', category: '', stock: '', videoUrl: '', shippingCost: '', demoType: 'none', demoImage: '', collectionSlug: '', personalize: '', parcel: '' });
+    setProdForm({ name: '', price: '', category: '', stock: '', videoUrl: '', shippingCost: '', demoType: 'none', demoImage: '', collectionSlug: '', personalize: '', parcel: '', ar: '' });
     setProdImage(null);
     setProdAdditionalImages([]);
     setProdDesc('');
@@ -2453,6 +2458,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
       demoImage: product.demoImage ?? '',
       collectionSlug: product.collectionSlug ?? '',
       personalize: product.personalize ? JSON.stringify(product.personalize) : '',
+      ar: product.ar ? JSON.stringify(product.ar) : '',
       parcel: product.parcel ? JSON.stringify(product.parcel) : '',
     });
     setProdImage(product.mainImage ?? product.image ?? null);
@@ -2479,7 +2485,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
     costPrice: number;
   }) {
     setEditingProductId(null);
-    setProdForm({ name: data.name, price: String(data.price), category: '', stock: '99', videoUrl: '', shippingCost: '', demoType: 'none', demoImage: '', collectionSlug: '', personalize: '', parcel: '' });
+    setProdForm({ name: data.name, price: String(data.price), category: '', stock: '99', videoUrl: '', shippingCost: '', demoType: 'none', demoImage: '', collectionSlug: '', personalize: '', parcel: '', ar: '' });
     setProdImage(data.image || null);
     setProdAdditionalImages(data.additionalImages ?? []);
     setProdDesc(data.description || '');
@@ -2510,11 +2516,14 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
       let additionalImages = prodAdditionalImages;
       let description = prodDesc;
       let colorOptions = prodColorOptions;
+      let arPayload: any = prodForm.ar ? JSON.parse(prodForm.ar) : null;
       try {
         if (mainImage) mainImage = await dataUrlToBlobUrl(mainImage);
         additionalImages = await Promise.all(additionalImages.map((u) => dataUrlToBlobUrl(u)));
         description = await uploadInlineImages(description);
         colorOptions = await Promise.all(colorOptions.map(async (c) => (c.image ? { ...c, image: await dataUrlToBlobUrl(c.image) } : c)));
+        // foto recortada da realidade aumentada vai para o Blob (PNG)
+        if (typeof arPayload?.image === 'string' && arPayload.image.startsWith('data:')) arPayload = { ...arPayload, image: await dataUrlToBlobUrl(arPayload.image, 'ar') };
       } catch (upErr: any) {
         addToast('error', `Não foi possível enviar as fotos: ${upErr?.message ?? 'erro desconhecido'}`);
         return;
@@ -2538,6 +2547,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
           demoImage: prodForm.demoImage.trim(),
           collectionSlug: prodForm.collectionSlug,
           personalize: prodForm.personalize ? JSON.parse(prodForm.personalize) : { enabled: false },
+          ar: arPayload,
           parcel: prodForm.parcel ? JSON.parse(prodForm.parcel) : null,
           description: description || null,
           mainImage,
