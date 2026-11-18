@@ -141,6 +141,35 @@ const SECTION_LABELS: Record<Section, string> = {
 // outra loja selecionada no topo elas somem do menu.
 const KITOYS_ONLY_SECTIONS: Section[] = ['sectors', 'worlds', 'letreiro', 'nfc'];
 
+// Cadastro de produto de outra loja: cria uma categoria nova (vira aba de filtro na loja).
+function NewStoreCategory({ onCreate }: { onCreate: (name: string) => Promise<void> }) {
+  const [name, setName] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const create = async () => {
+    const v = name.trim().slice(0, 40);
+    if (!v || busy) return;
+    setBusy(true); setErr('');
+    try { await onCreate(v); setName(''); }
+    catch (e: any) { setErr(e?.message || 'Não foi possível criar a categoria.'); }
+    finally { setBusy(false); }
+  };
+  return (
+    <div className="mt-3">
+      <div className="flex gap-2">
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nova categoria (ex.: Llaveros)" maxLength={40}
+          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void create(); } }}
+          className="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40" />
+        <button type="button" onClick={() => void create()} disabled={busy || !name.trim()}
+          className="shrink-0 rounded-xl bg-green-600 px-4 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50">
+          {busy ? 'Criando…' : '+ Criar'}
+        </button>
+      </div>
+      {err && <p className="mt-1.5 text-xs text-red-300">{err}</p>}
+    </div>
+  );
+}
+
 type StoreSummary = { slug: string; title: string; logoImage: string; iconImage: string; neonPrimary: string; neonSecondary: string; enabled: boolean; collections: string[] };
 
 // Cadastro de produto: todos os blocos com o mesmo cartao e o mesmo cabecalho.
@@ -164,7 +193,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
   importSourceUrl, importSourceProductUrl, initialCostPrice,
   productType, onProductTypeChange, sizes, onSizesChange, colorOptions, onColorOptionsChange, ownStore }: {
   // Multi-loja: loja própria selecionada no topo (ex.: VICE CITY). null = Kitoys.
-  ownStore?: { title: string; collections: string[] } | null;
+  ownStore?: { title: string; collections: string[]; addCollection?: (name: string) => Promise<void> } | null;
   products: Product[];
   categories: Category[];
   showForm: boolean;
@@ -1146,7 +1175,7 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
             {/* 3) Onde aparece no site — Kitoys: setor → coleção; outra loja: categoria dela */}
             {ownStore ? (
               <section className={CARD}>
-                <SectionHead icon={<LayoutGrid size={16} />} title={`Coleção na ${ownStore.title} *`} sub="Escolha a coleção do produto: é ela que filtra a loja. As coleções são criadas em Editar loja → Coleções da loja." />
+                <SectionHead icon={<LayoutGrid size={16} />} title={`Categoria na ${ownStore.title} *`} sub="Escolha a categoria do produto (é ela que filtra a loja) ou crie uma nova aqui mesmo." />
                 {ownStore.collections.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {ownStore.collections.map((c) => (
@@ -1157,15 +1186,14 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
                     ))}
                   </div>
                 ) : (
-                  <>
-                    <p className="mb-2 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-100">Esta loja ainda não tem coleções. Crie em Editar loja → Coleções da loja; por enquanto, escreva uma:</p>
-                    <input
-                      value={form.category}
-                      onChange={(e) => onFormChange('category', e.target.value)}
-                      placeholder="Ex.: Llaveros"
-                      className="w-full rounded-xl border border-white/10 bg-[#1c2236] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-green-500/40 focus:ring-2 focus:ring-green-500/40"
-                    />
-                  </>
+                  <p className="rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-100">Esta loja ainda não tem categorias. Crie a primeira abaixo.</p>
+                )}
+                <NewStoreCategory onCreate={async (name) => {
+                  if (ownStore.addCollection) await ownStore.addCollection(name);
+                  onFormChange('category', name);
+                }} />
+                {form.category.trim() && !ownStore.collections.includes(form.category.trim()) && (
+                  <p className="mt-2 text-xs text-white/50">Categoria atual: <strong className="text-white/80">{form.category}</strong></p>
                 )}
               </section>
             ) : (
@@ -2256,6 +2284,23 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
     } catch {} finally { setStoresLoaded(true); }
   }, []);
 
+  // Nova categoria criada no cadastro do produto: entra nas coleções da loja selecionada.
+  const addStoreCollection = useCallback(async (name: string) => {
+    const slug = storeRef.current;
+    if (!slug || slug === 'kitoys') return;
+    const r = await fetch(`/api/sales-pages?slug=${encodeURIComponent(slug)}`, { cache: 'no-store' });
+    const cfg = r.ok ? await r.json() : null;
+    if (!cfg?.slug) throw new Error('Não foi possível carregar a loja.');
+    const cols: string[] = Array.isArray(cfg.collections) ? cfg.collections.map(String) : [];
+    if (cols.some((c) => c.toLowerCase() === name.toLowerCase())) return;
+    const s = await fetch('/api/sales-pages', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...cfg, originalSlug: cfg.slug, collections: [...cols, name] }),
+    });
+    if (!s.ok) throw new Error((await s.json().catch(() => null))?.error || 'Erro ao salvar a categoria.');
+    await loadStores();
+  }, [loadStores]);
+
   // Restaura a loja escolhida da última vez e carrega a lista de lojas.
   useEffect(() => {
     try { const s = localStorage.getItem('kt_admin_store'); if (s) setStoreSlug(s); } catch {}
@@ -2990,7 +3035,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
           {section === 'dashboard' && <DashboardSection products={products} orders={orders} revenue={revenue} onNavigate={navigate} trackingAlerts={trackingPending} store={storeSlug} />}
           {section === 'products' && (
             <ProductsSection
-              ownStore={activeStore ? { title: activeStore.title, collections: activeStore.collections } : null}
+              ownStore={activeStore ? { title: activeStore.title, collections: activeStore.collections, addCollection: addStoreCollection } : null}
               products={products}
               categories={categories}
               showForm={showForm}

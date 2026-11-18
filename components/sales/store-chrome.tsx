@@ -17,6 +17,9 @@ import { LanguageSwitcher } from '@/components/language-switcher';
 import { useCart } from '@/lib/cart-context';
 import { clampLogoHeight, storeBarHeight, storeHeaderOffset, storeLegalHref, storePath, type SalesPageConfig } from '@/lib/sales-pages-shared';
 import { rememberStore } from '@/lib/store-context';
+import { type Product } from '@/lib/products';
+import { toStoreProduct } from '@/lib/store-product';
+import { cardPrice } from '@/lib/personalize';
 import { PAYMENT_LOGOS } from '@/components/payment-logos';
 
 type Brand = Pick<SalesPageConfig, 'slug' | 'title' | 'logoImage' | 'neonPrimary' | 'neonSecondary' | 'footerNote'> & { logoHeight?: number; whatsappEnabled?: boolean; whatsappNumber?: string; instagram?: string };
@@ -70,15 +73,68 @@ export function StoreHeader({ store, overlay = false, onCatalog }: { store: Bran
     if (onCatalog) { window.dispatchEvent(new CustomEvent(STORE_SEARCH_EVENT, { detail: q })); onCatalog(); }
     else router.push(`${home}?q=${encodeURIComponent(q.trim())}#productos`);
   };
+  // Dropdown com os produtos em tempo real enquanto digita (catálogo da loja,
+  // carregado uma vez pela API na primeira vez que o campo recebe foco).
+  const [catalog, setCatalog] = useState<Product[] | null>(null);
+  const [dropOpen, setDropOpen] = useState(false);
+  const loadCatalog = () => {
+    if (catalog) return;
+    setCatalog([]);
+    fetch(`/api/products?store=${encodeURIComponent(store.slug)}`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((rows) => setCatalog(Array.isArray(rows) ? rows.map((r: any) => toStoreProduct(r)) : []))
+      .catch(() => setCatalog([]));
+  };
+  const fold = (v: string) => v.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const term = fold(q.trim());
+  const hits = term && catalog ? catalog.filter((p) => fold(`${p.name} ${p.categoryLabel ?? ''}`).includes(term)) : [];
   const searchBox = (cls: string) => (
-    <form role="search" onSubmit={submit} className={cls}>
+    <form role="search" onSubmit={(e) => { setDropOpen(false); submit(e); }} className={`relative ${cls}`}
+      onFocus={() => { loadCatalog(); setDropOpen(true); }}
+      onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDropOpen(false); }}
+      onKeyDown={(e) => { if (e.key === 'Escape') setDropOpen(false); }}>
       <label className="relative block">
         <span className="sr-only">Buscar en {store.title}</span>
         <Search size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-white/55" aria-hidden />
-        <input type="search" value={q} onChange={(e) => typed(e.target.value)} placeholder={`Buscar en ${store.title}…`} enterKeyHint="search"
+        <input type="search" value={q} onChange={(e) => { typed(e.target.value); setDropOpen(true); }} placeholder={`Buscar en ${store.title}…`} enterKeyHint="search"
+          autoComplete="off"
           className="h-11 w-full rounded-xl border border-white/15 bg-white/[0.07] pl-10 pr-3 text-base text-white outline-none transition-colors placeholder:text-white/45 focus:border-[var(--vc-s)]"
           style={{ ['--vc-s' as string]: S }} />
       </label>
+      {dropOpen && term && (
+        <div className="absolute inset-x-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-white/15 bg-[#0d0418]/95 shadow-[0_20px_50px_rgba(0,0,0,.55)] backdrop-blur-xl animate-in fade-in slide-in-from-top-1">
+          {catalog === null || (catalog.length === 0 && !hits.length) ? (
+            <p className="px-4 py-3 text-sm text-white/55">Buscando…</p>
+          ) : hits.length === 0 ? (
+            <p className="px-4 py-3 text-sm text-white/55">Sin resultados para «{q.trim()}»</p>
+          ) : (
+            <ul className="max-h-[60vh] overflow-y-auto py-1">
+              {hits.slice(0, 6).map((p) => {
+                const cp = cardPrice(p.price, p.personalize, p.sizes);
+                return (
+                  <li key={p.id}>
+                    <Link href={`/producto/${p.id}-${p.slug}`} onClick={() => setDropOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2 transition-colors hover:bg-white/10 focus-visible:bg-white/10 focus-visible:outline-none">
+                      <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-[#1a1024]">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        {p.image && <img src={p.image} alt="" className="h-full w-full object-cover" loading="lazy" />}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-semibold text-white">{p.name}</span>
+                        {p.categoryLabel && <span className="block truncate text-xs text-white/50">{p.categoryLabel}</span>}
+                      </span>
+                      <span className="shrink-0 text-sm font-bold tabular-nums text-white">{cp.main}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+              {hits.length > 6 && (
+                <li><button type="submit" className="w-full cursor-pointer px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-[0.16em] text-white/70 hover:bg-white/10 hover:text-white">Ver los {hits.length} resultados</button></li>
+              )}
+            </ul>
+          )}
+        </div>
+      )}
     </form>
   );
 

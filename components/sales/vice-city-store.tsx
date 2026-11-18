@@ -264,6 +264,19 @@ export function ViceCityStore({ config, products, cover }: Props) {
   const S = config.neonSecondary;
   const vars = { '--vc-primary': P, '--vc-secondary': S } as React.CSSProperties;
   const toCatalog = () => catalogRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // Busca ativa (texto no campo do topo ou ?q= na URL): esconde a capa.
+  const [searching, setSearching] = useState(false);
+  useEffect(() => {
+    const set = (v: string) => setSearching((was) => {
+      const now = v.trim().length > 0;
+      if (now && !was) window.scrollTo({ top: 0, behavior: 'smooth' });
+      return now;
+    });
+    set(new URLSearchParams(window.location.search).get('q') ?? '');
+    const on = (e: Event) => set(String((e as CustomEvent).detail ?? ''));
+    window.addEventListener(STORE_SEARCH_EVENT, on);
+    return () => window.removeEventListener(STORE_SEARCH_EVENT, on);
+  }, []);
   // Botão da capa: vai direto ao produto-gancho (o da capa) na lista; sem ele, ao começo dos produtos.
   const toHook = () => {
     const el = cover ? document.getElementById(`p-${cover.id}`) : null;
@@ -286,6 +299,9 @@ export function ViceCityStore({ config, products, cover }: Props) {
       <StoreHeader store={config} overlay onCatalog={toCatalog} />
 
       {/* ── CAPA ─────────────────────────────────────────────────────────── */}
+      {/* enquanto o cliente digita na busca, a capa encolhe e os produtos sobem */}
+      <div className={`grid transition-[grid-template-rows,opacity] duration-500 ease-out motion-reduce:transition-none ${searching ? 'grid-rows-[0fr] opacity-0' : 'grid-rows-[1fr] opacity-100'}`} inert={searching}>
+      <div className="min-h-0 overflow-hidden">
       <section className="relative isolate">
         {/* a capa: tela cheia; no celular os bonecos ficam no centro, no PC à esquerda */}
         <div className="absolute inset-x-0 top-0 -z-10 h-[76svh] lg:inset-0 lg:h-auto">
@@ -346,7 +362,9 @@ export function ViceCityStore({ config, products, cover }: Props) {
 
         </div>
       </section>
-
+      </div></div>
+      {/* buscando: a capa some e os resultados ficam logo abaixo do topo */}
+      {searching && <div aria-hidden style={{ ['--st-m' as string]: `${storeHeaderOffset(config, true)}px`, ['--st-d' as string]: `${storeHeaderOffset(config)}px` }} className="h-[var(--st-m)] md:h-[var(--st-d)]" />}
 
       <div className="relative">
         {/* fundo dos produtos: a mesma arte da capa, parada atrás enquanto a página rola
