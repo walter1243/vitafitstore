@@ -19,8 +19,9 @@ import { DEFAULT_NAME_COLORS, nameRequiredFor, cleanCustomText, lineTotalFor, mi
 import { ProductShipping } from '@/components/shipping/shipping-options'
 import { arReady } from '@/lib/ar'
 import { ArViewer } from '@/components/ar/ar-viewer'
+import { Product3DViewer, type PublicModel } from '@/components/ar/product-3d-viewer'
 
-export function ProductPageView({ product, entrega, homeHref = '/', homeLabel = 'Inicio' }: { product: Product; entrega?: Partial<EntregaContent>; homeHref?: string; homeLabel?: string }) {
+export function ProductPageView({ product, entrega, homeHref = '/', homeLabel = 'Inicio', model = null }: { product: Product; entrega?: Partial<EntregaContent>; homeHref?: string; homeLabel?: string; model?: PublicModel | null }) {
   // previsão calculada no navegador (data de hoje do cliente, sem diferença entre servidor e tela)
   const [eta, setEta] = useState('')
   useEffect(() => { if ({ ...DEFAULT_ENTREGA, ...entrega }.enabled) setEta(deliveryText(entrega, Boolean(product.personalize?.enabled))) }, [entrega, product.personalize?.enabled])
@@ -460,7 +461,9 @@ export function ProductPageView({ product, entrega, homeHref = '/', homeLabel = 
         </div>
       </div>
 
-      {arReady(product.ar) && <div className="mt-6 max-w-md"><ArViewer name={product.name} ar={product.ar!} theme="light" /></div>}
+      {model
+        ? <div className="mt-6 max-w-md"><Product3DViewer model={model} name={product.name} theme="light" /></div>
+        : arReady(product.ar) && <div className="mt-6 max-w-md"><ArViewer name={product.name} ar={product.ar!} theme="light" /></div>}
 
       {/* Descricao no celular/tablet (no computador fica embaixo das fotos) */}
       <div className="mt-12 max-w-3xl lg:hidden">

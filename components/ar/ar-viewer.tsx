@@ -12,7 +12,7 @@ import { arDepthCm, buildArGlb, loadArBitmap, type ArConfig } from '@/lib/ar';
 
 const MODEL_VIEWER_SRC = 'https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js';
 
-function loadModelViewer(): Promise<void> {
+export function loadModelViewer(): Promise<void> {
   if (typeof window === 'undefined') return Promise.resolve();
   if (customElements.get('model-viewer')) return Promise.resolve();
   if (!document.querySelector(`script[src="${MODEL_VIEWER_SRC}"]`)) {

@@ -20,6 +20,14 @@ export async function POST(req: NextRequest) {
         if (!session) {
           throw new Error('Sessão inválida. Faça login novamente.');
         }
+        // Modelos 3D (Produtos → Modelo 3D): só na pasta modelos3d/, tipos 3D e até 60 MB.
+        if (pathname.startsWith('modelos3d/')) {
+          return {
+            allowedContentTypes: ['model/gltf-binary', 'model/vnd.usdz+zip', 'model/stl', 'model/3mf', 'model/obj', 'application/octet-stream'],
+            addRandomSuffix: true,
+            maximumSizeInBytes: 60 * 1024 * 1024,
+          };
+        }
         return {
           allowedContentTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'video/mp4', 'video/webm'],
           addRandomSuffix: true,

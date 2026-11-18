@@ -18,6 +18,7 @@ import { StoreCartSidebar } from '@/components/sales/store-cart'
 import { StoreWhatsApp } from '@/components/sales/store-chrome'
 import { storeFontClass } from '@/components/sales/store-fonts'
 import { getStoreProductsServer } from '@/lib/products-db'
+import { getProductModel } from '@/lib/product-models'
 import { toStoreProduct, type DbProduct } from '@/lib/store-product'
 import { getSalesPage, MAIN_STORE, storeIcons } from '@/lib/sales-pages'
 
@@ -65,7 +66,9 @@ export default async function ProductPage({ params }: PageProps) {
 
   if (!product) notFound()
 
-  const [content, sectors] = await Promise.all([getSiteContent(), getSectors()])
+  const [content, sectors, model3d] = await Promise.all([getSiteContent(), getSectors(), getProductModel(product.id, true)])
+  // Modelo 3D publicado e validado (Produtos → Modelo 3D): só o que a página precisa.
+  const model = model3d?.measured ? { glbUrl: model3d.glbUrl, usdzUrl: model3d.usdzUrl, measured: model3d.measured, placement: model3d.placement } : null
 
   // Produto de outra loja (ex.: VICE CITY STORE): cabeçalho, rodapé e "Inicio"
   // dela — quem veio pelo link da loja não cai na Kitoys. Carrinho/checkout iguais.
@@ -81,7 +84,7 @@ export default async function ProductPage({ params }: PageProps) {
       <div data-kt-store={store.slug} className={`${storeFontClass} flex min-h-screen flex-col bg-[#0b0614]`}>
         <StoreHeader store={store} />
         <main className="flex-1">
-          <StoreProductView product={product} store={store} entrega={content.entrega} related={related} />
+          <StoreProductView product={product} store={store} entrega={content.entrega} related={related} model={model} />
         </main>
         <StoreFooter store={store} />
         <StoreCartSidebar store={store} />
@@ -96,7 +99,7 @@ export default async function ProductPage({ params }: PageProps) {
     <div className="flex min-h-screen flex-col bg-[#FAF8F5]">
       <Header />
       <main className="flex-1">
-        <ProductPageView product={product} entrega={content.entrega} />
+        <ProductPageView product={product} entrega={content.entrega} model={model} />
       </main>
       <Footer content={content.rodape} logo={content.cabecalho.logoImage} />
       <WhatsAppFloating />

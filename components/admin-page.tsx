@@ -12,6 +12,7 @@ import { ShippingZonesSection } from '@/components/admin-shipping-zones';
 import AdminCouponPopup from '@/components/admin-coupon-popup';
 import AdminSalesPages from '@/components/admin-sales-pages';
 import { ArEditor } from '@/components/admin-ar-editor';
+import { AdminModel3D } from '@/components/admin-model3d';
 import { storePath } from '@/lib/sales-pages-shared';
 import { CategoryCollections, NoteFields, ParcelFields, PersonalizeEditor, ProductPlacement, SaleModeFields } from '@/components/admin-product-extras';
 import { TrackingSection, needsTracking, isNewAlert } from '@/components/admin-tracking';
@@ -1202,6 +1203,9 @@ function ProductsSection({ products, showForm, saving, form, image, additionalIm
 
             {/* Realidade aumentada: o cliente vê o produto na mesa/parede pela câmera */}
             <ArEditor value={form.ar} onChange={(json) => onFormChange('ar', json)} productImage={image} />
+
+            {/* Modelo 3D real (3MF do MakerWorld): 3D na página + AR em tamanho real travado */}
+            <AdminModel3D productId={editingProductId} />
 
             {/* 4) Extras: personalizacao com nome e amostra interativa */}
             <div className="grid items-start gap-5 lg:grid-cols-2">

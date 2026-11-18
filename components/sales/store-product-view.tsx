@@ -23,17 +23,19 @@ import { ProductCard } from '@/components/sales/vice-city-store';
 import { flyToCart } from '@/lib/fly-to-cart';
 import { arReady } from '@/lib/ar';
 import { ArViewer } from '@/components/ar/ar-viewer';
+import { Product3DViewer, type PublicModel } from '@/components/ar/product-3d-viewer';
 import { useStoreContact, waLink } from '@/components/sales/store-chrome';
 
 type Store = Pick<SalesPageConfig, 'slug' | 'title' | 'neonPrimary' | 'neonSecondary' | 'theme' | 'backgroundImage'> & { whatsappEnabled?: boolean; whatsappNumber?: string };
 
 const eur = (n: number) => `${n.toFixed(2).replace('.', ',')} €`;
 
-export function StoreProductView({ product, store, entrega, related }: {
+export function StoreProductView({ product, store, entrega, related, model = null }: {
   product: Product;
   store: Store;
   entrega?: Partial<EntregaContent>;
   related: Product[];
+  model?: PublicModel | null; // modelo 3D publicado (3D + AR em tamanho real)
 }) {
   const router = useRouter();
   const { addItem } = useCart();
@@ -164,7 +166,7 @@ export function StoreProductView({ product, store, entrega, related }: {
               {images.length > 1 && (
                 <p className="absolute bottom-3 right-3 rounded bg-black/60 px-2.5 py-1 text-xs font-semibold tabular-nums text-white backdrop-blur">{active + 1} / {images.length}</p>
               )}
-              {arReady(product.ar) && <ArViewer name={product.name} ar={product.ar!} theme="dark" variant="icon" className="absolute right-3 top-3 z-10" />}
+              {!model && arReady(product.ar) && <ArViewer name={product.name} ar={product.ar!} theme="dark" variant="icon" className="absolute right-3 top-3 z-10" />}
             </div>
             {images.length > 1 && (
               <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -177,6 +179,7 @@ export function StoreProductView({ product, store, entrega, related }: {
                 ))}
               </div>
             )}
+            {model && <Product3DViewer model={model} name={product.name} theme="dark" />}
           </div>
 
           {/* Compra */}
