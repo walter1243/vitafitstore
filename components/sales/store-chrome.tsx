@@ -5,7 +5,7 @@
 // no lugar do cabeçalho/rodapé da Kitoys — quem entra pelo Instagram da loja
 // não vê nada da Kitoys. Carrinho e checkout continuam os mesmos.
 //
-// Cabeçalho: barra de vidro flutuante (72px de altura total). Com overlay, ele
+// Cabeçalho: barra de vidro flutuante (84px de altura total). Com overlay, ele
 // fica POR CIMA da capa (a foto começa no topo da tela, atrás do vidro).
 
 import { useEffect } from 'react';
@@ -24,12 +24,12 @@ export function StoreHeader({ store, overlay = false, onCatalog }: { store: Bran
   const home = storePath(store.slug);
 
   return (
-    <header className={`sticky top-0 z-40 px-3 pt-3 text-white ${overlay ? '-mb-[72px]' : ''}`}>
-      <div className="mx-auto flex h-[60px] max-w-6xl items-center justify-between gap-3 rounded-2xl border border-white/15 bg-[#0d0418]/55 px-3 shadow-[0_10px_30px_rgba(0,0,0,.35)] backdrop-blur-xl sm:px-4">
+    <header className={`sticky top-0 z-40 px-3 pt-3 text-white ${overlay ? '-mb-[84px]' : ''}`}>
+      <div className="mx-auto flex h-[72px] max-w-6xl items-center justify-between gap-3 rounded-2xl border border-white/15 bg-[#0d0418]/55 px-3 shadow-[0_10px_30px_rgba(0,0,0,.35)] backdrop-blur-xl sm:px-4">
         <Link href={home} className="flex min-w-0 items-center gap-2.5 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2" style={{ outlineColor: store.neonSecondary }} aria-label={store.title}>
           {store.logoImage ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={store.logoImage} alt={store.title} className="h-10 w-auto max-w-[170px] object-contain" />
+            <img src={store.logoImage} alt={store.title} className="h-12 w-auto max-w-[220px] object-contain sm:h-14 sm:max-w-[300px]" />
           ) : (
             <>
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ background: `linear-gradient(135deg, ${store.neonSecondary}, ${store.neonPrimary})` }}>

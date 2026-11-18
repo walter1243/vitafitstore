@@ -14,7 +14,8 @@ export type SalesPageConfig = {
   title: string;
   theme: SalesPageTheme;
   enabled: boolean;
-  logoImage: string;
+  logoImage: string; // logo do topo (com o nome)
+  iconImage: string; // ícone quadrado: favicon + prévia do link (Instagram/WhatsApp)
   eyebrow: string;
   heading: string;
   subtitle: string;
@@ -42,6 +43,7 @@ export const DEFAULT_SALES_PAGE: Omit<SalesPageConfig, 'slug'> = {
   theme: 'vice-city',
   enabled: true,
   logoImage: '',
+  iconImage: '',
   eyebrow: 'EDICIÓN LIMITADA',
   heading: 'VICE CITY STORE',
   subtitle: 'Llaveros y piezas 3D con alma retro de los 80. Luz de neón, palmeras y actitud de ciudad — impresos en nuestro taller en España.',
@@ -100,7 +102,7 @@ export function storeArt(cfg: Pick<SalesPageConfig, 'theme' | 'backgroundImage'>
 }
 
 // Ícone da aba (favicon) de cada tema — gerados em public/images/lojas/.
-// Com logo enviado no painel, o favicon da loja é o próprio logo.
+// Com ícone enviado no painel (Editar loja → Ícone da loja), o favicon é ele.
 export const THEME_ICONS: Record<SalesPageTheme, { icon32: string; icon192: string; icon512: string; apple: string }> = {
   'vice-city': {
     icon32: '/images/lojas/vice-city-icon-32.png',
@@ -111,8 +113,8 @@ export const THEME_ICONS: Record<SalesPageTheme, { icon32: string; icon192: stri
 };
 
 // Favicon (metadata do Next) das páginas da loja — substitui o da Kitoys.
-export function storeIcons(cfg: Pick<SalesPageConfig, 'theme' | 'logoImage'>) {
-  if (cfg.logoImage) return { icon: [{ url: cfg.logoImage }], shortcut: cfg.logoImage, apple: [{ url: cfg.logoImage }] };
+export function storeIcons(cfg: Pick<SalesPageConfig, 'theme' | 'iconImage'>) {
+  if (cfg.iconImage) return { icon: [{ url: cfg.iconImage }], shortcut: cfg.iconImage, apple: [{ url: cfg.iconImage }] };
   const t = THEME_ICONS[cfg.theme] ?? THEME_ICONS['vice-city'];
   return {
     icon: [
@@ -126,8 +128,8 @@ export function storeIcons(cfg: Pick<SalesPageConfig, 'theme' | 'logoImage'>) {
 }
 
 // Um único endereço de favicon (para trocar o ícone no navegador, ex.: checkout).
-export function storeFaviconHref(cfg: Pick<SalesPageConfig, 'theme' | 'logoImage'>) {
-  return cfg.logoImage || (THEME_ICONS[cfg.theme] ?? THEME_ICONS['vice-city']).icon32;
+export function storeFaviconHref(cfg: Pick<SalesPageConfig, 'theme' | 'iconImage'>) {
+  return cfg.iconImage || (THEME_ICONS[cfg.theme] ?? THEME_ICONS['vice-city']).icon32;
 }
 
 // Políticas (envíos, devoluciones…) com o visual de cada loja:

@@ -230,7 +230,7 @@ function Catalog({ products, config, sectionRef }: { products: Product[]; config
       ) : (
         <>
           {/* Barra de filtros: fica presa embaixo do cabeçalho no celular */}
-          <div className="sticky top-[72px] z-20 -mx-4 mb-5 space-y-3 border-y border-white/10 bg-[#0d0418]/85 px-4 py-3 backdrop-blur-xl sm:static sm:mx-0 sm:rounded-2xl sm:border">
+          <div className="sticky top-[84px] z-20 -mx-4 mb-5 space-y-3 border-y border-white/10 bg-[#0d0418]/85 px-4 py-3 backdrop-blur-xl sm:static sm:mx-0 sm:rounded-2xl sm:border">
             <div className="flex items-center gap-2">
               <label className="relative min-w-0 flex-1">
                 <span className="sr-only">Buscar en la colección</span>

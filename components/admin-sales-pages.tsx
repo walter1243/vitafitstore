@@ -9,7 +9,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Check, Copy, ExternalLink, Image as ImageIcon, Instagram, Loader2, Plus, Rocket, Settings2, Sparkles, Star, Trash2, X } from 'lucide-react';
 import { dataUrlToBlobUrl, isDataUrl } from '@/lib/upload-data-url';
 import { useHoverPaste } from '@/lib/use-hover-paste';
-import { SALES_PAGE_THEMES, THEME_ART, storePath, type SalesPageConfig } from '@/lib/sales-pages-shared';
+import { SALES_PAGE_THEMES, THEME_ART, THEME_ICONS, storePath, type SalesPageConfig } from '@/lib/sales-pages-shared';
 
 type AdminProduct = { id: number; name: string; price: number; image?: string; mainImage?: string; category?: string };
 
@@ -17,7 +17,7 @@ const inputCls = 'w-full rounded-lg border border-white/10 bg-[#1c2236] px-3 py-
 const labelCls = 'mb-1.5 block text-xs font-medium text-white/50';
 
 const EMPTY: SalesPageConfig = {
-  slug: '', title: 'Nova loja', theme: 'vice-city', enabled: true, logoImage: '',
+  slug: '', title: 'Nova loja', theme: 'vice-city', enabled: true, logoImage: '', iconImage: '',
   eyebrow: 'EDICIÓN LIMITADA', heading: 'VICE CITY STORE',
   subtitle: 'Llaveros y piezas 3D con alma retro de los 80.',
   ctaLabel: 'Comprar ahora', badge: 'NUEVO DROP', heroImage: '', heroVideo: '', backgroundImage: '',
@@ -89,10 +89,11 @@ export default function AdminSalesPages({ products, editSlug, onSaved, onManage 
     try {
       const heroImage = isDataUrl(editing.heroImage) ? await dataUrlToBlobUrl(editing.heroImage, 'lojas') : editing.heroImage;
       const logoImage = isDataUrl(editing.logoImage) ? await dataUrlToBlobUrl(editing.logoImage, 'lojas') : editing.logoImage;
+      const iconImage = isDataUrl(editing.iconImage) ? await dataUrlToBlobUrl(editing.iconImage, 'lojas') : editing.iconImage;
       const backgroundImage = isDataUrl(editing.backgroundImage) ? await dataUrlToBlobUrl(editing.backgroundImage, 'lojas') : editing.backgroundImage;
       const r = await fetch('/api/sales-pages', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...editing, heroImage, logoImage, backgroundImage }),
+        body: JSON.stringify({ ...editing, heroImage, logoImage, iconImage, backgroundImage }),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d?.error || 'Erro ao salvar.');
@@ -163,21 +164,35 @@ export default function AdminSalesPages({ products, editSlug, onSaved, onManage 
                 {!editing.enabled && <p className="mt-1.5 text-[11px] text-amber-200">Em rascunho: só você (logado) vê. Clique em “Rascunho” → “Publicada” e salve para o link funcionar para todos.</p>}
               </div>
             )}
-            <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#0f1117] p-3">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/10" style={{ background: `linear-gradient(135deg, ${editing.neonSecondary}, ${editing.neonPrimary})` }}>
+            {/* Logo do topo (largo, com o nome) */}
+            <div className="rounded-xl border border-white/10 bg-[#0f1117] p-3">
+              <p className="text-sm font-semibold text-white">Logo do topo (com o nome)</p>
+              <p className="text-[11px] text-white/40">Aparece grande na barra de cima da loja, nos produtos e no checkout. Horizontal, PNG com fundo transparente.</p>
+              <div className="relative mt-2 flex h-20 items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-[#0d0418] px-4">
                 {editing.logoImage
                   // eslint-disable-next-line @next/next/no-img-element
-                  ? <img src={editing.logoImage} alt="" className="h-full w-full object-contain" />
-                  : <Rocket size={20} className="text-black" />}
+                  ? <img src={editing.logoImage} alt="" className="h-14 w-auto max-w-full object-contain" />
+                  : <span className="text-xs text-white/40">Sem logo: mostra o nome da loja em neon</span>}
+                {editing.logoImage && <button type="button" onClick={() => up('logoImage', '')} title="Remover logo" className="absolute right-1.5 top-1.5 rounded-lg bg-black/60 p-1.5 text-white/80 hover:bg-red-600"><Trash2 size={13} /></button>}
+              </div>
+              <input type="file" accept="image/jpeg,image/png,image/webp,image/avif"
+                onChange={async (e) => { const f = e.target.files?.[0]; if (f) up('logoImage', await readAsDataUrl(f)); e.target.value = ''; }}
+                className="mt-2 w-full text-xs text-white/60" />
+            </div>
+            {/* Ícone (quadrado): favicon da aba + prévia do link no Instagram/WhatsApp */}
+            <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#0f1117] p-3">
+              <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-[#0d0418]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={editing.iconImage || THEME_ICONS[editing.theme]?.icon192} alt="" className="h-full w-full object-cover" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-white">Logo da loja</p>
-                <p className="text-[11px] text-white/40">Aparece no topo da página, nos produtos, no checkout e no painel. PNG com fundo transparente fica melhor.</p>
+                <p className="text-sm font-semibold text-white">Ícone da loja (quadrado)</p>
+                <p className="text-[11px] text-white/40">Ícone da aba do navegador e imagem que aparece ao compartilhar o link no Instagram/WhatsApp. Quadrado, ex.: 512×512. {editing.iconImage ? '' : 'Agora: ícone padrão do tema.'}</p>
                 <div className="mt-1.5 flex items-center gap-2">
                   <input type="file" accept="image/jpeg,image/png,image/webp,image/avif"
-                    onChange={async (e) => { const f = e.target.files?.[0]; if (f) up('logoImage', await readAsDataUrl(f)); e.target.value = ''; }}
+                    onChange={async (e) => { const f = e.target.files?.[0]; if (f) up('iconImage', await readAsDataUrl(f)); e.target.value = ''; }}
                     className="min-w-0 flex-1 text-xs text-white/60" />
-                  {editing.logoImage && <button type="button" onClick={() => up('logoImage', '')} title="Remover logo" className="rounded-lg p-1.5 text-white/50 hover:bg-red-500/15 hover:text-red-300"><Trash2 size={13} /></button>}
+                  {editing.iconImage && <button type="button" onClick={() => up('iconImage', '')} title="Voltar ao ícone do tema" className="rounded-lg p-1.5 text-white/50 hover:bg-red-500/15 hover:text-red-300"><Trash2 size={13} /></button>}
                 </div>
               </div>
             </div>

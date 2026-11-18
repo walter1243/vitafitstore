@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { cookies, headers } from 'next/headers';
 import { CartSidebar } from '@/components/cart-sidebar';
 import { ViceCityStore } from '@/components/sales/vice-city-store';
-import { getSalesPage, storeIcons } from '@/lib/sales-pages';
+import { getSalesPage, storeArt, storeIcons } from '@/lib/sales-pages';
 import { getStoreProductsServer } from '@/lib/products-db';
 import { toStoreProduct, type DbProduct } from '@/lib/store-product';
 import { COUNTRY_COOKIE, countrySurcharge, viewerCountry } from '@/lib/country-price';
@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: page.title,
       description: page.subtitle,
       siteName: page.title,
-      images: page.heroImage || page.logoImage ? [page.heroImage || page.logoImage] : undefined,
+      images: [page.iconImage || page.heroImage || storeArt(page).hero],
     },
   };
 }

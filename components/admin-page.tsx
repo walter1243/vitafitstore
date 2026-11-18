@@ -139,7 +139,7 @@ const SECTION_LABELS: Record<Section, string> = {
 // outra loja selecionada no topo elas somem do menu.
 const KITOYS_ONLY_SECTIONS: Section[] = ['sectors', 'worlds', 'letreiro', 'nfc'];
 
-type StoreSummary = { slug: string; title: string; logoImage: string; neonPrimary: string; neonSecondary: string; enabled: boolean };
+type StoreSummary = { slug: string; title: string; logoImage: string; iconImage: string; neonPrimary: string; neonSecondary: string; enabled: boolean };
 
 // Cadastro de produto: todos os blocos com o mesmo cartao e o mesmo cabecalho.
 const CARD = 'rounded-2xl border border-white/10 bg-[#0f1117] p-5';
@@ -2239,7 +2239,7 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
       const d = r.ok ? await r.json() : [];
       if (Array.isArray(d)) {
         setStores(d.map((p: any) => ({
-          slug: String(p.slug), title: String(p.title), logoImage: String(p.logoImage ?? ''),
+          slug: String(p.slug), title: String(p.title), logoImage: String(p.logoImage ?? ''), iconImage: String(p.iconImage ?? ''),
           neonPrimary: String(p.neonPrimary ?? '#ff2d9b'), neonSecondary: String(p.neonSecondary ?? '#00e5ff'),
           enabled: Boolean(p.enabled),
         })));
@@ -2790,8 +2790,8 @@ export default function AdminPage({ initialAdmin }: { initialAdmin: AdminUserSes
         <div className="flex shrink-0 items-center gap-3 border-b border-white/10 px-5 py-4">
           {activeStore ? (
             <div className="flex h-11 min-w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl px-1.5" style={{ background: `linear-gradient(135deg, ${activeStore.neonSecondary}, ${activeStore.neonPrimary})` }}>
-              {activeStore.logoImage
-                ? <img src={activeStore.logoImage} alt={activeStore.title} className="h-9 w-auto max-w-[72px] object-contain" />
+              {activeStore.iconImage || activeStore.logoImage
+                ? <img src={activeStore.iconImage || activeStore.logoImage} alt={activeStore.title} className="h-9 w-auto max-w-[72px] object-contain" />
                 : <Rocket size={20} className="text-black" />}
             </div>
           ) : (

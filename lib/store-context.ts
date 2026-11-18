@@ -16,7 +16,7 @@ export function rememberedStore(): string {
   try { return sessionStorage.getItem(KEY) || MAIN_STORE; } catch { return MAIN_STORE; }
 }
 
-type StoreBrand = Pick<SalesPageConfig, 'slug' | 'title' | 'logoImage' | 'neonPrimary' | 'neonSecondary' | 'theme'>;
+type StoreBrand = Pick<SalesPageConfig, 'slug' | 'title' | 'logoImage' | 'iconImage' | 'neonPrimary' | 'neonSecondary' | 'theme'>;
 
 // Loja ativa + dados de marca dela (nome, logo, cores). null = Kitoys.
 export function useActiveStore(cartStoreSlug?: string): { slug: string; brand: StoreBrand | null } {
@@ -42,7 +42,7 @@ export function useActiveStore(cartStoreSlug?: string): { slug: string; brand: S
 
 // Página compartilhada (checkout) comprando em outra loja: a aba do navegador
 // mostra o ícone dessa loja; ao sair, volta o ícone original (Kitoys).
-export function useStoreFavicon(brand: Pick<SalesPageConfig, 'logoImage' | 'theme'> | null) {
+export function useStoreFavicon(brand: Pick<SalesPageConfig, 'iconImage' | 'theme'> | null) {
   const href = brand ? storeFaviconHref(brand) : '';
   useEffect(() => {
     if (!href) return;
