@@ -604,3 +604,7 @@ body { top: 0 !important; }
 .products-row > * { flex: 0 0 68%; min-width: 0; scroll-snap-align: start; }
 @media (min-width: 640px) { .products-row > * { flex-basis: 40%; } }
 @media (min-width: 1024px) { .products-row { gap: 1.5rem; } .products-row > * { flex-basis: calc((100% - 3 * 1.5rem) / 3.4); } }
+
+/* Lojas próprias (multi-loja, ex.: VICE CITY STORE): fontes carregadas em components/sales/store-fonts.ts */
+.font-store { font-family: var(--font-store-body), ui-sans-serif, system-ui, sans-serif; }
+.font-store-display { font-family: var(--font-store-display), var(--font-store-body), ui-sans-serif, sans-serif; letter-spacing: .01em; }

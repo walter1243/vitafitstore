@@ -14,6 +14,7 @@ import { getSectors } from '@/lib/sectors'
 import { SectorsProvider } from '@/components/kids/sectors-context'
 import { StoreFooter, StoreHeader } from '@/components/sales/store-chrome'
 import { StoreProductView } from '@/components/sales/store-product-view'
+import { storeFontClass } from '@/components/sales/store-fonts'
 import { getStoreProductsServer } from '@/lib/products-db'
 import { toStoreProduct, type DbProduct } from '@/lib/store-product'
 import { getSalesPage, MAIN_STORE } from '@/lib/sales-pages'
@@ -75,7 +76,7 @@ export default async function ProductPage({ params }: PageProps) {
       .map((p) => toStoreProduct(p as DbProduct))
     return (
       <SectorsProvider sectors={sectors}>
-      <div data-kt-store={store.slug} className="flex min-h-screen flex-col bg-[#140720]">
+      <div data-kt-store={store.slug} className={`${storeFontClass} flex min-h-screen flex-col bg-[#140720]`}>
         <StoreHeader store={store} />
         <main className="flex-1">
           <StoreProductView product={product} store={store} entrega={content.entrega} related={related} />

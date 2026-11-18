@@ -19,10 +19,10 @@ import { DEFAULT_ENTREGA, type EntregaContent } from '@/lib/site-content-default
 import { DEFAULT_NAME_COLORS, cleanCustomText, lineTotalFor, minQtyFor, nameRequiredFor, packOf, parsePersonalize, sizeRange, sizedPrice } from '@/lib/personalize';
 import { NamePersonalizer, NamePreview } from '@/components/personalize/name-personalizer';
 import { FREE_SHIPPING_FROM } from '@/lib/checkout-pricing';
-import { storePath, type SalesPageConfig } from '@/lib/sales-pages-shared';
+import { storeArt, storePath, type SalesPageConfig } from '@/lib/sales-pages-shared';
 import { ProductCard } from '@/components/sales/vice-city-store';
 
-type Store = Pick<SalesPageConfig, 'slug' | 'title' | 'neonPrimary' | 'neonSecondary'>;
+type Store = Pick<SalesPageConfig, 'slug' | 'title' | 'neonPrimary' | 'neonSecondary' | 'theme' | 'backgroundImage'>;
 
 const eur = (n: number) => `${n.toFixed(2).replace('.', ',')} €`;
 
@@ -36,6 +36,7 @@ export function StoreProductView({ product, store, entrega, related }: {
   const { addItem } = useCart();
   const P = store.neonPrimary;
   const S = store.neonSecondary;
+  const art = storeArt(store);
 
   // Personalização com nome (chaveiro): mesmas regras da Kitoys.
   const pcfg = parsePersonalize(product.personalize);
@@ -104,7 +105,11 @@ export function StoreProductView({ product, store, entrega, related }: {
 
   return (
     <div className="relative overflow-x-clip bg-[#140720] text-white" style={{ ['--vc-primary' as string]: P, ['--vc-secondary' as string]: S }}>
-      <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(90% 60% at 80% -10%, ${P}26 0%, transparent 60%), radial-gradient(70% 50% at 0% 10%, ${S}1f 0%, transparent 60%), linear-gradient(180deg, #24093a 0%, #140720 45%, #0c0416 100%)` }} />
+      {/* fundo: a arte da loja desfocada no topo, sumindo no escuro */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[75vh] overflow-hidden">
+        <div className="absolute -inset-16 bg-cover bg-center opacity-60 blur-[56px]" style={{ backgroundImage: `url(${art.ambient})` }} />
+        <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, transparent 0%, #14072099 45%, #140720 100%), radial-gradient(80% 60% at 85% 0%, ${P}33, transparent 70%)` }} />
+      </div>
 
       <div className={`relative z-10 mx-auto max-w-6xl px-4 pt-5 ${personalized ? 'pb-16' : 'pb-32 lg:pb-16'}`}>
         <Link href={storePath(store.slug)} className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/60 transition-colors hover:text-white">
@@ -161,7 +166,7 @@ export function StoreProductView({ product, store, entrega, related }: {
           {/* Compra */}
           <div className="min-w-0">
             {product.categoryLabel && <p className="text-[11px] font-bold uppercase tracking-[0.25em]" style={{ color: S }}>{product.categoryLabel}</p>}
-            <h1 className="mt-1 text-3xl font-black leading-tight sm:text-4xl">{product.name}</h1>
+            <h1 className="font-store-display mt-1 text-3xl leading-tight sm:text-4xl">{product.name}</h1>
             <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <p className="text-3xl font-black" style={{ textShadow: `0 0 18px ${P}88` }}>{priceLabel}</p>
               {pack && <span className="rounded-md px-2 py-0.5 text-xs font-bold text-black" style={{ background: S }}>Pack {pack.qty} uds</span>}

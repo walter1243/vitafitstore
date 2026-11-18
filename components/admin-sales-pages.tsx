@@ -9,7 +9,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Check, Copy, ExternalLink, Image as ImageIcon, Instagram, Loader2, Plus, Rocket, Settings2, Sparkles, Star, Trash2, X } from 'lucide-react';
 import { dataUrlToBlobUrl, isDataUrl } from '@/lib/upload-data-url';
 import { useHoverPaste } from '@/lib/use-hover-paste';
-import { SALES_PAGE_THEMES, storePath, type SalesPageConfig } from '@/lib/sales-pages-shared';
+import { SALES_PAGE_THEMES, THEME_ART, storePath, type SalesPageConfig } from '@/lib/sales-pages-shared';
 
 type AdminProduct = { id: number; name: string; price: number; image?: string; mainImage?: string; category?: string };
 
@@ -20,7 +20,7 @@ const EMPTY: SalesPageConfig = {
   slug: '', title: 'Nova loja', theme: 'vice-city', enabled: true, logoImage: '',
   eyebrow: 'EDICIÓN LIMITADA', heading: 'VICE CITY STORE',
   subtitle: 'Llaveros y piezas 3D con alma retro de los 80.',
-  ctaLabel: 'Comprar ahora', badge: 'NUEVO DROP', heroImage: '', heroVideo: '',
+  ctaLabel: 'Comprar ahora', badge: 'NUEVO DROP', heroImage: '', heroVideo: '', backgroundImage: '',
   countdownTo: null, countdownLabel: 'El drop termina en',
   coverProductId: null, coverTagline: 'La pieza que enciende la colección',
   productIds: [], featureTitle: 'El llavero que brilla',
@@ -89,9 +89,10 @@ export default function AdminSalesPages({ products, editSlug, onSaved, onManage 
     try {
       const heroImage = isDataUrl(editing.heroImage) ? await dataUrlToBlobUrl(editing.heroImage, 'lojas') : editing.heroImage;
       const logoImage = isDataUrl(editing.logoImage) ? await dataUrlToBlobUrl(editing.logoImage, 'lojas') : editing.logoImage;
+      const backgroundImage = isDataUrl(editing.backgroundImage) ? await dataUrlToBlobUrl(editing.backgroundImage, 'lojas') : editing.backgroundImage;
       const r = await fetch('/api/sales-pages', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...editing, heroImage, logoImage }),
+        body: JSON.stringify({ ...editing, heroImage, logoImage, backgroundImage }),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d?.error || 'Erro ao salvar.');
@@ -213,6 +214,20 @@ export default function AdminSalesPages({ products, editSlug, onSaved, onManage 
 
           {/* Coluna capa + produtos */}
           <div className="space-y-3">
+            <div className="rounded-xl border border-white/10 bg-[#0f1117] p-3">
+              <div className="mb-2 flex items-center gap-2"><ImageIcon size={15} className="text-white/60" /><p className="text-sm font-semibold text-white">Foto de fundo da capa</p></div>
+              <div className="relative mx-auto aspect-[9/16] max-w-[150px] overflow-hidden rounded-lg border border-white/10 bg-[#1c2236]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={editing.backgroundImage || THEME_ART[editing.theme]?.hero} alt="" className="h-full w-full object-cover" />
+                {editing.backgroundImage
+                  ? <button type="button" onClick={() => up('backgroundImage', '')} title="Voltar para a arte do tema" className="absolute right-1.5 top-1.5 rounded-lg bg-black/60 p-1.5 text-white/80 hover:bg-red-600"><Trash2 size={13} /></button>
+                  : <span className="absolute inset-x-1.5 bottom-1.5 rounded bg-black/60 px-1.5 py-0.5 text-center text-[10px] text-white/80">arte do tema</span>}
+              </div>
+              <input type="file" accept="image/jpeg,image/png,image/webp,image/avif"
+                onChange={async (e) => { const f = e.target.files?.[0]; if (f) up('backgroundImage', await readAsDataUrl(f)); e.target.value = ''; }}
+                className="mt-2 w-full text-xs text-white/60" />
+              <p className="mt-1 text-[11px] text-white/40">Vertical (ex.: 1080×1920) fica melhor: no celular ocupa a tela toda. Sem foto, usa a arte do tema.</p>
+            </div>
             <div ref={heroPaste.ref} className="rounded-xl border border-white/10 bg-[#0f1117] p-3">
               <div className="mb-2 flex items-center gap-2"><ImageIcon size={15} className="text-white/60" /><p className="text-sm font-semibold text-white">Imagem da capa (opcional)</p></div>
               <div className="relative mx-auto flex aspect-square max-w-[200px] items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-[#1c2236]">

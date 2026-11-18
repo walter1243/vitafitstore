@@ -4,6 +4,9 @@
 // Usados na página da loja (/<slug>) e na página de produto dos produtos dela,
 // no lugar do cabeçalho/rodapé da Kitoys — quem entra pelo Instagram da loja
 // não vê nada da Kitoys. Carrinho e checkout continuam os mesmos.
+//
+// Cabeçalho: barra de vidro flutuante (72px de altura total). Com overlay, ele
+// fica POR CIMA da capa (a foto começa no topo da tela, atrás do vidro).
 
 import { useEffect } from 'react';
 import Link from 'next/link';
@@ -14,39 +17,49 @@ import { rememberStore } from '@/lib/store-context';
 
 type Brand = Pick<SalesPageConfig, 'slug' | 'title' | 'logoImage' | 'neonPrimary' | 'neonSecondary' | 'footerNote'>;
 
-export function StoreHeader({ store }: { store: Brand }) {
+export function StoreHeader({ store, overlay = false, onCatalog }: { store: Brand; overlay?: boolean; onCatalog?: () => void }) {
   const { setIsCartOpen, totalItems } = useCart();
   // Lembra a loja nesta visita (checkout e carrinho vazio voltam para ela).
   useEffect(() => { rememberStore(store.slug); }, [store.slug]);
+  const home = storePath(store.slug);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-[#120818]/85 text-white backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
-        <Link href={storePath(store.slug)} className="flex min-w-0 items-center gap-2.5" aria-label={store.title}>
+    <header className={`sticky top-0 z-40 px-3 pt-3 text-white ${overlay ? '-mb-[72px]' : ''}`}>
+      <div className="mx-auto flex h-[60px] max-w-6xl items-center justify-between gap-3 rounded-2xl border border-white/15 bg-[#0d0418]/55 px-3 shadow-[0_10px_30px_rgba(0,0,0,.35)] backdrop-blur-xl sm:px-4">
+        <Link href={home} className="flex min-w-0 items-center gap-2.5 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2" style={{ outlineColor: store.neonSecondary }} aria-label={store.title}>
           {store.logoImage ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={store.logoImage} alt={store.title} className="h-9 w-auto max-w-[160px] object-contain" />
+            <img src={store.logoImage} alt={store.title} className="h-10 w-auto max-w-[170px] object-contain" />
           ) : (
             <>
-              <Sparkles size={16} style={{ color: store.neonSecondary }} aria-hidden />
-              <span className="truncate text-sm font-black uppercase tracking-[0.2em]" style={{ textShadow: `0 0 12px ${store.neonPrimary}` }}>{store.title}</span>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ background: `linear-gradient(135deg, ${store.neonSecondary}, ${store.neonPrimary})` }}>
+                <Sparkles size={17} className="text-black" aria-hidden />
+              </span>
+              <span className="font-store-display truncate text-base uppercase tracking-[0.12em]" style={{ textShadow: `0 0 14px ${store.neonPrimary}` }}>{store.title}</span>
             </>
           )}
         </Link>
-        <button
-          type="button"
-          onClick={() => setIsCartOpen(true)}
-          aria-label="Abrir carrito"
-          className="relative flex h-10 cursor-pointer items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 text-sm font-semibold text-white transition-colors hover:bg-white/10"
-        >
-          <ShoppingBag size={17} aria-hidden />
-          <span className="hidden sm:inline">Carrito</span>
-          {totalItems > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full px-1 text-[11px] font-bold text-black" style={{ background: store.neonSecondary }}>
-              {totalItems}
-            </span>
+        <div className="flex shrink-0 items-center gap-1.5">
+          {onCatalog ? (
+            <button type="button" onClick={onCatalog} className="hidden h-10 cursor-pointer items-center rounded-xl px-3.5 text-sm font-semibold text-white/80 transition-colors hover:bg-white/10 hover:text-white sm:flex">Colección</button>
+          ) : (
+            <Link href={`${home}#productos`} className="hidden h-10 items-center rounded-xl px-3.5 text-sm font-semibold text-white/80 transition-colors hover:bg-white/10 hover:text-white sm:flex">Colección</Link>
           )}
-        </button>
+          <button
+            type="button"
+            onClick={() => setIsCartOpen(true)}
+            aria-label={totalItems > 0 ? `Abrir carrito (${totalItems})` : 'Abrir carrito'}
+            className="relative flex h-11 cursor-pointer items-center gap-2 rounded-xl border border-white/15 bg-white/[0.06] px-3.5 text-sm font-semibold text-white transition-colors hover:bg-white/[0.12]"
+          >
+            <ShoppingBag size={18} aria-hidden />
+            <span className="hidden sm:inline">Carrito</span>
+            {totalItems > 0 && (
+              <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full px-1 text-[11px] font-bold text-black" style={{ background: store.neonSecondary, boxShadow: `0 0 10px ${store.neonSecondary}` }}>
+                {totalItems}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
     </header>
   );
@@ -54,16 +67,18 @@ export function StoreHeader({ store }: { store: Brand }) {
 
 export function StoreFooter({ store }: { store: Brand }) {
   return (
-    <footer className="relative z-10 border-t border-white/10 bg-[#0c0416] px-4 py-8 text-center text-white/50">
-      <p className="text-sm font-black uppercase tracking-[0.25em] text-white/80">{store.title}</p>
-      <p className="mt-2 text-xs">{store.footerNote}</p>
-      <nav className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs">
+    <footer className="relative z-10 border-t border-white/10 bg-[#08020f] px-4 pb-10 pt-10 text-center text-white/55">
+      <p className="font-store-display text-lg uppercase tracking-[0.18em] text-white/90" style={{ textShadow: `0 0 16px ${store.neonPrimary}66` }}>{store.title}</p>
+      <p className="mx-auto mt-2 max-w-md text-xs leading-relaxed">{store.footerNote}</p>
+      <nav aria-label="Información legal" className="mt-5 flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs">
         <Link href="/legal/envios" className="hover:text-white">Envíos</Link>
-        <Link href="/legal/aviso-legal" className="hover:text-white">Aviso legal</Link>
+        <Link href="/legal/devoluciones" className="hover:text-white">Devoluciones</Link>
+        <Link href="/legal/terminos" className="hover:text-white">Términos</Link>
         <Link href="/legal/privacidad" className="hover:text-white">Privacidad</Link>
         <Link href="/legal/cookies" className="hover:text-white">Cookies</Link>
-        <Link href="/legal/devoluciones" className="hover:text-white">Devoluciones</Link>
+        <Link href="/legal/aviso-legal" className="hover:text-white">Aviso legal</Link>
       </nav>
+      <p className="mt-5 text-[11px] text-white/35">Precios con IVA incluido · Pago seguro con Stripe</p>
     </footer>
   );
 }
