@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Search, ShoppingBag } from 'lucide-react';
 import { storeFontClass } from '@/components/sales/store-fonts';
+import { LanguageSwitcher } from '@/components/language-switcher';
 import { useCart } from '@/lib/cart-context';
 import { clampLogoHeight, storeBarHeight, storeHeaderOffset, storeLegalHref, storePath, type SalesPageConfig } from '@/lib/sales-pages-shared';
 import { rememberStore } from '@/lib/store-context';
@@ -104,6 +105,8 @@ export function StoreHeader({ store, overlay = false, onCatalog }: { store: Bran
             ) : (
               <Link href={`${home}#productos`} className="hidden h-10 items-center rounded-xl px-3.5 text-sm font-semibold text-white/80 transition-colors hover:bg-white/10 hover:text-white sm:flex">Colección</Link>
             )}
+            {/* idioma com bandeira, igual à Kitoys */}
+            <LanguageSwitcher tone="dark" />
             <button
               type="button"
               onClick={() => setIsCartOpen(true)}

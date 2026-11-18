@@ -10,7 +10,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Check, PenLine, Search, ShoppingCart, SlidersHorizontal, Truck } from 'lucide-react';
+import { Check, PenLine, Search, ShoppingCart, SlidersHorizontal, Truck } from 'lucide-react';
 import { type Product } from '@/lib/products';
 import { useCart } from '@/lib/cart-context';
 import { cardPrice } from '@/lib/personalize';
@@ -316,10 +316,6 @@ export function ViceCityStore({ config, products, cover }: Props) {
         <div className="mx-auto grid max-w-6xl gap-12 px-4 pb-16 pt-[44svh] sm:pt-[46svh] lg:min-h-[76svh] lg:grid-cols-[1fr_minmax(0,480px)] lg:items-center lg:gap-6 lg:pb-12 lg:pt-28">
           {/* PC: texto à direita, sobre o pôr do sol — os bonecos ficam livres à esquerda */}
           <div className="text-center lg:col-start-2 lg:text-left">
-            <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/40 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.28em] backdrop-blur-md" style={{ color: S }}>
-              <span className="vc-pulse inline-flex h-2 w-2 rounded-full" style={{ background: S, boxShadow: `0 0 10px ${S}` }} aria-hidden />
-              {config.badge || config.eyebrow}
-            </p>
             {config.logoImage && clampHeroLogo(config.heroLogoSize) > 0 ? (
               // Logo grande no lugar do título (Editar loja → Logo na capa)
               <h1 className="mt-4">
@@ -351,7 +347,7 @@ export function ViceCityStore({ config, products, cover }: Props) {
               <button type="button" onClick={toHook}
                 className="group inline-flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-2xl px-7 py-3 text-base font-bold uppercase tracking-wide text-black transition-opacity hover:opacity-95 sm:w-auto"
                 style={{ background: `linear-gradient(90deg, ${S}, ${P})`, boxShadow: `0 10px 34px ${P}66` }}>
-                {config.ctaLabel || 'Comprar ahora'} <ArrowRight size={19} className="transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden />
+                {config.ctaLabel || 'Comprar ahora'}
               </button>
               <p className="flex items-center gap-1.5 text-sm text-white/70"><Truck size={16} aria-hidden /> Envío gratis desde {FREE_SHIPPING_FROM} €</p>
             </div>

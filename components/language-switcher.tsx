@@ -74,7 +74,8 @@ const Flag = ({ code }: { code: string }) => (
   <img src={`https://flagcdn.com/w40/${code}.png`} alt="" width={22} height={16} className="h-4 w-[22px] shrink-0 rounded-[3px] object-cover shadow-[0_0_0_1px_rgba(0,0,0,0.08)]" />
 );
 
-export function LanguageSwitcher({ className = '' }: { className?: string }) {
+// tone 'dark': botão claro para barra escura (lojas próprias, ex.: VICE CITY).
+export function LanguageSwitcher({ className = '', tone = 'light' }: { className?: string; tone?: 'light' | 'dark' }) {
   const [lang, setLang] = useState('es');
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -105,7 +106,7 @@ export function LanguageSwitcher({ className = '' }: { className?: string }) {
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={`Idioma: ${cur.name}`}
-        className="flex h-11 cursor-pointer items-center gap-1.5 rounded-full px-2 text-[13px] font-semibold text-[#1d1d1f] transition-colors hover:bg-[#F2F4FA]"
+        className={`flex h-11 cursor-pointer items-center gap-1.5 rounded-full px-2 text-[13px] font-semibold transition-colors ${tone === 'dark' ? 'text-white hover:bg-white/10' : 'text-[#1d1d1f] hover:bg-[#F2F4FA]'}`}
       >
         <Flag code={cur.flag} />
         <span className="hidden sm:inline">{cur.short}</span>
